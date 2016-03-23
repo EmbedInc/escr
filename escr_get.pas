@@ -1,6 +1,6 @@
 {   Collection of subroutines for getting command parameters.
 }
-module prepic_get;
+module escr_get;
 define get_token;
 define get_tkraw;
 define get_tkrawc;
@@ -15,7 +15,7 @@ define get_time;
 define get_fp;
 define get_str;
 define get_args_str;
-%include '/cognivision_links/dsee_libs/pic/prepic.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 {
 ****************************************************************************
 *
@@ -264,7 +264,7 @@ begin
 4:  dtype := dtype_str_k;
 5:  dtype := dtype_time_k;
 otherwise
-    writeln ('Internal screwup in program PREPIC.  Unexpected PICK value');
+    writeln ('Internal screwup in program ESCR.  Unexpected PICK value');
     writeln ('in GET_DTYPE.');
     err_atline ('', '', nil, 0);
     end;

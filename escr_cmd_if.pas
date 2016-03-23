@@ -1,15 +1,15 @@
 {   IF statement.
 }
-module prepic_cmd_if;
-define prepic_cmd_if;
-define prepic_cmd_then;
-define prepic_cmd_else;
-define prepic_cmd_endif;
-%include 'prepic.ins.pas';
+module escr_cmd_if;
+define escr_cmd_if;
+define escr_cmd_then;
+define escr_cmd_else;
+define escr_cmd_endif;
+%include 'escr.ins.pas';
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_IF (STAT)
+*   Subroutine ESCR_CMD_IF (STAT)
 *
 *   /IF condition [THEN]
 *
@@ -31,7 +31,7 @@ define prepic_cmd_endif;
 *         - executed on FALSE -
 *       /ENDIF
 }
-procedure prepic_cmd_if (
+procedure escr_cmd_if (
   out     stat: sys_err_t);
   val_param;
 
@@ -66,9 +66,9 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_THEN (STAT)
+*   Subroutine ESCR_CMD_THEN (STAT)
 }
-procedure prepic_cmd_then (
+procedure escr_cmd_then (
   out     stat: sys_err_t);
   val_param;
 
@@ -91,9 +91,9 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_ELSE (STAT)
+*   Subroutine ESCR_CMD_ELSE (STAT)
 }
-procedure prepic_cmd_else (
+procedure escr_cmd_else (
   out     stat: sys_err_t);
   val_param;
 
@@ -116,9 +116,9 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_ENDIF (STAT)
+*   Subroutine ESCR_CMD_ENDIF (STAT)
 }
-procedure prepic_cmd_endif (
+procedure escr_cmd_endif (
   out     stat: sys_err_t);
   val_param;
 

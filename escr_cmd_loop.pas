@@ -1,19 +1,19 @@
 {   Commands related to loops.
 }
-module prepic_cmd_loop;
-define prepic_cmd_loop;
+module escr_cmd_loop;
+define escr_cmd_loop;
 define loop_iter;
-define prepic_cmd_endloop;
-%include 'prepic.ins.pas';
+define escr_cmd_endloop;
+%include 'escr.ins.pas';
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_LOOP (STAT)
+*   Subroutine ESCR_CMD_LOOP (STAT)
 *
 *   /LOOP
 *   /LOOP SYMBOLS varname
 }
-procedure prepic_cmd_loop (
+procedure escr_cmd_loop (
   out     stat: sys_err_t);
   val_param;
 
@@ -311,9 +311,9 @@ loop:                                  {loop execution back to start of block}
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_ENDLOOP (STAT)
+*   Subroutine ESCR_CMD_ENDLOOP (STAT)
 }
-procedure prepic_cmd_endloop (
+procedure escr_cmd_endloop (
   out     stat: sys_err_t);
   val_param;
 

@@ -1,23 +1,23 @@
 {   Commands relating to preprocessor macros.  These are defined much like
 *   preprocessor subroutines but are envoked just like assembler macros.
 }
-module prepic_cmd_macro;
-define prepic_cmd_macro;
-define prepic_cmd_endmac;
-define prepic_cmd_quitmac;
+module escr_cmd_macro;
+define escr_cmd_macro;
+define escr_cmd_endmac;
+define escr_cmd_quitmac;
 define macro_run;
-%include 'prepic.ins.pas';
+%include 'escr.ins.pas';
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_MACRO (STAT)
+*   Subroutine ESCR_CMD_MACRO (STAT)
 *
 *   /MACRO name
 *
 *   Starts the definition of a macro.  The macro definition is stored but not
 *   executed now.
 }
-procedure prepic_cmd_macro (
+procedure escr_cmd_macro (
   out     stat: sys_err_t);
   val_param;
 
@@ -49,19 +49,19 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_ENDMAC (STAT)
+*   Subroutine ESCR_CMD_ENDMAC (STAT)
 *
 *   /ENDMAC
 *
 *   End the current macro definition.
 }
-procedure prepic_cmd_endmac (
+procedure escr_cmd_endmac (
   out     stat: sys_err_t);
   val_param;
 
 begin
   if not inhibit_p^.inh then begin     {executing code normally ?}
-    prepic_cmd_quitmac (stat);         {acts just like QUITMAC}
+    escr_cmd_quitmac (stat);           {acts just like QUITMAC}
     return;
     end;
 
@@ -77,13 +77,13 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_QUITMAC (STAT)
+*   Subroutine ESCR_CMD_QUITMAC (STAT)
 *
 *   /QUITMAC
 *
 *   Stop executing the innermost macro currently in.
 }
-procedure prepic_cmd_quitmac (
+procedure escr_cmd_quitmac (
   out     stat: sys_err_t);
   val_param;
 

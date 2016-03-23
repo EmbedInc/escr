@@ -1,8 +1,8 @@
 {   Routines to process inline preprocessor functions.
 }
-module prepic_inline;
+module escr_inline;
 define inline_expand_line;
-%include '/cognivision_links/dsee_libs/pic/prepic.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 {
 *   Private routines used inside this module only.
 }

@@ -1,6 +1,6 @@
 {   Symbol handling routines.
 }
-module prepic_sym;
+module escr_sym;
 define sym_name;
 define sym_new;
 define sym_new_const;
@@ -8,7 +8,7 @@ define sym_new_var;
 define sym_find;
 define sym_del;
 define sym_del_name;
-%include '/cognivision_links/dsee_libs/pic/prepic.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 {
 ********************************************************************************
 *

@@ -1,4 +1,4 @@
-{   Subroutine PREPIC_CMD_FLAG (BUF, SP, STAT)
+{   Subroutine ESCR_CMD_FLAG (BUF, SP, STAT)
 *
 *   /FLAG name
 *
@@ -8,11 +8,11 @@
 *   expands into the byte containing the flag and the bit number within
 *   the byte.
 }
-module prepic_cmd_flag;
-define prepic_cmd_flag;
-%include 'prepic.ins.pas';
+module escr_cmd_flag;
+define escr_cmd_flag;
+%include 'escr.ins.pas';
 
-procedure prepic_cmd_flag (
+procedure escr_cmd_flag (
   out     stat: sys_err_t);
   val_param;
 
@@ -236,6 +236,6 @@ lang_dspic_k: begin
 *   Unexpected input source file language.
 }
 otherwise
-    err_lang (lang, 'PREPIC_CMD_FLAG', 1);
+    err_lang (lang, 'ESCR_CMD_FLAG', 1);
     end;
   end;

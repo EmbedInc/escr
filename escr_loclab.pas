@@ -13,9 +13,9 @@
 *   labels list of the first parent that does hold such a list.  The top level
 *   execution block always holds a local labels list.
 }
-module prepic_loclab;
+module escr_loclab;
 define loclab_get;
-%include 'prepic.ins.pas';
+%include 'escr.ins.pas';
 {
 ********************************************************************************
 *
@@ -115,7 +115,7 @@ lang_aspic_k: begin                    {all the case-insensitive languages}
   string_append (fname, tk);           {add the sequence number}
   {
   *   Create the table entry for this label.  The name the label will be
-  *   referred to in PREPIC source code (generic name) is in LNAME, and the full
+  *   referred to in ESCR source code (generic name) is in LNAME, and the full
   *   expanded name of the label in FNAME.  POS is the position within the table
   *   where the new entry is to be added.
   }

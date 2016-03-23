@@ -1,22 +1,22 @@
 {   Subroutine management.
 }
-module prepic_cmd_subr;
-define prepic_cmd_subroutine;
-define prepic_cmd_endsub;
-define prepic_cmd_call;
-define prepic_cmd_return;
-%include 'prepic.ins.pas';
+module escr_cmd_subr;
+define escr_cmd_subroutine;
+define escr_cmd_endsub;
+define escr_cmd_call;
+define escr_cmd_return;
+%include 'escr.ins.pas';
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_SUBROUTINE (STAT)
+*   Subroutine ESCR_CMD_SUBROUTINE (STAT)
 *
 *   /SUBROUTINE name
 *
 *   Define the start of a subroutine.  The subroutine definition is stored,
 *   but is not executed now.
 }
-procedure prepic_cmd_subroutine (
+procedure escr_cmd_subroutine (
   out     stat: sys_err_t);
   val_param;
 
@@ -48,19 +48,19 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_ENDSUB (STAT)
+*   Subroutine ESCR_CMD_ENDSUB (STAT)
 *
 *   /ENDSUB
 *
 *   Indicate the end of a subroutine definition.
 }
-procedure prepic_cmd_endsub (
+procedure escr_cmd_endsub (
   out     stat: sys_err_t);
   val_param;
 
 begin
   if not inhibit_p^.inh then begin     {executing code normally ?}
-    prepic_cmd_return (stat);          {acts just like RETURN}
+    escr_cmd_return (stat);            {acts just like RETURN}
     return;
     end;
 
@@ -76,14 +76,14 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_CALL (STAT)
+*   Subroutine ESCR_CMD_CALL (STAT)
 *
 *   /CALL name [arg ... arg]
 *
 *   Execute the indicated subroutine, then return to after this command when the
 *   subroutine completes.
 }
-procedure prepic_cmd_call (
+procedure escr_cmd_call (
   out     stat: sys_err_t);
   val_param;
 
@@ -129,13 +129,13 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_RETURN (STAT)
+*   Subroutine ESCR_CMD_RETURN (STAT)
 *
 *   /RETURN
 *
 *   Return from the innermost subroutine currently in.
 }
-procedure prepic_cmd_return (
+procedure escr_cmd_return (
   out     stat: sys_err_t);
   val_param;
 

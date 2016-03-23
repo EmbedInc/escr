@@ -2,10 +2,10 @@
 *   The mechanics of detecting the inline functions and handling their
 *   nested expansions is done in the INLINE module.
 }
-module prepic_func;
+module escr_func;
 define inline_func_init;
 define inline_func;
-%include '/cognivision_links/dsee_libs/pic/prepic.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 
 const
 {
@@ -132,7 +132,7 @@ var
   r: sys_fp_max_t;                     {scratch floating point}
   i, n: sys_int_max_t;                 {scratch integers}
   ii: sys_int_machine_t;               {scratch integer}
-  sym_p: sym_p_t;                      {scratch pointer to a PREPIC symbol}
+  sym_p: sym_p_t;                      {scratch pointer to a ESCR symbol}
   fp24: pic_fp24_t;                    {PIC 24 bit floating point number}
   fp32f: pic_fp32f_t;                  {32 bit fast floating point for dsPICs}
   val, val2: val_t;                    {arguments or other intermediate values}
@@ -516,7 +516,7 @@ lang_dspic_k: begin                    {language is ASM30}
   end;                                 {end of ASM30 language case}
 
 otherwise
-    err_lang (lang, 'PREPIC_FUNC', 1);
+    err_lang (lang, 'ESCR_FUNC', 1);
     end;
   string_append (lot, tk);
   end;
@@ -710,7 +710,7 @@ dtype_fp_k: goto ret_r;                {REAL}
 dtype_time_k: goto ret_time_r;         {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
-  sys_msg_parm_str (msg_parm[2], 'PREPIC_FUNC, function "+"');
+  sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "+"');
   err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
 {
 *   Common return points for various data types.  These are jumped to at the
@@ -1634,7 +1634,7 @@ dtype_time_k: begin
       end;
 otherwise                              {unexpected data type}
     sys_msg_parm_int (msg_parm[1], ord(val.dtype));
-    sys_msg_parm_str (msg_parm[2], 'PREPIC_FUNC, function IF');
+    sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function IF');
     err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
     end;
   end;
@@ -1815,7 +1815,7 @@ otherwise
       if pick = 0 then goto arg_bad_tk; {keyword is invalid ?}
       end
     else begin                         {no name type keyword}
-      pick := 1;                       {indicate default of PREPIC symbol}
+      pick := 1;                       {indicate default of ESCR symbol}
       end
     ;
 
@@ -1823,7 +1823,7 @@ otherwise
   if tk2.len = 0 then goto ret_b;
   case pick of                         {what type of symbol to look for ?}
 
-1:  begin                              {PSYM, any prepic symbol}
+1:  begin                              {PSYM, any escr symbol}
       sym_find (tk2, sym_p);
       b := sym_p <> nil;
       end;
@@ -1937,7 +1937,7 @@ lang_dspic_k: begin                    {language is ASM30}
   end;                                 {end of ASM30 language case}
 
 otherwise
-    err_lang (lang, 'PREPIC_FUNC', 1);
+    err_lang (lang, 'ESCR_FUNC', 1);
     end;
   string_append (lot, tk);
   end;
@@ -2044,7 +2044,7 @@ dtype_fp_k: goto ret_r;                {REAL}
 dtype_time_k: goto ret_time;           {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
-  sys_msg_parm_str (msg_parm[2], 'PREPIC_FUNC, function "MAX"');
+  sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "MAX"');
   err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
   end;
 {
@@ -2125,7 +2125,7 @@ dtype_fp_k: goto ret_r;                {REAL}
 dtype_time_k: goto ret_time;           {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
-  sys_msg_parm_str (msg_parm[2], 'PREPIC_FUNC, function "MIN"');
+  sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "MIN"');
   err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
   end;
 {

@@ -1,6 +1,6 @@
 {   Routines for handling terms in expressions or function parameters.
 }
-module prepic_term;
+module escr_term;
 define val_copy;
 define val_bool;
 define val_int;
@@ -12,7 +12,7 @@ define val_text;
 define val_size;
 define val_init;
 define val_time;
-%include '/cognivision_links/dsee_libs/pic/prepic.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 {
 ****************************************************************************
 *
@@ -356,7 +356,7 @@ dtype_time_k: begin                    {TIME}
       end;
 
 otherwise
-    writeln ('Internal screwup in program PREPIC:  Data type ID of', ord(val.dtype));
+    writeln ('Internal screwup in program ESCR:  Data type ID of', ord(val.dtype));
     writeln ('encountered in subroutine VAL_STR.');
     err_atline ('', '', nil, 0);
     end;
@@ -424,7 +424,7 @@ lang_dspic_k: begin                    {ASM30}
           str_from_fp (val.fp, str);
           end;
 otherwise
-        err_lang (lang, 'PREPIC_VAL', 1);
+        err_lang (lang, 'ESCR_VAL', 1);
         end;                           {end of language cases}
       end;                             {end of FP data type case}
 
@@ -450,7 +450,7 @@ dtype_time_k: begin                    {TIME}
       end;
 
 otherwise
-    writeln ('Internal screwup in program PREPIC:  Data type ID of', ord(val.dtype));
+    writeln ('Internal screwup in program ESCR:  Data type ID of', ord(val.dtype));
     writeln ('encountered in subroutine VAL_TEXT.');
     err_atline ('', '', nil, 0);
     end;
@@ -498,7 +498,7 @@ dtype_time_k: begin
       end;
 
 otherwise
-    writeln ('Internal screwup in program PREPIC:  Data type ID of', ord(dtype));
+    writeln ('Internal screwup in program ESCR:  Data type ID of', ord(dtype));
     writeln ('encountered in subroutine VAL_SIZE.');
     err_atline ('', '', nil, 0);
     end;

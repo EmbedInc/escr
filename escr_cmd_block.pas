@@ -1,17 +1,17 @@
 {   Execution block commands.
 }
-module prepic_cmd_block;
-define prepic_cmd_block;
-define prepic_cmd_repeat;
-define prepic_cmd_quit;
-define prepic_cmd_endblock;
-%include 'prepic.ins.pas';
+module escr_cmd_block;
+define escr_cmd_block;
+define escr_cmd_repeat;
+define escr_cmd_quit;
+define escr_cmd_endblock;
+%include 'escr.ins.pas';
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_BLOCK (STAT)
+*   Subroutine ESCR_CMD_BLOCK (STAT)
 }
-procedure prepic_cmd_block (
+procedure escr_cmd_block (
   out     stat: sys_err_t);
   val_param;
 
@@ -26,9 +26,9 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_REPEAT (STAT)
+*   Subroutine ESCR_CMD_REPEAT (STAT)
 }
-procedure prepic_cmd_repeat (
+procedure escr_cmd_repeat (
   out     stat: sys_err_t);
   val_param;
 
@@ -42,9 +42,9 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_QUIT (STAT)
+*   Subroutine ESCR_CMD_QUIT (STAT)
 }
-procedure prepic_cmd_quit (
+procedure escr_cmd_quit (
   out     stat: sys_err_t);
   val_param;
 
@@ -55,9 +55,9 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine PREPIC_CMD_ENDBLOCK (STAT)
+*   Subroutine ESCR_CMD_ENDBLOCK (STAT)
 }
-procedure prepic_cmd_endblock (
+procedure escr_cmd_endblock (
   out     stat: sys_err_t);
   val_param;
 

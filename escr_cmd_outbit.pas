@@ -1,4 +1,4 @@
-{   Subroutine PREPIC_CMD_OUTBIT (BUF, SP, STAT)
+{   Subroutine ESCR_CMD_OUTBIT (BUF, SP, STAT)
 *
 *   /OUTBIT name port bit [polarity] [ival]
 *
@@ -23,11 +23,11 @@
 *     #define <name>_pin <port>,<bit>
 *     #define <name>_pinlat <lat>,<bit>
 }
-module prepic_cmd_outbit;
-define prepic_cmd_outbit;
-%include '/cognivision_links/dsee_libs/pic/prepic.ins.pas';
+module escr_cmd_outbit;
+define escr_cmd_outbit;
+%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 
-procedure prepic_cmd_outbit (
+procedure escr_cmd_outbit (
   out     stat: sys_err_t);
   val_param;
 
@@ -103,7 +103,7 @@ lang_dspic_k: begin                    {ASM30}
       if bit > 15 then err_parm_last_bad; {bit value too large ?}
       end;
 otherwise
-    err_lang (lang, 'PREPIC_CMD_INBIT', 1);
+    err_lang (lang, 'ESCR_CMD_INBIT', 1);
     end;
   string_f_int (strbit, bit);          {make bit number string}
 {
@@ -573,6 +573,6 @@ lang_dspic_k: begin
 *   Unexpected input source file language.
 }
 otherwise
-    err_lang (lang, 'PREPIC_CMD_OUTBIT', 2);
+    err_lang (lang, 'ESCR_CMD_OUTBIT', 2);
     end;
   end;

@@ -1,7 +1,7 @@
 {   Collection of small utility routines that don't nicely fit into
 *   any of the other modules.
 }
-module prepic_util;
+module escr_util;
 define write_vstr;
 define write_obuf;
 define show_obuf;
@@ -11,7 +11,7 @@ define str_from_fp;
 define close_out;
 define close_out_all;
 define uptocomm;
-%include 'prepic.ins.pas';
+%include 'escr.ins.pas';
 {
 ********************************************************************************
 *
@@ -236,7 +236,7 @@ begin
 *
 *   Subroutine STR_FROM_FP (TK, FP)
 *
-*   Convert the floating point value FP to it's official Prepic string
+*   Convert the floating point value FP to it's official Escr string
 *   representation.  The result must always contain a decimal point or
 *   exponential notation to distinguish it from a integer string.
 }

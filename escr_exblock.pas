@@ -3,7 +3,7 @@
 *   root block is created for the top level code, so all code is always inside
 *   a execution block.
 }
-module prepic_exblock;
+module escr_exblock;
 define exblock_new;
 define exblock_close;
 define exblock_loclab_init;
@@ -15,7 +15,7 @@ define exblock_arg_get_bl;
 define exblock_arg_get;
 define exblock_repeat;
 define exblock_quit;
-%include 'prepic.ins.pas';
+%include 'escr.ins.pas';
 {
 ********************************************************************************
 *

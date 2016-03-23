@@ -1,14 +1,14 @@
-{   Program PREPIC <input file name> [<output file name>]
+{   Program ESCR <input file name> [<output file name>]
 *
 *   Preprocess the Microchip PIC assembler source file to produce a file
-*   that can be passed to the assembler.  See the PREPIC documentation
+*   that can be passed to the assembler.  See the ESCR documentation
 *   file for details.
 *
 *   By default, the output file is written to the current directory.
 }
-program prepic;
+program escr;
 define com;
-%include 'prepic.ins.pas';
+%include 'escr.ins.pas';
 
 const
   max_msg_parms = 2;                   {max parameters we can pass to a message}
@@ -279,7 +279,7 @@ done_opts:                             {done with all the command line options}
       osuff := '.S';                   {set output file suffix}
       end;
 otherwise                              {anything else, like .ASPIC}
-    sys_message_bomb ('pic', 'err_prepic_insuff', nil, 0);
+    sys_message_bomb ('pic', 'err_escr_insuff', nil, 0);
     end;
 
   infile_open (conn.tnam, infile_p, stat); {read and save top level input file}
@@ -409,40 +409,40 @@ loop_line:                             {back here each new line from input file}
   string_tkpick (cmd, cmdlist, pick);  {pick command name from list}
   sys_error_none (stat);               {init to no error in command routine}
   case pick of                         {which preprocessor command is it ?}
-1:  prepic_cmd_inbit (stat);
-2:  prepic_cmd_outbit (stat);
-3:  prepic_cmd_flag (stat);
-4:  prepic_cmd_var (stat);
-5:  prepic_cmd_set (stat);
-6:  prepic_cmd_const (stat);
-7:  prepic_cmd_del (stat);
-8:  prepic_cmd_sylist (stat);
-9:  prepic_cmd_include (stat);
-10: prepic_cmd_write (stat);
-11: prepic_cmd_show (stat);
-12: prepic_cmd_subroutine (stat);
-13: prepic_cmd_endsub (stat);
-14: prepic_cmd_call (stat);
-15: prepic_cmd_return (stat);
-16: prepic_cmd_if (stat);
-17: prepic_cmd_then (stat);
-18: prepic_cmd_else (stat);
-19: prepic_cmd_endif (stat);
-20: prepic_cmd_block (stat);
-21: prepic_cmd_repeat (stat);
-22: prepic_cmd_quit (stat);
-23: prepic_cmd_endblock (stat);
-24: prepic_cmd_writeto (stat);
-25: prepic_cmd_writeend (stat);
+1:  escr_cmd_inbit (stat);
+2:  escr_cmd_outbit (stat);
+3:  escr_cmd_flag (stat);
+4:  escr_cmd_var (stat);
+5:  escr_cmd_set (stat);
+6:  escr_cmd_const (stat);
+7:  escr_cmd_del (stat);
+8:  escr_cmd_sylist (stat);
+9:  escr_cmd_include (stat);
+10: escr_cmd_write (stat);
+11: escr_cmd_show (stat);
+12: escr_cmd_subroutine (stat);
+13: escr_cmd_endsub (stat);
+14: escr_cmd_call (stat);
+15: escr_cmd_return (stat);
+16: escr_cmd_if (stat);
+17: escr_cmd_then (stat);
+18: escr_cmd_else (stat);
+19: escr_cmd_endif (stat);
+20: escr_cmd_block (stat);
+21: escr_cmd_repeat (stat);
+22: escr_cmd_quit (stat);
+23: escr_cmd_endblock (stat);
+24: escr_cmd_writeto (stat);
+25: escr_cmd_writeend (stat);
 26: begin                              {/STOP}
       if inhibit_p^.inh then goto done_cmd; {execution is inhibited ?}
       goto leave_all;
       end;
-27: prepic_cmd_macro (stat);
-28: prepic_cmd_endmac (stat);
-29: prepic_cmd_quitmac (stat);
-30: prepic_cmd_loop (stat);
-31: prepic_cmd_endloop (stat);
+27: escr_cmd_macro (stat);
+28: escr_cmd_endmac (stat);
+29: escr_cmd_quitmac (stat);
+30: escr_cmd_loop (stat);
+31: escr_cmd_endloop (stat);
 
 otherwise
     sys_msg_parm_vstr (msg_parm[1], cmd);

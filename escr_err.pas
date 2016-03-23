@@ -1,6 +1,6 @@
 {   Error handling.
 }
-module prepic_err;
+module escr_err;
 define err_atline;
 define err_atline_abort;
 define err_val;
@@ -11,7 +11,7 @@ define err_parm_missing;
 define err_dtype_unimp;
 define err_check_symname;
 define err_sym_not_found;
-%include 'prepic.ins.pas';
+%include 'escr.ins.pas';
 {
 ****************************************************************************
 *

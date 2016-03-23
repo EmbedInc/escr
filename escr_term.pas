@@ -1,8 +1,8 @@
 {   Routines for handling terms in expressions or function parameters.
 }
-module prepic_term;
+module escr_term;
 define term_get;
-%include '/cognivision_links/dsee_libs/pic/prepic.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 {
 ****************************************************************************
 *

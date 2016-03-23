@@ -1,9 +1,9 @@
 {   Routines for formatting values to strings in specific ways.
 }
-module prepic_format;
+module escr_format;
 define format_int;
 define format_fp;
-%include 'prepic.ins.pas';
+%include 'escr.ins.pas';
 {
 ********************************************************************************
 *

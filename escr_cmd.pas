@@ -1,10 +1,10 @@
 {   Module of routines that implement individual preprocessor commands.
 *   Some larger command routines are in their own modules, called
-*   PREPIC_CMD_<name>.  The smaller command routines are collected here.
+*   ESCR_CMD_<name>.  The smaller command routines are collected here.
 *
 *   All the command subroutines have a common interface:
 *
-*     prepic_cmd_<name> (STAT)
+*     escr_cmd_<name> (STAT)
 *
 *   The input line is in IBUF and IP is the parse index after the command
 *   name.  The upper case command name is in CMD.  The program will abort
@@ -21,24 +21,24 @@
 *   when the command routine returns, it will be written to the
 *   output file.
 }
-module prepic_cmd;
-define prepic_cmd_var;
-define prepic_cmd_const;
-define prepic_cmd_set;
-define prepic_cmd_del;
-define prepic_cmd_sylist;
-define prepic_cmd_include;
-define prepic_cmd_write;
-define prepic_cmd_show;
-define prepic_cmd_writeto;
-define prepic_cmd_writeend;
-%include '/cognivision_links/dsee_libs/pic/prepic.ins.pas';
+module escr_cmd;
+define escr_cmd_var;
+define escr_cmd_const;
+define escr_cmd_set;
+define escr_cmd_del;
+define escr_cmd_sylist;
+define escr_cmd_include;
+define escr_cmd_write;
+define escr_cmd_show;
+define escr_cmd_writeto;
+define escr_cmd_writeend;
+%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 {
 ********************************************************************************
 *
 *   /VAR (NEW, EXIST, LOCAL) name [dtype] [= value]
 }
-procedure prepic_cmd_var (
+procedure escr_cmd_var (
   out     stat: sys_err_t);
   val_param;
 
@@ -137,7 +137,7 @@ make_new:                              {a new symbol needs to be created}
 *
 *   /SET name value
 }
-procedure prepic_cmd_set (
+procedure escr_cmd_set (
   out     stat: sys_err_t);
   val_param;
 
@@ -175,7 +175,7 @@ begin
 *
 *   /CONST name [dtype] = value
 }
-procedure prepic_cmd_const (
+procedure escr_cmd_const (
   out     stat: sys_err_t);
   val_param;
 
@@ -229,7 +229,7 @@ dtype_str_k: begin                     {STRING}
 *
 *   /DEL name
 }
-procedure prepic_cmd_del (
+procedure escr_cmd_del (
   out     stat: sys_err_t);
   val_param;
 
@@ -253,7 +253,7 @@ begin
 *
 *   List all symbols as comments to the output file.
 }
-procedure prepic_cmd_sylist (
+procedure escr_cmd_sylist (
   out     stat: sys_err_t);
   val_param;
 
@@ -269,7 +269,7 @@ var
 ********************
 *
 *   Local subroutine WRITE_VAL (VAL)
-*   This subroutine is local to PREPIC_CMD_SYLIST.
+*   This subroutine is local to ESCR_CMD_SYLIST.
 *
 *   Write a representation of the data value VAL into the output line buffer.
 }
@@ -306,7 +306,7 @@ lang_dspic_k: begin
           string_append (obuf, tk);
           end;
 otherwise
-        err_lang (lang, 'PREPIC_CMD', 1);
+        err_lang (lang, 'ESCR_CMD', 1);
         end;                           {end of language type cases}
       end;                             {end of data type is integer case}
 
@@ -338,7 +338,7 @@ otherwise
 {
 ********************
 *
-*   Executable code for routine PREPIC_CMD_SYLIST.
+*   Executable code for routine ESCR_CMD_SYLIST.
 }
 begin
   if inhibit_p^.inh then return;       {execution is inhibited ?}
@@ -400,7 +400,7 @@ otherwise
 *   The pathname in string is relative to the directory containing the file
 *   that contains the INCLUDE directive.
 }
-procedure prepic_cmd_include (
+procedure escr_cmd_include (
   out     stat: sys_err_t);
   val_param;
 
@@ -446,7 +446,7 @@ begin
 *   Write the concatenation of the string representation of all the arguments
 *   as one line to the output file.
 }
-procedure prepic_cmd_write (
+procedure escr_cmd_write (
   out     stat: sys_err_t);
   val_param;
 
@@ -463,7 +463,7 @@ begin
 *   Just like command WRITE, except that the line is written to standard output
 *   instead of the output file.
 }
-procedure prepic_cmd_show (
+procedure escr_cmd_show (
   out     stat: sys_err_t);
   val_param;
 
@@ -477,7 +477,7 @@ begin
 *
 *   /WRITETO fnam
 }
-procedure prepic_cmd_writeto (
+procedure escr_cmd_writeto (
   out     stat: sys_err_t);
   val_param;
 
@@ -508,7 +508,7 @@ begin
 *
 *   /WRITEND
 }
-procedure prepic_cmd_writeend (
+procedure escr_cmd_writeend (
   out     stat: sys_err_t);
   val_param;
 

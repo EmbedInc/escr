@@ -1,10 +1,10 @@
 {   Routines for managing input files.
 }
-module prepic_infile;
+module escr_infile;
 define infile_open;
 define infile_getline;
 define infile_skipline;
-%include 'prepic.ins.pas';
+%include 'escr.ins.pas';
 {
 ********************************************************************************
 *
