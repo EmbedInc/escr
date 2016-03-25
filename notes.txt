@@ -1,0 +1,8 @@
+Prevent functions from being executed in sections of code that are
+inhibited.  Commands in inhibited sections check for inhibit and don't
+perform their actions if inhibited, but that is after the command line has
+been expanded and functions resolved.  This won't be simple to fix.  Some
+commands need to be at least partially executed during inhibits since they
+may change the inhibit state.  Command line function expansion may need to
+be moved into each command (yuk).
+

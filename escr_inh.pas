@@ -56,11 +56,11 @@ begin
   if e.inhibit_p = e.exblock_p^.inh_p^.prev_p then begin {going too far for this block ?}
     case e.inhibit_p^.inhty of         {what type of inhibit is it ?}
 escr_inhty_if_k: begin                 {IF construct}
-        escr_err_atline ('pic', 'err_nest_ih_if', nil, 0);
+        escr_err_atline (e, 'pic', 'err_nest_ih_if', nil, 0);
         end;
 otherwise
       sys_msg_parm_int (msg_parm[1], ord(e.inhibit_p^.inhty));
-      escr_err_atline ('pic', 'err_nest_inh', msg_parm, 1);
+      escr_err_atline (e, 'pic', 'err_nest_inh', msg_parm, 1);
       end;
     end;
 
