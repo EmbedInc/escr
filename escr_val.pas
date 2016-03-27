@@ -1,16 +1,16 @@
 {   Routines for handling terms in expressions or function parameters.
 }
 module escr_term;
-define val_copy;
+define escr_val_copy;
 define val_bool;
 define val_int;
 define val_fp;
 define val_isint;
 define val_isbool;
-define val_str;
-define val_text;
+define escr_val_str;
+define escr_val_text;
 define val_size;
-define val_init;
+define escr_val_init;
 define val_time;
 %include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 {
@@ -22,7 +22,7 @@ define val_time;
 *   that can be unambiguously converted from IVAL.  Only the actual data value
 *   of OVAL is irrelevant on entry.
 }
-procedure val_copy (                   {copy a VAL_T value}
+procedure escr_val_copy (              {copy a VAL_T value}
   in      ival: val_t;                 {the input value}
   out     oval: val_t);                {the output value}
   val_param;
@@ -39,13 +39,13 @@ dtype_fp_k: begin                      {to FLOATING POINT}
     oval.fp := val_fp (ival);
     end;
 dtype_str_k: begin                     {to STRING}
-    val_str (ival, oval.str);
+    escr_val_str (ival, oval.str);
     end;
 dtype_time_k: begin                    {to TIME}
     oval.time := val_time (ival);
     end;
 otherwise                              {unimplemented output data type}
-    err_dtype_unimp (oval.dtype, 'VAL_COPY');
+    escr_err_dtype_unimp (oval.dtype, 'VAL_COPY');
     end;                               {end of output data type cases}
   end;
 {
@@ -94,8 +94,8 @@ dtype_str_k: begin                     {input data type is string}
     end;                               {end of VAL data type cases}
 
   sys_message ('pic', 'term_not_bool');
-  err_val (val);                       {show source value and data type}
-  err_atline ('', '', nil, 0);
+  escr_err_val (val);                  {show source value and data type}
+  escr_err_atline ('', '', nil, 0);
   return;                              {keep compiler from complaining}
   end;
 {
@@ -132,8 +132,8 @@ dtype_str_k: begin                     {string}
     end;                               {end of VAL data type cases}
 
   sys_message ('pic', 'term_not_int');
-  err_val (val);                       {show source value and data type}
-  err_atline ('', '', nil, 0);
+  escr_err_val (val);                  {show source value and data type}
+  escr_err_atline ('', '', nil, 0);
   return;                              {keep compiler from complaining}
   end;
 {
@@ -167,8 +167,8 @@ dtype_str_k: begin                     {string}
     end;                               {end of VAL data type cases}
 
   sys_message ('pic', 'term_not_time');
-  err_val (val);                       {show source value and data type}
-  err_atline ('', '', nil, 0);
+  escr_err_val (val);                  {show source value and data type}
+  escr_err_atline ('', '', nil, 0);
   return;                              {keep compiler from complaining}
   end;
 {
@@ -209,8 +209,8 @@ dtype_str_k: begin                     {string}
     end;                               {end of VAL data type cases}
 
   sys_message ('pic', 'term_not_fp');
-  err_val (val);                       {show source value and data type}
-  err_atline ('', '', nil, 0);
+  escr_err_val (val);                  {show source value and data type}
+  escr_err_atline ('', '', nil, 0);
   return;                              {keep compiler from complaining}
   end;
 {
@@ -266,8 +266,8 @@ dtype_str_k: begin                     {string}
     end;                               {end of VAL data type cases}
 
   sys_message ('pic', 'term_not_num');
-  err_val (val);                       {show source value and data type}
-  err_atline ('', '', nil, 0);
+  escr_err_val (val);                  {show source value and data type}
+  escr_err_atline ('', '', nil, 0);
   return;                              {keep compiler from complaining}
   end;
 {
@@ -325,7 +325,7 @@ otherwise
 *   Convert the value in VAL to a string and return it in STR.  This routine
 *   never bombs on error because all values have a string representation.
 }
-procedure val_str (                    {make string representation of value in VAL}
+procedure escr_val_str (               {make string representation of value in VAL}
   in      val: val_t;                  {the source value}
   in out  str: univ string_var_arg_t); {returned string}
   val_param;
@@ -344,7 +344,7 @@ dtype_int_k: begin                     {INTEGER}
       end;
 
 dtype_fp_k: begin                      {REAL}
-      str_from_fp (val.fp, str);
+      escr_str_from_fp (val.fp, str);
       end;
 
 dtype_str_k: begin                     {STRING}
@@ -352,13 +352,13 @@ dtype_str_k: begin                     {STRING}
       end;
 
 dtype_time_k: begin                    {TIME}
-      str_from_time (val.time, str);
+      escr_str_from_time (val.time, str);
       end;
 
 otherwise
     writeln ('Internal screwup in program ESCR:  Data type ID of', ord(val.dtype));
     writeln ('encountered in subroutine VAL_STR.');
-    err_atline ('', '', nil, 0);
+    escr_err_atline ('', '', nil, 0);
     end;
   end;
 {
@@ -369,7 +369,7 @@ otherwise
 *   Convert the value in VAL to its text representation in the current
 *   input language.
 }
-procedure val_text (                   {make output language text representation}
+procedure escr_val_text (              {make output language text representation}
   in      val: val_t;                  {the source value}
   in out  str: univ string_var_arg_t); {returned string}
   val_param;
@@ -408,20 +408,20 @@ lang_aspic_k: begin                    {MPASM}
           string_appends (str, 'h'''(0));
           string_f_int_max_base (      {high byte}
             tk, fp24.b2, 16, 2, [string_fi_leadz_k, string_fi_unsig_k], stat);
-          err_atline_abort (stat, '', '', nil, 0);
+          escr_err_atline_abort (stat, '', '', nil, 0);
           string_append (str, tk);
           string_f_int_max_base (      {middle byte}
             tk, fp24.b1, 16, 2, [string_fi_leadz_k, string_fi_unsig_k], stat);
-          err_atline_abort (stat, '', '', nil, 0);
+          escr_err_atline_abort (stat, '', '', nil, 0);
           string_append (str, tk);
           string_f_int_max_base (      {low byte}
             tk, fp24.b0, 16, 2, [string_fi_leadz_k, string_fi_unsig_k], stat);
-          err_atline_abort (stat, '', '', nil, 0);
+          escr_err_atline_abort (stat, '', '', nil, 0);
           string_append (str, tk);
           string_append1 (str, '''');
           end;
 lang_dspic_k: begin                    {ASM30}
-          str_from_fp (val.fp, str);
+          escr_str_from_fp (val.fp, str);
           end;
 otherwise
         err_lang (lang, 'ESCR_VAL', 1);
@@ -444,7 +444,7 @@ ret_string:                            {common code to return string S_P^}
       end;
 
 dtype_time_k: begin                    {TIME}
-      str_from_time (val.time, tk);    {make time string in TK}
+      escr_str_from_time (val.time, tk); {make time string in TK}
       s_p := univ_ptr(addr(tk));       {point to string to return}
       goto ret_string;                 {return as text string}
       end;
@@ -452,7 +452,7 @@ dtype_time_k: begin                    {TIME}
 otherwise
     writeln ('Internal screwup in program ESCR:  Data type ID of', ord(val.dtype));
     writeln ('encountered in subroutine VAL_TEXT.');
-    err_atline ('', '', nil, 0);
+    escr_err_atline ('', '', nil, 0);
     end;
   end;
 {
@@ -500,7 +500,7 @@ dtype_time_k: begin
 otherwise
     writeln ('Internal screwup in program ESCR:  Data type ID of', ord(dtype));
     writeln ('encountered in subroutine VAL_SIZE.');
-    err_atline ('', '', nil, 0);
+    escr_err_atline ('', '', nil, 0);
     end;
   end;
 {
@@ -512,7 +512,7 @@ otherwise
 *   be the full VAL_T structure as defined in the include file.  It must not
 *   be a short version as used in some cases, such as for symbol values.
 }
-procedure val_init (                   {initialize full VAL_T descriptor to data type}
+procedure escr_val_init (              {initialize full VAL_T descriptor to data type}
   in      dtype: dtype_k_t;            {data type to set up VAL for}
   out     val: val_t);                 {full value descriptor to initialize}
   val_param;

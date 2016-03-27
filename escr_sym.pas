@@ -2,12 +2,12 @@
 }
 module escr_sym;
 define sym_name;
-define sym_new;
-define sym_new_const;
-define sym_new_var;
-define sym_find;
-define sym_del;
-define sym_del_name;
+define escr_sym_new;
+define escr_sym_new_const;
+define escr_sym_new_var;
+define escr_sym_find;
+define escr_sym_del;
+define escr_sym_del_name;
 %include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 {
 ********************************************************************************
@@ -64,7 +64,7 @@ begin
 *   The program will bomb with error if the maximum allowed versions of the
 *   symbol already exist.
 }
-procedure sym_new (                    {create new symbol}
+procedure escr_sym_new (               {create new symbol}
   in      name: univ string_var_arg_t; {symbol name}
   in      sz: sys_int_adr_t;           {size of the whole symbol descriptor}
   in      global: boolean;             {create global, not local symbol}
@@ -101,7 +101,7 @@ begin
       vern := prev_p^.vern + 1;        {make version number of this new symbol}
       if vern > max_symvers_k then begin {already at maximum allowed version ?}
         sys_msg_parm_vstr (msg_parm[1], name);
-        err_atline ('pic', 'sym_maxvers', msg_parm, 1); {max versions exceeded error}
+        escr_err_atline ('pic', 'sym_maxvers', msg_parm, 1); {max versions exceeded error}
         return;
         end;
       end
@@ -165,7 +165,7 @@ local:                                 {create symbol as local}
 *   when GLOBAL is FALSE.  SYM_P is the returned pointer to the new symbol.  The
 *   data value will be initialized to its default value.
 }
-procedure sym_new_const (              {create new symbol for a constant}
+procedure escr_sym_new_const (         {create new symbol for a constant}
   in      name: univ string_var_arg_t; {symbol name}
   in      dtype: dtype_k_t;            {data type of the constant}
   in      len: sys_int_machine_t;      {extra length parameter used for some data types}
@@ -178,7 +178,7 @@ var
 
 begin
   sz := offset(sym_t.const_val) + val_size(dtype, len); {total symbol descriptor size}
-  sym_new (name, sz, global, sym_p);   {create the basic symbol}
+  escr_sym_new (name, sz, global, sym_p); {create the basic symbol}
   sym_p^.stype := sym_const_k;         {set symbol type}
   sym_p^.const_val.dtype := dtype;     {set data type of this constant}
   case dtype of                        {what is the data type ?}
@@ -200,7 +200,7 @@ dtype_time_k: begin                    {time}
       sym_p^.const_val.time := sys_clock;
       end;
 otherwise
-    err_dtype_unimp (dtype, 'SYM_NEW_CONST');
+    escr_err_dtype_unimp (dtype, 'SYM_NEW_CONST');
     end;
   end;
 {
@@ -215,7 +215,7 @@ otherwise
 *   when GLOBAL is FALSE.  SYM_P is the returned pointer to the new symbol.  The
 *   data value will be initialized to its default value.
 }
-procedure sym_new_var (                {create new symbol for a variable}
+procedure escr_sym_new_var (           {create new symbol for a variable}
   in      name: univ string_var_arg_t; {symbol name}
   in      dtype: dtype_k_t;            {data type of the variable}
   in      len: sys_int_machine_t;      {extra length parameter used for some data types}
@@ -228,7 +228,7 @@ var
 
 begin
   sz := offset(sym_t.var_val) + val_size(dtype, len); {total symbol descriptor size}
-  sym_new (name, sz, global, sym_p);   {create the basic symbol}
+  escr_sym_new (name, sz, global, sym_p); {create the basic symbol}
   sym_p^.stype := sym_var_k;           {set symbol type}
   sym_p^.var_val.dtype := dtype;       {set data type of this variable}
   case dtype of                        {what is the data type ?}
@@ -250,7 +250,7 @@ dtype_time_k: begin                    {time}
       sym_p^.var_val.time := sys_clock_from_fp_rel (0.0);
       end;
 otherwise
-    err_dtype_unimp (dtype, 'SYM_NEW_VAR');
+    escr_err_dtype_unimp (dtype, 'SYM_NEW_VAR');
     end;
   end;
 {
@@ -262,7 +262,7 @@ otherwise
 *   name exists, then SYM_P is returned pointing to the symbol descriptor.
 *   If the named symbol does not exist, then SYM_P is returned nil.
 }
-procedure sym_find (                   {look up symbol in symbol table}
+procedure escr_sym_find (              {look up symbol in symbol table}
   in      name: univ string_var_arg_t; {symbol name}
   out     sym_p: sym_p_t);             {returned pointer to symbol, NIL if not found}
   val_param;
@@ -294,7 +294,7 @@ begin
 *   Delete the symbol pointed to by SYM_P.  SYM_P is returned NIL.  All symbols
 *   of the same name stacked later than the indicated symbol are also deleted.
 }
-procedure sym_del (                    {delete specific symbol version}
+procedure escr_sym_del (               {delete specific symbol version}
   in out  sym_p: sym_p_t);             {pointer to symbol to delete, returned NIL}
   val_param;
 
@@ -318,7 +318,7 @@ begin
 
     while s_p <> sym_p do begin        {from latest version back to this one}
       s2_p := s_p^.prev_p;             {save pointer to next older version}
-      sym_del (s_p);                   {delete this newest version}
+      escr_sym_del (s_p);              {delete this newest version}
       s_p := s2_p;                     {go to the next older, now the newest}
       end;                             {back to do this new end of versions entry}
     end;
@@ -379,7 +379,7 @@ begin
 *
 *   Delete the most recently created version of the symbol of name NAME.
 }
-procedure sym_del_name (               {delete symbol by name}
+procedure escr_sym_del_name (          {delete symbol by name}
   in      name: univ string_var_arg_t); {symbol name}
   val_param;
 
@@ -403,11 +403,11 @@ begin
     found);                            {TRUE if name found in table}
   if not found then begin              {name not found ?}
     sys_msg_parm_vstr (msg_parm[1], name);
-    err_atline ('pic', 'sym_not_found_del', msg_parm, 1);
+    escr_err_atline ('pic', 'sym_not_found_del', msg_parm, 1);
     return;
     end;
 
   string_hash_ent_atpos (pos, name_p, sym_pp); {get info from symbol table entry}
   sym_p := sym_pp^;                    {get pointer to symbol descriptor}
-  sym_del (sym_p);                     {delete the symbol}
+  escr_sym_del (sym_p);                {delete the symbol}
   end;

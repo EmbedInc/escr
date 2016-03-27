@@ -2,15 +2,15 @@
 *   any of the other modules.
 }
 module escr_util;
-define write_vstr;
-define write_obuf;
-define show_obuf;
+define escr_write_vstr;
+define escr_write_obuf;
+define escr_show_obuf;
 define str_to_time;
-define str_from_time;
-define str_from_fp;
-define close_out;
-define close_out_all;
-define uptocomm;
+define escr_str_from_time;
+define escr_str_from_fp;
+define escr_close_out;
+define escr_close_out_all;
+define escr_uptocomm;
 %include 'escr.ins.pas';
 {
 ********************************************************************************
@@ -19,7 +19,7 @@ define uptocomm;
 *
 *   Write the string in S as the next line to the current output file.
 }
-procedure write_vstr (                 {write var string to current output file}
+procedure escr_write_vstr (            {write var string to current output file}
   in      s: univ string_var_arg_t;    {the string to write}
   out     stat: sys_err_t);            {completion status}
   val_param;
@@ -36,15 +36,15 @@ begin
 *   output file.  OBUF is reset to empty.  The program is aborted on
 *   any error.
 }
-procedure write_obuf;                  {write line to output file from OBUF}
+procedure escr_write_obuf;             {write line to output file from OBUF}
   val_param;
 
 var
   stat: sys_err_t;
 
 begin
-  write_vstr (e.obuf, stat);           {write OBUF as next output file line}
-  err_atline_abort (stat, '', '', nil, 0); {abort showing input line number on error}
+  escr_write_vstr (e.obuf, stat);      {write OBUF as next output file line}
+  escr_err_atline_abort (stat, '', '', nil, 0); {abort showing input line number on error}
   e.obuf.len := 0;                     {reset the output line buffer to empty}
   end;
 {
@@ -55,7 +55,7 @@ begin
 *   Write the contents of the global string OBUF as the next line to standard
 *   output.  OBUF is reset to empty.
 }
-procedure show_obuf;                   {write line to standard output from OBUF}
+procedure escr_show_obuf;              {write line to standard output from OBUF}
   val_param;
 
 begin
@@ -188,7 +188,7 @@ have_date:                             {DATE is all filled in}
 *
 *   Create the string representation into S of the absolute time in TIME.
 }
-procedure str_from_time (              {make string from absolute time descriptor}
+procedure escr_str_from_time (         {make string from absolute time descriptor}
   in      time: sys_clock_t;           {input absolute time descriptor}
   in out  s: univ string_var_arg_t);   {returned string representation of the time}
   val_param;
@@ -209,26 +209,26 @@ begin
     date);                             {returned expaneded date/time descriptor}
 
   sys_date_string (date, sys_dstr_year_k, 4, s, stat); {year}
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   string_append1 (s, '/');
   sys_date_string (date, sys_dstr_mon_k, 2, tk, stat); {month}
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   string_append (s, tk);
   string_append1 (s, '/');
   sys_date_string (date, sys_dstr_day_k, 2, tk, stat); {day}
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   string_append (s, tk);
   string_append1 (s, '.');
   sys_date_string (date, sys_dstr_hour_k, 2, tk, stat); {hour}
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   string_append (s, tk);
   string_append1 (s, ':');
   sys_date_string (date, sys_dstr_min_k, 2, tk, stat); {minute}
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   string_append (s, tk);
   string_append1 (s, ':');
   sys_date_string (date, sys_dstr_sec_frac_k, 9, tk, stat); {seconds}
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   string_append (s, tk);
   end;
 {
@@ -240,7 +240,7 @@ begin
 *   representation.  The result must always contain a decimal point or
 *   exponential notation to distinguish it from a integer string.
 }
-procedure str_from_fp (                {make string from floating point value}
+procedure escr_str_from_fp (           {make string from floating point value}
   in      fp: double;                  {floating point input value}
   in out  s: univ string_var_arg_t);   {returned string representation}
   val_param;
@@ -270,7 +270,7 @@ begin
 *   OUT_P will be NIL if the original output file is closed.  The closed file
 *   will be deleted when DEL is TRUE.
 }
-procedure close_out (                  {close the current output file, pop previous}
+procedure escr_close_out (             {close the current output file, pop previous}
   in      del: boolean);               {delete the file}
   val_param;
 
@@ -298,13 +298,13 @@ begin
 *   Close all the output files.  The files are deleted when DEL if TRUE.  OUT_P
 *   will be NIL when this routine returns.
 }
-procedure close_out_all (              {close all output files}
+procedure escr_close_out_all (         {close all output files}
   in      del: boolean);               {delete the file files}
   val_param;
 
 begin
   while e.out_p <> nil do begin        {loop until all output files closed}
-    close_out (del);                   {delete this output file, pop back to previous}
+    escr_close_out (del);              {delete this output file, pop back to previous}
     end;
   end;
 {
@@ -316,7 +316,7 @@ begin
 *   any blanks preceeding it removed.  The resulting line length is returned in
 *   NCLEN.
 }
-procedure uptocomm (                   {find line length without comment}
+procedure escr_uptocomm (              {find line length without comment}
   in      s: univ string_var_arg_t;    {the input string}
   out     nclen: string_index_t);      {string length with comment removed}
   val_param;

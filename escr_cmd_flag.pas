@@ -34,9 +34,9 @@ begin
   tk.max := size_char(tk.str);
 
   if not get_token (name)              {get NAME parameter}
-    then err_parm_missing ('', '', nil, 0);
+    then escr_err_parm_missing ('', '', nil, 0);
 
-  get_end;                             {no more parameters allowed}
+  escr_get_end;                        {no more parameters allowed}
 {
 *   Determine the GFLn variable number and the bit number within the variable
 *   for this flag.  GFLN will be set to the 0-N global flag word number
@@ -56,10 +56,10 @@ begin
 *   total number of flags created.
 }
   string_vstring (syname, 'Flagdata_nflags'(0), -1); {make name of this symbol}
-  sym_find (syname, sym_p);            {get pointer to symbol if already exists}
+  escr_sym_find (syname, sym_p);       {get pointer to symbol if already exists}
 
   if sym_p = nil then begin            {doesn't already exist, need to create ?}
-    sym_new_const (                    {create the new symbol}
+    escr_sym_new_const (               {create the new symbol}
       syname,                          {name of symbol to create}
       dtype_int_k,                     {value will be integer}
       0,                               {length, not used with integer type}
@@ -73,10 +73,10 @@ begin
 *   total number of flag words used.
 }
   string_vstring (syname, 'Flagdata_nwords'(0), -1); {make name of this symbol}
-  sym_find (syname, sym_p);            {get pointer to symbol if already exists}
+  escr_sym_find (syname, sym_p);       {get pointer to symbol if already exists}
 
   if sym_p = nil then begin            {doesn't already exist, need to create ?}
-    sym_new_const (                    {create the new symbol}
+    escr_sym_new_const (               {create the new symbol}
       syname,                          {name of symbol to create}
       dtype_int_k,                     {value will be integer}
       0,                               {length, not used with integer type}
@@ -99,7 +99,7 @@ begin
   string_append_token (tk, gflnstr);   {add GLFn number}
   string_append_token (tk, bitstr);    {add bit number within GFLn word}
 
-  sym_new_const (                      {create the string constant}
+  escr_sym_new_const (                 {create the string constant}
     syname,                            {name of constant to create}
     dtype_str_k,                       {value will be a string}
     tk.len,                            {string length}
@@ -125,7 +125,7 @@ lang_aspic_k: begin
     string_vstring (e.obuf, 'nflagb set '(0), -1);
     string_f_int (tk, flag_byten);
     string_append (e.obuf, tk);
-    write_obuf;
+    escr_write_obuf;
     end;
 {
 *   flag_<name>_regn equ <gfl n>
@@ -134,7 +134,7 @@ lang_aspic_k: begin
   string_append (e.obuf, name);
   string_appends (e.obuf, '_regn equ '(0));
   string_append (e.obuf, gflnstr);
-  write_obuf;
+  escr_write_obuf;
 {
 *   #define flag_<name>_reg gflx
 }
@@ -142,7 +142,7 @@ lang_aspic_k: begin
   string_append (e.obuf, name);
   string_appends (e.obuf, '_reg gfl'(0));
   string_append (e.obuf, gflnstr);
-  write_obuf;
+  escr_write_obuf;
 {
 *   flag_<name>_bit equ <n>
 }
@@ -150,7 +150,7 @@ lang_aspic_k: begin
   string_append (e.obuf, name);
   string_appends (e.obuf, '_bit equ '(0));
   string_append (e.obuf, bitstr);
-  write_obuf;
+  escr_write_obuf;
 {
 *   #define flag_<name> gfl<n>,<bit>
 }
@@ -160,7 +160,7 @@ lang_aspic_k: begin
   string_append (e.obuf, gflnstr);
   string_append1 (e.obuf, ',');
   string_append (e.obuf, bitstr);
-  write_obuf;
+  escr_write_obuf;
 {
 *   Update the flags state for next time.
 }
@@ -183,7 +183,7 @@ lang_dspic_k: begin
     string_appends (e.obuf, '.set nflagb, '(0));
     string_f_int (tk, flag_byten);
     string_append (e.obuf, tk);
-    write_obuf;
+    escr_write_obuf;
     end;
 {
 *   .equ flag_<name>_regn, <gfl n>
@@ -192,7 +192,7 @@ lang_dspic_k: begin
   string_append (e.obuf, name);
   string_appends (e.obuf, '_regn, '(0));
   string_append (e.obuf, gflnstr);
-  write_obuf;
+  escr_write_obuf;
 {
 *   .equ flag_<name>_reg, <gflx>
 }
@@ -200,7 +200,7 @@ lang_dspic_k: begin
   string_append (e.obuf, name);
   string_appends (e.obuf, '_reg, gfl'(0));
   string_append (e.obuf, gflnstr);
-  write_obuf;
+  escr_write_obuf;
 {
 *   .equ flag_<name>_bit, <n>
 }
@@ -208,7 +208,7 @@ lang_dspic_k: begin
   string_append (e.obuf, name);
   string_appends (e.obuf, '_bit, '(0));
   string_append (e.obuf, bitstr);
-  write_obuf;
+  escr_write_obuf;
 
 
 (*
@@ -221,7 +221,7 @@ lang_dspic_k: begin
   string_append (e.obuf, gflnstr);
   string_append1 (e.obuf, ',');
   string_append (e.obuf, bitstr);
-  write_obuf;
+  escr_write_obuf;
 *)
 
 {

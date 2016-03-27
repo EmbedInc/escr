@@ -57,7 +57,7 @@ begin
   c := fstr.str[p];                    {save the first token character}
   string_token (fstr, p, tk, stat);    {get the token contents}
   if string_eos(stat) then return;     {nothing there ?}
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   term_get := true;                    {indicate returning with a value}
 {
 *   Check for token is text string.
@@ -110,22 +110,22 @@ begin
 *   Check for symbol reference.
 }
   if not sym_name(tk) then goto not_sym; {token is not a valid symbol name}
-  sym_find (tk, sym_p);                {lookup name in symbol table}
+  escr_sym_find (tk, sym_p);           {lookup name in symbol table}
   if sym_p = nil then goto not_sym;    {no such symbol ?}
   case sym_p^.stype of                 {what kind of symbol is it ?}
 sym_var_k: begin                       {symbol is a variable}
-      val_init (sym_p^.var_val.dtype, val); {set up VAL for this data type}
-      val_copy (sym_p^.var_val, val);  {return the variable's value}
+      escr_val_init (sym_p^.var_val.dtype, val); {set up VAL for this data type}
+      escr_val_copy (sym_p^.var_val, val); {return the variable's value}
       return;
       end;
 sym_const_k: begin                     {symbol is a constant}
-      val_init (sym_p^.const_val.dtype, val); {set up VAL for this data type}
-      val_copy (sym_p^.const_val, val); {return the constant's value}
+      escr_val_init (sym_p^.const_val.dtype, val); {set up VAL for this data type}
+      escr_val_copy (sym_p^.const_val, val); {return the constant's value}
       return;
       end;
 otherwise                              {this symbol can't be used as a term}
     sys_msg_parm_vstr (msg_parm[1], tk);
-    err_atline ('pic', 'sym_nval', msg_parm, 1);
+    escr_err_atline ('pic', 'sym_nval', msg_parm, 1);
     return;
     end;
 not_sym:                               {skip to here on not a symbol reference}
@@ -133,6 +133,6 @@ not_sym:                               {skip to here on not a symbol reference}
 *   The token is not a recognizable term.
 }
   sys_msg_parm_vstr (msg_parm[1], tk);
-  err_atline ('pic', 'term_bad', msg_parm, 1); {bomb with error message}
+  escr_err_atline ('pic', 'term_bad', msg_parm, 1); {bomb with error message}
   return;                              {keep compiler from complaining}
   end;

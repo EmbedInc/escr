@@ -16,11 +16,11 @@ procedure escr_cmd_block (
   val_param;
 
 begin
-  exblock_new;                         {create new execution block state}
+  escr_exblock_new;                    {create new execution block state}
   e.exblock_p^.start_p :=              {save pointer to starting line of this block}
     e.exblock_p^.prev_p^.inpos_p^.last_p;
   e.exblock_p^.bltype := exblock_blk_k; {indicate BLOCK ... ENBLOCK type}
-  exblock_inline_set (                 {set next source line to execute}
+  escr_exblock_inline_set (            {set next source line to execute}
     e.exblock_p^.prev_p^.inpos_p^.line_p);
   end;
 {
@@ -36,7 +36,7 @@ begin
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
 
   if not loop_iter then begin          {loop terminated ?}
-    exblock_quit;                      {leave block without executing anything}
+    escr_exblock_quit;                 {leave block without executing anything}
     end;
   end;
 {
@@ -50,7 +50,7 @@ procedure escr_cmd_quit (
 
 begin
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
-  exblock_quit;
+  escr_exblock_quit;
   end;
 {
 ********************************************************************************
@@ -63,16 +63,16 @@ procedure escr_cmd_endblock (
 
 begin
   if e.exblock_p^.prev_p = nil then begin {in root execution block}
-    err_atline ('pic', 'err_endblock_root', nil, 0);
+    escr_err_atline ('pic', 'err_endblock_root', nil, 0);
     end;
   if e.exblock_p^.bltype <> exblock_blk_k then begin {not in BLOCK ... ENDBLOCK block type ?}
-    err_atline ('pic', 'err_endblock_type', nil, 0);
+    escr_err_atline ('pic', 'err_endblock_type', nil, 0);
     end;
   if e.exblock_p^.inpos_p^.prev_p <> nil then begin {block ended in include file ?}
-    err_atline ('pic', 'err_endblock_include', nil, 0);
+    escr_err_atline ('pic', 'err_endblock_include', nil, 0);
     end;
 
   e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}
     e.exblock_p^.inpos_p^.line_p;
-  exblock_close;                       {end this BLOCK ... ENDBLOCK execution block}
+  escr_exblock_close;                  {end this BLOCK ... ENDBLOCK execution block}
   end;

@@ -105,7 +105,7 @@ lang_aspic_k: begin                    {all the case-insensitive languages}
     0,                                 {no fixed field width, use what it takes}
     [string_fi_unsig_k],               {the input number is unsigned}
     stat);
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   e.labeln := e.labeln + 1;            {update unique number of next time}
 
   jj := 3 - tk.len;                    {number of leading zeros to add}

@@ -4,8 +4,8 @@ module escr_get;
 define get_token;
 define get_tkraw;
 define get_tkrawc;
-define get_end;
-define get_keyword;
+define escr_get_end;
+define escr_get_keyword;
 define get_dtype;
 define get_val;
 define get_val_dtype;
@@ -14,7 +14,7 @@ define get_int;
 define get_time;
 define get_fp;
 define get_str;
-define get_args_str;
+define escr_get_args_str;
 %include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 {
 ****************************************************************************
@@ -46,7 +46,7 @@ begin
     end;
 
   sys_error_print (stat, '', '', nil, 0); {abort with error}
-  err_atline ('', '', nil, 0);
+  escr_err_atline ('', '', nil, 0);
   return;                              {keep compiler from complaining}
   end;
 {
@@ -180,7 +180,7 @@ otherwise                              {all other characters}
 *   Abort with error indicating the current input line if the input line
 *   was not exhausted.
 }
-procedure get_end;                     {make sure no more tokens left on input line}
+procedure escr_get_end;                {make sure no more tokens left on input line}
   val_param;
 
 const
@@ -198,7 +198,7 @@ begin
 
   sys_msg_parm_vstr (msg_parm[1], e.cmd);
   sys_msg_parm_vstr (msg_parm[2], tk);
-  err_atline ('pic', 'parm_extra', msg_parm, 2);
+  escr_err_atline ('pic', 'parm_extra', msg_parm, 2);
   end;
 {
 ****************************************************************************
@@ -213,7 +213,7 @@ begin
 *
 *   The keywords in KLIST must be upper case and separated by blanks.
 }
-procedure get_keyword (                {get one of list of keywords from input stream}
+procedure escr_get_keyword (           {get one of list of keywords from input stream}
   in      klist: string;               {keywords, upper case separated by blanks}
   out     pick: sys_int_machine_t);    {1-N keyword number, 0 = no token available}
   val_param;
@@ -232,7 +232,7 @@ begin
   string_upcase (tk);                  {make upper case for keyword matching}
   string_tkpick80 (tk, klist, pick);   {pick the token from the list}
   if pick <= 0 then begin              {token didn't match any keyword ?}
-    err_parm_bad (tk);                 {abort with bad parameter to this command}
+    escr_err_parm_bad (tk);            {abort with bad parameter to this command}
     end;
   end;
 {
@@ -255,7 +255,7 @@ var
 
 begin
   get_dtype := false;                  {init to no token available}
-  get_keyword ('BOOL INTEGER REAL STRING TIME', pick); {get the selected keyword}
+  escr_get_keyword ('BOOL INTEGER REAL STRING TIME', pick); {get the selected keyword}
   case pick of
 0:  return;
 1:  dtype := dtype_bool_k;
@@ -266,7 +266,7 @@ begin
 otherwise
     writeln ('Internal screwup in program ESCR.  Unexpected PICK value');
     writeln ('in GET_DTYPE.');
-    err_atline ('', '', nil, 0);
+    escr_err_atline ('', '', nil, 0);
     end;
   get_dtype := true;                   {indicate returning with a data type}
   end;
@@ -310,7 +310,7 @@ begin
   get_val_dtype := false;              {init to no term available}
   if not get_val (v) then return;      {get the term in its native format}
   get_val_dtype := true;               {indicate term was available}
-  val_copy (v, val);                   {copy and convert term to returned value}
+  escr_val_copy (v, val);              {copy and convert term to returned value}
   end;
 {
 ****************************************************************************
@@ -435,7 +435,7 @@ begin
   get_str := false;                    {init to no term available}
   if not get_val (val) then return;    {no input term ?}
   get_str := true;
-  val_str (val, str);                  {pass back string value}
+  escr_val_str (val, str);             {pass back string value}
   end;
 {
 ****************************************************************************
@@ -445,7 +445,7 @@ begin
 *   Get the concatenation of the string represenation of all remaining arguments.
 *   The input line is guaranteed to be exhausted after this call.
 }
-procedure get_args_str (               {get string representation of remaining parameters}
+procedure escr_get_args_str (          {get string representation of remaining parameters}
   in out  str: univ string_var_arg_t); {concatenation of remaining args converted to strings}
   val_param;
 

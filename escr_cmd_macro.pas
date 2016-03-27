@@ -29,19 +29,19 @@ var
 begin
   name.max := size_char(name.str);     {init local var string}
 
-  inh_new;                             {create new execution inhibit layer}
+  escr_inh_new;                        {create new execution inhibit layer}
   e.inhibit_p^.inhty := inhty_blkdef_k; {inhibit it due to reading block definition}
   e.inhibit_p^.blkdef_type := exblock_mac_k; {block type is macro}
   if e.inhibit_p^.inh then return;     {previously inhibited, don't define macro}
   e.inhibit_p^.inh := true;            {inhibit execution during macro definition}
 
   if not get_token (name)              {get macro name}
-    then err_parm_missing ('', '', nil, 0);
-  err_check_symname (name);            {check for valid symbol name}
+    then escr_err_parm_missing ('', '', nil, 0);
+  escr_err_check_symname (name);       {check for valid symbol name}
 
   sz :=                                {make size of whole macro symbol}
     offset(sym_t.macro_line_p) + size_min(sym_t.macro_line_p);
-  sym_new (name, sz, false, sym_p);    {create new symbol for macro name}
+  escr_sym_new (name, sz, false, sym_p); {create new symbol for macro name}
   sym_p^.stype := sym_macro_k;         {this symbol is a macro name}
   sym_p^.macro_line_p :=               {save pointer to macro definition line}
     e.exblock_p^.inpos_p^.last_p;
@@ -69,10 +69,10 @@ begin
       (e.inhibit_p^.inhty <> inhty_blkdef_k) or {not in a block definition ?}
       (e.inhibit_p^.blkdef_type <> exblock_mac_k) {block is not a macro ?}
       then begin
-    err_atline ('pic', 'not_in_macdef', nil, 0);
+    escr_err_atline ('pic', 'not_in_macdef', nil, 0);
     end;
 
-  inh_end;                             {end excution inhibit due to macro def}
+  escr_inh_end;                        {end excution inhibit due to macro def}
   end;
 {
 ********************************************************************************
@@ -92,12 +92,12 @@ begin
 
   while e.exblock_p^.bltype <> exblock_mac_k do begin {up thru blocks until first macro}
     if e.exblock_p^.prev_p = nil then begin {at top execution block ?}
-      err_atline ('pic', 'not_in_macro', nil, 0); {complain not in a macro}
+      escr_err_atline ('pic', 'not_in_macro', nil, 0); {complain not in a macro}
       end;
-    exblock_close;                     {end this execution block, make previous current}
+    escr_exblock_close;                {end this execution block, make previous current}
     end;                               {back to check this new execution block}
 
-  exblock_close;                       {end the macro execution block}
+  escr_exblock_close;                  {end the macro execution block}
   end;
 {
 ********************************************************************************
@@ -136,7 +136,7 @@ begin
   tk.max := size_char(tk.str);
 
   oldlen := e.ibuf.len;                {save original length of the input line}
-  uptocomm (e.ibuf, nclen);            {get length of line with comment stripped}
+  escr_uptocomm (e.ibuf, nclen);       {get length of line with comment stripped}
   e.ibuf.len := nclen;                 {strip off comment from input line}
   if e.ibuf.len < 2 then goto nomac;   {macro invocation requires at least 2 chars}
 
@@ -146,7 +146,7 @@ begin
     if not get_token(label) then goto nomac; {get the label name into LABEL}
     end;
   if not get_token(name) then goto nomac; {get the opcode name into NAME}
-  sym_find (name, sym_p);              {get symbol from macro name}
+  escr_sym_find (name, sym_p);         {get symbol from macro name}
   if sym_p = nil then goto nomac;      {no such symbol ?}
   if sym_p^.stype <> sym_macro_k then goto nomac; {not a macro ?}
 {
@@ -154,22 +154,22 @@ begin
 *   symbol, LABEL contains the name of any label on this line, and NAME is the
 *   macro name as it appeared on the invocation line.
 }
-  exblock_new;                         {create new execution block}
+  escr_exblock_new;                    {create new execution block}
   e.exblock_p^.sym_p := sym_p;         {set pointer to symbol for this block}
   e.exblock_p^.bltype := exblock_mac_k; {new block is a macro}
   e.exblock_p^.args := true;           {this block can take arguments}
-  exblock_loclab_init;                 {create table for local labels}
+  escr_exblock_loclab_init;            {create table for local labels}
 
   if label.len > 0 then begin          {label exists on this line ?}
-    exblock_arg_addn (label, -1);      {label name is special argument -1}
+    escr_exblock_arg_addn (label, -1); {label name is special argument -1}
     end;
-  exblock_arg_addn (name, 0);          {macro name is special argument 0}
+  escr_exblock_arg_addn (name, 0);     {macro name is special argument 0}
 
   while true do begin                  {loop until argument list exhausted}
     if not get_tkrawc (tk) then exit;  {get next argument}
-    exblock_arg_add (tk);              {add as next argument to new execution block}
+    escr_exblock_arg_add (tk);         {add as next argument to new execution block}
     end;
-  exblock_inline_set (sym_p^.macro_line_p); {go to macro definition line}
+  escr_exblock_inline_set (sym_p^.macro_line_p); {go to macro definition line}
   discard( infile_getline (str_p) );   {advance past macro definition line}
   macro_run := true;                   {indicate macro invocation processed}
   return;

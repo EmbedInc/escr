@@ -40,13 +40,13 @@ var
   cond: boolean;                       {the IF condition value}
 
 begin
-  inh_new;                             {create new execution inhibit layer}
+  escr_inh_new;                        {create new execution inhibit layer}
   e.inhibit_p^.inhty := inhty_if_k;    {this inhibit is for IF command}
   if e.inhibit_p^.inh then return;     {already inhibited, just track IF nesting ?}
   e.inhibit_p^.if_flags := [];         {init all IF control flags to off}
 
   if not get_bool (cond) then begin    {get the value of the conditional}
-    err_parm_missing ('', '', nil, 0);
+    escr_err_parm_missing ('', '', nil, 0);
     end;
   if cond then begin                   {the IF condition is TRUE}
     e.inhibit_p^.if_flags := e.inhibit_p^.if_flags + [ifflag_true_k]; {set flag accordingly}
@@ -55,13 +55,13 @@ begin
 
   e.inhibit_p^.inh := false;           {init execution enabled following IF}
 
-  get_keyword ('THEN', pick);          {read THEN keyword if present}
+  escr_get_keyword ('THEN', pick);     {read THEN keyword if present}
   if pick = 1 then begin               {THEN keyword used ?}
     e.inhibit_p^.inh := not cond;      {enable execution only if condition was true}
     e.inhibit_p^.if_flags :=           {THEN and command not allowed}
       e.inhibit_p^.if_flags + [ifflag_nothen_k];
     end;
-  get_end;                             {error if anything else on command line}
+  escr_get_end;                        {error if anything else on command line}
   end;
 {
 ********************************************************************************
@@ -74,13 +74,13 @@ procedure escr_cmd_then (
 
 begin
   if e.inhibit_p^.inhty <> inhty_if_k then begin {not in IF structure ?}
-    err_atline ('pic', 'not_in_if', nil, 0);
+    escr_err_atline ('pic', 'not_in_if', nil, 0);
     end;
-  get_end;                             {error if anything else on command line}
+  escr_get_end;                        {error if anything else on command line}
   if e.inhibit_p^.prev_p^.inh then return; {whole IF inhibited, just tracking nesting ?}
 
   if ifflag_nothen_k in e.inhibit_p^.if_flags then begin {THEN not allowed here ?}
-    err_atline ('pic', 'ill_then', nil, 0);
+    escr_err_atline ('pic', 'ill_then', nil, 0);
     end;
   e.inhibit_p^.if_flags :=             {no subsequent THEN command allowed this IF}
     e.inhibit_p^.if_flags + [ifflag_nothen_k];
@@ -99,13 +99,13 @@ procedure escr_cmd_else (
 
 begin
   if e.inhibit_p^.inhty <> inhty_if_k then begin {not in IF structure ?}
-    err_atline ('pic', 'not_in_if', nil, 0);
+    escr_err_atline ('pic', 'not_in_if', nil, 0);
     end;
-  get_end;                             {error if anything else on command line}
+  escr_get_end;                        {error if anything else on command line}
   if e.inhibit_p^.prev_p^.inh then return; {whole IF inhibited, just tracking nesting ?}
 
   if ifflag_noelse_k in e.inhibit_p^.if_flags then begin {ELSE not allowed here ?}
-    err_atline ('pic', 'ill_else', nil, 0);
+    escr_err_atline ('pic', 'ill_else', nil, 0);
     end;
   e.inhibit_p^.if_flags :=             {no subsequent THEN or ELSE command allowed this IF}
     e.inhibit_p^.if_flags + [ifflag_nothen_k, ifflag_noelse_k];
@@ -124,7 +124,7 @@ procedure escr_cmd_endif (
 
 begin
   if e.inhibit_p^.inhty <> inhty_if_k then begin {not in IF structure ?}
-    err_atline ('pic', 'not_in_if', nil, 0);
+    escr_err_atline ('pic', 'not_in_if', nil, 0);
     end;
 
   if                                   {neither THEN nor ELSE encountered ?}
@@ -132,9 +132,9 @@ begin
       (not (ifflag_nothen_k in e.inhibit_p^.if_flags)) and {no THEN ?}
       (not (ifflag_noelse_k in e.inhibit_p^.if_flags)) {no ELSE ?}
       then begin
-    err_atline ('pic', 'err_if_nothenelse', nil, 0);
+    escr_err_atline ('pic', 'err_if_nothenelse', nil, 0);
     end;
 
-  inh_end;                             {remove the execution inhibit for the IF structure}
-  get_end;                             {error if anything else on command line}
+  escr_inh_end;                        {remove the execution inhibit for the IF structure}
+  escr_get_end;                        {error if anything else on command line}
   end;

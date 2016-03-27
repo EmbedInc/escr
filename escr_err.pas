@@ -1,16 +1,16 @@
 {   Error handling.
 }
 module escr_err;
-define err_atline;
-define err_atline_abort;
-define err_val;
+define escr_err_atline;
+define escr_err_atline_abort;
+define escr_err_val;
 define err_lang;
-define err_parm_bad;
-define err_parm_last_bad;
-define err_parm_missing;
-define err_dtype_unimp;
-define err_check_symname;
-define err_sym_not_found;
+define escr_err_parm_bad;
+define escr_err_parm_last_bad;
+define escr_err_parm_missing;
+define escr_err_dtype_unimp;
+define escr_err_check_symname;
+define escr_err_sym_not_found;
 %include 'escr.ins.pas';
 {
 ****************************************************************************
@@ -21,7 +21,7 @@ define err_sym_not_found;
 *   the current source file name and line number, then exit the program with
 *   error status.
 }
-procedure err_atline (                 {show error followed by source line number}
+procedure escr_err_atline (            {show error followed by source line number}
   in      subsys: string;              {name of subsystem, used to find message file}
   in      msg: string;                 {message name withing subsystem file}
   in      parms: univ sys_parm_msg_ar_t; {array of parameter descriptors}
@@ -39,7 +39,7 @@ var
   line_p: inline_p_t;                  {pointer to definition of one input stream line}
 
 begin
-  close_out_all (true);                {close and delete all output files}
+  escr_close_out_all (true);           {close and delete all output files}
 
   sys_message_parms (subsys, msg, parms, n_parms); {write caller's message}
 
@@ -78,7 +78,7 @@ begin
 *   current source line, then bomb the program.  Nothing is done if
 *   STAT is not indicating an error.
 }
-procedure err_atline_abort (           {bomb with msg and source line on error}
+procedure escr_err_atline_abort (      {bomb with msg and source line on error}
   in      stat: sys_err_t;             {error code, nothing done if no error}
   in      subsys: string;              {subsystem name of caller's message}
   in      msg: string;                 {name of caller's message within subsystem}
@@ -90,7 +90,7 @@ begin
   if not sys_error(stat) then return;  {STAT is not indicating an error ?}
 
   sys_error_print (stat, subsys, msg, parms, n_parms); {write caller's error msg}
-  err_atline ('', '', nil, 0);         {indicate source line and bomb}
+  escr_err_atline ('', '', nil, 0);    {indicate source line and bomb}
   end;
 {
 ****************************************************************************
@@ -99,7 +99,7 @@ begin
 *
 *   Show the data type and value of VAL.
 }
-procedure err_val (                    {show value and data type of offending value}
+procedure escr_err_val (               {show value and data type of offending value}
   in      val: val_t);                 {the value}
   val_param;
 
@@ -159,7 +159,7 @@ begin
   sys_msg_parm_int (msg_parm[1], ord(lang));
   sys_msg_parm_str (msg_parm[2], module);
   sys_msg_parm_int (msg_parm[3], checkpoint);
-  err_atline ('pic', 'err_lang', msg_parm, 3);
+  escr_err_atline ('pic', 'err_lang', msg_parm, 3);
   end;
 {
 ****************************************************************************
@@ -169,7 +169,7 @@ begin
 *   Bomb program with error message about the bad parameter PARM to the
 *   current command.  The source file and line number will be shown.
 }
-procedure err_parm_bad (               {bomb with bad parameter to command error}
+procedure escr_err_parm_bad (          {bomb with bad parameter to command error}
   in      parm: univ string_var_arg_t); {the offending parameter}
   options (val_param, noreturn);
 
@@ -183,7 +183,7 @@ var
 begin
   sys_msg_parm_vstr (msg_parm[1], parm);
   sys_msg_parm_vstr (msg_parm[2], e.cmd);
-  err_atline ('pic', 'parm_bad_cmd', msg_parm, 2);
+  escr_err_atline ('pic', 'parm_bad_cmd', msg_parm, 2);
   end;
 {
 ****************************************************************************
@@ -193,18 +193,18 @@ begin
 *   Like ERR_PARM_BAD except that it automatically works on the last
 *   parameter parsed from the input line.
 }
-procedure err_parm_last_bad;           {last parameter parsed was bad}
+procedure escr_err_parm_last_bad;      {last parameter parsed was bad}
   options (val_param, noreturn);
 
 begin
-  err_parm_bad (e.lparm);
+  escr_err_parm_bad (e.lparm);
   end;
 {
 ****************************************************************************
 *
 *   Subroutine ERR_PARM_MISSING (SUBSYS, MSG, PARMS, N_PARMS)
 }
-procedure err_parm_missing (           {a required command parameter not found}
+procedure escr_err_parm_missing (      {a required command parameter not found}
   in      subsys: string;              {name of subsystem, used to find message file}
   in      msg: string;                 {message name withing subsystem file}
   in      parms: univ sys_parm_msg_ar_t; {array of parameter descriptors}
@@ -221,7 +221,7 @@ var
 begin
   sys_msg_parm_vstr (msg_parm[1], e.cmd);
   sys_message_parms ('pic', 'parm_missing', msg_parm, 1);
-  err_atline (subsys, msg, parms, n_parms);
+  escr_err_atline (subsys, msg, parms, n_parms);
   end;
 {
 ****************************************************************************
@@ -231,7 +231,7 @@ begin
 *   Indicate an internal error has occurred where data type DTYPE is not supported
 *   in routine ROUTINE.  The program will be aborted with error.
 }
-procedure err_dtype_unimp (            {unimplemented data type internal error}
+procedure escr_err_dtype_unimp (       {unimplemented data type internal error}
   in      dtype: dtype_k_t;            {unimplemented data type}
   in      routine: string);            {name of the routine where data type unimplemented}
   options (val_param, noreturn);
@@ -246,7 +246,7 @@ var
 begin
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], routine);
-  err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
+  escr_err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
   end;
 {
 ****************************************************************************
@@ -256,7 +256,7 @@ begin
 *   Check NAME for containing a valid symbol name.  The subroutine returns
 *   normally if it is, and aborts the program with error status if it is not.
 }
-procedure err_check_symname (          {abort with error on invalid symbol name}
+procedure escr_err_check_symname (     {abort with error on invalid symbol name}
   in      name: univ string_var_arg_t); {symbol name to check}
   val_param;
 
@@ -271,7 +271,7 @@ begin
   if sym_name (name) then return;      {symbol name is valid ?}
 
   sys_msg_parm_vstr (msg_parm[1], name);
-  err_atline ('pic', 'sym_name_bad', msg_parm, 1);
+  escr_err_atline ('pic', 'sym_name_bad', msg_parm, 1);
   end;
 {
 ********************************************************************************
@@ -280,7 +280,7 @@ begin
 *
 *   No symbol of the indicated name was found.
 }
-procedure err_sym_not_found (          {symbol not found}
+procedure escr_err_sym_not_found (     {symbol not found}
   in      name: univ string_var_arg_t); {symbol name that was not found}
   options (val_param, noreturn);
 
@@ -293,5 +293,5 @@ var
 
 begin
   sys_msg_parm_vstr (msg_parm[1], name);
-  err_atline ('pic', 'sym_not_found', msg_parm, 1);
+  escr_err_atline ('pic', 'sym_not_found', msg_parm, 1);
   end;

@@ -3,8 +3,8 @@
 *   nested expansions is done in the INLINE module.
 }
 module escr_func;
-define inline_func_init;
-define inline_func;
+define escr_inline_func_init;
+define escr_inline_func;
 %include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 
 const
@@ -26,7 +26,7 @@ var
 *   Initialize for processing inline functions.  This routine must be called
 *   once before the other routines in this module.
 }
-procedure inline_func_init;            {one-time init for processing inline funcs}
+procedure escr_inline_func_init;       {one-time init for processing inline funcs}
   val_param;
 
 begin
@@ -110,7 +110,7 @@ begin
 *   resulting expansion, if any, is appended to LOT.  FSTR contains exactly
 *   the function body.  This is the part just inside the "[" and "]".
 }
-procedure inline_func (                {perform inline function operation}
+procedure escr_inline_func (           {perform inline function operation}
   in      fstr: univ string_var_arg_t; {function source string, brackets removed}
   in out  lot: string_var8192_t);      {string to append function expansion to}
   val_param;
@@ -278,7 +278,7 @@ begin
   gstr := false;                       {init to no argument available}
   if not gval (val) then return;       {no argument ?}
   gstr := true;
-  val_str (val, str);                  {pass back argument value}
+  escr_val_str (val, str);             {pass back argument value}
   end;
 {
 ****************************************
@@ -303,7 +303,7 @@ begin
     gkeyw := false;
     end;
   string_upcase (str);                 {return keyword in upper case}
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   end;
 {
 ****************************************
@@ -401,7 +401,7 @@ begin
       s1_p := addr(v1.str);
       end
     else begin                         {V1 is not string}
-      val_str (v1, s1);
+      escr_val_str (v1, s1);
       s1_p := addr(s1);
       end
     ;
@@ -411,7 +411,7 @@ begin
       s2_p := addr(v2.str);
       end
     else begin                         {V2 is not string}
-      val_str (v2, s2);
+      escr_val_str (v2, s2);
       s2_p := addr(s2);
       end
     ;
@@ -438,9 +438,9 @@ begin
   string_token (fstr, p, funn, stat);  {get function name}
   string_unpad (funn);                 {delete trailing spaces from function name}
   if string_eos(stat) or else (funn.len <= 0) then begin {function name is missing ?}
-    err_atline ('pic', 'func_name_missing', nil, 0);
+    escr_err_atline ('pic', 'func_name_missing', nil, 0);
     end;
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   string_upcase (funn);                {make upper case for keyword matching}
 {
 *   The upper case function name is in FUNN and it is guaranteed to be at
@@ -561,7 +561,7 @@ ret_str:                               {common code to return string in TK}
   r := 1.0 - 0.5 ** (1.0 / (a1 * a2)); {make the filter fraction}
 
 ret_r:                                 {common code to return FP value in R}
-  str_from_fp (r, tk);                 {make floating point string in TK}
+  escr_str_from_fp (r, tk);            {make floating point string in TK}
   string_append (lot, tk);             {append floating point string to the output}
   end;
 {
@@ -690,7 +690,7 @@ dtype_int_k: begin                     {INTEGER + TIME}
             end;
 dtype_fp_k: ;                          {REAL + TIME}
 dtype_time_k: begin                    {TIME + TIME}
-            err_atline ('pic', 'time_time', nil, 0);
+            escr_err_atline ('pic', 'time_time', nil, 0);
             end;
 otherwise
           goto arg_not_num_time;
@@ -711,7 +711,7 @@ dtype_time_k: goto ret_time_r;         {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "+"');
-  err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
+  escr_err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
 {
 *   Common return points for various data types.  These are jumped to at the
 *   end of other functions to return specific data types.
@@ -719,7 +719,7 @@ dtype_time_k: goto ret_time_r;         {TIME}
 ret_time_r:                            {return time value in TIME plus seconds in R}
   time := sys_clock_add (time, sys_clock_from_fp_rel(r)); {make final time}
 ret_time:                              {return time value in TIME}
-  str_from_time (time, tk);            {make time string in TK}
+  escr_str_from_time (time, tk);       {make time string in TK}
   string_append (lot, tk);             {return it}
   goto done_func;                      {done processing this function}
 
@@ -880,7 +880,7 @@ otherwise
 }
 19: begin
   if not term_get (fstr, p, val) then goto arg_missing;
-  val_text (val, tk);                  {convert to native assembler format string}
+  escr_val_text (val, tk);             {convert to native assembler format string}
   string_append (lot, tk);             {write to the output string}
   end;
 {
@@ -918,7 +918,7 @@ otherwise
           end
         else begin                     {ARG1 integer in I1, ARG2 float in A1}
           if i1 < 0                    {negative value to floating point exponent ?}
-            then err_atline ('pic', 'exp_neg_fp', nil, 0);
+            then escr_err_atline ('pic', 'exp_neg_fp', nil, 0);
           r := i1 ** a1;
           goto ret_r;
           end
@@ -932,7 +932,7 @@ otherwise
           end
         else begin                     {ARG1 fp in A1, ARG2 fp in A2}
           if a1 < 0.0                  {negative value to floating point exponent ?}
-            then err_atline ('pic', 'exp_neg_fp', nil, 0);
+            then escr_err_atline ('pic', 'exp_neg_fp', nil, 0);
           r := a1 ** a2;
           end
         ;
@@ -949,7 +949,7 @@ otherwise
   if not term_get (fstr, p, val) then goto arg_missing;
   a1 := val_fp (val);
   if a1 <= 0.0
-    then err_atline ('pic', 'log_neg', nil, 0);
+    then escr_err_atline ('pic', 'log_neg', nil, 0);
   r := ln(a1) / ln2;
   goto ret_r;
   end;
@@ -961,7 +961,7 @@ otherwise
 23: begin
   if not gfp (a1) then goto arg_missing;
   if a1 < 0.0
-    then err_atline ('pic', 'sqrt_neg', nil, 0);
+    then escr_err_atline ('pic', 'sqrt_neg', nil, 0);
   r := sqrt(a1);
   goto ret_r;
   end;
@@ -1635,7 +1635,7 @@ dtype_time_k: begin
 otherwise                              {unexpected data type}
     sys_msg_parm_int (msg_parm[1], ord(val.dtype));
     sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function IF');
-    err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
+    escr_err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
     end;
   end;
 {
@@ -1699,7 +1699,7 @@ otherwise                              {unexpected data type}
 
 have_seqparm:                          {parameters I1, I2, and SEQFLAGS all set}
   i := string_seq_get (tk, i1, i2, seqflags, stat);
-  err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (stat, '', '', nil, 0);
   goto ret_i;
   end;
 {
@@ -1708,7 +1708,7 @@ have_seqparm:                          {parameters I1, I2, and SEQFLAGS all set}
 *   NOW
 }
 48: begin
-  str_from_time (sys_clock, tk);
+  escr_str_from_time (sys_clock, tk);
   string_append (lot, tk);
   end;
 {
@@ -1824,7 +1824,7 @@ otherwise
   case pick of                         {what type of symbol to look for ?}
 
 1:  begin                              {PSYM, any escr symbol}
-      sym_find (tk2, sym_p);
+      escr_sym_find (tk2, sym_p);
       b := sym_p <> nil;
       end;
 
@@ -1859,8 +1859,8 @@ otherwise
 
 5:  begin                              {ARG}
       string_t_int (tk2, ii, stat);    {make argument number}
-      err_atline_abort (stat, 'pic', 'term_not_int', nil, 0);
-      exblock_arg_get (ii, str_p);     {get pointer to argument value}
+      escr_err_atline_abort (stat, 'pic', 'term_not_int', nil, 0);
+      escr_exblock_arg_get (ii, str_p); {get pointer to argument value}
       b := str_p <> nil;               {TRUE if argument exists}
       end;
 
@@ -1875,7 +1875,7 @@ otherwise
 }
 52: begin
   if not gint(i) then goto arg_missing; {get the argument number into I}
-  exblock_arg_get (i, str_p);          {get pointer to the indexed argument}
+  escr_exblock_arg_get (i, str_p);     {get pointer to the indexed argument}
   if str_p <> nil then begin           {argument string exists}
     string_append (lot, str_p^);       {expand to just the raw argument chars}
     end;
@@ -1890,7 +1890,7 @@ otherwise
 53: begin
   if not gint(i) then goto arg_missing; {get the integer value into I}
   gstrs (tk2);                         {get string concatenation of remaining arguments}
-  format_int (i, tk2, tk, stat);
+  escr_format_int (i, tk2, tk, stat);
   if sys_error(stat) then goto error;
   goto ret_str;                        {return the string in TK}
   end;
@@ -1904,7 +1904,7 @@ otherwise
 54: begin
   if not gfp(r) then goto arg_missing; {get the floating point value into R}
   gstrs (tk2);                         {get string concatenation of remaining arguments}
-  format_fp (r, tk2, tk, stat);
+  escr_format_fp (r, tk2, tk, stat);
   if sys_error(stat) then goto error;
   goto ret_str;                        {return the string in TK}
   end;
@@ -1974,7 +1974,7 @@ otherwise
 58: begin                              {MAX}
   if not term_get (fstr, p, val) then begin {get the first term}
     sys_msg_parm_str (msg_parm[1], 'MAX');
-    err_atline ('pic', 'func_arg_missing', msg_parm, 1);
+    escr_err_atline ('pic', 'func_arg_missing', msg_parm, 1);
     end;
   dtype := val.dtype;                  {init returned data type to first argument}
   case val.dtype of                    {what is data type of first argument ?}
@@ -2045,7 +2045,7 @@ dtype_time_k: goto ret_time;           {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "MAX"');
-  err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
+  escr_err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
   end;
 {
 ********************
@@ -2055,7 +2055,7 @@ dtype_time_k: goto ret_time;           {TIME}
 59: begin                              {MIN}
   if not term_get (fstr, p, val) then begin {get the first term}
     sys_msg_parm_str (msg_parm[1], 'MIN');
-    err_atline ('pic', 'func_arg_missing', msg_parm, 1);
+    escr_err_atline ('pic', 'func_arg_missing', msg_parm, 1);
     end;
   dtype := val.dtype;                  {init returned data type to first argument}
   case val.dtype of                    {what is data type of first argument ?}
@@ -2126,7 +2126,7 @@ dtype_time_k: goto ret_time;           {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "MIN"');
-  err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
+  escr_err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
   end;
 {
 ********************
@@ -2156,7 +2156,7 @@ dtype_time_k: goto ret_time;           {TIME}
   if not term_get (fstr, p, val) then goto arg_missing;
   a1 := val_fp (val);
   if a1 <= 0.0
-    then err_atline ('pic', 'log_neg', nil, 0);
+    then escr_err_atline ('pic', 'log_neg', nil, 0);
   r := ln(a1);
   goto ret_r;
   end;
@@ -2183,7 +2183,7 @@ dtype_time_k: goto ret_time;           {TIME}
 63: begin
   if not gstr (tk) then goto arg_missing;
   if tk.len <> 1 then begin
-    err_atline ('pic', 'ccode_strlen', nil, 0);
+    escr_err_atline ('pic', 'ccode_strlen', nil, 0);
     end;
   i := ord(tk.str[1]);                 {return the internal character code}
   goto ret_i;
@@ -2195,8 +2195,8 @@ dtype_time_k: goto ret_time;           {TIME}
 }
 64: begin
   if not gstr (tk) then goto arg_missing; {get symbol name into TK}
-  sym_find (tk, sym_p);                {look up the symbol name}
-  if sym_p = nil then err_sym_not_found (tk);
+  escr_sym_find (tk, sym_p);           {look up the symbol name}
+  if sym_p = nil then escr_err_sym_not_found (tk);
 
   if gkeyw (tk)
     then begin                         {QUAL keyword is in TK}
@@ -2258,45 +2258,45 @@ dtype_time_k: string_vstring (tk, 'TIME'(0), -1);
 }
 otherwise
     sys_msg_parm_vstr (msg_parm[1], funn);
-    err_atline ('pic', 'func_name_bad', msg_parm, 1);
+    escr_err_atline ('pic', 'func_name_bad', msg_parm, 1);
     end;
 
 done_func:                             {done with unique code for the particular function}
   string_token (fstr, p, tk, stat);    {try to get another function argument}
   if not string_eos(stat) then begin   {didn't hit end of string as expected ?}
-    err_atline_abort (stat, '', '', nil, 0);
+    escr_err_atline_abort (stat, '', '', nil, 0);
     sys_msg_parm_vstr (msg_parm[1], funn);
     sys_msg_parm_vstr (msg_parm[2], tk);
-    err_atline ('pic', 'func_arg_extra', msg_parm, 2);
+    escr_err_atline ('pic', 'func_arg_extra', msg_parm, 2);
     end;
   return;
 
 error:                                 {general error on processing function, STAT set}
   sys_error_print (stat, '', '', nil, 0);
   sys_msg_parm_vstr (msg_parm[1], funn);
-  err_atline ('pic', 'func_err', msg_parm, 1);
+  escr_err_atline ('pic', 'func_err', msg_parm, 1);
 
 arg_not_num_time:                      {argument is not numeric or time value}
-  err_atline ('pic', 'term_not_time_num', nil, 0);
+  escr_err_atline ('pic', 'term_not_time_num', nil, 0);
 
 arg_not_num:                           {argument is not numeric}
-  err_atline ('pic', 'term_not_num', nil, 0);
+  escr_err_atline ('pic', 'term_not_num', nil, 0);
 
 arg_dtype_bad:
   sys_msg_parm_vstr (msg_parm[1], funn);
-  err_atline ('pic', 'func_arg_dtype', msg_parm, 1);
+  escr_err_atline ('pic', 'func_arg_dtype', msg_parm, 1);
 
 arg_bad_tk:                            {bad function argument, argument in TK}
   sys_msg_parm_vstr (msg_parm[1], tk);
   sys_msg_parm_vstr (msg_parm[2], funn);
-  err_atline ('pic', 'func_arg_bad', msg_parm, 2);
+  escr_err_atline ('pic', 'func_arg_bad', msg_parm, 2);
 
 arg_error:                             {error on attempt to get function arg, STAT set}
   sys_error_print (stat, '', '', nil, 0);
   sys_msg_parm_vstr (msg_parm[1], funn);
-  err_atline ('pic', 'func_arg_err', msg_parm, 1);
+  escr_err_atline ('pic', 'func_arg_err', msg_parm, 1);
 
 arg_missing:                           {a required argument is missing}
   sys_msg_parm_vstr (msg_parm[1], funn);
-  err_atline ('pic', 'func_arg_missing', msg_parm, 1);
+  escr_err_atline ('pic', 'func_arg_missing', msg_parm, 1);
   end;

@@ -4,17 +4,17 @@
 *   a execution block.
 }
 module escr_exblock;
-define exblock_new;
-define exblock_close;
-define exblock_loclab_init;
-define exblock_inline_set;
-define exblock_inline_push;
-define exblock_arg_addn;
-define exblock_arg_add;
-define exblock_arg_get_bl;
-define exblock_arg_get;
-define exblock_repeat;
-define exblock_quit;
+define escr_exblock_new;
+define escr_exblock_close;
+define escr_exblock_loclab_init;
+define escr_exblock_inline_set;
+define escr_exblock_inline_push;
+define escr_exblock_arg_addn;
+define escr_exblock_arg_add;
+define escr_exblock_arg_get_bl;
+define escr_exblock_arg_get;
+define escr_exblock_repeat;
+define escr_exblock_quit;
 %include 'escr.ins.pas';
 {
 ********************************************************************************
@@ -25,7 +25,7 @@ define exblock_quit;
 *   block type will be initialized to TOP, which must be changed for all except
 *   the top block.
 }
-procedure exblock_new;                 {create and install new execution block}
+procedure escr_exblock_new;            {create and install new execution block}
   val_param;
 
 const
@@ -49,7 +49,7 @@ begin
       nlev := e.exblock_p^.level + 1;  {nesting level one more than parent block}
       if nlev > max_blklev_k then begin {new block would be nested too deep ?}
         sys_msg_parm_int (msg_parm[1], max_blklev_k);
-        err_atline ('pic', 'err_maxnest_block', msg_parm, 1);
+        escr_err_atline ('pic', 'err_maxnest_block', msg_parm, 1);
         end;
       end
     ;
@@ -66,7 +66,7 @@ begin
   bl_p^.nargs := 0;
   bl_p^.locsym_p := nil;               {init to no local symbols created this block}
   bl_p^.inpos_p := nil;                {indicate source reading position not filled in}
-  inh_new;                             {make execution inhibit state for this block}
+  escr_inh_new;                        {make execution inhibit state for this block}
   bl_p^.inh_p := e.inhibit_p;          {save pointer top inhibit for this block}
   bl_p^.loop_p := nil;                 {init to block is not a explicit loop}
   bl_p^.bltype := exblock_top_k;       {init to top block type}
@@ -84,7 +84,7 @@ begin
 *   Close the current execution block, deallocate any associated resources, and
 *   make the previous execution block current.
 }
-procedure exblock_close;               {close curr execution block and delete temp state}
+procedure escr_exblock_close;          {close curr execution block and delete temp state}
   val_param;
 
 var
@@ -100,15 +100,15 @@ begin
 }
   while e.exblock_p^.locsym_p <> nil do begin {loop until local symbols list gone}
     sym_p := e.exblock_p^.locsym_p^.sym_p; {get pointer to this symbol}
-    sym_del (sym_p);                   {delete it and the local symbols list entry}
+    escr_sym_del (sym_p);              {delete it and the local symbols list entry}
     end;
 
   inhprev_p := e.exblock_p^.inh_p^.prev_p; {get pointer to inhibit to restore to}
   while e.inhibit_p <> inhprev_p do begin {scan back to inibit to restore to}
-    inh_end;                           {delete top inhibit}
+    escr_inh_end;                      {delete top inhibit}
     if e.inhibit_p = nil then begin    {didn't find inhibit to restore to ?}
       writeln ('INTERNAL ERROR: Inhibit to restore to not found in BLOCK_CLOSE.');
-      err_atline ('', '', nil, 0);
+      escr_err_atline ('', '', nil, 0);
       end;
     end;
 
@@ -136,12 +136,12 @@ begin
 *   It is a hard error if this routine is called with the local labels list
 *   already existing.
 }
-procedure exblock_loclab_init;         {create and init local symbols list in this block}
+procedure escr_exblock_loclab_init;    {create and init local symbols list in this block}
   val_param;
 
 begin
   if e.exblock_p^.loclab <> nil then begin {local labels list already exists ?}
-    err_atline ('pic', 'err_loclab_exist', nil, 0);
+    escr_err_atline ('pic', 'err_loclab_exist', nil, 0);
     end;
 
   string_hash_create (                 {create the label names hash table}
@@ -161,14 +161,14 @@ begin
 *   position will be lost.  This is more like a "GOTO", whereas EXBLOCK_INLINE_PUSH
 *   is more like a "CALL".
 }
-procedure exblock_inline_set (         {go to new input source position in curr block}
+procedure escr_exblock_inline_set (    {go to new input source position in curr block}
   in      line_p: inline_p_t);         {pointer to next input line to use}
   val_param;
 
 begin
   if e.exblock_p^.inpos_p = nil
     then begin                         {no position set yet at all for this block}
-      exblock_inline_push (line_p);    {create new position descriptor and set it}
+      escr_exblock_inline_push (line_p); {create new position descriptor and set it}
       end
     else begin                         {position descriptor already exists}
       e.exblock_p^.inpos_p^.line_p := line_p; {jump to the new source stream position}
@@ -188,7 +188,7 @@ begin
 *   block.  The new position will be nested under the previous position.  The
 *   previous position will be restored when the new position state is deleted.
 }
-procedure exblock_inline_push (        {push new source line location for exec block}
+procedure escr_exblock_inline_push (   {push new source line location for exec block}
   in      line_p: inline_p_t);         {pointer to next input line to use}
   val_param;
 
@@ -207,7 +207,7 @@ begin
     level := e.exblock_p^.inpos_p^.level + 1; {make nesting level of new input file}
     if level > max_inclev_k then begin {would exceed input file nesting level ?}
       sys_msg_parm_int (msg_parm[1], max_inclev_k);
-      err_atline ('pic', 'err_maxnext_file', msg_parm, 1);
+      escr_err_atline ('pic', 'err_maxnext_file', msg_parm, 1);
       end;
     end;
 
@@ -236,7 +236,7 @@ begin
 *   are numbered sequentially starting at 1.  Results are undefined if argument
 *   N is already defined.
 }
-procedure exblock_arg_addn (           {add argument to current block, specific number}
+procedure escr_exblock_arg_addn (      {add argument to current block, specific number}
   in      str: univ string_var_arg_t;  {argument string}
   in      n: sys_int_machine_t);       {argument number}
   val_param;
@@ -273,13 +273,13 @@ begin
 *   Add a new argument at the end of the arguments list of the current block.
 *   STR is the argument string.
 }
-procedure exblock_arg_add (            {add argument to current block}
+procedure escr_exblock_arg_add (       {add argument to current block}
   in      str: univ string_var_arg_t); {argument string}
   val_param;
 
 begin
   e.exblock_p^.nargs := e.exblock_p^.nargs + 1; {count one more argument this block}
-  exblock_arg_addn (str, e.exblock_p^.nargs); {add argument with this new number}
+  escr_exblock_arg_addn (str, e.exblock_p^.nargs); {add argument with this new number}
   end;
 {
 ********************************************************************************
@@ -290,7 +290,7 @@ begin
 *   VAL_P is returned NIL if argument N does not exist.  Arguments are numbered
 *   sequentially starting at 1.
 }
-procedure exblock_arg_get_bl (         {get value of execution block argument}
+procedure escr_exblock_arg_get_bl (    {get value of execution block argument}
   in      bl: exblock_t;               {execution block to get argument of}
   in      n: sys_int_machine_t;        {1-N sequential argument number}
   out     val_p: string_var_p_t);      {pointer to argument value, NIL if not exist}
@@ -318,7 +318,7 @@ begin
 *
 *   Get the value of argument N as visible from the current execution block.
 }
-procedure exblock_arg_get (            {get value of currently visible argument}
+procedure escr_exblock_arg_get (       {get value of currently visible argument}
   in      n: sys_int_machine_t;        {1-N sequential argument number}
   out     val_p: string_var_p_t);      {pointer to argument value, NIL if not exist}
   val_param;
@@ -335,7 +335,7 @@ begin
     if bl_p = nil then return;         {no arguments anywhere ?}
     end;
 
-  exblock_arg_get_bl (bl_p^, n, val_p); {resolve the argument value}
+  escr_exblock_arg_get_bl (bl_p^, n, val_p); {resolve the argument value}
   end;
 {
 ********************************************************************************
@@ -344,16 +344,16 @@ begin
 *
 *   Unconditionally loop back to the start of the current execution block.
 }
-procedure exblock_repeat;              {loop back to start of block}
+procedure escr_exblock_repeat;         {loop back to start of block}
   val_param;
 
 begin
   while e.inhibit_p <> e.exblock_p^.inh_p do begin {pop back to base block inhibit}
-    inh_end;                           {delete this inhibit}
+    escr_inh_end;                      {delete this inhibit}
     end;
 
-  exblock_inline_set (e.exblock_p^.start_p); {jump back to block start command}
-  infile_skipline;                     {skip block definition, to first executable line}
+  escr_exblock_inline_set (e.exblock_p^.start_p); {jump back to block start command}
+  escr_infile_skipline;                {skip block definition, to first executable line}
   e.exblock_p^.iter1 := false;         {not in first iteration anymore}
   end;
 {
@@ -366,7 +366,7 @@ begin
 *   This will cause us to just scan to the end of block command, then pop the
 *   block at that time.
 }
-procedure exblock_quit;
+procedure escr_exblock_quit;
   val_param;
 
 var

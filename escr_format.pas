@@ -1,8 +1,8 @@
 {   Routines for formatting values to strings in specific ways.
 }
 module escr_format;
-define format_int;
-define format_fp;
+define escr_format_int;
+define escr_format_fp;
 %include 'escr.ins.pas';
 {
 ********************************************************************************
@@ -32,7 +32,7 @@ define format_fp;
 *
 *     SIN  -  The input integer will be interpreted as signed (default).
 }
-procedure format_int (                 {create specifically formatted integer string}
+procedure escr_format_int (            {create specifically formatted integer string}
   in      i: sys_int_max_t;            {input integer value}
   in      fmt: univ string_var_arg_t;  {format string}
   in out  s: univ string_var_arg_t;    {returned integer string}
@@ -125,7 +125,7 @@ begin
 }
 otherwise
       sys_msg_parm_vstr (msg_parm[1], tk);
-      err_atline ('pic', 'err_fmt_int', msg_parm, 1);
+      escr_err_atline ('pic', 'err_fmt_int', msg_parm, 1);
       end;
     if sys_error(stat) then return;
     end;                               {back to get next format command}
@@ -206,7 +206,7 @@ otherwise
 *     NLZ  -  Do not add leading zeros.  Blanks will fill fixed size field.
 *       (default).
 }
-procedure format_fp (                  {create specifically formatted floating point string}
+procedure escr_format_fp (             {create specifically formatted floating point string}
   in      fp: sys_fp_max_t;            {input integer value}
   in      fmt: univ string_var_arg_t;  {format string}
   in out  s: univ string_var_arg_t;    {returned floating point string string}
@@ -487,7 +487,7 @@ begin
 }
 otherwise
       sys_msg_parm_vstr (msg_parm[1], tk);
-      err_atline ('pic', 'err_fmt_fp', msg_parm, 1);
+      escr_err_atline ('pic', 'err_fmt_fp', msg_parm, 1);
       end;
     if sys_error(stat) then return;
     end;                               {back to get next format command}

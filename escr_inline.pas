@@ -1,7 +1,7 @@
 {   Routines to process inline preprocessor functions.
 }
 module escr_inline;
-define inline_expand_line;
+define escr_inline_expand_line;
 %include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
 {
 *   Private routines used inside this module only.
@@ -24,7 +24,7 @@ procedure inline_expand_func (         {expand rest of line starting at inline f
 *
 *   Expand all the inline functions in LIN into LOT.
 }
-procedure inline_expand_line (         {expand all inline functions of a line}
+procedure escr_inline_expand_line (    {expand all inline functions of a line}
   in      lin: univ string_var_arg_t;  {input line, may contain inline functions}
   out     lot: string_var8192_t);      {output line, contains no inline functions}
   val_param;
@@ -175,7 +175,7 @@ begin
 fnd_end:
   oldlen := exp.len;                   {save true length of remainder of line}
   exp.len := p - 1;                    {truncate at end of function body}
-  inline_func (exp, lot);              {perform function, append result to out str}
+  escr_inline_func (exp, lot);         {perform function, append result to out str}
   exp.len := oldlen;                   {restore true length of line remainder}
   p := p + 1;                          {make first index after the whole function}
   while p <= exp.len do begin          {copy text after function to output line}

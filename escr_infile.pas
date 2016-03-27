@@ -1,9 +1,9 @@
 {   Routines for managing input files.
 }
 module escr_infile;
-define infile_open;
+define escr_infile_open;
 define infile_getline;
-define infile_skipline;
+define escr_infile_skipline;
 %include 'escr.ins.pas';
 {
 ********************************************************************************
@@ -17,7 +17,7 @@ define infile_skipline;
 *   input file descriptor.  Each unique input file is only read once and
 *   stored in memory.
 }
-procedure infile_open (                {get input file descriptor for input file}
+procedure escr_infile_open (           {get input file descriptor for input file}
   in      fnam: univ string_var_arg_t; {file name}
   out     infile_p: infile_p_t;        {returned pointer to input file descriptor}
   out     stat: sys_err_t);            {completion status}
@@ -152,7 +152,7 @@ retry:                                 {back here after popping back to prev inp
 *   input line.  It is a error if currently at the input stream end of the current
 *   execution block.
 }
-procedure infile_skipline;             {skip next input file line}
+procedure escr_infile_skipline;        {skip next input file line}
   val_param;
 
 var
@@ -161,6 +161,6 @@ var
 begin
   if not infile_getline (str_p) then begin {try to get next input line}
     writeln ('INTERNAL ERROR: End of execution block encountered in INFILE_SKIPLINE.');
-    err_atline ('', '', nil, 0);
+    escr_err_atline ('', '', nil, 0);
     end;
   end;
