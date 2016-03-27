@@ -34,9 +34,9 @@ var
 
 begin
   get_token := true;                   {init to returning with a token}
-  string_token (ibuf, ip, lparm, stat); {try to get the next token}
+  string_token (e.ibuf, e.ip, e.lparm, stat); {try to get the next token}
   if not sys_error(stat) then begin    {got it ?}
-    string_copy (lparm, tk);
+    string_copy (e.lparm, tk);
     return;
     end;
   if string_eos(stat) then begin       {hit end of input line ?}
@@ -74,16 +74,16 @@ begin
   get_tkraw := false;                  {init to no token available}
   tk.len := 0;
 
-  while ip <= ibuf.len do begin        {skip over blanks at current position}
-    if ibuf.str[ip] <> ' ' then exit;  {at a non-blank ?}
-    ip := ip + 1;                      {skip over this blank}
+  while e.ip <= e.ibuf.len do begin    {skip over blanks at current position}
+    if e.ibuf.str[e.ip] <> ' ' then exit; {at a non-blank ?}
+    e.ip := e.ip + 1;                  {skip over this blank}
     end;
-  if ip > ibuf.len then return;        {no token before end of input string ?}
+  if e.ip > e.ibuf.len then return;    {no token before end of input string ?}
   get_tkraw := true;                   {will be returning with a token}
 
   quote := false;                      {init to not within a quoted string}
-  while ip <= ibuf.len do begin        {scan the remainder of the input string}
-    c := ibuf.str[ip];                 {fetch this character}
+  while e.ip <= e.ibuf.len do begin    {scan the remainder of the input string}
+    c := e.ibuf.str[e.ip];             {fetch this character}
     if quote
       then begin                       {in a quoted string}
         string_append1 (tk, c);        {copy this char to returned token}
@@ -91,7 +91,7 @@ begin
         end
       else begin                       {not in a quoted string}
         if c = ' ' then begin          {unquoted blank ends token}
-          ip := ip + 1;                {skip over this blank}
+          e.ip := e.ip + 1;            {skip over this blank}
           exit;
           end;
         string_append1 (tk, c);        {copy this char to returned token}
@@ -101,7 +101,7 @@ begin
           end;
         end
       ;
-    ip := ip + 1;                      {make index of the next char}
+    e.ip := e.ip + 1;                  {make index of the next char}
     end;                               {back to process this new char}
   end;
 {
@@ -127,18 +127,18 @@ begin
   get_tkrawc := false;                 {init to no token available}
   tk.len := 0;
 
-  while ip <= ibuf.len do begin        {skip over blanks at current position}
-    if ibuf.str[ip] <> ' ' then exit;  {at a non-blank ?}
-    ip := ip + 1;                      {skip over this blank}
+  while e.ip <= e.ibuf.len do begin    {skip over blanks at current position}
+    if e.ibuf.str[e.ip] <> ' ' then exit; {at a non-blank ?}
+    e.ip := e.ip + 1;                  {skip over this blank}
     end;
-  if ip > ibuf.len then return;        {no token before end of input string ?}
+  if e.ip > e.ibuf.len then return;    {no token before end of input string ?}
   get_tkrawc := true;                  {will be returning with a token}
 
   quote := false;                      {init to not within a quoted string}
   blcnt := 0;                          {init to no blanks skipped over}
-  while ip <= ibuf.len do begin        {scan the remainder of the input string}
-    c := ibuf.str[ip];                 {fetch this character}
-    ip := ip + 1;                      {update index to next character to fetch}
+  while e.ip <= e.ibuf.len do begin    {scan the remainder of the input string}
+    c := e.ibuf.str[e.ip];             {fetch this character}
+    e.ip := e.ip + 1;                  {update index to next character to fetch}
     if quote
       then begin                       {in a quoted string}
         string_append1 (tk, c);        {copy this char to returned token}
@@ -196,7 +196,7 @@ begin
 
   if not get_token (tk) then return;   {hit end of line as expected ?}
 
-  sys_msg_parm_vstr (msg_parm[1], cmd);
+  sys_msg_parm_vstr (msg_parm[1], e.cmd);
   sys_msg_parm_vstr (msg_parm[2], tk);
   err_atline ('pic', 'parm_extra', msg_parm, 2);
   end;
@@ -284,7 +284,7 @@ function get_val (                     {get value of next input stream token}
   val_param;
 
 begin
-  get_val := term_get (ibuf, ip, val);
+  get_val := term_get (e.ibuf, e.ip, val);
   end;
 {
 ****************************************************************************

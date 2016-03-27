@@ -39,14 +39,14 @@ var
     array[1..max_msg_parms] of sys_parm_msg_t;
 
 begin
-  if exblock_p = nil
+  if e.exblock_p = nil
     then begin                         {creating top level block}
-      util_mem_context_get (mem_top_p^, mem_p); {create mem context for top block}
+      util_mem_context_get (e.mem_top_p^, mem_p); {create mem context for top block}
       nlev := 0;                       {set nesting level for top block}
       end
     else begin                         {creating nested block}
-      util_mem_context_get (exblock_p^.mem_p^, mem_p); {create new mem context for block}
-      nlev := exblock_p^.level + 1;    {nesting level one more than parent block}
+      util_mem_context_get (e.exblock_p^.mem_p^, mem_p); {create new mem context for block}
+      nlev := e.exblock_p^.level + 1;  {nesting level one more than parent block}
       if nlev > max_blklev_k then begin {new block would be nested too deep ?}
         sys_msg_parm_int (msg_parm[1], max_blklev_k);
         err_atline ('pic', 'err_maxnest_block', msg_parm, 1);
@@ -56,7 +56,7 @@ begin
   util_mem_grab (                      {allocate memory for execution block descriptor}
     sizeof(bl_p^), mem_p^, false, bl_p);
 
-  bl_p^.prev_p := exblock_p;           {link back to parent execution block}
+  bl_p^.prev_p := e.exblock_p;         {link back to parent execution block}
   bl_p^.level := nlev;                 {set 0-N nesting level of this block}
   bl_p^.start_p := nil;                {indicate definition start line not set yet}
   bl_p^.sym_p := nil;                  {init to no symbol exists to represent this block}
@@ -67,14 +67,14 @@ begin
   bl_p^.locsym_p := nil;               {init to no local symbols created this block}
   bl_p^.inpos_p := nil;                {indicate source reading position not filled in}
   inh_new;                             {make execution inhibit state for this block}
-  bl_p^.inh_p := inhibit_p;            {save pointer top inhibit for this block}
+  bl_p^.inh_p := e.inhibit_p;          {save pointer top inhibit for this block}
   bl_p^.loop_p := nil;                 {init to block is not a explicit loop}
   bl_p^.bltype := exblock_top_k;       {init to top block type}
   bl_p^.loclab := nil;                 {init to no list of local labels}
   bl_p^.args := false;                 {init to this block does not take arguments}
   bl_p^.iter1 := true;                 {init to executing the first iteration}
 
-  exblock_p := bl_p;                   {make the new block current}
+  e.exblock_p := bl_p;                 {make the new block current}
   end;
 {
 ********************************************************************************
@@ -98,26 +98,26 @@ begin
 *   versions of it.  It will also delete the entry for that symbol from the
 *   local symbols list.
 }
-  while exblock_p^.locsym_p <> nil do begin {loop until local symbols list gone}
-    sym_p := exblock_p^.locsym_p^.sym_p; {get pointer to this symbol}
+  while e.exblock_p^.locsym_p <> nil do begin {loop until local symbols list gone}
+    sym_p := e.exblock_p^.locsym_p^.sym_p; {get pointer to this symbol}
     sym_del (sym_p);                   {delete it and the local symbols list entry}
     end;
 
-  inhprev_p := exblock_p^.inh_p^.prev_p; {get pointer to inhibit to restore to}
-  while inhibit_p <> inhprev_p do begin {scan back to inibit to restore to}
+  inhprev_p := e.exblock_p^.inh_p^.prev_p; {get pointer to inhibit to restore to}
+  while e.inhibit_p <> inhprev_p do begin {scan back to inibit to restore to}
     inh_end;                           {delete top inhibit}
-    if inhibit_p = nil then begin      {didn't find inhibit to restore to ?}
+    if e.inhibit_p = nil then begin    {didn't find inhibit to restore to ?}
       writeln ('INTERNAL ERROR: Inhibit to restore to not found in BLOCK_CLOSE.');
       err_atline ('', '', nil, 0);
       end;
     end;
 
-  if exblock_p^.loclab <> nil then begin {delete local labels list if exists}
-    string_hash_delete (exblock_p^.loclab);
+  if e.exblock_p^.loclab <> nil then begin {delete local labels list if exists}
+    string_hash_delete (e.exblock_p^.loclab);
     end;
 
-  mem_p := exblock_p^.mem_p;           {save memory context for this block}
-  exblock_p := exblock_p^.prev_p;      {make parent execution block current}
+  mem_p := e.exblock_p^.mem_p;         {save memory context for this block}
+  e.exblock_p := e.exblock_p^.prev_p;  {make parent execution block current}
   util_mem_context_del (mem_p);        {deallocate all dynamic memory of the block}
   end;
 {
@@ -140,17 +140,17 @@ procedure exblock_loclab_init;         {create and init local symbols list in th
   val_param;
 
 begin
-  if exblock_p^.loclab <> nil then begin {local labels list already exists ?}
+  if e.exblock_p^.loclab <> nil then begin {local labels list already exists ?}
     err_atline ('pic', 'err_loclab_exist', nil, 0);
     end;
 
   string_hash_create (                 {create the label names hash table}
-    exblock_p^.loclab,                 {returned handle to the loc labels table}
+    e.exblock_p^.loclab,               {returned handle to the loc labels table}
     lab_nbuck_k,                       {number of hash buckets to create}
     lab_maxlen_k,                      {max length of table entry names}
     sizeof(string_var_p_t),            {size of data stored for each entry}
     [string_hashcre_nodel_k],          {won't individually deallocate entries}
-    exblock_p^.mem_p^);                {pointer to parent memory context}
+    e.exblock_p^.mem_p^);              {pointer to parent memory context}
   end;
 {
 ********************************************************************************
@@ -166,17 +166,17 @@ procedure exblock_inline_set (         {go to new input source position in curr 
   val_param;
 
 begin
-  if exblock_p^.inpos_p = nil
+  if e.exblock_p^.inpos_p = nil
     then begin                         {no position set yet at all for this block}
       exblock_inline_push (line_p);    {create new position descriptor and set it}
       end
     else begin                         {position descriptor already exists}
-      exblock_p^.inpos_p^.line_p := line_p; {jump to the new source stream position}
+      e.exblock_p^.inpos_p^.line_p := line_p; {jump to the new source stream position}
       end
     ;
 
-  if exblock_p^.start_p = nil then begin {line starting this block not set yet ?}
-    exblock_p^.start_p := line_p;      {set this line as block starting line}
+  if e.exblock_p^.start_p = nil then begin {line starting this block not set yet ?}
+    e.exblock_p^.start_p := line_p;    {set this line as block starting line}
     end;
   end;
 {
@@ -203,8 +203,8 @@ var
 
 begin
   level := 0;                          {init to this is top input file this block}
-  if exblock_p^.inpos_p <> nil then begin {there is a previous input file this block ?}
-    level := exblock_p^.inpos_p^.level + 1; {make nesting level of new input file}
+  if e.exblock_p^.inpos_p <> nil then begin {there is a previous input file this block ?}
+    level := e.exblock_p^.inpos_p^.level + 1; {make nesting level of new input file}
     if level > max_inclev_k then begin {would exceed input file nesting level ?}
       sys_msg_parm_int (msg_parm[1], max_inclev_k);
       err_atline ('pic', 'err_maxnext_file', msg_parm, 1);
@@ -212,8 +212,8 @@ begin
     end;
 
   util_mem_grab (                      {allocate new input position descriptor}
-    sizeof(pos_p^), exblock_p^.mem_p^, true, pos_p);
-  pos_p^.prev_p := exblock_p^.inpos_p; {point back to previous input stream position}
+    sizeof(pos_p^), e.exblock_p^.mem_p^, true, pos_p);
+  pos_p^.prev_p := e.exblock_p^.inpos_p; {point back to previous input stream position}
   pos_p^.level := level;               {set nesting level of this position state}
   pos_p^.line_p := line_p;             {point to next input line to use}
   if pos_p^.prev_p = nil
@@ -224,7 +224,7 @@ begin
       pos_p^.last_p := pos_p^.prev_p^.last_p; {init pointer to last read line}
       end
     ;
-  exblock_p^.inpos_p := pos_p;         {make new input position current}
+  e.exblock_p^.inpos_p := pos_p;       {make new input position current}
   end;
 {
 ********************************************************************************
@@ -245,25 +245,25 @@ var
   arg_p: arg_p_t;                      {points to newly created argument descriptor}
 
 begin
-  exblock_p^.args := true;             {this block definitely takes arguments}
+  e.exblock_p^.args := true;           {this block definitely takes arguments}
 
   util_mem_grab (                      {allocate memory for the new argument}
-    sizeof(arg_p^), exblock_p^.mem_p^, false, arg_p);
+    sizeof(arg_p^), e.exblock_p^.mem_p^, false, arg_p);
   arg_p^.next_p := nil;                {this will be last argument in the list}
   arg_p^.argn := n;                    {set number of this argument}
   string_alloc (                       {allocate mem for the arg string and init it}
-    str.len, exblock_p^.mem_p^, false, arg_p^.val_p);
+    str.len, e.exblock_p^.mem_p^, false, arg_p^.val_p);
   string_copy (str, arg_p^.val_p^);    {set the argument value}
 
-  if exblock_p^.arg_last_p = nil
+  if e.exblock_p^.arg_last_p = nil
     then begin                         {this is first argument in list}
-      exblock_p^.arg_p := arg_p;
+      e.exblock_p^.arg_p := arg_p;
       end
     else begin                         {add to end of existing list}
-      exblock_p^.arg_last_p^.next_p := arg_p;
+      e.exblock_p^.arg_last_p^.next_p := arg_p;
       end
     ;
-  exblock_p^.arg_last_p := arg_p;      {update pointer to last argument in list}
+  e.exblock_p^.arg_last_p := arg_p;    {update pointer to last argument in list}
   end;
 {
 ********************************************************************************
@@ -278,8 +278,8 @@ procedure exblock_arg_add (            {add argument to current block}
   val_param;
 
 begin
-  exblock_p^.nargs := exblock_p^.nargs + 1; {count one more argument this block}
-  exblock_arg_addn (str, exblock_p^.nargs); {add argument with this new number}
+  e.exblock_p^.nargs := e.exblock_p^.nargs + 1; {count one more argument this block}
+  exblock_arg_addn (str, e.exblock_p^.nargs); {add argument with this new number}
   end;
 {
 ********************************************************************************
@@ -329,7 +329,7 @@ var
 begin
   val_p := nil;                        {init to argument doesn't exist}
 
-  bl_p := exblock_p;                   {init to current execution block}
+  bl_p := e.exblock_p;                 {init to current execution block}
   while not bl_p^.args do begin        {skip over blocks that don't take arguments}
     bl_p := bl_p^.prev_p;              {go to parent execution block}
     if bl_p = nil then return;         {no arguments anywhere ?}
@@ -348,13 +348,13 @@ procedure exblock_repeat;              {loop back to start of block}
   val_param;
 
 begin
-  while inhibit_p <> exblock_p^.inh_p do begin {pop back to base block inhibit}
+  while e.inhibit_p <> e.exblock_p^.inh_p do begin {pop back to base block inhibit}
     inh_end;                           {delete this inhibit}
     end;
 
-  exblock_inline_set (exblock_p^.start_p); {jump back to block start command}
+  exblock_inline_set (e.exblock_p^.start_p); {jump back to block start command}
   infile_skipline;                     {skip block definition, to first executable line}
-  exblock_p^.iter1 := false;           {not in first iteration anymore}
+  e.exblock_p^.iter1 := false;         {not in first iteration anymore}
   end;
 {
 ********************************************************************************
@@ -373,10 +373,10 @@ var
   inh_p: inh_p_t;                      {scratch pointer to execution inhibit state}
 
 begin
-  inh_p := inhibit_p;                  {init to top execution inhibit}
+  inh_p := e.inhibit_p;                {init to top execution inhibit}
   while true do begin                  {loop to base execution inhibit this block}
     inh_p^.inh := true;                {disable execution at this level}
-    if inh_p = exblock_p^.inh_p then exit; {at base inhibit for the block ?}
+    if inh_p = e.exblock_p^.inh_p then exit; {at base inhibit for the block ?}
     inh_p := inh_p^.prev_p;            {back to previous execution inhibit}
     end;
   end;

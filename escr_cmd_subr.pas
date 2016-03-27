@@ -29,10 +29,10 @@ begin
   name.max := size_char(name.str);     {init local var string}
 
   inh_new;                             {create new execution inhibit layer}
-  inhibit_p^.inhty := inhty_blkdef_k;  {inhibit it due to reading block definition}
-  inhibit_p^.blkdef_type := exblock_sub_k; {block type is subroutine}
-  if inhibit_p^.inh then return;       {previously inhibited, don't define subroutine}
-  inhibit_p^.inh := true;              {inhibit execution during subroutine definition}
+  e.inhibit_p^.inhty := inhty_blkdef_k; {inhibit it due to reading block definition}
+  e.inhibit_p^.blkdef_type := exblock_sub_k; {block type is subroutine}
+  if e.inhibit_p^.inh then return;     {previously inhibited, don't define subroutine}
+  e.inhibit_p^.inh := true;            {inhibit execution during subroutine definition}
 
   if not get_token (name)              {get subroutine name}
     then err_parm_missing ('', '', nil, 0);
@@ -43,7 +43,7 @@ begin
   sym_new (name, sz, false, sym_p);    {create new symbol for subroutine name}
   sym_p^.stype := sym_subr_k;          {this symbol is a subroutine name}
   sym_p^.subr_line_p :=                {save pointer to subroutine definition line}
-    exblock_p^.inpos_p^.last_p;
+    e.exblock_p^.inpos_p^.last_p;
   end;
 {
 ********************************************************************************
@@ -59,14 +59,14 @@ procedure escr_cmd_endsub (
   val_param;
 
 begin
-  if not inhibit_p^.inh then begin     {executing code normally ?}
+  if not e.inhibit_p^.inh then begin   {executing code normally ?}
     escr_cmd_return (stat);            {acts just like RETURN}
     return;
     end;
 
   if                                   {not defining a subroutine ?}
-      (inhibit_p^.inhty <> inhty_blkdef_k) or {not in a block definition ?}
-      (inhibit_p^.blkdef_type <> exblock_sub_k) {block is not a subroutine ?}
+      (e.inhibit_p^.inhty <> inhty_blkdef_k) or {not in a block definition ?}
+      (e.inhibit_p^.blkdef_type <> exblock_sub_k) {block is not a subroutine ?}
       then begin
     err_atline ('pic', 'not_in_subdef', nil, 0);
     end;
@@ -99,7 +99,7 @@ var
     array[1..max_msg_parms] of sys_parm_msg_t;
 
 begin
-  if inhibit_p^.inh then return;       {execution is inhibited ?}
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   name.max := size_char(name.str);     {init local var strings}
   tk.max := size_char(tk.str);
 
@@ -114,9 +114,9 @@ begin
     end;
 
   exblock_new;                         {create new execution block}
-  exblock_p^.sym_p := sym_p;           {set pointer to symbol for this block}
-  exblock_p^.bltype := exblock_sub_k;  {new block is a subroutine}
-  exblock_p^.args := true;             {this block can take arguments}
+  e.exblock_p^.sym_p := sym_p;         {set pointer to symbol for this block}
+  e.exblock_p^.bltype := exblock_sub_k; {new block is a subroutine}
+  e.exblock_p^.args := true;           {this block can take arguments}
   exblock_arg_addn (name, 0);          {subroutine name is special argument 0}
   while true do begin                  {loop until argument list exhausted}
     if not get_tkraw (tk) then exit;   {get next argument}
@@ -140,10 +140,10 @@ procedure escr_cmd_return (
   val_param;
 
 begin
-  if inhibit_p^.inh then return;       {execution is inhibited ?}
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  while exblock_p^.bltype <> exblock_sub_k do begin {up thru blocks until first subr}
-    if exblock_p^.prev_p = nil then begin {at top execution block ?}
+  while e.exblock_p^.bltype <> exblock_sub_k do begin {up thru blocks until first subr}
+    if e.exblock_p^.prev_p = nil then begin {at top execution block ?}
       err_atline ('pic', 'not_in_sub', nil, 0); {complain not in a subroutine}
       end;
     exblock_close;                     {end this execution block, make previous current}

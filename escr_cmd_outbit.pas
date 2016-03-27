@@ -55,7 +55,7 @@ label
  have_ivaltk, end_parms, done_parms;
 
 begin
-  if inhibit_p^.inh then return;       {execution is inhibited ?}
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   name.max := size_char(name.str);     {init local var strings}
   namel.max := size_char(namel.str);
   strbit.max := size_char(strbit.str);
@@ -249,43 +249,43 @@ lang_aspic_k: begin
 {
 *   <name>_reg equ portx
 }
-  string_append (obuf, name);
-  string_appends (obuf, '_reg equ port'(0));
-  string_append1 (obuf, portl);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_reg equ port'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 {
 *     ifdef trisx
 *   <name>_tris equ trisx
 *       endif
 }
-  string_appends (obuf, '  ifdef tris'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, '  ifdef tris'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_append (obuf, name);
-  string_appends (obuf, '_tris equ tris'(0));
-  string_append1 (obuf, portl);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_tris equ tris'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_appends (obuf, '    endif'(0));
+  string_appends (e.obuf, '    endif'(0));
   write_obuf;
 {
 *   <name>_bit equ <bit>
 }
-  string_append (obuf, name);
-  string_appends (obuf, '_bit equ '(0));
-  string_append (obuf, strbit);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_bit equ '(0));
+  string_append (e.obuf, strbit);
   write_obuf;
 {
 *   val_trisx set val_trisx & ~(1 << <bit>)
 }
-  string_appends (obuf, 'val_tris'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ' set val_tris'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ' & ~(1 << '(0));
-  string_append (obuf, strbit);
-  string_appends (obuf, ')'(0));
+  string_appends (e.obuf, 'val_tris'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ' set val_tris'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ' & ~(1 << '(0));
+  string_append (e.obuf, strbit);
+  string_appends (e.obuf, ')'(0));
   write_obuf;
 {
 *   Update VAL_PORTx according to the IVAL parameter.
@@ -293,25 +293,25 @@ lang_aspic_k: begin
 *   For 0: val_portx set val_portx & ~(1 << <bit>)
 *   For 1: val_portx set val_portx | (1 << <bit>)
 }
-  string_appends (obuf, 'val_port'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ' set val_port'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, 'val_port'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ' set val_port'(0));
+  string_append1 (e.obuf, portl);
   if ival = 0
-    then string_appends (obuf, ' & ~(1 << '(0)) {initial value is 0}
-    else string_appends (obuf, ' | (1 << '(0)); {initial value is 1}
-  string_append (obuf, strbit);
-  string_appends (obuf, ')'(0));
+    then string_appends (e.obuf, ' & ~(1 << '(0)) {initial value is 0}
+    else string_appends (e.obuf, ' | (1 << '(0)); {initial value is 1}
+  string_append (e.obuf, strbit);
+  string_appends (e.obuf, ')'(0));
   write_obuf;
 {
 *   #define <name>_pin portx,<bit>
 }
-  string_appends (obuf, '#define '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_pin port'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ',');
-  string_append (obuf, strbit);
+  string_appends (e.obuf, '#define '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_pin port'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ',');
+  string_append (e.obuf, strbit);
   write_obuf;
 {
 *     ifdef latx
@@ -319,24 +319,24 @@ lang_aspic_k: begin
 *   #define <name>_pinlat latx,<bit>
 *       endif
 }
-  string_appends (obuf, '  ifdef lat'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, '  ifdef lat'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_append (obuf, name);
-  string_appends (obuf, '_lat equ lat'(0));
-  string_append1 (obuf, portl);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_lat equ lat'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_appends (obuf, '#define '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_pinlat lat'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ','(0));
-  string_append (obuf, strbit);
+  string_appends (e.obuf, '#define '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_pinlat lat'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ','(0));
+  string_append (e.obuf, strbit);
   write_obuf;
 
-  string_appends (obuf, '    endif'(0));
+  string_appends (e.obuf, '    endif'(0));
   write_obuf;
 {
 *     ifdef latx
@@ -350,52 +350,52 @@ lang_aspic_k: begin
 *         endm
 *       endm
 }
-  string_appends (obuf, '  ifdef lat'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, '  ifdef lat'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_appends (obuf, 'set_'(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_off macro'(0));
+  string_appends (e.obuf, 'set_'(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_off macro'(0));
   write_obuf;
 
-  string_appends (obuf, '      dbankif lat'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, '      dbankif lat'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_appends (obuf, '      b'(0));
+  string_appends (e.obuf, '      b'(0));
   if positive
-    then string_append1 (obuf, 'c')
-    else string_append1 (obuf, 's');
-  string_appends (obuf, 'f lat'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ','(0));
-  string_append (obuf, strbit);
+    then string_append1 (e.obuf, 'c')
+    else string_append1 (e.obuf, 's');
+  string_appends (e.obuf, 'f lat'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ','(0));
+  string_append (e.obuf, strbit);
   write_obuf;
 
-  string_appends (obuf, '      endm'(0));
+  string_appends (e.obuf, '      endm'(0));
   write_obuf;
 
-  string_appends (obuf, 'set_'(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_on macro'(0));
+  string_appends (e.obuf, 'set_'(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_on macro'(0));
   write_obuf;
 
-  string_appends (obuf, '      dbankif lat'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, '      dbankif lat'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_appends (obuf, '      b'(0));
+  string_appends (e.obuf, '      b'(0));
   if positive
-    then string_append1 (obuf, 's')
-    else string_append1 (obuf, 'c');
-  string_appends (obuf, 'f lat'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ','(0));
-  string_append (obuf, strbit);
+    then string_append1 (e.obuf, 's')
+    else string_append1 (e.obuf, 'c');
+  string_appends (e.obuf, 'f lat'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ','(0));
+  string_append (e.obuf, strbit);
   write_obuf;
 
-  string_appends (obuf, '      endm'(0));
+  string_appends (e.obuf, '      endm'(0));
   write_obuf;
 {
 *       else
@@ -409,54 +409,54 @@ lang_aspic_k: begin
 *         endm
 *       endif
 }
-  string_appends (obuf, '    else'(0));
+  string_appends (e.obuf, '    else'(0));
   write_obuf;
 
-  string_appends (obuf, 'set_'(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_off macro'(0));
+  string_appends (e.obuf, 'set_'(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_off macro'(0));
   write_obuf;
 
-  string_appends (obuf, '      dbankif port'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, '      dbankif port'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_appends (obuf, '      b'(0));
+  string_appends (e.obuf, '      b'(0));
   if positive
-    then string_append1 (obuf, 'c')
-    else string_append1 (obuf, 's');
-  string_appends (obuf, 'f port'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ','(0));
-  string_append (obuf, strbit);
+    then string_append1 (e.obuf, 'c')
+    else string_append1 (e.obuf, 's');
+  string_appends (e.obuf, 'f port'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ','(0));
+  string_append (e.obuf, strbit);
   write_obuf;
 
-  string_appends (obuf, '      endm'(0));
+  string_appends (e.obuf, '      endm'(0));
   write_obuf;
 
-  string_appends (obuf, 'set_'(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_on macro'(0));
+  string_appends (e.obuf, 'set_'(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_on macro'(0));
   write_obuf;
 
-  string_appends (obuf, '      dbankif port'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, '      dbankif port'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_appends (obuf, '      b'(0));
+  string_appends (e.obuf, '      b'(0));
   if positive
-    then string_append1 (obuf, 's')
-    else string_append1 (obuf, 'c');
-  string_appends (obuf, 'f port'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ','(0));
-  string_append (obuf, strbit);
+    then string_append1 (e.obuf, 's')
+    else string_append1 (e.obuf, 'c');
+  string_appends (e.obuf, 'f port'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ','(0));
+  string_append (e.obuf, strbit);
   write_obuf;
 
-  string_appends (obuf, '      endm'(0));
+  string_appends (e.obuf, '      endm'(0));
   write_obuf;
 
-  string_appends (obuf, '    endif'(0));
+  string_appends (e.obuf, '    endif'(0));
   write_obuf;
 
   end;                                 {end of MPASM language case}
@@ -469,74 +469,74 @@ lang_dspic_k: begin
 {
 *   .equ <name>_reg, _PORTx
 }
-  string_appends (obuf, '.equ '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_reg, _PORT'(0));
-  string_append1 (obuf, portu);
+  string_appends (e.obuf, '.equ '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_reg, _PORT'(0));
+  string_append1 (e.obuf, portu);
   write_obuf;
 {
 *   .equ <name>_tris, _TRISx
 }
-  string_appends (obuf, '.equ '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_tris, _TRIS'(0));
-  string_append1 (obuf, portu);
+  string_appends (e.obuf, '.equ '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_tris, _TRIS'(0));
+  string_append1 (e.obuf, portu);
   write_obuf;
 {
 *   .equ <name>_bit, <bit>
 }
-  string_appends (obuf, '.equ '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_bit, '(0));
-  string_append (obuf, strbit);
+  string_appends (e.obuf, '.equ '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_bit, '(0));
+  string_append (e.obuf, strbit);
   write_obuf;
 {
 *   .equ <name>_lat, _LATx
 }
-  string_appends (obuf, '.equ '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_lat, _LAT'(0));
-  string_append1 (obuf, portu);
+  string_appends (e.obuf, '.equ '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_lat, _LAT'(0));
+  string_append1 (e.obuf, portu);
   write_obuf;
 {
 *   .macro set_<name>_on
 *     (bset or bclr) _LATx, #<bit>
 *   .endm
 }
-  string_appends (obuf, '.macro set_'(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_on'(0));
+  string_appends (e.obuf, '.macro set_'(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_on'(0));
   write_obuf;
-  string_appends (obuf, '  '(0));
+  string_appends (e.obuf, '  '(0));
   if positive
-    then string_appends (obuf, 'bset'(0))
-    else string_appends (obuf, 'bclr'(0));
-  string_appends (obuf, ' _LAT'(0));
-  string_append1 (obuf, portu);
-  string_appends (obuf, ', #'(0));
-  string_append (obuf, strbit);
+    then string_appends (e.obuf, 'bset'(0))
+    else string_appends (e.obuf, 'bclr'(0));
+  string_appends (e.obuf, ' _LAT'(0));
+  string_append1 (e.obuf, portu);
+  string_appends (e.obuf, ', #'(0));
+  string_append (e.obuf, strbit);
   write_obuf;
-  string_appends (obuf, '  .endm'(0));
+  string_appends (e.obuf, '  .endm'(0));
   write_obuf;
 {
 *   .macro set_<name>_off
 *     (bclr or bset) _LATx, #<bit>
 *   .endm
 }
-  string_appends (obuf, '.macro set_'(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_off'(0));
+  string_appends (e.obuf, '.macro set_'(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_off'(0));
   write_obuf;
-  string_appends (obuf, '  '(0));
+  string_appends (e.obuf, '  '(0));
   if positive
-    then string_appends (obuf, 'bclr'(0))
-    else string_appends (obuf, 'bset'(0));
-  string_appends (obuf, ' _LAT'(0));
-  string_append1 (obuf, portu);
-  string_appends (obuf, ', #'(0));
-  string_append (obuf, strbit);
+    then string_appends (e.obuf, 'bclr'(0))
+    else string_appends (e.obuf, 'bset'(0));
+  string_appends (e.obuf, ' _LAT'(0));
+  string_append1 (e.obuf, portu);
+  string_appends (e.obuf, ', #'(0));
+  string_append (e.obuf, strbit);
   write_obuf;
-  string_appends (obuf, '  .endm'(0));
+  string_appends (e.obuf, '  .endm'(0));
   write_obuf;
 {
 *   Update VAL_PORTx according to the IVAL parameter.
@@ -544,26 +544,26 @@ lang_dspic_k: begin
 *   For 0: .set val_portx, val_portx & ~(1 << <bit>)
 *   For 1: .set val_portx, val_portx | (1 << <bit>)
 }
-  string_appends (obuf, '.set val_port'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ', val_port'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, '.set val_port'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ', val_port'(0));
+  string_append1 (e.obuf, portl);
   if ival = 0
-    then string_appends (obuf, ' & ~(1 << '(0)) {initial value is 0}
-    else string_appends (obuf, ' | (1 << '(0)); {initial value is 1}
-  string_append (obuf, strbit);
-  string_appends (obuf, ')'(0));
+    then string_appends (e.obuf, ' & ~(1 << '(0)) {initial value is 0}
+    else string_appends (e.obuf, ' | (1 << '(0)); {initial value is 1}
+  string_append (e.obuf, strbit);
+  string_appends (e.obuf, ')'(0));
   write_obuf;
 {
 *   .set val_trisx, val_trisx & ~(1 << <bit>)
 }
-  string_appends (obuf, '.set val_tris'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ', val_tris'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ' & ~(1 << '(0));
-  string_append (obuf, strbit);
-  string_appends (obuf, ')'(0));
+  string_appends (e.obuf, '.set val_tris'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ', val_tris'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ' & ~(1 << '(0));
+  string_append (e.obuf, strbit);
+  string_appends (e.obuf, ')'(0));
   write_obuf;
 
   end;                                 {end of ASM30 language case}

@@ -25,7 +25,7 @@ procedure write_vstr (                 {write var string to current output file}
   val_param;
 
 begin
-  file_write_text (s, out_p^.conn, stat); {write string as next output file line}
+  file_write_text (s, e.out_p^.conn, stat); {write string as next output file line}
   end;
 {
 ********************************************************************************
@@ -43,9 +43,9 @@ var
   stat: sys_err_t;
 
 begin
-  write_vstr (obuf, stat);             {write OBUF as next output file line}
+  write_vstr (e.obuf, stat);           {write OBUF as next output file line}
   err_atline_abort (stat, '', '', nil, 0); {abort showing input line number on error}
-  obuf.len := 0;                       {reset the output line buffer to empty}
+  e.obuf.len := 0;                     {reset the output line buffer to empty}
   end;
 {
 ********************************************************************************
@@ -59,8 +59,8 @@ procedure show_obuf;                   {write line to standard output from OBUF}
   val_param;
 
 begin
-  writeln (obuf.str:obuf.len);         {write OBUF to standard output as one line}
-  obuf.len := 0;                       {reset the output line buffer to empty}
+  writeln (e.obuf.str:e.obuf.len);     {write OBUF to standard output as one line}
+  e.obuf.len := 0;                     {reset the output line buffer to empty}
   end;
 {
 ********************************************************************************
@@ -279,9 +279,9 @@ var
   stat: sys_err_t;
 
 begin
-  o_p := out_p;                        {save pointer to state of the file to delete}
+  o_p := e.out_p;                      {save pointer to state of the file to delete}
   if o_p = nil then return;            {no current output file, nothing to do ?}
-  out_p := o_p^.prev_p;                {pop back to previous output file}
+  e.out_p := o_p^.prev_p;              {pop back to previous output file}
 
   file_close (o_p^.conn);              {close the file}
   if del then begin                    {supposed to delete the file ?}
@@ -303,7 +303,7 @@ procedure close_out_all (              {close all output files}
   val_param;
 
 begin
-  while out_p <> nil do begin          {loop until all output files closed}
+  while e.out_p <> nil do begin        {loop until all output files closed}
     close_out (del);                   {delete this output file, pop back to previous}
     end;
   end;

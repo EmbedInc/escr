@@ -30,10 +30,10 @@ begin
   name.max := size_char(name.str);     {init local var string}
 
   inh_new;                             {create new execution inhibit layer}
-  inhibit_p^.inhty := inhty_blkdef_k;  {inhibit it due to reading block definition}
-  inhibit_p^.blkdef_type := exblock_mac_k; {block type is macro}
-  if inhibit_p^.inh then return;       {previously inhibited, don't define macro}
-  inhibit_p^.inh := true;              {inhibit execution during macro definition}
+  e.inhibit_p^.inhty := inhty_blkdef_k; {inhibit it due to reading block definition}
+  e.inhibit_p^.blkdef_type := exblock_mac_k; {block type is macro}
+  if e.inhibit_p^.inh then return;     {previously inhibited, don't define macro}
+  e.inhibit_p^.inh := true;            {inhibit execution during macro definition}
 
   if not get_token (name)              {get macro name}
     then err_parm_missing ('', '', nil, 0);
@@ -44,7 +44,7 @@ begin
   sym_new (name, sz, false, sym_p);    {create new symbol for macro name}
   sym_p^.stype := sym_macro_k;         {this symbol is a macro name}
   sym_p^.macro_line_p :=               {save pointer to macro definition line}
-    exblock_p^.inpos_p^.last_p;
+    e.exblock_p^.inpos_p^.last_p;
   end;
 {
 ********************************************************************************
@@ -60,14 +60,14 @@ procedure escr_cmd_endmac (
   val_param;
 
 begin
-  if not inhibit_p^.inh then begin     {executing code normally ?}
+  if not e.inhibit_p^.inh then begin   {executing code normally ?}
     escr_cmd_quitmac (stat);           {acts just like QUITMAC}
     return;
     end;
 
   if                                   {not defining a macro ?}
-      (inhibit_p^.inhty <> inhty_blkdef_k) or {not in a block definition ?}
-      (inhibit_p^.blkdef_type <> exblock_mac_k) {block is not a macro ?}
+      (e.inhibit_p^.inhty <> inhty_blkdef_k) or {not in a block definition ?}
+      (e.inhibit_p^.blkdef_type <> exblock_mac_k) {block is not a macro ?}
       then begin
     err_atline ('pic', 'not_in_macdef', nil, 0);
     end;
@@ -88,10 +88,10 @@ procedure escr_cmd_quitmac (
   val_param;
 
 begin
-  if inhibit_p^.inh then return;       {execution is inhibited ?}
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  while exblock_p^.bltype <> exblock_mac_k do begin {up thru blocks until first macro}
-    if exblock_p^.prev_p = nil then begin {at top execution block ?}
+  while e.exblock_p^.bltype <> exblock_mac_k do begin {up thru blocks until first macro}
+    if e.exblock_p^.prev_p = nil then begin {at top execution block ?}
       err_atline ('pic', 'not_in_macro', nil, 0); {complain not in a macro}
       end;
     exblock_close;                     {end this execution block, make previous current}
@@ -130,19 +130,19 @@ label
 begin
   sys_error_none (stat);               {init to no error encountered}
   macro_run := false;                  {init to no macro executed}
-  if inhibit_p^.inh then return;       {execution is inhibited ?}
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   label.max := size_char(label.str);   {init local var strings}
   name.max := size_char(name.str);
   tk.max := size_char(tk.str);
 
-  oldlen := ibuf.len;                  {save original length of the input line}
-  uptocomm (ibuf, nclen);              {get length of line with comment stripped}
-  ibuf.len := nclen;                   {strip off comment from input line}
-  if ibuf.len < 2 then goto nomac;     {macro invocation requires at least 2 chars}
+  oldlen := e.ibuf.len;                {save original length of the input line}
+  uptocomm (e.ibuf, nclen);            {get length of line with comment stripped}
+  e.ibuf.len := nclen;                 {strip off comment from input line}
+  if e.ibuf.len < 2 then goto nomac;   {macro invocation requires at least 2 chars}
 
-  ip := 1;                             {init input line parse index}
+  e.ip := 1;                           {init input line parse index}
   label.len := 0;                      {init to no label on this line}
-  if ibuf.str[1] <> ' ' then begin     {a non-blank is in column 1 ?}
+  if e.ibuf.str[1] <> ' ' then begin   {a non-blank is in column 1 ?}
     if not get_token(label) then goto nomac; {get the label name into LABEL}
     end;
   if not get_token(name) then goto nomac; {get the opcode name into NAME}
@@ -155,9 +155,9 @@ begin
 *   macro name as it appeared on the invocation line.
 }
   exblock_new;                         {create new execution block}
-  exblock_p^.sym_p := sym_p;           {set pointer to symbol for this block}
-  exblock_p^.bltype := exblock_mac_k;  {new block is a macro}
-  exblock_p^.args := true;             {this block can take arguments}
+  e.exblock_p^.sym_p := sym_p;         {set pointer to symbol for this block}
+  e.exblock_p^.bltype := exblock_mac_k; {new block is a macro}
+  e.exblock_p^.args := true;           {this block can take arguments}
   exblock_loclab_init;                 {create table for local labels}
 
   if label.len > 0 then begin          {label exists on this line ?}
@@ -175,5 +175,5 @@ begin
   return;
 
 nomac:                                 {no macro on this line}
-  ibuf.len := oldlen;                  {restore full original input line}
+  e.ibuf.len := oldlen;                {restore full original input line}
   end;

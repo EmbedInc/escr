@@ -90,7 +90,7 @@ label
 
 begin
   string_hash_pos_lookup (             {find position of name in symbol table}
-    sym,                               {table to find position in}
+    e.sym,                             {table to find position in}
     name,                              {name to find position of}
     pos,                               {returned position}
     found);                            {TRUE if name found in table}
@@ -122,7 +122,7 @@ begin
 *   Now create the new symbol descriptor and install it.
 }
     util_mem_grab (                    {allocate memory for new symbol descriptor}
-      sz, mem_sym_p^, true, sym_p);
+      sz, e.mem_sym_p^, true, sym_p);
     sym_p^.prev_p := prev_p;           {point back to previous version of this symbol}
     sym_p^.next_p := nil;              {init to no following symbol of this name}
     sym_p^.name_p := name_p;           {point to name string in symbol table}
@@ -130,7 +130,7 @@ begin
     sym_p^.scope_p := nil;             {init to global symbol}
     sym_pp^ := sym_p;                  {point symbol table to this new version}
 
-    if exblock_p^.prev_p = nil then return; {don't make local if in top block}
+    if e.exblock_p^.prev_p = nil then return; {don't make local if in top block}
     if not global then goto local;     {create as local symbol ?}
     if                                 {check for previous version is local}
         (prev_p <> nil) and then       {previous version of this symbol exists ?}
@@ -145,13 +145,13 @@ begin
 *   symbols to delete when that execution block is ended.
 }
 local:                                 {create symbol as local}
-  sym_p^.scope_p := exblock_p;         {indicate local symbol and point to owning block}
+  sym_p^.scope_p := e.exblock_p;       {indicate local symbol and point to owning block}
 
   util_mem_grab (                      {create new local symbol list entry}
-    sizeof(lsym_p^), exblock_p^.mem_p^, true, lsym_p);
-  lsym_p^.next_p := exblock_p^.locsym_p; {point to rest of local symbols chain}
+    sizeof(lsym_p^), e.exblock_p^.mem_p^, true, lsym_p);
+  lsym_p^.next_p := e.exblock_p^.locsym_p; {point to rest of local symbols chain}
   lsym_p^.sym_p := sym_p;              {point to the local symbol}
-  exblock_p^.locsym_p := lsym_p;       {link in at start of local symbols list}
+  e.exblock_p^.locsym_p := lsym_p;     {link in at start of local symbols list}
   end;
 {
 ********************************************************************************
@@ -273,7 +273,7 @@ var
 
 begin
   string_hash_ent_lookup (             {look up name in symbol table}
-    sym,                               {table to look up name in}
+    e.sym,                             {table to look up name in}
     name,                              {the name to look up}
     name_p,                            {returned pointer to name in table entry}
     sym_pp);                           {returned pointer to table entry data area}
@@ -351,7 +351,7 @@ begin
 *   Done deleting local symbols list entry, if any.
 }
   string_hash_pos_lookup (             {find position of symbol table entry}
-    sym, sym_p^.name_p^, pos, found);
+    e.sym, sym_p^.name_p^, pos, found);
   if not found then begin
     writeln ('INTERNAL ERROR: Symbol "', sym_p^.name_p^.str:sym_p^.name_p^.len, '"');
     writeln ('  not found in symbol table.  (SYM_DEL)');
@@ -370,7 +370,7 @@ begin
       end
     ;
 
-  util_mem_ungrab (sym_p, mem_sym_p^); {deallocate the symbol descriptor}
+  util_mem_ungrab (sym_p, e.mem_sym_p^); {deallocate the symbol descriptor}
   end;
 {
 ********************************************************************************
@@ -397,7 +397,7 @@ var
 
 begin
   string_hash_pos_lookup (             {find position of name in symbol table}
-    sym,                               {table to find position in}
+    e.sym,                             {table to find position in}
     name,                              {name to find position of}
     pos,                               {returned position}
     found);                            {TRUE if name found in table}

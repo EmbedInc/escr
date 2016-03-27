@@ -38,7 +38,7 @@ begin
   sys_error_none (stat);               {init to no error encountered}
 
   string_treename (fnam, tnam);        {make full input file treename}
-  file_p := files_p;                   {init to first entry in cached files list}
+  file_p := e.files_p;                 {init to first entry in cached files list}
   while file_p <> nil do begin         {scan thru list of files already read and cached}
     if string_equal (file_p^.tnam, tnam) then begin {found requested file in list ?}
       infile_p := file_p;              {pass back pointer to existing file info}
@@ -53,13 +53,13 @@ begin
   if sys_error(stat) then return;
 
   util_mem_grab (                      {alloc mem for the input file descriptor}
-    sizeof(file_p^), mem_top_p^, false, file_p);
-  file_p^.next_p := files_p;           {fill in input file descriptor}
+    sizeof(file_p^), e.mem_top_p^, false, file_p);
+  file_p^.next_p := e.files_p;         {fill in input file descriptor}
   file_p^.tnam.max := size_char(file_p^.tnam.str);
   string_copy (tnam, file_p^.tnam);
   file_p^.lines_p := nil;
 
-  files_p := file_p;                   {link this descriptor to start of files list}
+  e.files_p := file_p;                 {link this descriptor to start of files list}
 {
 *   Read all the lines from the file and save them in memory.
 }
@@ -75,11 +75,11 @@ begin
     string_unpad (buf);                {remove trailing blanks from this line}
 
     util_mem_grab (                    {alloc mem for this input line descriptor}
-      sizeof(line_p^), mem_top_p^, false, line_p);
+      sizeof(line_p^), e.mem_top_p^, false, line_p);
     line_p^.next_p := nil;             {init to no following line}
     line_p^.file_p := file_p;          {point to parent file}
     line_p^.lnum := conn.lnum;         {save input line number}
-    string_alloc (buf.len, mem_top_p^, false, line_p^.str_p); {alloc mem for input line string}
+    string_alloc (buf.len, e.mem_top_p^, false, line_p^.str_p); {alloc mem for input line string}
     string_copy (buf, line_p^.str_p^); {save this input line string in memory}
     line_pp^ := line_p;                {link new line descriptor to end of list}
     line_pp := addr(line_p^.next_p);   {update where to write next forward link}
@@ -123,18 +123,18 @@ label
 begin
   infile_getline := false;             {init to end of input reached}
 
-  if exblock_p = nil then begin
+  if e.exblock_p = nil then begin
     writeln ('INTERNAL ERROR: No execution block defined in INFILE_GETLINE.');
     sys_bomb;
     end;
 
 retry:                                 {back here after popping back to prev input file}
-  pos_p := exblock_p^.inpos_p;         {get pointer to input position state}
+  pos_p := e.exblock_p^.inpos_p;       {get pointer to input position state}
   if pos_p = nil then return;          {input stream exhausted this execution block ?}
   line_p := pos_p^.line_p;             {get pointer to next input stream line info}
   if line_p = nil then begin           {end of current input file ?}
-    exblock_p^.inpos_p := pos_p^.prev_p; {pop back to previous nested input position}
-    util_mem_ungrab (pos_p, exblock_p^.mem_p^); {deallocate old input position descriptor}
+    e.exblock_p^.inpos_p := pos_p^.prev_p; {pop back to previous nested input position}
+    util_mem_ungrab (pos_p, e.exblock_p^.mem_p^); {deallocate old input position descriptor}
     goto retry;                        {try again with this new input file}
     end;
   str_p := line_p^.str_p;              {return pointer to this input line}

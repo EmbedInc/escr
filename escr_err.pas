@@ -43,7 +43,7 @@ begin
 
   sys_message_parms (subsys, msg, parms, n_parms); {write caller's message}
 
-  block_p := exblock_p;                {get pointer to current execution block}
+  block_p := e.exblock_p;              {get pointer to current execution block}
   inpos_p := block_p^.inpos_p;         {get pointer to nested input file state}
   line_p := inpos_p^.last_p;           {get pointer to current input line info}
   sys_msg_parm_vstr (msg_parm[1], line_p^.file_p^.tnam); {input file name}
@@ -182,7 +182,7 @@ var
 
 begin
   sys_msg_parm_vstr (msg_parm[1], parm);
-  sys_msg_parm_vstr (msg_parm[2], cmd);
+  sys_msg_parm_vstr (msg_parm[2], e.cmd);
   err_atline ('pic', 'parm_bad_cmd', msg_parm, 2);
   end;
 {
@@ -197,7 +197,7 @@ procedure err_parm_last_bad;           {last parameter parsed was bad}
   options (val_param, noreturn);
 
 begin
-  err_parm_bad (lparm);
+  err_parm_bad (e.lparm);
   end;
 {
 ****************************************************************************
@@ -219,7 +219,7 @@ var
     array[1..max_msg_parms] of sys_parm_msg_t;
 
 begin
-  sys_msg_parm_vstr (msg_parm[1], cmd);
+  sys_msg_parm_vstr (msg_parm[1], e.cmd);
   sys_message_parms ('pic', 'parm_missing', msg_parm, 1);
   err_atline (subsys, msg, parms, n_parms);
   end;

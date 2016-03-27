@@ -38,17 +38,17 @@ begin
   sys_error_none (stat);               {init to no error occurred}
 
   exblock_new;                         {create new execution block state}
-  exblock_p^.start_p :=                {save pointer to starting line of this block}
-    exblock_p^.prev_p^.inpos_p^.last_p;
-  exblock_p^.bltype := exblock_loop_k; {indicate LOOP ... ENDLOOP type}
+  e.exblock_p^.start_p :=              {save pointer to starting line of this block}
+    e.exblock_p^.prev_p^.inpos_p^.last_p;
+  e.exblock_p^.bltype := exblock_loop_k; {indicate LOOP ... ENDLOOP type}
   exblock_inline_set (                 {set next source line to execute}
-    exblock_p^.prev_p^.inpos_p^.line_p);
+    e.exblock_p^.prev_p^.inpos_p^.line_p);
 
-  if inhibit_p^.inh then return;       {execution inhibited ?}
+  if e.inhibit_p^.inh then return;     {execution inhibited ?}
 
   get_keyword ('SYMBOLS FOR FROM N', pick); {get looptype keyword}
   util_mem_grab (                      {allocate loop descriptor}
-    sizeof(loop_p^), exblock_p^.mem_p^, false, loop_p);
+    sizeof(loop_p^), e.exblock_p^.mem_p^, false, loop_p);
   loop_p^.looptype := looptype_unc_k;  {init loop descriptor to default}
   loop_p^.var_p := nil;                {init to no loop variable}
 
@@ -76,13 +76,13 @@ begin
 *   Create the local list of symbol names.
 }
   util_mem_grab (                      {allocate symbol names list}
-    sizeof(slist_p^), exblock_p^.mem_p^, false, slist_p);
+    sizeof(slist_p^), e.exblock_p^.mem_p^, false, slist_p);
   loop_p^.sym_list_p := slist_p;       {save pointer to names list}
 
-  string_list_init (slist_p^, exblock_p^.mem_p^); {init names list}
+  string_list_init (slist_p^, e.exblock_p^.mem_p^); {init names list}
   slist_p^.deallocable := false;       {not individually deacllocatable}
 
-  string_hash_pos_first (sym, pos, found);
+  string_hash_pos_first (e.sym, pos, found);
   while found do begin                 {once for each symbol in the symbol table}
     string_hash_ent_atpos (pos, name_p, sym_pp); {get info from this table entry}
     sym_p := sym_pp^;                  {get pointer to this symbol}
@@ -109,7 +109,7 @@ begin
   string_list_pos_abs (slist_p^, 1);   {go to first list entry}
 
   if slist_p^.str_p = nil then begin   {the list is empty ?}
-    inhibit_p^.inh := true;            {inhibit execution for this block}
+    e.inhibit_p^.inh := true;          {inhibit execution for this block}
     return;
     end;
 
@@ -162,15 +162,15 @@ loop_from:                             {common code with /LOOP FROM}
       (loop_p^.for_inc >= 0) and       {counting up ?}
       (loop_p^.for_curr > loop_p^.for_end) {already past the end ?}
       then begin
-    inhibit_p^.inh := true;            {inhibit execution for this block}
+    e.inhibit_p^.inh := true;          {inhibit execution for this block}
     end;
   if
       (loop_p^.for_inc < 0) and        {counting down ?}
       (loop_p^.for_curr < loop_p^.for_end) {already past the end ?}
       then begin
-    inhibit_p^.inh := true;            {inhibit execution for this block}
+    e.inhibit_p^.inh := true;          {inhibit execution for this block}
     end;
-  if inhibit_p^.inh then return;       {execution is inhibited ?}
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
   if name.len > 0 then begin           {need to create loop variable ?}
     sym_new_var (                      {create the loop variable}
@@ -207,7 +207,7 @@ loop_from:                             {common code with /LOOP FROM}
     then err_parm_missing ('', '', nil, 0);
 
   if loop_p^.for_end < 1 then begin    {will do 0 iterations ?}
-    inhibit_p^.inh := true;            {inhibit execution for this block}
+    e.inhibit_p^.inh := true;          {inhibit execution for this block}
     return;
     end;
   end;
@@ -216,7 +216,7 @@ loop_from:                             {common code with /LOOP FROM}
 }
     end;                               {end of looptype cases}
 
-  exblock_p^.loop_p := loop_p;         {add loop descriptor to this execution block}
+  e.exblock_p^.loop_p := loop_p;       {add loop descriptor to this execution block}
   end;
 {
 ********************************************************************************
@@ -242,9 +242,9 @@ label
 begin
   loop_iter := false;                  {init to loop terminated}
 
-  if exblock_p^.bltype <> exblock_loop_k {not in explicit loop block ?}
+  if e.exblock_p^.bltype <> exblock_loop_k {not in explicit loop block ?}
     then goto loop;                    {loop back unconditionally}
-  loop_p := exblock_p^.loop_p;         {get pointer to loop descriptor}
+  loop_p := e.exblock_p^.loop_p;       {get pointer to loop descriptor}
   if loop_p = nil then goto loop;      {no loop data ?}
   case loop_p^.looptype of             {what kind of loop is this ?}
 {
@@ -323,19 +323,19 @@ label
 begin
   sys_error_none (stat);               {init to no error occurred}
 
-  if exblock_p^.bltype <> exblock_loop_k then begin {not in LOOP block type ?}
+  if e.exblock_p^.bltype <> exblock_loop_k then begin {not in LOOP block type ?}
     err_atline ('pic', 'err_endblock_type', nil, 0);
     end;
-  if exblock_p^.inpos_p^.prev_p <> nil then begin {block ended in include file ?}
+  if e.exblock_p^.inpos_p^.prev_p <> nil then begin {block ended in include file ?}
     err_atline ('pic', 'err_endblock_include', nil, 0);
     end;
-  if inhibit_p^.inh then goto del_block; {execution is inhibited ?}
+  if e.inhibit_p^.inh then goto del_block; {execution is inhibited ?}
 
   get_end;                             {no command parameters allowed}
   if loop_iter then return;            {back to do next loop iteration ?}
 
 del_block:                             {delete this block}
-  exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}
-    exblock_p^.inpos_p^.line_p;
+  e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}
+    e.exblock_p^.inpos_p^.line_p;
   exblock_close;                       {end this execution block}
   end;

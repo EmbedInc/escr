@@ -68,7 +68,7 @@ lang_aspic_k: begin                    {all the case-insensitive languages}
 *   from the current execution block to successively higher parents.  The top
 *   execution block always has a local labels table.
 }
-  ex_p := exblock_p;                   {init to look for labels table in current block}
+  ex_p := e.exblock_p;                 {init to look for labels table in current block}
   while ex_p^.loclab = nil do begin    {no local labels table here ?}
     ex_p := ex_p^.prev_p;              {go to parent execution block and try again}
     end;
@@ -100,13 +100,13 @@ lang_aspic_k: begin                    {all the case-insensitive languages}
 
   string_f_int_max_base (              {make unique label number string}
     tk,                                {output string}
-    labeln,                            {input integer}
+    e.labeln,                          {input integer}
     10,                                {radix}
     0,                                 {no fixed field width, use what it takes}
     [string_fi_unsig_k],               {the input number is unsigned}
     stat);
   err_atline_abort (stat, '', '', nil, 0);
-  labeln := labeln + 1;                {update unique number of next time}
+  e.labeln := e.labeln + 1;            {update unique number of next time}
 
   jj := 3 - tk.len;                    {number of leading zeros to add}
   for ii := 1 to jj do begin           {add the leading zeros}

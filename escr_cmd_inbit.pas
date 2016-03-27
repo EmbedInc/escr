@@ -50,7 +50,7 @@ var
     array[1..max_msg_parms] of sys_parm_msg_t;
 
 begin
-  if inhibit_p^.inh then return;       {execution is inhibited ?}
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   name.max := size_char(name.str);     {init local var strings}
   namel.max := size_char(namel.str);
   strbit.max := size_char(strbit.str);
@@ -204,43 +204,43 @@ lang_aspic_k: begin
 {
 *   <name>_reg equ portx
 }
-  string_append (obuf, name);
-  string_appends (obuf, '_reg equ port'(0));
-  string_append1 (obuf, portl);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_reg equ port'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 {
 *     ifdef trisx
 *   <name>_tris equ trisx
 *       endif
 }
-  string_appends (obuf, '  ifdef tris'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, '  ifdef tris'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_append (obuf, name);
-  string_appends (obuf, '_tris equ tris'(0));
-  string_append1 (obuf, portl);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_tris equ tris'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_appends (obuf, '    endif'(0));
+  string_appends (e.obuf, '    endif'(0));
   write_obuf;
 {
 *   <name>_bit equ <bit>
 }
-  string_append (obuf, name);
-  string_appends (obuf, '_bit equ '(0));
-  string_append (obuf, strbit);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_bit equ '(0));
+  string_append (e.obuf, strbit);
   write_obuf;
 {
 *   val_trisx set val_trisx | (1 << <bit>)
 }
-  string_appends (obuf, 'val_tris'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ' set val_tris'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ' | (1 << '(0));
-  string_append (obuf, strbit);
-  string_appends (obuf, ')'(0));
+  string_appends (e.obuf, 'val_tris'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ' set val_tris'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ' | (1 << '(0));
+  string_append (e.obuf, strbit);
+  string_appends (e.obuf, ')'(0));
   write_obuf;
 {
 *   Update VAL_PULLUPx according to the PUP parameter.
@@ -250,37 +250,37 @@ lang_aspic_k: begin
       {
       *   val_pullupx set val_pullupx | (1 << <bit>)
       }
-      string_appends (obuf, 'val_pullup'(0));
-      string_append1 (obuf, portl);
-      string_appends (obuf, ' set val_pullup'(0));
-      string_append1 (obuf, portl);
-      string_appends (obuf, '  | (1 << '(0));
-      string_append (obuf, strbit);
-      string_appends (obuf, ')'(0));
+      string_appends (e.obuf, 'val_pullup'(0));
+      string_append1 (e.obuf, portl);
+      string_appends (e.obuf, ' set val_pullup'(0));
+      string_append1 (e.obuf, portl);
+      string_appends (e.obuf, '  | (1 << '(0));
+      string_append (e.obuf, strbit);
+      string_appends (e.obuf, ')'(0));
       end
     else begin                         {pullup disabled}
       {
       *   val_pullupx set val_pullupx & ~(1 << <bit>)
       }
-      string_appends (obuf, 'val_pullup'(0));
-      string_append1 (obuf, portl);
-      string_appends (obuf, ' set val_pullup'(0));
-      string_append1 (obuf, portl);
-      string_appends (obuf, '  & ~(1 << '(0));
-      string_append (obuf, strbit);
-      string_appends (obuf, ')'(0));
+      string_appends (e.obuf, 'val_pullup'(0));
+      string_append1 (e.obuf, portl);
+      string_appends (e.obuf, ' set val_pullup'(0));
+      string_append1 (e.obuf, portl);
+      string_appends (e.obuf, '  & ~(1 << '(0));
+      string_append (e.obuf, strbit);
+      string_appends (e.obuf, ')'(0));
       end
     ;
   write_obuf;
 {
 *   #define <name>_pin portx,<bit>
 }
-  string_appends (obuf, '#define '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_pin port'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ',');
-  string_append (obuf, strbit);
+  string_appends (e.obuf, '#define '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_pin port'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ',');
+  string_append (e.obuf, strbit);
   write_obuf;
 {
 *     ifdef latx
@@ -288,24 +288,24 @@ lang_aspic_k: begin
 *   #define <name>_pinlat latx,<bit>
 *       endif
 }
-  string_appends (obuf, '  ifdef lat'(0));
-  string_append1 (obuf, portl);
+  string_appends (e.obuf, '  ifdef lat'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_append (obuf, name);
-  string_appends (obuf, '_lat equ lat'(0));
-  string_append1 (obuf, portl);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_lat equ lat'(0));
+  string_append1 (e.obuf, portl);
   write_obuf;
 
-  string_appends (obuf, '#define '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_pinlat lat'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ','(0));
-  string_append (obuf, strbit);
+  string_appends (e.obuf, '#define '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_pinlat lat'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ','(0));
+  string_append (e.obuf, strbit);
   write_obuf;
 
-  string_appends (obuf, '    endif'(0));
+  string_appends (e.obuf, '    endif'(0));
   write_obuf;
   end;                                 {end of MPASM language case}
 {
@@ -317,45 +317,45 @@ lang_dspic_k: begin
 {
 *   .equ <name>_reg, _PORTx
 }
-  string_appends (obuf, '.equ '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_reg, _PORT'(0));
-  string_append1 (obuf, portu);
+  string_appends (e.obuf, '.equ '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_reg, _PORT'(0));
+  string_append1 (e.obuf, portu);
   write_obuf;
 {
 *   .equ <name>_tris, _TRISx
 }
-  string_appends (obuf, '.equ '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_tris, _TRIS'(0));
-  string_append1 (obuf, portu);
+  string_appends (e.obuf, '.equ '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_tris, _TRIS'(0));
+  string_append1 (e.obuf, portu);
   write_obuf;
 {
 *   .equ <name>_bit, <bit>
 }
-  string_appends (obuf, '.equ '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_bit, '(0));
-  string_append (obuf, strbit);
+  string_appends (e.obuf, '.equ '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_bit, '(0));
+  string_append (e.obuf, strbit);
   write_obuf;
 {
 *   .equ <name>_lat, _LATx
 }
-  string_appends (obuf, '.equ '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_lat, _LAT'(0));
-  string_append1 (obuf, portu);
+  string_appends (e.obuf, '.equ '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_lat, _LAT'(0));
+  string_append1 (e.obuf, portu);
   write_obuf;
 {
 *   .set val_trisx, val_trisx | (1 << <bit>)
 }
-  string_appends (obuf, '.set val_tris'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ', val_tris'(0));
-  string_append1 (obuf, portl);
-  string_appends (obuf, ' | (1 << '(0));
-  string_append (obuf, strbit);
-  string_appends (obuf, ')'(0));
+  string_appends (e.obuf, '.set val_tris'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ', val_tris'(0));
+  string_append1 (e.obuf, portl);
+  string_appends (e.obuf, ' | (1 << '(0));
+  string_append (e.obuf, strbit);
+  string_appends (e.obuf, ')'(0));
   write_obuf;
 {
 *   Update VAL_PULLUPx according to the PUP parameter.
@@ -365,25 +365,25 @@ lang_dspic_k: begin
       {
       *   .set val_pullupx, val_pullupx | (1 << <bit>)
       }
-      string_appends (obuf, '.set val_pullup'(0));
-      string_append1 (obuf, portl);
-      string_appends (obuf, ', val_pullup'(0));
-      string_append1 (obuf, portl);
-      string_appends (obuf, '  | (1 << '(0));
-      string_append (obuf, strbit);
-      string_appends (obuf, ')'(0));
+      string_appends (e.obuf, '.set val_pullup'(0));
+      string_append1 (e.obuf, portl);
+      string_appends (e.obuf, ', val_pullup'(0));
+      string_append1 (e.obuf, portl);
+      string_appends (e.obuf, '  | (1 << '(0));
+      string_append (e.obuf, strbit);
+      string_appends (e.obuf, ')'(0));
       end
     else begin                         {pullup disabled}
       {
       *   .set val_pullupx, val_pullupx & ~(1 << <bit>)
       }
-      string_appends (obuf, '.set val_pullup'(0));
-      string_append1 (obuf, portl);
-      string_appends (obuf, ', val_pullup'(0));
-      string_append1 (obuf, portl);
-      string_appends (obuf, '  & ~(1 << '(0));
-      string_append (obuf, strbit);
-      string_appends (obuf, ')'(0));
+      string_appends (e.obuf, '.set val_pullup'(0));
+      string_append1 (e.obuf, portl);
+      string_appends (e.obuf, ', val_pullup'(0));
+      string_append1 (e.obuf, portl);
+      string_appends (e.obuf, '  & ~(1 << '(0));
+      string_append (e.obuf, strbit);
+      string_appends (e.obuf, ')'(0));
       end
     ;
   write_obuf;
@@ -392,22 +392,22 @@ lang_dspic_k: begin
 {
 *   #define <name>_pin _PORTx,<bit>
 }
-  string_appends (obuf, '#define '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_pin _PORT'(0));
-  string_append1 (obuf, portu);
-  string_appends (obuf, ',');
-  string_append (obuf, strbit);
+  string_appends (e.obuf, '#define '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_pin _PORT'(0));
+  string_append1 (e.obuf, portu);
+  string_appends (e.obuf, ',');
+  string_append (e.obuf, strbit);
   write_obuf;
 {
 *   #define <name>_pinlat _LATx,<bit>
 }
-  string_appends (obuf, '#define '(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_pinlat _LAT'(0));
-  string_append1 (obuf, portu);
-  string_appends (obuf, ',');
-  string_append (obuf, strbit);
+  string_appends (e.obuf, '#define '(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_pinlat _LAT'(0));
+  string_append1 (e.obuf, portu);
+  string_appends (e.obuf, ',');
+  string_append (e.obuf, strbit);
   write_obuf;
 *)
 

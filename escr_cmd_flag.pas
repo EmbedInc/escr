@@ -26,7 +26,7 @@ var
   sym_p: sym_p_t;                      {pointer to symbol to create or update}
 
 begin
-  if inhibit_p^.inh then return;       {execution is inhibited ?}
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   name.max := size_char(name.str);     {init local var strings}
   gflnstr.max := size_char(gflnstr.str);
   bitstr.max := size_char(bitstr.str);
@@ -122,44 +122,44 @@ lang_aspic_k: begin
 *   NFLAGB set <n>
 }
   if flag_bitn = 0 then begin          {starting a new flags byte ?}
-    string_vstring (obuf, 'nflagb set '(0), -1);
+    string_vstring (e.obuf, 'nflagb set '(0), -1);
     string_f_int (tk, flag_byten);
-    string_append (obuf, tk);
+    string_append (e.obuf, tk);
     write_obuf;
     end;
 {
 *   flag_<name>_regn equ <gfl n>
 }
-  string_vstring (obuf, 'flag_'(0), -1);
-  string_append (obuf, name);
-  string_appends (obuf, '_regn equ '(0));
-  string_append (obuf, gflnstr);
+  string_vstring (e.obuf, 'flag_'(0), -1);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_regn equ '(0));
+  string_append (e.obuf, gflnstr);
   write_obuf;
 {
 *   #define flag_<name>_reg gflx
 }
-  string_vstring (obuf, '#define flag_'(0), -1);
-  string_append (obuf, name);
-  string_appends (obuf, '_reg gfl'(0));
-  string_append (obuf, gflnstr);
+  string_vstring (e.obuf, '#define flag_'(0), -1);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_reg gfl'(0));
+  string_append (e.obuf, gflnstr);
   write_obuf;
 {
 *   flag_<name>_bit equ <n>
 }
-  string_vstring (obuf, 'flag_'(0), -1);
-  string_append (obuf, name);
-  string_appends (obuf, '_bit equ '(0));
-  string_append (obuf, bitstr);
+  string_vstring (e.obuf, 'flag_'(0), -1);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_bit equ '(0));
+  string_append (e.obuf, bitstr);
   write_obuf;
 {
 *   #define flag_<name> gfl<n>,<bit>
 }
-  string_vstring (obuf, '#define flag_'(0), -1);
-  string_append (obuf, name);
-  string_appends (obuf, ' gfl'(0));
-  string_append (obuf, gflnstr);
-  string_append1 (obuf, ',');
-  string_append (obuf, bitstr);
+  string_vstring (e.obuf, '#define flag_'(0), -1);
+  string_append (e.obuf, name);
+  string_appends (e.obuf, ' gfl'(0));
+  string_append (e.obuf, gflnstr);
+  string_append1 (e.obuf, ',');
+  string_append (e.obuf, bitstr);
   write_obuf;
 {
 *   Update the flags state for next time.
@@ -180,34 +180,34 @@ lang_dspic_k: begin
 *   .set nflagb <n>
 }
   if flag_bitn = 0 then begin          {starting a new flags word ?}
-    string_appends (obuf, '.set nflagb, '(0));
+    string_appends (e.obuf, '.set nflagb, '(0));
     string_f_int (tk, flag_byten);
-    string_append (obuf, tk);
+    string_append (e.obuf, tk);
     write_obuf;
     end;
 {
 *   .equ flag_<name>_regn, <gfl n>
 }
-  string_appends (obuf, '.equ flag_'(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_regn, '(0));
-  string_append (obuf, gflnstr);
+  string_appends (e.obuf, '.equ flag_'(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_regn, '(0));
+  string_append (e.obuf, gflnstr);
   write_obuf;
 {
 *   .equ flag_<name>_reg, <gflx>
 }
-  string_appends (obuf, '.equ flag_'(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_reg, gfl'(0));
-  string_append (obuf, gflnstr);
+  string_appends (e.obuf, '.equ flag_'(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_reg, gfl'(0));
+  string_append (e.obuf, gflnstr);
   write_obuf;
 {
 *   .equ flag_<name>_bit, <n>
 }
-  string_appends (obuf, '.equ flag_'(0));
-  string_append (obuf, name);
-  string_appends (obuf, '_bit, '(0));
-  string_append (obuf, bitstr);
+  string_appends (e.obuf, '.equ flag_'(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, '_bit, '(0));
+  string_append (e.obuf, bitstr);
   write_obuf;
 
 
@@ -215,12 +215,12 @@ lang_dspic_k: begin
 {
 *   #define flag_<name> gfl<n>,<bit>
 }
-  string_appends (obuf, '#define flag_'(0));
-  string_append (obuf, name);
-  string_appends (obuf, ' gfl'(0));
-  string_append (obuf, gflnstr);
-  string_append1 (obuf, ',');
-  string_append (obuf, bitstr);
+  string_appends (e.obuf, '#define flag_'(0));
+  string_append (e.obuf, name);
+  string_appends (e.obuf, ' gfl'(0));
+  string_append (e.obuf, gflnstr);
+  string_append1 (e.obuf, ',');
+  string_append (e.obuf, bitstr);
   write_obuf;
 *)
 
