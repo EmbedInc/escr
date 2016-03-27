@@ -91,7 +91,7 @@ begin
 {
 *   Check for time.
 }
-  if str_to_time (tk, val.time) then begin
+  if escr_str_to_time (tk, val.time) then begin
     val.dtype := dtype_time_k;
     return;
     end;

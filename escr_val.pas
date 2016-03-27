@@ -159,7 +159,7 @@ dtype_time_k: begin                    {time}
       return;
       end;
 dtype_str_k: begin                     {string}
-      if str_to_time (val.str, time) then begin {successfully converted ?}
+      if escr_str_to_time (val.str, time) then begin {successfully converted ?}
         val_time := time;              {pass back the result}
         return;
         end;

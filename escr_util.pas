@@ -5,7 +5,7 @@ module escr_util;
 define escr_write_vstr;
 define escr_write_obuf;
 define escr_show_obuf;
-define str_to_time;
+define escr_str_to_time;
 define escr_str_from_time;
 define escr_str_from_fp;
 define escr_close_out;
@@ -71,7 +71,7 @@ begin
 *   the time descriptor TIME.  The function returns TRUE on success and FALSE
 *   if the input string is not a valid date/time string.
 }
-function str_to_time (                 {make absolute time descriptor from string}
+function escr_str_to_time (                 {make absolute time descriptor from string}
   in      s: univ string_var_arg_t;    {input string}
   out     time: sys_clock_t)           {returned time descriptor}
   :boolean;                            {TRUE on success}
@@ -89,7 +89,7 @@ label
 
 begin
   tk.max := size_char(tk.str);         {init local var string}
-  str_to_time := false;                {init to input string not valid time}
+  escr_str_to_time := false;                {init to input string not valid time}
 
   p := 1;                              {init S parse index}
   string_token_anyd (                  {extract year number field}
@@ -179,7 +179,7 @@ begin
 
 have_date:                             {DATE is all filled in}
   time := sys_clock_from_date (date);  {make absolute time descripor}
-  str_to_time := true;                 {indicate string conversion was successful}
+  escr_str_to_time := true;                 {indicate string conversion was successful}
   end;
 {
 ********************************************************************************
