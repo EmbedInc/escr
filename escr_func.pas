@@ -5,17 +5,18 @@
 module escr_func;
 define escr_inline_func_init;
 define escr_inline_func;
-%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
+%include 'escr2.ins.pas';
+%include 'pic.ins.pas';
 
 const
 {
 *   Physical constants.  Don't mess with these.
 }
   pi = 3.14159265358979323846;         {what it sounds like, don't touch}
-  e = 2.718281828;                     {ditto}
+  ek = 2.718281828;                    {ditto}
   pi2 = 2.0 * pi;                      {2 Pi}
   pi2nv = 1.0 / pi2;                   {1 / 2Pi}
-  env = 1.0 / e;                       {1 / e}
+  env = 1.0 / ek;                      {1 / e}
   ln2 = ln(2.0);                       {natural log of 2}
 
 var
@@ -26,7 +27,8 @@ var
 *   Initialize for processing inline functions.  This routine must be called
 *   once before the other routines in this module.
 }
-procedure escr_inline_func_init;       {one-time init for processing inline funcs}
+procedure escr_inline_func_init (      {one-time init for processing inline funcs}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param;
 
 begin
@@ -104,13 +106,14 @@ begin
 {
 ****************************************************************************
 *
-*   Subroutine INLINE_FUNC (FSTR, LOT)
+*   Subroutine ESTR_INLINE_FUNC (E, FSTR, LOT)
 *
 *   Perform the operation indicated by the inline function in FSTR.  The
 *   resulting expansion, if any, is appended to LOT.  FSTR contains exactly
 *   the function body.  This is the part just inside the "[" and "]".
 }
 procedure escr_inline_func (           {perform inline function operation}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fstr: univ string_var_arg_t; {function source string, brackets removed}
   in out  lot: string_var8192_t);      {string to append function expansion to}
   val_param;
@@ -168,7 +171,7 @@ function gval (                        {get next function argument}
   val_param;
 
 begin
-  gval := term_get (fstr, p, val);
+  gval := escr_term_get (e, fstr, p, val);
   end;
 {
 ****************************************
@@ -190,7 +193,7 @@ begin
   gbool := false;                      {init to no argument available}
   if not gval (val) then return;       {no argument ?}
   gbool := true;
-  b := val_bool (val);                 {pass back argument value}
+  b := escr_val_bool (e, val);         {pass back argument value}
   end;
 {
 ****************************************
@@ -212,7 +215,7 @@ begin
   gint := false;                       {init to no argument available}
   if not gval (val) then return;       {no argument ?}
   gint := true;
-  i := val_int (val);                  {pass back argument value}
+  i := escr_val_int (e, val);          {pass back argument value}
   end;
 {
 ****************************************
@@ -234,7 +237,7 @@ begin
   gtime := false;                      {init to no argument available}
   if not gval (val) then return;       {no argument ?}
   gtime := true;
-  time := val_time (val);              {pass back argument value}
+  time := escr_val_time (e, val);      {pass back argument value}
   end;
 {
 ****************************************
@@ -256,7 +259,7 @@ begin
   gfp := false;                        {init to no argument available}
   if not gval (val) then return;       {no argument ?}
   gfp := true;
-  fp := val_fp (val);                  {pass back argument value}
+  fp := escr_val_fp (e, val);          {pass back argument value}
   end;
 {
 ****************************************
@@ -278,7 +281,7 @@ begin
   gstr := false;                       {init to no argument available}
   if not gval (val) then return;       {no argument ?}
   gstr := true;
-  escr_val_str (val, str);             {pass back argument value}
+  escr_val_str (e, val, str);          {pass back argument value}
   end;
 {
 ****************************************
@@ -303,7 +306,7 @@ begin
     gkeyw := false;
     end;
   string_upcase (str);                 {return keyword in upper case}
-  escr_err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   end;
 {
 ****************************************
@@ -401,7 +404,7 @@ begin
       s1_p := addr(v1.str);
       end
     else begin                         {V1 is not string}
-      escr_val_str (v1, s1);
+       escr_val_str (e, v1, s1);
       s1_p := addr(s1);
       end
     ;
@@ -411,7 +414,7 @@ begin
       s2_p := addr(v2.str);
       end
     else begin                         {V2 is not string}
-      escr_val_str (v2, s2);
+       escr_val_str (e, v2, s2);
       s2_p := addr(s2);
       end
     ;
@@ -438,9 +441,9 @@ begin
   string_token (fstr, p, funn, stat);  {get function name}
   string_unpad (funn);                 {delete trailing spaces from function name}
   if string_eos(stat) or else (funn.len <= 0) then begin {function name is missing ?}
-    escr_err_atline ('pic', 'func_name_missing', nil, 0);
+    escr_err_atline (e, 'pic', 'func_name_missing', nil, 0);
     end;
-  escr_err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   string_upcase (funn);                {make upper case for keyword matching}
 {
 *   The upper case function name is in FUNN and it is guaranteed to be at
@@ -450,7 +453,7 @@ begin
 *   instead of a preprocessor inline function.  This syntax always starts
 *   a W0 - W15 register name, possibly preceded by "++" or "--".
 }
-  if lang <> lang_dspic_k then goto notind; {wrong language ?}
+  if e.lang <> escr_lang_dspic_k then goto notind; {wrong language ?}
 
   pf := 1;                             {init FUNN parse index}
   {
@@ -492,9 +495,9 @@ notind:                                {not ASM30 register indirect syntax}
 1: begin
   if not gfp(r) then goto arg_missing; {get the floating point value into R}
   fp24 := pic_fp24_f_real (r);         {convert to PIC 24 bit representation}
-  case lang of                         {what is the input source language}
+  case e.lang of                       {what is the input source language}
 
-lang_aspic_k: begin                    {language is MPASM}
+escr_lang_aspic_k: begin               {language is MPASM}
   string_appends (tk, 'h'''(0));       {force HEX format}
   string_f_int8h (tk2, fp24.b2);
   string_append (tk, tk2);
@@ -505,7 +508,7 @@ lang_aspic_k: begin                    {language is MPASM}
   string_append1 (tk, '''');
   end;                                 {end of MPASM language case}
 
-lang_dspic_k: begin                    {language is ASM30}
+escr_lang_dspic_k: begin               {language is ASM30}
   string_appends (tk, '0x'(0));        {force HEX format}
   string_f_int8h (tk2, fp24.b2);
   string_append (tk, tk2);
@@ -516,7 +519,7 @@ lang_dspic_k: begin                    {language is ASM30}
   end;                                 {end of ASM30 language case}
 
 otherwise
-    err_lang (lang, 'ESCR_FUNC', 1);
+    escr_err_lang (e, e.lang, 'ESCR_FUNC', 1);
     end;
   string_append (lot, tk);
   end;
@@ -553,15 +556,15 @@ ret_str:                               {common code to return string in TK}
 *   FFTC2 tcfilt sfreq
 }
 4: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  a1 := val_fp (val);                  {get power of 2 time constant}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  a2 := val_fp (val);                  {get sampling frequency}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  a1 := escr_val_fp (e, val);          {get power of 2 time constant}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  a2 := escr_val_fp (e, val);          {get sampling frequency}
 
   r := 1.0 - 0.5 ** (1.0 / (a1 * a2)); {make the filter fraction}
 
 ret_r:                                 {common code to return FP value in R}
-  escr_str_from_fp (r, tk);            {make floating point string in TK}
+  escr_str_from_fp (e, r, tk);         {make floating point string in TK}
   string_append (lot, tk);             {append floating point string to the output}
   end;
 {
@@ -570,10 +573,10 @@ ret_r:                                 {common code to return FP value in R}
 *   FFFREQ ffreq sfreq
 }
 5: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  a1 := val_fp (val);                  {get filter rolloff frequency}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  a2 := val_fp (val);                  {get sampling frequency}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  a1 := escr_val_fp (e, val);          {get filter rolloff frequency}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  a2 := escr_val_fp (e, val);          {get sampling frequency}
 
   r := pi2nv / a1;                     {make standard power of E time constant}
   r := 1.0 - env ** (1.0 / (r * a2));  {make the filter fraction}
@@ -585,8 +588,8 @@ ret_r:                                 {common code to return FP value in R}
 *   SIN ang
 }
 6: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  a1 := val_fp (val);                  {get angle in radians}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  a1 := escr_val_fp (e, val);          {get angle in radians}
   r := sin(a1);                        {compute the function value}
   goto ret_r;                          {return the value in R}
   end;
@@ -596,8 +599,8 @@ ret_r:                                 {common code to return FP value in R}
 *   COS ang
 }
 7: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  a1 := val_fp (val);                  {get angle in radians}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  a1 := escr_val_fp (e, val);          {get angle in radians}
   r := cos(a1);                        {compute the function value}
   goto ret_r;                          {return the value in R}
   end;
@@ -607,8 +610,8 @@ ret_r:                                 {common code to return FP value in R}
 *   TAN ang
 }
 8: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  a1 := val_fp (val);                  {get angle in radians}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  a1 := escr_val_fp (e, val);          {get angle in radians}
   r := sin(a1) / cos(a1);              {compute the function value}
   goto ret_r;                          {return the value in R}
   end;
@@ -627,8 +630,8 @@ ret_r:                                 {common code to return FP value in R}
 *   RDEG ang
 }
 10: begin                              {RDEG}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  r := val_fp(val) * 180.0 / pi;
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  r := escr_val_fp (e, val) * 180.0 / pi;
   goto ret_r;                          {return the value in R}
   end;
 {
@@ -637,8 +640,8 @@ ret_r:                                 {common code to return FP value in R}
 *   DEGR ang
 }
 11: begin                              {DEGR}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  r := val_fp(val) * pi / 180.0;
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  r := escr_val_fp (e, val) * pi / 180.0;
   goto ret_r;                          {return the value in R}
   end;
 {
@@ -649,7 +652,7 @@ ret_r:                                 {common code to return FP value in R}
 12: begin                              {+}
   i := 0;                              {init the result}
   dtype := escr_dtype_int_k;           {init result data type}
-  while term_get (fstr, p, val) do begin {loop once for each argument}
+  while escr_term_get (e, fstr, p, val) do begin {loop once for each argument}
     case val.dtype of                  {what is data type of this argument}
 
 escr_dtype_int_k: begin                {argument is integer}
@@ -690,7 +693,7 @@ escr_dtype_int_k: begin                {INTEGER + TIME}
             end;
 escr_dtype_fp_k: ;                     {REAL + TIME}
 escr_dtype_time_k: begin               {TIME + TIME}
-            escr_err_atline ('pic', 'time_time', nil, 0);
+            escr_err_atline (e, 'pic', 'time_time', nil, 0);
             end;
 otherwise
           goto arg_not_num_time;
@@ -711,7 +714,7 @@ escr_dtype_time_k: goto ret_time_r;    {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "+"');
-  escr_err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
+  escr_err_atline (e, 'pic', 'err_dtype_unimp', msg_parm, 2);
 {
 *   Common return points for various data types.  These are jumped to at the
 *   end of other functions to return specific data types.
@@ -719,7 +722,7 @@ escr_dtype_time_k: goto ret_time_r;    {TIME}
 ret_time_r:                            {return time value in TIME plus seconds in R}
   time := sys_clock_add (time, sys_clock_from_fp_rel(r)); {make final time}
 ret_time:                              {return time value in TIME}
-  escr_str_from_time (time, tk);       {make time string in TK}
+  escr_str_from_time (e, time, tk);    {make time string in TK}
   string_append (lot, tk);             {return it}
   goto done_func;                      {done processing this function}
 
@@ -736,12 +739,12 @@ ret_i:                                 {common code to return integer value in I
 *   - arg1 arg2
 }
 13: begin                              {-}
-  if not term_get (fstr, p, val) then goto arg_missing;
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
   case val.dtype of                    {what is data type of first argument ?}
 
 escr_dtype_int_k: begin                {INTEGER first arg}
       i := val.int;
-      if not term_get (fstr, p, val) then goto arg_missing;
+      if not escr_term_get (e, fstr, p, val) then goto arg_missing;
       case val.dtype of
 escr_dtype_int_k: begin                {INTEGER - INTEGER}
           i := i - val.int;
@@ -758,7 +761,7 @@ otherwise
 
 escr_dtype_fp_k: begin                 {REAL first arg}
       r := val.fp;
-      if not term_get (fstr, p, val) then goto arg_missing;
+      if not escr_term_get (e, fstr, p, val) then goto arg_missing;
       case val.dtype of
 escr_dtype_int_k: begin                {REAL - INTEGER}
           r := r - val.int;
@@ -775,7 +778,7 @@ otherwise
 
 escr_dtype_time_k: begin               {TIME first arg}
       time := val.time;
-      if not term_get (fstr, p, val) then goto arg_missing;
+      if not escr_term_get (e, fstr, p, val) then goto arg_missing;
       case val.dtype of
 escr_dtype_int_k: begin                {TIME - INTEGER}
           r := -val.int;
@@ -807,8 +810,8 @@ otherwise
 14: begin                              {*}
   i := 1;                              {init the result}
   isint := true;                       {init to data type is integer}
-  while term_get (fstr, p, val) do begin {loop once for each argument}
-    if not val_isint (val, i1, a1) then begin {this argument is floating point ?}
+  while escr_term_get (e, fstr, p, val) do begin {loop once for each argument}
+    if not escr_val_isint (e, val, i1, a1) then begin {this argument is floating point ?}
       if isint then begin              {all was integer so far ?}
         r := i;                        {convert to floating point}
         isint := false;
@@ -831,10 +834,10 @@ otherwise
 *   / arg1 arg2
 }
 15: begin                              {/}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  r := val_fp (val);                   {get numerator}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  r := r / val_fp(val);                {get denominator and compute result}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  r := escr_val_fp (e, val);           {get numerator}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  r := r / escr_val_fp (e, val);       {get denominator and compute result}
   goto ret_r;                          {return the floating point value in R}
   end;
 {
@@ -843,10 +846,10 @@ otherwise
 *   DIV arg1 arg2
 }
 16: begin                              {DIV}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  i := val_int (val);                  {get numerator}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  i := i div val_int(val);             {get denominator and compute the result}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  i := escr_val_int (e, val);          {get numerator}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  i := i div escr_val_int (e, val);    {get denominator and compute the result}
   goto ret_i;                          {return the integer value in I}
   end;
 {
@@ -855,9 +858,9 @@ otherwise
 *   RND arg
 }
 17: begin                              {RND}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  if not val_isint (val, i, r) then begin {argument is floating point ?}
-    i := round(val_fp(val));
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  if not escr_val_isint (e, val, i, r) then begin {argument is floating point ?}
+    i := round(escr_val_fp(e, val));
     end;
   goto ret_i;                          {return the integer value in I}
   end;
@@ -867,9 +870,9 @@ otherwise
 *   TRUNC arg
 }
 18: begin                              {TRUNC}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  if not val_isint (val, i, r) then begin {argument is floating point ?}
-    i := trunc(val_fp(val));
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  if not escr_val_isint (e, val, i, r) then begin {argument is floating point ?}
+    i := trunc(escr_val_fp(e, val));
     end;
   goto ret_i;                          {return the integer value in I}
   end;
@@ -879,8 +882,8 @@ otherwise
 *   V value
 }
 19: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  escr_val_text (val, tk);             {convert to native assembler format string}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  escr_val_text (e, val, tk);          {convert to native assembler format string}
   string_append (lot, tk);             {write to the output string}
   end;
 {
@@ -889,8 +892,8 @@ otherwise
 *   ABS arg
 }
 20: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  if val_isint (val, i1, a1)
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  if escr_val_isint (e, val, i1, a1)
     then begin                         {argument is integer}
       i := abs(i1);
       goto ret_i;
@@ -907,32 +910,32 @@ otherwise
 *   EXP arg1 arg2
 }
 21: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  if val_isint (val, i1, a1)
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  if escr_val_isint (e, val, i1, a1)
     then begin                         {ARG1 is integer in I1}
-      if not term_get (fstr, p, val) then goto arg_missing;
-      if val_isint (val, i2, a1)
+      if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+      if escr_val_isint (e, val, i2, a1)
         then begin                     {ARG1 integer in I1, ARG2 integer in I2}
           i := i1 ** i2;
           goto ret_i;
           end
         else begin                     {ARG1 integer in I1, ARG2 float in A1}
           if i1 < 0                    {negative value to floating point exponent ?}
-            then escr_err_atline ('pic', 'exp_neg_fp', nil, 0);
+            then  escr_err_atline (e, 'pic', 'exp_neg_fp', nil, 0);
           r := i1 ** a1;
           goto ret_r;
           end
         ;
       end
     else begin                         {ARG1 is floating point in A1}
-      if not term_get (fstr, p, val) then goto arg_missing;
-      if val_isint (val, i1, a2)
+      if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+      if escr_val_isint (e, val, i1, a2)
         then begin                     {ARG1 fp in A1, ARG2 integer in I1}
           r := a1 ** i1;
           end
         else begin                     {ARG1 fp in A1, ARG2 fp in A2}
           if a1 < 0.0                  {negative value to floating point exponent ?}
-            then escr_err_atline ('pic', 'exp_neg_fp', nil, 0);
+            then  escr_err_atline (e, 'pic', 'exp_neg_fp', nil, 0);
           r := a1 ** a2;
           end
         ;
@@ -946,10 +949,10 @@ otherwise
 *   LOG2 arg
 }
 22: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  a1 := val_fp (val);
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  a1 := escr_val_fp (e, val);
   if a1 <= 0.0
-    then escr_err_atline ('pic', 'log_neg', nil, 0);
+    then  escr_err_atline (e, 'pic', 'log_neg', nil, 0);
   r := ln(a1) / ln2;
   goto ret_r;
   end;
@@ -961,7 +964,7 @@ otherwise
 23: begin
   if not gfp (a1) then goto arg_missing;
   if a1 < 0.0
-    then escr_err_atline ('pic', 'sqrt_neg', nil, 0);
+    then  escr_err_atline (e, 'pic', 'sqrt_neg', nil, 0);
   r := sqrt(a1);
   goto ret_r;
   end;
@@ -971,10 +974,10 @@ otherwise
 *   SHIFTR value bits
 }
 24: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  i1 := val_int (val);                 {get VALUE}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  i2 := val_int (val);                 {get BITS}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  i1 := escr_val_int (e, val);         {get VALUE}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  i2 := escr_val_int (e, val);         {get BITS}
   i := rshft(i1, i2);
   goto ret_i;
   end;
@@ -984,10 +987,10 @@ otherwise
 *   SHIFTL value bits
 }
 25: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  i1 := val_int (val);                 {get VALUE}
-  if not term_get (fstr, p, val) then goto arg_missing;
-  i2 := val_int (val);                 {get BITS}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  i1 := escr_val_int (e, val);         {get VALUE}
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  i2 := escr_val_int (e, val);         {get BITS}
   i := lshft(i1, i2);
   goto ret_i;
   end;
@@ -1409,12 +1412,12 @@ otherwise
 }
 33: begin
   if not gval (val) then goto arg_missing; {get first argument}
-  if val_isbool (val, b)
+  if escr_val_isbool (e, val, b)
     then begin                         {first term is boolean}
       isint := false;
       end
     else begin
-      i := val_int (val);
+      i := escr_val_int (e, val);
       isint := true;
       end
     ;
@@ -1423,10 +1426,10 @@ otherwise
   while gval (val) do begin            {once for each remaining argument}
     if isint
       then begin                       {integer}
-        i := i & val_int (val);
+        i := i & escr_val_int (e, val);
         end
       else begin                       {boolean}
-        b := b and val_bool (val);
+        b := b and escr_val_bool (e, val);
         end
       ;
     n := n + 1;                        {count one more argument read}
@@ -1445,12 +1448,12 @@ ret_bi:                                {return boolean or integer depending on I
 }
 34: begin
   if not gval (val) then goto arg_missing; {get first argument}
-  if val_isbool (val, b)
+  if escr_val_isbool (e, val, b)
     then begin                         {first term is boolean}
       isint := false;
       end
     else begin
-      i := val_int (val);
+      i := escr_val_int (e, val);
       isint := true;
       end
     ;
@@ -1459,10 +1462,10 @@ ret_bi:                                {return boolean or integer depending on I
   while gval (val) do begin            {once for each remaining argument}
     if isint
       then begin                       {integer}
-        i := i ! val_int (val);
+        i := i ! escr_val_int (e, val);
         end
       else begin                       {boolean}
-        b := b or val_bool (val);
+        b := b or escr_val_bool (e, val);
         end
       ;
     n := n + 1;                        {count one more argument read}
@@ -1477,12 +1480,12 @@ ret_bi:                                {return boolean or integer depending on I
 }
 35: begin
   if not gval (val) then goto arg_missing; {get first argument}
-  if val_isbool (val, b)
+  if escr_val_isbool (e, val, b)
     then begin                         {first term is boolean}
       isint := false;
       end
     else begin
-      i := val_int (val);
+      i := escr_val_int (e, val);
       isint := true;
       end
     ;
@@ -1491,10 +1494,10 @@ ret_bi:                                {return boolean or integer depending on I
   while gval (val) do begin            {once for each remaining argument}
     if isint
       then begin                       {integer}
-        i := xor(i, val_int (val));
+        i := xor(i, escr_val_int (e, val));
         end
       else begin                       {boolean}
-        b1 := val_bool (val);
+        b1 := escr_val_bool (e, val);
         b := (b and (not b1)) or ((not b) and b1);
         end
       ;
@@ -1635,7 +1638,7 @@ escr_dtype_time_k: begin
 otherwise                              {unexpected data type}
     sys_msg_parm_int (msg_parm[1], ord(val.dtype));
     sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function IF');
-    escr_err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
+    escr_err_atline (e, 'pic', 'err_dtype_unimp', msg_parm, 2);
     end;
   end;
 {
@@ -1699,7 +1702,7 @@ otherwise                              {unexpected data type}
 
 have_seqparm:                          {parameters I1, I2, and SEQFLAGS all set}
   i := string_seq_get (tk, i1, i2, seqflags, stat);
-  escr_err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   goto ret_i;
   end;
 {
@@ -1708,7 +1711,7 @@ have_seqparm:                          {parameters I1, I2, and SEQFLAGS all set}
 *   NOW
 }
 48: begin
-  escr_str_from_time (sys_clock, tk);
+  escr_str_from_time (e, sys_clock, tk);
   string_append (lot, tk);
   end;
 {
@@ -1824,7 +1827,7 @@ otherwise
   case pick of                         {what type of symbol to look for ?}
 
 1:  begin                              {PSYM, any escr symbol}
-      escr_sym_find (tk2, sym_p);
+      escr_sym_find (e, tk2, sym_p);
       b := sym_p <> nil;
       end;
 
@@ -1859,8 +1862,8 @@ otherwise
 
 5:  begin                              {ARG}
       string_t_int (tk2, ii, stat);    {make argument number}
-      escr_err_atline_abort (stat, 'pic', 'term_not_int', nil, 0);
-      escr_exblock_arg_get (ii, str_p); {get pointer to argument value}
+      escr_err_atline_abort (e, stat, 'pic', 'term_not_int', nil, 0);
+      escr_exblock_arg_get (e, ii, str_p); {get pointer to argument value}
       b := str_p <> nil;               {TRUE if argument exists}
       end;
 
@@ -1875,7 +1878,7 @@ otherwise
 }
 52: begin
   if not gint(i) then goto arg_missing; {get the argument number into I}
-  escr_exblock_arg_get (i, str_p);     {get pointer to the indexed argument}
+  escr_exblock_arg_get (e, i, str_p);  {get pointer to the indexed argument}
   if str_p <> nil then begin           {argument string exists}
     string_append (lot, str_p^);       {expand to just the raw argument chars}
     end;
@@ -1890,7 +1893,7 @@ otherwise
 53: begin
   if not gint(i) then goto arg_missing; {get the integer value into I}
   gstrs (tk2);                         {get string concatenation of remaining arguments}
-  escr_format_int (i, tk2, tk, stat);
+  escr_format_int (e, i, tk2, tk, stat);
   if sys_error(stat) then goto error;
   goto ret_str;                        {return the string in TK}
   end;
@@ -1904,7 +1907,7 @@ otherwise
 54: begin
   if not gfp(r) then goto arg_missing; {get the floating point value into R}
   gstrs (tk2);                         {get string concatenation of remaining arguments}
-  escr_format_fp (r, tk2, tk, stat);
+  escr_format_fp (e, r, tk2, tk, stat);
   if sys_error(stat) then goto error;
   goto ret_str;                        {return the string in TK}
   end;
@@ -1917,9 +1920,9 @@ otherwise
   if not gfp(r) then goto arg_missing; {get the floating point value into R}
   fp32f := pic_fp32f_f_real (r);       {convert to 32 bit fast dsPIC floating point}
   tk.len := 0;                         {init returned string to empty}
-  case lang of                         {what is the input source language}
+  case e.lang of                       {what is the input source language}
 
-lang_aspic_k: begin                    {language is MPASM}
+escr_lang_aspic_k: begin               {language is MPASM}
   string_appends (tk, 'h'''(0));       {force HEX format}
   string_f_int16h (tk2, fp32f.w1);     {write high word in HEX}
   string_append (tk, tk2);
@@ -1928,7 +1931,7 @@ lang_aspic_k: begin                    {language is MPASM}
   string_append1 (tk, '''');
   end;                                 {end of MPASM language case}
 
-lang_dspic_k: begin                    {language is ASM30}
+escr_lang_dspic_k: begin               {language is ASM30}
   string_appends (tk, '0x'(0));        {force HEX format}
   string_f_int16h (tk2, fp32f.w1);     {write high word in HEX}
   string_append (tk, tk2);
@@ -1937,7 +1940,7 @@ lang_dspic_k: begin                    {language is ASM30}
   end;                                 {end of ASM30 language case}
 
 otherwise
-    err_lang (lang, 'ESCR_FUNC', 1);
+    escr_err_lang (e, e.lang, 'ESCR_FUNC', 1);
     end;
   string_append (lot, tk);
   end;
@@ -1972,9 +1975,9 @@ otherwise
 *   MAX arg ... arg
 }
 58: begin                              {MAX}
-  if not term_get (fstr, p, val) then begin {get the first term}
+  if not escr_term_get (e, fstr, p, val) then begin {get the first term}
     sys_msg_parm_str (msg_parm[1], 'MAX');
-    escr_err_atline ('pic', 'func_arg_missing', msg_parm, 1);
+     escr_err_atline (e, 'pic', 'func_arg_missing', msg_parm, 1);
     end;
   dtype := val.dtype;                  {init returned data type to first argument}
   case val.dtype of                    {what is data type of first argument ?}
@@ -1991,7 +1994,7 @@ otherwise
     goto arg_not_num_time;             {invalid first argument data type}
     end;
 
-  while term_get (fstr, p, val) do begin {loop once for each subsequent argument}
+  while escr_term_get (e, fstr, p, val) do begin {loop once for each subsequent argument}
     case val.dtype of                  {what is data type of this argument ?}
 
 escr_dtype_int_k: begin                {... INTEGER}
@@ -2045,7 +2048,7 @@ escr_dtype_time_k: goto ret_time;      {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "MAX"');
-  escr_err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
+  escr_err_atline (e, 'pic', 'err_dtype_unimp', msg_parm, 2);
   end;
 {
 ********************
@@ -2053,9 +2056,9 @@ escr_dtype_time_k: goto ret_time;      {TIME}
 *   MIN arg ... arg
 }
 59: begin                              {MIN}
-  if not term_get (fstr, p, val) then begin {get the first term}
+  if not escr_term_get (e, fstr, p, val) then begin {get the first term}
     sys_msg_parm_str (msg_parm[1], 'MIN');
-    escr_err_atline ('pic', 'func_arg_missing', msg_parm, 1);
+    escr_err_atline (e, 'pic', 'func_arg_missing', msg_parm, 1);
     end;
   dtype := val.dtype;                  {init returned data type to first argument}
   case val.dtype of                    {what is data type of first argument ?}
@@ -2072,7 +2075,7 @@ otherwise
     goto arg_not_num_time;             {invalid first argument data type}
     end;
 
-  while term_get (fstr, p, val) do begin {loop once for each subsequent argument}
+  while escr_term_get (e, fstr, p, val) do begin {loop once for each subsequent argument}
     case val.dtype of                  {what is data type of this argument ?}
 
 escr_dtype_int_k: begin                {... INTEGER}
@@ -2126,7 +2129,7 @@ escr_dtype_time_k: goto ret_time;      {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "MIN"');
-  escr_err_atline ('pic', 'err_dtype_unimp', msg_parm, 2);
+  escr_err_atline (e, 'pic', 'err_dtype_unimp', msg_parm, 2);
   end;
 {
 ********************
@@ -2153,10 +2156,10 @@ escr_dtype_time_k: goto ret_time;      {TIME}
 *   LOG arg
 }
 61: begin
-  if not term_get (fstr, p, val) then goto arg_missing;
-  a1 := val_fp (val);
+  if not escr_term_get (e, fstr, p, val) then goto arg_missing;
+  a1 := escr_val_fp (e, val);
   if a1 <= 0.0
-    then escr_err_atline ('pic', 'log_neg', nil, 0);
+    then  escr_err_atline (e, 'pic', 'log_neg', nil, 0);
   r := ln(a1);
   goto ret_r;
   end;
@@ -2166,12 +2169,12 @@ escr_dtype_time_k: goto ret_time;      {TIME}
 *   E [arg]
 }
 62: begin
-  if not term_get (fstr, p, val) then begin
-    r := e;
+  if not escr_term_get (e, fstr, p, val) then begin
+    r := ek;
     goto ret_r;
     end;
 
-  a1 := val_fp (val);
+  a1 := escr_val_fp (e, val);
   r := exp(a1);
   goto ret_r;
   end;
@@ -2183,7 +2186,7 @@ escr_dtype_time_k: goto ret_time;      {TIME}
 63: begin
   if not gstr (tk) then goto arg_missing;
   if tk.len <> 1 then begin
-    escr_err_atline ('pic', 'ccode_strlen', nil, 0);
+     escr_err_atline (e, 'pic', 'ccode_strlen', nil, 0);
     end;
   i := ord(tk.str[1]);                 {return the internal character code}
   goto ret_i;
@@ -2195,8 +2198,8 @@ escr_dtype_time_k: goto ret_time;      {TIME}
 }
 64: begin
   if not gstr (tk) then goto arg_missing; {get symbol name into TK}
-  escr_sym_find (tk, sym_p);           {look up the symbol name}
-  if sym_p = nil then escr_err_sym_not_found (tk);
+  escr_sym_find (e, tk, sym_p);        {look up the symbol name}
+  if sym_p = nil then  escr_err_sym_not_found (e, tk);
 
   if gkeyw (tk)
     then begin                         {QUAL keyword is in TK}
@@ -2248,7 +2251,7 @@ escr_dtype_time_k: string_vstring (tk, 'TIME'(0), -1);
 }
 65: begin
   if not gkeyw(tk) then goto arg_missing; {get local label name into TK}
-  loclab_get (tk, tk2);                {get the full expanded name of this local label}
+  escr_loclab_get (e, tk, tk2);        {get the full expanded name of this local label}
   string_append (lot, tk2);
   end;
 {
@@ -2258,45 +2261,45 @@ escr_dtype_time_k: string_vstring (tk, 'TIME'(0), -1);
 }
 otherwise
     sys_msg_parm_vstr (msg_parm[1], funn);
-    escr_err_atline ('pic', 'func_name_bad', msg_parm, 1);
+    escr_err_atline (e, 'pic', 'func_name_bad', msg_parm, 1);
     end;
 
 done_func:                             {done with unique code for the particular function}
   string_token (fstr, p, tk, stat);    {try to get another function argument}
   if not string_eos(stat) then begin   {didn't hit end of string as expected ?}
-    escr_err_atline_abort (stat, '', '', nil, 0);
+    escr_err_atline_abort (e, stat, '', '', nil, 0);
     sys_msg_parm_vstr (msg_parm[1], funn);
     sys_msg_parm_vstr (msg_parm[2], tk);
-    escr_err_atline ('pic', 'func_arg_extra', msg_parm, 2);
+    escr_err_atline (e, 'pic', 'func_arg_extra', msg_parm, 2);
     end;
   return;
 
 error:                                 {general error on processing function, STAT set}
   sys_error_print (stat, '', '', nil, 0);
   sys_msg_parm_vstr (msg_parm[1], funn);
-  escr_err_atline ('pic', 'func_err', msg_parm, 1);
+  escr_err_atline (e, 'pic', 'func_err', msg_parm, 1);
 
 arg_not_num_time:                      {argument is not numeric or time value}
-  escr_err_atline ('pic', 'term_not_time_num', nil, 0);
+   escr_err_atline (e, 'pic', 'term_not_time_num', nil, 0);
 
 arg_not_num:                           {argument is not numeric}
-  escr_err_atline ('pic', 'term_not_num', nil, 0);
+   escr_err_atline (e, 'pic', 'term_not_num', nil, 0);
 
 arg_dtype_bad:
   sys_msg_parm_vstr (msg_parm[1], funn);
-  escr_err_atline ('pic', 'func_arg_dtype', msg_parm, 1);
+  escr_err_atline (e, 'pic', 'func_arg_dtype', msg_parm, 1);
 
 arg_bad_tk:                            {bad function argument, argument in TK}
   sys_msg_parm_vstr (msg_parm[1], tk);
   sys_msg_parm_vstr (msg_parm[2], funn);
-  escr_err_atline ('pic', 'func_arg_bad', msg_parm, 2);
+  escr_err_atline (e, 'pic', 'func_arg_bad', msg_parm, 2);
 
 arg_error:                             {error on attempt to get function arg, STAT set}
   sys_error_print (stat, '', '', nil, 0);
   sys_msg_parm_vstr (msg_parm[1], funn);
-  escr_err_atline ('pic', 'func_arg_err', msg_parm, 1);
+  escr_err_atline (e, 'pic', 'func_arg_err', msg_parm, 1);
 
 arg_missing:                           {a required argument is missing}
   sys_msg_parm_vstr (msg_parm[1], funn);
-  escr_err_atline ('pic', 'func_arg_missing', msg_parm, 1);
+  escr_err_atline (e, 'pic', 'func_arg_missing', msg_parm, 1);
   end;

@@ -9,7 +9,7 @@ define escr_cmd_return;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_CMD_SUBROUTINE (STAT)
+*   Subroutine  ESCR_CMD_SUBROUTINE (E, STAT)
 *
 *   /SUBROUTINE name
 *
@@ -17,6 +17,7 @@ define escr_cmd_return;
 *   but is not executed now.
 }
 procedure escr_cmd_subroutine (
+  in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
@@ -28,19 +29,19 @@ var
 begin
   name.max := size_char(name.str);     {init local var string}
 
-  escr_inh_new;                        {create new execution inhibit layer}
+  escr_inh_new (e);                    {create new execution inhibit layer}
   e.inhibit_p^.inhty := escr_inhty_blkdef_k; {inhibit it due to reading block definition}
   e.inhibit_p^.blkdef_type := escr_exblock_sub_k; {block type is subroutine}
   if e.inhibit_p^.inh then return;     {previously inhibited, don't define subroutine}
   e.inhibit_p^.inh := true;            {inhibit execution during subroutine definition}
 
-  if not get_token (name)              {get subroutine name}
-    then escr_err_parm_missing ('', '', nil, 0);
-  escr_err_check_symname (name);       {check for valid symbol name}
+  if not escr_get_token (e, name)      {get subroutine name}
+    then escr_err_parm_missing (e, '', '', nil, 0);
+  escr_err_check_symname (e, name);    {check for valid symbol name}
 
   sz :=                                {make size of whole subroutine symbol}
     offset(escr_sym_t.subr_line_p) + size_min(escr_sym_t.subr_line_p);
-  escr_sym_new (name, sz, false, sym_p); {create new symbol for subroutine name}
+  escr_sym_new (e, name, sz, false, sym_p); {create new symbol for subroutine name}
   sym_p^.stype := escr_sym_subr_k;     {this symbol is a subroutine name}
   sym_p^.subr_line_p :=                {save pointer to subroutine definition line}
     e.exblock_p^.inpos_p^.last_p;
@@ -48,19 +49,20 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_CMD_ENDSUB (STAT)
+*   Subroutine  ESCR_CMD_ENDSUB (E, STAT)
 *
 *   /ENDSUB
 *
 *   Indicate the end of a subroutine definition.
 }
 procedure escr_cmd_endsub (
+  in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
 begin
   if not e.inhibit_p^.inh then begin   {executing code normally ?}
-    escr_cmd_return (stat);            {acts just like RETURN}
+    escr_cmd_return (e, stat);         {acts just like RETURN}
     return;
     end;
 
@@ -68,15 +70,15 @@ begin
       (e.inhibit_p^.inhty <> escr_inhty_blkdef_k) or {not in a block definition ?}
       (e.inhibit_p^.blkdef_type <> escr_exblock_sub_k) {block is not a subroutine ?}
       then begin
-    escr_err_atline ('pic', 'not_in_subdef', nil, 0);
+    escr_err_atline (e, 'pic', 'not_in_subdef', nil, 0);
     end;
 
-  escr_inh_end;                        {end excution inhibit due to subroutine def}
+  escr_inh_end (e);                    {end excution inhibit due to subroutine def}
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_CMD_CALL (STAT)
+*   Subroutine  ESCR_CMD_CALL (E, STAT)
 *
 *   /CALL name [arg ... arg]
 *
@@ -84,6 +86,7 @@ begin
 *   subroutine completes.
 }
 procedure escr_cmd_call (
+  in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
@@ -103,39 +106,40 @@ begin
   name.max := size_char(name.str);     {init local var strings}
   tk.max := size_char(tk.str);
 
-  if not get_token (name)              {get subroutine name}
-    then escr_err_parm_missing ('', '', nil, 0);
-  escr_err_check_symname (name);       {check for valid symbol name}
-  escr_sym_find (name, sym_p);         {get symbol from subroutine name}
-  if sym_p = nil then escr_err_sym_not_found (name); {no such symbol ?}
+  if not escr_get_token (e, name)      {get subroutine name}
+    then escr_err_parm_missing (e, '', '', nil, 0);
+  escr_err_check_symname (e, name);    {check for valid symbol name}
+  escr_sym_find (e, name, sym_p);      {get symbol from subroutine name}
+  if sym_p = nil then  escr_err_sym_not_found (e, name); {no such symbol ?}
   if sym_p^.stype <> escr_sym_subr_k then begin {symbol not a subroutine ?}
     sys_msg_parm_vstr (msg_parm[1], name);
-    escr_err_atline ('pic', 'sym_not_subr', msg_parm, 1);
+    escr_err_atline (e, 'pic', 'sym_not_subr', msg_parm, 1);
     end;
 
-  escr_exblock_new;                    {create new execution block}
+  escr_exblock_new (e);                {create new execution block}
   e.exblock_p^.sym_p := sym_p;         {set pointer to symbol for this block}
   e.exblock_p^.bltype := escr_exblock_sub_k; {new block is a subroutine}
   e.exblock_p^.args := true;           {this block can take arguments}
-  escr_exblock_arg_addn (name, 0);     {subroutine name is special argument 0}
+  escr_exblock_arg_addn (e, name, 0);  {subroutine name is special argument 0}
   while true do begin                  {loop until argument list exhausted}
-    if not get_tkraw (tk) then exit;   {get next argument}
-    escr_exblock_arg_add (tk);         {add as next argument to new execution block}
+    if not escr_get_tkraw (e, tk) then exit; {get next argument}
+    escr_exblock_arg_add (e, tk);      {add as next argument to new execution block}
     end;
-  escr_exblock_inline_set (sym_p^.subr_line_p); {go to subroutine definition line}
-  discard( infile_getline (str_p) );   {advance past subroutine definition line}
-  escr_exblock_loclab_init;            {create table for local labels}
+  escr_exblock_inline_set (e, sym_p^.subr_line_p); {go to subroutine definition line}
+  discard( escr_infile_getline (e, str_p) ); {advance past subroutine definition line}
+  escr_exblock_loclab_init (e);        {create table for local labels}
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_CMD_RETURN (STAT)
+*   Subroutine  ESCR_CMD_RETURN (E, STAT)
 *
 *   /RETURN
 *
 *   Return from the innermost subroutine currently in.
 }
 procedure escr_cmd_return (
+  in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
@@ -144,10 +148,10 @@ begin
 
   while e.exblock_p^.bltype <> escr_exblock_sub_k do begin {up thru blocks until first subr}
     if e.exblock_p^.prev_p = nil then begin {at top execution block ?}
-      escr_err_atline ('pic', 'not_in_sub', nil, 0); {complain not in a subroutine}
+      escr_err_atline (e, 'pic', 'not_in_sub', nil, 0); {complain not in a subroutine}
       end;
-    escr_exblock_close;                {end this execution block, make previous current}
+    escr_exblock_close (e);            {end this execution block, make previous current}
     end;                               {back to check this new execution block}
 
-  escr_exblock_close;                  {end the subroutine execution block}
+  escr_exblock_close (e);              {end the subroutine execution block}
   end;

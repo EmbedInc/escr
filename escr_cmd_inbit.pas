@@ -1,4 +1,4 @@
-{   Subroutine ESCR_CMD_INBIT (STAT)
+{   Subroutine ESCR_CMD_INBIT (E, STAT)
 *
 *   /INBIT name port bit [PUP]
 *
@@ -24,9 +24,10 @@
 }
 module escr_cmd_inbit;
 define escr_cmd_inbit;
-%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
+%include 'escr2.ins.pas';
 
 procedure escr_cmd_inbit (
+  in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
@@ -57,15 +58,15 @@ begin
   tk.max := size_char(tk.str);
   syname.max := size_char(syname.str);
 
-  if not get_token (name)              {get NAME parameter}
-    then escr_err_parm_missing ('', '', nil, 0);
+  if not escr_get_token (e, name)      {get NAME parameter}
+    then escr_err_parm_missing (e, '', '', nil, 0);
   string_copy (name, namel);           {make lower case version of name}
   string_downcase (namel);
 {
 *   Get PORTx parameter.
 }
-  if not get_token (tk)                {get I/O port name into TK}
-    then escr_err_parm_missing ('', '', nil, 0);
+  if not escr_get_token (e, tk)        {get I/O port name into TK}
+    then escr_err_parm_missing (e, '', '', nil, 0);
   string_downcase (tk);                {make lower case port register name}
   portl := tk.str[5];                  {extract lower case a-z port letter}
   if                                   {invalid port register name ?}
@@ -76,39 +77,39 @@ begin
       (tk.str[4] <> 't') or
       (portl < 'a') or (portl > 'z')   {not a valid port letter ?}
       then begin
-    escr_err_parm_last_bad;
+    escr_err_parm_last_bad (e);
     end;
   portu := string_upcase_char (portl); {make upper case port letter}
 {
 *   Get bit number parameter.
 }
-  if not get_int (im) then begin       {get the bit number}
-    escr_err_parm_missing ('', '', nil, 0);
+  if not escr_get_int (e, im) then begin {get the bit number}
+    escr_err_parm_missing (e, '', '', nil, 0);
     end;
   bit := im;                           {get the bit number into BIT}
-  if bit < 0 then escr_err_parm_last_bad; {negative bit numbers not allowed}
-  case lang of
-lang_aspic_k: begin                    {MPASM}
-      if bit > 7 then escr_err_parm_last_bad; {bit value too large ?}
+  if bit < 0 then escr_err_parm_last_bad (e); {negative bit numbers not allowed}
+  case e.lang of
+escr_lang_aspic_k: begin               {MPASM}
+      if bit > 7 then escr_err_parm_last_bad (e); {bit value too large ?}
       end;
-lang_dspic_k: begin                    {ASM30}
-      if bit > 15 then escr_err_parm_last_bad; {bit value too large ?}
+escr_lang_dspic_k: begin               {ASM30}
+      if bit > 15 then escr_err_parm_last_bad (e); {bit value too large ?}
       end;
 otherwise
-    err_lang (lang, 'ESCR_CMD_INBIT', 1);
+    escr_err_lang (e, e.lang, 'ESCR_CMD_INBIT', 1);
     end;
   string_f_int (strbit, bit);          {make bit number string}
 {
 *   Get optional PUP parameter.
 }
-  escr_get_keyword ('PUP', pick);      {pick the keyword from the list}
+  escr_get_keyword (e, 'PUP', pick);   {pick the keyword from the list}
   case pick of
 1:  pup := true;
 otherwise
     pup := false;
     end;
 
-  escr_get_end;                        {no more parameters allowed}
+  escr_get_end (e);                    {no more parameters allowed}
 {
 *   Create the preprocessor constant Portdata_<port><bit> where PORT is the
 *   single letter port name and BIT is the 0-N number of this bit within the
@@ -119,9 +120,9 @@ otherwise
   string_append1 (syname, portl);
   string_append (syname, strbit);
 
-  escr_sym_find (syname, sym_p);       {find constant if it already exists}
+  escr_sym_find (e, syname, sym_p);    {find constant if it already exists}
   if sym_p <> nil then begin           {already exists ?}
-    escr_sym_del (sym_p);              {delete it}
+    escr_sym_del (e, sym_p);           {delete it}
     end;
 
   tk.len := 0;                         {build the constant string value}
@@ -129,7 +130,7 @@ otherwise
   string_append_token (tk, string_v('IN'(0))); {this is a input bit}
   string_append_token (tk, string_v('POS'(0))); {all INBIT positive logic for now}
 
-  escr_sym_new_const (                 {create the constant}
+  escr_sym_new_const (e,               {create the constant}
     syname,                            {name of the constant}
     escr_dtype_str_k,                  {value will be a string}
     tk.len,                            {string length}
@@ -150,16 +151,16 @@ otherwise
   string_append (syname, namel);
   string_appends (syname, '_port'(0));
 
-  escr_sym_find (syname, sym_p);       {find constant if it already exists}
+  escr_sym_find (e, syname, sym_p);    {find constant if it already exists}
   if sym_p <> nil then begin           {already exists ?}
     sys_msg_parm_vstr (msg_parm[1], name);
-    escr_err_atline ('pic', 'err_inbit_dup', msg_parm, 1); {bomb with error message}
+     escr_err_atline (e, 'pic', 'err_inbit_dup', msg_parm, 1); {bomb with error message}
     end;
 
   tk.len := 0;                         {build the string value}
   string_append1 (tk, portu);
 
-  escr_sym_new_const (                 {create the constant}
+  escr_sym_new_const (e,               {create the constant}
     syname,                            {name of the constant}
     escr_dtype_str_k,                  {value will be a string}
     tk.len,                            {string length}
@@ -179,13 +180,13 @@ otherwise
   string_append (syname, namel);
   string_appends (syname, '_bit'(0));
 
-  escr_sym_find (syname, sym_p);       {find constant if it already exists}
+  escr_sym_find (e, syname, sym_p);    {find constant if it already exists}
   if sym_p <> nil then begin           {already exists ?}
     sys_msg_parm_vstr (msg_parm[1], name);
-    escr_err_atline ('pic', 'err_inbit_dup', msg_parm, 1); {bomb with error message}
+     escr_err_atline (e, 'pic', 'err_inbit_dup', msg_parm, 1); {bomb with error message}
     end;
 
-  escr_sym_new_const (                 {create the constant}
+   escr_sym_new_const (e,              {create the constant}
     syname,                            {name of the constant}
     escr_dtype_int_k,                  {value will be integer}
     0,                                 {unused for integer data type}
@@ -194,20 +195,20 @@ otherwise
 
   sym_p^.const_val.int := bit;         {set the value of the new constant}
 
-  case lang of                         {what is the input source language ?}
+  case e.lang of                       {what is the input source language ?}
 {
 ********************
 *
 *   Input source language is MPASM.
 }
-lang_aspic_k: begin
+escr_lang_aspic_k: begin
 {
 *   <name>_reg equ portx
 }
   string_append (e.obuf, name);
   string_appends (e.obuf, '_reg equ port'(0));
   string_append1 (e.obuf, portl);
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *     ifdef trisx
 *   <name>_tris equ trisx
@@ -215,22 +216,22 @@ lang_aspic_k: begin
 }
   string_appends (e.obuf, '  ifdef tris'(0));
   string_append1 (e.obuf, portl);
-  escr_write_obuf;
+  escr_write_obuf (e);
 
   string_append (e.obuf, name);
   string_appends (e.obuf, '_tris equ tris'(0));
   string_append1 (e.obuf, portl);
-  escr_write_obuf;
+  escr_write_obuf (e);
 
   string_appends (e.obuf, '    endif'(0));
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *   <name>_bit equ <bit>
 }
   string_append (e.obuf, name);
   string_appends (e.obuf, '_bit equ '(0));
   string_append (e.obuf, strbit);
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *   val_trisx set val_trisx | (1 << <bit>)
 }
@@ -241,7 +242,7 @@ lang_aspic_k: begin
   string_appends (e.obuf, ' | (1 << '(0));
   string_append (e.obuf, strbit);
   string_appends (e.obuf, ')'(0));
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *   Update VAL_PULLUPx according to the PUP parameter.
 }
@@ -271,7 +272,7 @@ lang_aspic_k: begin
       string_appends (e.obuf, ')'(0));
       end
     ;
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *   #define <name>_pin portx,<bit>
 }
@@ -281,7 +282,7 @@ lang_aspic_k: begin
   string_append1 (e.obuf, portl);
   string_appends (e.obuf, ',');
   string_append (e.obuf, strbit);
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *     ifdef latx
 *   <name>_lat equ latx
@@ -290,12 +291,12 @@ lang_aspic_k: begin
 }
   string_appends (e.obuf, '  ifdef lat'(0));
   string_append1 (e.obuf, portl);
-  escr_write_obuf;
+  escr_write_obuf (e);
 
   string_append (e.obuf, name);
   string_appends (e.obuf, '_lat equ lat'(0));
   string_append1 (e.obuf, portl);
-  escr_write_obuf;
+  escr_write_obuf (e);
 
   string_appends (e.obuf, '#define '(0));
   string_append (e.obuf, name);
@@ -303,17 +304,17 @@ lang_aspic_k: begin
   string_append1 (e.obuf, portl);
   string_appends (e.obuf, ','(0));
   string_append (e.obuf, strbit);
-  escr_write_obuf;
+  escr_write_obuf (e);
 
   string_appends (e.obuf, '    endif'(0));
-  escr_write_obuf;
+  escr_write_obuf (e);
   end;                                 {end of MPASM language case}
 {
 ********************
 *
-*   Input source language is MPASM.
+*   Input source language is ASM30.
 }
-lang_dspic_k: begin
+escr_lang_dspic_k: begin
 {
 *   .equ <name>_reg, _PORTx
 }
@@ -321,7 +322,7 @@ lang_dspic_k: begin
   string_append (e.obuf, name);
   string_appends (e.obuf, '_reg, _PORT'(0));
   string_append1 (e.obuf, portu);
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *   .equ <name>_tris, _TRISx
 }
@@ -329,7 +330,7 @@ lang_dspic_k: begin
   string_append (e.obuf, name);
   string_appends (e.obuf, '_tris, _TRIS'(0));
   string_append1 (e.obuf, portu);
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *   .equ <name>_bit, <bit>
 }
@@ -337,7 +338,7 @@ lang_dspic_k: begin
   string_append (e.obuf, name);
   string_appends (e.obuf, '_bit, '(0));
   string_append (e.obuf, strbit);
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *   .equ <name>_lat, _LATx
 }
@@ -345,7 +346,7 @@ lang_dspic_k: begin
   string_append (e.obuf, name);
   string_appends (e.obuf, '_lat, _LAT'(0));
   string_append1 (e.obuf, portu);
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *   .set val_trisx, val_trisx | (1 << <bit>)
 }
@@ -356,7 +357,7 @@ lang_dspic_k: begin
   string_appends (e.obuf, ' | (1 << '(0));
   string_append (e.obuf, strbit);
   string_appends (e.obuf, ')'(0));
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *   Update VAL_PULLUPx according to the PUP parameter.
 }
@@ -386,7 +387,7 @@ lang_dspic_k: begin
       string_appends (e.obuf, ')'(0));
       end
     ;
-  escr_write_obuf;
+  escr_write_obuf (e);
 
 (*
 {
@@ -398,7 +399,7 @@ lang_dspic_k: begin
   string_append1 (e.obuf, portu);
   string_appends (e.obuf, ',');
   string_append (e.obuf, strbit);
-  escr_write_obuf;
+  escr_write_obuf (e);
 {
 *   #define <name>_pinlat _LATx,<bit>
 }
@@ -408,7 +409,7 @@ lang_dspic_k: begin
   string_append1 (e.obuf, portu);
   string_appends (e.obuf, ',');
   string_append (e.obuf, strbit);
-  escr_write_obuf;
+  escr_write_obuf (e);
 *)
 
   end;                                 {end of ASM30 language case}
@@ -418,6 +419,6 @@ lang_dspic_k: begin
 *   Unexpected input source file language.
 }
 otherwise
-    err_lang (lang, 'ESCR_CMD_INBIT', 2);
+    escr_err_lang (e, e.lang, 'ESCR_CMD_INBIT', 2);
     end;
   end;

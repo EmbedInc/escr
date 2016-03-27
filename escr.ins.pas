@@ -22,6 +22,19 @@ type
   escr_exblock_p_t = ^escr_exblock_t;  {pointer to info about one nested executable block}
   escr_inh_p_t = ^escr_inh_t;          {pointer to state for one execution inhibit layer}
 
+  escr_suff_k_t = (                    {input file suffix ID}
+    escr_suff_ins_aspic_k,             {.ins.aspic}
+    escr_suff_aspic_k,                 {.aspic}
+    escr_suff_ins_dspic_k,             {.ins.dspic}
+    escr_suff_dspic_k,                 {.dspic}
+    escr_suff_es_k,                    {.es}
+    escr_suff_escr_k);                 {.escr}
+
+  escr_lang_k_t = (                    {input source language ID}
+    escr_lang_aspic_k,                 {MPASM}
+    escr_lang_dspic_k,                 {ASM30}
+    escr_lang_escr_k);                 {Embed script}
+
   escr_dtype_k_t = (                   {data type ID}
     escr_dtype_bool_k,                 {boolean}
     escr_dtype_int_k,                  {integer}
@@ -200,6 +213,9 @@ escr_inhty_blk_k: (                    {in execution block}
   escr_p_t = ^escr_t;
   escr_t = record                      {state for one use of the ESCR system}
     out_p: escr_outfile_p_t;           {points to current output file info, NIL = none}
+    nflags: sys_int_machine_t;         {total number of flags bits created}
+    flag_byten: sys_int_machine_t;     {number of flag bytes (words on PIC 30) created}
+    flag_bitn: sys_int_machine_t;      {0-N bit number of next flag within flag byte/word}
     sym: string_hash_handle_t;         {symbol table}
     mem_sytable_p: util_mem_context_p_t; {pointer to mem context for global symbol table}
     mem_sym_p: util_mem_context_p_t;   {pointer to mem context for global symbol data}
@@ -207,6 +223,7 @@ escr_inhty_blk_k: (                    {in execution block}
     files_p: escr_infile_p_t;          {points to list of input files}
     exblock_p: escr_exblock_p_t;       {points to info about current execution block}
     inhibit_p: escr_inh_p_t;           {points to current execution inhibit info}
+    lang: escr_lang_k_t;               {input file language ID}
     labeln: sys_int_conv32_t;          {sequential number for next unique label}
     cmd: string_var32_t;               {name of current command, upper case}
     ibuf: string_var8192_t;            {current input line after function expansions}

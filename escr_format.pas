@@ -7,7 +7,7 @@ define escr_format_fp;
 {
 ********************************************************************************
 *
-*   Subroutine FORMAT_INT (I, FMT, S, STAT)
+*   Subroutine ESCR_FORMAT_INT (E, I, FMT, S, STAT)
 *
 *   Format the integer value I into the string S according for the format string
 *   FMT.  The valid format string elements are:
@@ -33,6 +33,7 @@ define escr_format_fp;
 *     SIN  -  The input integer will be interpreted as signed (default).
 }
 procedure escr_format_int (            {create specifically formatted integer string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      i: sys_int_max_t;            {input integer value}
   in      fmt: univ string_var_arg_t;  {format string}
   in out  s: univ string_var_arg_t;    {returned integer string}
@@ -125,7 +126,7 @@ begin
 }
 otherwise
       sys_msg_parm_vstr (msg_parm[1], tk);
-      escr_err_atline ('pic', 'err_fmt_int', msg_parm, 1);
+      escr_err_atline (e, 'pic', 'err_fmt_int', msg_parm, 1);
       end;
     if sys_error(stat) then return;
     end;                               {back to get next format command}
@@ -141,7 +142,7 @@ otherwise
 {
 ********************************************************************************
 *
-*   Subroutine FORMAT_FP (FP, FMT, S, STAT)
+*   Subroutine ESCR_FORMAT_FP (E, FP, FMT, S, STAT)
 *
 *   Format the floating point value FP into the string S according for the
 *   format string FMT.  The valid format string elements are:
@@ -207,6 +208,7 @@ otherwise
 *       (default).
 }
 procedure escr_format_fp (             {create specifically formatted floating point string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fp: sys_fp_max_t;            {input integer value}
   in      fmt: univ string_var_arg_t;  {format string}
   in out  s: univ string_var_arg_t;    {returned floating point string string}
@@ -487,7 +489,7 @@ begin
 }
 otherwise
       sys_msg_parm_vstr (msg_parm[1], tk);
-      escr_err_atline ('pic', 'err_fmt_fp', msg_parm, 1);
+      escr_err_atline (e, 'pic', 'err_fmt_fp', msg_parm, 1);
       end;
     if sys_error(stat) then return;
     end;                               {back to get next format command}

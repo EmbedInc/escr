@@ -1,12 +1,12 @@
 {   Routines for handling terms in expressions or function parameters.
 }
 module escr_term;
-define term_get;
-%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
+define escr_term_get;
+%include 'escr2.ins.pas';
 {
 ****************************************************************************
 *
-*   Function TERM_GET (FSTR, P, VAL)
+*   Function ESCR_TERM_GET (E, FSTR, P, VAL)
 *
 *   Get the next token in FSTR and interpret it as a term or inline function
 *   argument.  P is the FSTR parse index and VAL is the returned value
@@ -18,7 +18,8 @@ define term_get;
 *   that may have less memory allocated, such as used to hold the value of
 *   a variable or constant.
 }
-function term_get (                    {get value of next term in list}
+function escr_term_get (               {get value of next term in list}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fstr: univ string_var_arg_t; {source string, term will be next token}
   in out  p: string_index_t;           {source string parse index}
   out     val: escr_val_t)             {returned value of the term}
@@ -45,7 +46,7 @@ begin
   tk.max := size_char(tk.str);         {init local var string}
   tku.max := size_char(tku.str);
 
-  term_get := false;                   {init to no term found}
+  escr_term_get := false;              {init to no term found}
   if p > fstr.len then return;         {nothing left to parse from input string ?}
   while fstr.str[p] = ' ' do begin     {skip over blanks}
     p := p + 1;                        {advance to next input string char}
@@ -57,8 +58,8 @@ begin
   c := fstr.str[p];                    {save the first token character}
   string_token (fstr, p, tk, stat);    {get the token contents}
   if string_eos(stat) then return;     {nothing there ?}
-  escr_err_atline_abort (stat, '', '', nil, 0);
-  term_get := true;                    {indicate returning with a value}
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
+  escr_term_get := true;               {indicate returning with a value}
 {
 *   Check for token is text string.
 *
@@ -91,7 +92,7 @@ begin
 {
 *   Check for time.
 }
-  if escr_str_to_time (tk, val.time) then begin
+  if escr_str_to_time (e, tk, val.time) then begin
     val.dtype := escr_dtype_time_k;
     return;
     end;
@@ -109,23 +110,23 @@ begin
 {
 *   Check for symbol reference.
 }
-  if not sym_name(tk) then goto not_sym; {token is not a valid symbol name}
-  escr_sym_find (tk, sym_p);           {lookup name in symbol table}
+  if not escr_sym_name (e, tk) then goto not_sym; {token is not a valid symbol name}
+  escr_sym_find (e, tk, sym_p);        {lookup name in symbol table}
   if sym_p = nil then goto not_sym;    {no such symbol ?}
   case sym_p^.stype of                 {what kind of symbol is it ?}
 escr_sym_var_k: begin                  {symbol is a variable}
-      escr_val_init (sym_p^.var_val.dtype, val); {set up VAL for this data type}
-      escr_val_copy (sym_p^.var_val, val); {return the variable's value}
+      escr_val_init (e, sym_p^.var_val.dtype, val); {set up VAL for this data type}
+      escr_val_copy (e, sym_p^.var_val, val); {return the variable's value}
       return;
       end;
 escr_sym_const_k: begin                {symbol is a constant}
-      escr_val_init (sym_p^.const_val.dtype, val); {set up VAL for this data type}
-      escr_val_copy (sym_p^.const_val, val); {return the constant's value}
+      escr_val_init (e, sym_p^.const_val.dtype, val); {set up VAL for this data type}
+      escr_val_copy (e, sym_p^.const_val, val); {return the constant's value}
       return;
       end;
 otherwise                              {this symbol can't be used as a term}
     sys_msg_parm_vstr (msg_parm[1], tk);
-    escr_err_atline ('pic', 'sym_nval', msg_parm, 1);
+    escr_err_atline (e, 'pic', 'sym_nval', msg_parm, 1);
     return;
     end;
 not_sym:                               {skip to here on not a symbol reference}
@@ -133,6 +134,6 @@ not_sym:                               {skip to here on not a symbol reference}
 *   The token is not a recognizable term.
 }
   sys_msg_parm_vstr (msg_parm[1], tk);
-  escr_err_atline ('pic', 'term_bad', msg_parm, 1); {bomb with error message}
+  escr_err_atline (e, 'pic', 'term_bad', msg_parm, 1); {bomb with error message}
   return;                              {keep compiler from complaining}
   end;

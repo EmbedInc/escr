@@ -2,18 +2,19 @@
 }
 module escr_cmd_loop;
 define escr_cmd_loop;
-define loop_iter;
+define escr_loop_iter;
 define escr_cmd_endloop;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_CMD_LOOP (STAT)
+*   Subroutine  ESCR_CMD_LOOP (E, STAT)
 *
 *   /LOOP
 *   /LOOP SYMBOLS varname
 }
 procedure escr_cmd_loop (
+  in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
@@ -37,16 +38,16 @@ begin
   tk.max := size_char(tk.str);
   sys_error_none (stat);               {init to no error occurred}
 
-  escr_exblock_new;                    {create new execution block state}
+  escr_exblock_new (e);                {create new execution block state}
   e.exblock_p^.start_p :=              {save pointer to starting line of this block}
     e.exblock_p^.prev_p^.inpos_p^.last_p;
   e.exblock_p^.bltype := escr_exblock_loop_k; {indicate LOOP ... ENDLOOP type}
   escr_exblock_inline_set (            {set next source line to execute}
-    e.exblock_p^.prev_p^.inpos_p^.line_p);
+    e, e.exblock_p^.prev_p^.inpos_p^.line_p);
 
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
 
-  escr_get_keyword ('SYMBOLS FOR FROM N', pick); {get looptype keyword}
+  escr_get_keyword (e, 'SYMBOLS FOR FROM N', pick); {get looptype keyword}
   util_mem_grab (                      {allocate loop descriptor}
     sizeof(loop_p^), e.exblock_p^.mem_p^, false, loop_p);
   loop_p^.looptype := escr_looptype_unc_k; {init loop descriptor to default}
@@ -59,7 +60,7 @@ begin
 *   /LOOP with no parameters.
 }
 0: begin
-  escr_get_end;                        {no more command parameters allowed}
+  escr_get_end (e);                    {no more command parameters allowed}
   end;
 {
 ******************************
@@ -69,9 +70,9 @@ begin
 1: begin
   loop_p^.looptype := escr_looptype_sym_k; {looping over list of symbols}
 
-  if not get_token (name)              {get the variable name into NAME}
-    then escr_err_parm_missing ('', '', nil, 0);
-  escr_get_end;                        {no more command parameters allowed}
+  if not escr_get_token (e, name)      {get the variable name into NAME}
+    then escr_err_parm_missing (e, '', '', nil, 0);
+  escr_get_end (e);                    {no more command parameters allowed}
 {
 *   Create the local list of symbol names.
 }
@@ -98,7 +99,7 @@ begin
 {
 *   Initialze the loop state to the first names list entry.
 }
-  escr_sym_new_var (                   {create the loop variable}
+  escr_sym_new_var (e,                 {create the loop variable}
     name,                              {name of variable to create}
     escr_dtype_str_k,                  {variable's data type}
     escr_max_namelen_k,                {max length}
@@ -122,27 +123,27 @@ begin
 *   /LOOP FOR var FROM n TO m [BY k]
 }
 2: begin
-  if not get_token (name)              {get the variable name into NAME}
-    then escr_err_parm_missing ('', '', nil, 0);
+  if not escr_get_token (e, name)      {get the variable name into NAME}
+    then escr_err_parm_missing (e, '', '', nil, 0);
 
-  escr_get_keyword ('FROM', pick);
+  escr_get_keyword (e, 'FROM', pick);
 loop_from:                             {common code with /LOOP FROM}
-  if not get_int (loop_p^.for_start)
-    then escr_err_parm_missing ('', '', nil, 0);
+  if not escr_get_int (e, loop_p^.for_start)
+    then escr_err_parm_missing (e, '', '', nil, 0);
 
-  escr_get_keyword ('TO', pick);
-  if not get_int (loop_p^.for_end)
-    then escr_err_parm_missing ('', '', nil, 0);
+  escr_get_keyword (e, 'TO', pick);
+  if not escr_get_int (e, loop_p^.for_end)
+    then escr_err_parm_missing (e, '', '', nil, 0);
 
   if loop_p^.for_end >= loop_p^.for_start {set default increment from loop direction}
     then loop_p^.for_inc := 1
     else loop_p^.for_inc := -1;
 
-  escr_get_keyword ('BY', pick);
+  escr_get_keyword (e, 'BY', pick);
   if pick = 1 then begin               {BY clause exists ?}
-    if not get_int (loop_p^.for_inc)
-      then escr_err_parm_missing ('', '', nil, 0);
-    escr_get_end;                      {nothing more allowed on the command line}
+    if not escr_get_int (e, loop_p^.for_inc)
+      then  escr_err_parm_missing (e, '', '', nil, 0);
+    escr_get_end (e);                  {nothing more allowed on the command line}
     end;
   {
   *   The /LOOP command line has been parsed.  NAME is the name of the temporary
@@ -153,7 +154,7 @@ loop_from:                             {common code with /LOOP FROM}
   *   filled in.
   }
   if loop_p^.for_inc = 0 then begin    {invalid iteration increment ?}
-    escr_err_atline ('pic', 'err_loopinc0', nil, 0);
+    escr_err_atline (e, 'pic', 'err_loopinc0', nil, 0);
     end;
   loop_p^.looptype := escr_looptype_for_k; {FOR loop}
   loop_p^.for_curr := loop_p^.for_start; {init value for first iteration}
@@ -173,7 +174,7 @@ loop_from:                             {common code with /LOOP FROM}
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
   if name.len > 0 then begin           {need to create loop variable ?}
-    escr_sym_new_var (                 {create the loop variable}
+    escr_sym_new_var (e,               {create the loop variable}
       name,                            {name of the variable to create}
       escr_dtype_int_k,                {data type will be integer}
       0,                               {additional length parameter, unused}
@@ -203,8 +204,8 @@ loop_from:                             {common code with /LOOP FROM}
   loop_p^.for_curr := 1;               {value for first iteration}
   loop_p^.for_inc := 1;                {increment each iteration}
 
-  if not get_int (loop_p^.for_end)     {get number of times to loop}
-    then escr_err_parm_missing ('', '', nil, 0);
+  if not escr_get_int (e, loop_p^.for_end) {get number of times to loop}
+    then escr_err_parm_missing (e, '', '', nil, 0);
 
   if loop_p^.for_end < 1 then begin    {will do 0 iterations ?}
     e.inhibit_p^.inh := true;          {inhibit execution for this block}
@@ -228,7 +229,8 @@ loop_from:                             {common code with /LOOP FROM}
 *   altered.  If the terminating condition is not met, then the execution point
 *   is set to the first line within the current execution block.
 }
-function loop_iter                     {advance to next loop iteration}
+function escr_loop_iter (              {advance to next loop iteration}
+  in out  e: escr_t)                   {state for this use of the ESCR system}
   :boolean;                            {looped back, not terminated}
   val_param;
 
@@ -240,7 +242,7 @@ label
   loop;
 
 begin
-  loop_iter := false;                  {init to loop terminated}
+  escr_loop_iter := false;             {init to loop terminated}
 
   if e.exblock_p^.bltype <> escr_exblock_loop_k {not in explicit loop block ?}
     then goto loop;                    {loop back unconditionally}
@@ -265,7 +267,7 @@ escr_looptype_sym_k: begin             {looping thru list of symbols}
     if loop_p^.sym_list_p^.str_p = nil {hit end of list ?}
       then return;
 
-    escr_sym_find (loop_p^.sym_list_p^.str_p^, sym_p); {try to find the symbol}
+    escr_sym_find (e, loop_p^.sym_list_p^.str_p^, sym_p); {try to find the symbol}
     if sym_p = nil then next;          {this symbol got deleted, skip it}
 
     string_copy (                      {copy new name into loop variable}
@@ -301,19 +303,20 @@ escr_looptype_for_k: begin
 }
 otherwise                              {unimplemented loop type}
     writeln ('INTERNAL ERROR: Unexpected loop type encountered in LOOP_ITER.');
-    escr_err_atline ('', '', nil, 0);
+    escr_err_atline (e, '', '', nil, 0);
     end;                               {end of loop type cases}
 
 loop:                                  {loop execution back to start of block}
-  escr_exblock_repeat;                 {jump back to start of block}
-  loop_iter := true;                   {indicate execution was looped back}
+  escr_exblock_repeat (e);             {jump back to start of block}
+  escr_loop_iter := true;              {indicate execution was looped back}
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_CMD_ENDLOOP (STAT)
+*   Subroutine  ESCR_CMD_ENDLOOP (E, STAT)
 }
 procedure escr_cmd_endloop (
+  in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
@@ -324,18 +327,18 @@ begin
   sys_error_none (stat);               {init to no error occurred}
 
   if e.exblock_p^.bltype <> escr_exblock_loop_k then begin {not in LOOP block type ?}
-    escr_err_atline ('pic', 'err_endblock_type', nil, 0);
+    escr_err_atline (e, 'pic', 'err_endblock_type', nil, 0);
     end;
   if e.exblock_p^.inpos_p^.prev_p <> nil then begin {block ended in include file ?}
-    escr_err_atline ('pic', 'err_endblock_include', nil, 0);
+    escr_err_atline (e, 'pic', 'err_endblock_include', nil, 0);
     end;
   if e.inhibit_p^.inh then goto del_block; {execution is inhibited ?}
 
-  escr_get_end;                        {no command parameters allowed}
-  if loop_iter then return;            {back to do next loop iteration ?}
+  escr_get_end (e);                    {no command parameters allowed}
+  if escr_loop_iter(e) then return;    {back to do next loop iteration ?}
 
 del_block:                             {delete this block}
   e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}
     e.exblock_p^.inpos_p^.line_p;
-  escr_exblock_close;                  {end this execution block}
+  escr_exblock_close (e);              {end this execution block}
   end;

@@ -306,7 +306,7 @@ escr_dtype_int_k: begin
 
 escr_dtype_fp_k: begin
       string_appends (e.obuf, 'REAL = '(0));
-      escr_str_from_fp (val.fp, tk);
+      escr_str_from_fp (e, val.fp, tk);
       string_append (e.obuf, tk);
       end;
 
@@ -318,7 +318,7 @@ escr_dtype_str_k: begin
 
 escr_dtype_time_k: begin
       string_appends (e.obuf, 'TIME = '(0));
-      escr_str_from_time (val.time, tk);
+      escr_str_from_time (e, val.time, tk);
       string_append (e.obuf, tk);
       end;
 

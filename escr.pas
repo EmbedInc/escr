@@ -7,13 +7,13 @@
 *   By default, the output file is written to the current directory.
 }
 program escr;
-define com;
 %include 'escr2.ins.pas';
 
 const
   max_msg_parms = 2;                   {max parameters we can pass to a message}
 
 var
+  e: escr_t;                           {state for this use of ESCR system}
   i: sys_int_machine_t;                {scratch integer and loop counter}
   im: sys_int_max_t;                   {integer value for variable in symbol table}
   fp: sys_fp_max_t;                    {floating point value for variable in symbol table}
@@ -21,8 +21,8 @@ var
   fnam_out:                            {output file name}
     %include '(cog)lib/string_treename.ins.pas';
   conn: file_conn_t;                   {connection to top level input file}
-  sym_p: sym_p_t;                      {pointer to symbol in symbol table}
-  infile_p: infile_p_t;                {pointer to top level input file info}
+  sym_p: escr_sym_p_t;                 {pointer to symbol in symbol table}
+  infile_p: escr_infile_p_t;           {pointer to top level input file info}
   nclen: string_index_t;               {string length with comment removed}
   str_p: string_var_p_t;               {pointer to current input line string}
   osuff: string;                       {output file suffix}
@@ -72,40 +72,40 @@ begin
 *   Start of main routine.
 }
 begin
-  cmd.max := size_char(cmd.str);       {init var strings in common block}
-  cmd.len := 0;
-  ibuf.max := size_char(ibuf.str);
-  ibuf.len := 0;
-  lparm.max := size_char(lparm.str);
-  lparm.len := 0;
-  obuf.max := size_char(obuf.str);
-  obuf.len := 0;
+  e.cmd.max := size_char(e.cmd.str);   {init var strings in common block}
+  e.cmd.len := 0;
+  e.ibuf.max := size_char(e.ibuf.str);
+  e.ibuf.len := 0;
+  e.lparm.max := size_char(e.lparm.str);
+  e.lparm.len := 0;
+  e.obuf.max := size_char(e.obuf.str);
+  e.obuf.len := 0;
 
-  nflags := 0;                         {init to no /FLAG flags created}
-  flag_byten := 0;                     {init to no GFLx flag bytes required}
-  flag_bitn := 0;                      {number of next flag bit within flag byte}
-  files_p := nil;                      {init list of input files to empty}
-  exblock_p := nil;                    {init to no current execution block}
-  inhibit_p := nil;                    {init to no execution inhibit}
-  labeln := 1;                         {init globally unique number for next local label}
+  e.nflags := 0;                       {init to no /FLAG flags created}
+  e.flag_byten := 0;                   {init to no GFLx flag bytes required}
+  e.flag_bitn := 0;                    {number of next flag bit within flag byte}
+  e.files_p := nil;                    {init list of input files to empty}
+  e.exblock_p := nil;                  {init to no current execution block}
+  e.inhibit_p := nil;                  {init to no execution inhibit}
+  e.labeln := 1;                       {init globally unique number for next local label}
   util_mem_context_get (               {create mem context for symbol table}
-    util_top_mem_context, mem_sytable_p);
+    util_top_mem_context, e.mem_sytable_p);
   util_mem_context_get (               {create mem context for symbol data}
-    mem_sytable_p^, mem_sym_p);
+    e.mem_sytable_p^, e.mem_sym_p);
   string_hash_create (                 {create the symbol table}
-    sym,                               {symbol table to create}
-    sym_nbuck_k,                       {number of buckets in the hash table}
-    max_namelen_k,                     {max allowed characters in symbol name}
-    sizeof(sym_p_t),                   {size of data stored in each table entry}
+    e.sym,                             {symbol table to create}
+    escr_sym_nbuck_k,                  {number of buckets in the hash table}
+    escr_max_namelen_k,                {max allowed characters in symbol name}
+    sizeof(escr_sym_p_t),              {size of data stored in each table entry}
     [string_hashcre_memdir_k],         {use the supplied memory context directly}
-    mem_sytable_p^);                   {pointer to memory context to use}
+    e.mem_sytable_p^);                 {pointer to memory context to use}
   util_mem_context_get (               {create mem context for top level execution block}
-    util_top_mem_context, mem_top_p);
+    util_top_mem_context, e.mem_top_p);
 
-  inh_new;                             {create the root execution inhibit state}
-  inhibit_p^.inhty := inhty_root_k;
-  exblock_new;                         {create top level execution block}
-  exblock_loclab_init;                 {top level block always has local labels}
+  escr_inh_new (e);                    {create the root execution inhibit state}
+  e.inhibit_p^.inhty := escr_inhty_root_k;
+  escr_exblock_new (e);                {create top level execution block}
+  escr_exblock_loclab_init (e);        {top level block always has local labels}
 {
 *   Initialize our state before reading the command line options.
 }
@@ -166,8 +166,8 @@ next_opt:
 3: begin
   string_cmline_token (parm, stat);    {get the variable name}
   if sys_error(stat) then goto err_parm;
-  if not sym_name (parm) then goto parm_bad; {check for illegal symbol name}
-  sym_new_var (parm, dtype_bool_k, 0, true, sym_p); {create the new variable}
+  if not escr_sym_name (e, parm) then goto parm_bad; {check for illegal symbol name}
+  escr_sym_new_var (e, parm, escr_dtype_bool_k, 0, true, sym_p); {create the new variable}
   sym_p^.var_val.bool := true;         {set initial value of new variable}
   end;
 {
@@ -176,7 +176,7 @@ next_opt:
 4: begin
   string_cmline_token (parm, stat);    {get the variable name}
   if sys_error(stat) then goto err_parm;
-  if not sym_name (parm) then goto parm_bad; {check for illegal symbol name}
+  if not escr_sym_name (e, parm) then goto parm_bad; {check for illegal symbol name}
   string_copy (parm, tk);              {save name of new variable}
 
   string_cmline_token (parm, stat);    {get value string}
@@ -184,7 +184,7 @@ next_opt:
   string_t_int_max (parm, im, stat);   {convert to integer}
   if sys_error(stat) then goto err_parm;
 
-  sym_new_var (tk, dtype_int_k, 0, true, sym_p); {create the new variable}
+  escr_sym_new_var (e, tk, escr_dtype_int_k, 0, true, sym_p); {create the new variable}
   sym_p^.var_val.int := im;            {set variable value}
   end;
 {
@@ -193,7 +193,7 @@ next_opt:
 5: begin
   string_cmline_token (parm, stat);    {get the variable name}
   if sys_error(stat) then goto err_parm;
-  if not sym_name (parm) then goto parm_bad; {check for illegal symbol name}
+  if not escr_sym_name (e, parm) then goto parm_bad; {check for illegal symbol name}
   string_copy (parm, tk);              {save name of new variable}
 
   string_cmline_token (parm, stat);    {get value string}
@@ -201,7 +201,7 @@ next_opt:
   string_t_fpmax (parm, fp, [], stat); {convert to floating point}
   if sys_error(stat) then goto err_parm;
 
-  sym_new_var (tk, dtype_fp_k, 0, true, sym_p); {create the new variable}
+  escr_sym_new_var (e, tk, escr_dtype_fp_k, 0, true, sym_p); {create the new variable}
   sym_p^.var_val.fp := fp;             {set variable value}
   end;
 {
@@ -210,13 +210,13 @@ next_opt:
 6: begin
   string_cmline_token (parm, stat);    {get the variable name}
   if sys_error(stat) then goto err_parm;
-  if not sym_name (parm) then goto parm_bad; {check for illegal symbol name}
+  if not escr_sym_name (e, parm) then goto parm_bad; {check for illegal symbol name}
   string_copy (parm, tk);              {save name of new variable}
 
   string_cmline_token (parm, stat);    {get value string}
   if sys_error(stat) then goto err_parm;
 
-  sym_new_var (tk, dtype_str_k, parm.len, true, sym_p); {create the new variable}
+  escr_sym_new_var (e, tk, escr_dtype_str_k, parm.len, true, sym_p); {create the new variable}
   string_copy (parm, sym_p^.var_val.str); {set variable value}
   end;
 {
@@ -225,8 +225,8 @@ next_opt:
 7: begin
   string_cmline_token (parm, stat);    {get the variable name}
   if sys_error(stat) then goto err_parm;
-  if not sym_name (parm) then goto parm_bad; {check for illegal symbol name}
-  sym_new_var (parm, dtype_bool_k, 0, true, sym_p); {create the new variable}
+  if not escr_sym_name (e, parm) then goto parm_bad; {check for illegal symbol name}
+  escr_sym_new_var (e, parm, escr_dtype_bool_k, 0, true, sym_p); {create the new variable}
   sym_p^.var_val.bool := false;        {set initial value of new variable}
   end;
 {
@@ -263,28 +263,28 @@ done_opts:                             {done with all the command line options}
 
   case conn.ext_num of                 {which suffix did input file have ?}
 1:  begin                              {.INS.ASPIC}
-      lang := lang_aspic_k;            {set input file language ID}
+      e.lang := escr_lang_aspic_k;     {set input file language ID}
       osuff := '.inc';                 {set output file suffix}
       end;
 2:  begin                              {.ASPIC}
-      lang := lang_aspic_k;            {set input file language ID}
+      e.lang := escr_lang_aspic_k;     {set input file language ID}
       osuff := '.asm';                 {set output file suffix}
       end;
 3:  begin                              {.INS.DSPIC}
-      lang := lang_dspic_k;            {set input file language ID}
+      e.lang := escr_lang_dspic_k;     {set input file language ID}
       osuff := '.inc';                 {set output file suffix}
       end;
 4:  begin                              {.DSPIC}
-      lang := lang_dspic_k;            {set input file language ID}
+      e.lang := escr_lang_dspic_k;     {set input file language ID}
       osuff := '.S';                   {set output file suffix}
       end;
 otherwise                              {anything else, like .ASPIC}
     sys_message_bomb ('pic', 'err_escr_insuff', nil, 0);
     end;
 
-  infile_open (conn.tnam, infile_p, stat); {read and save top level input file}
+  escr_infile_open (e, conn.tnam, infile_p, stat); {read and save top level input file}
   sys_error_abort (stat, '', '', nil, 0);
-  exblock_inline_set (infile_p^.lines_p); {set input file line to start at}
+  escr_exblock_inline_set (e, infile_p^.lines_p); {set input file line to start at}
 {
 *   Process the output file name.
 }
@@ -297,9 +297,9 @@ otherwise                              {anything else, like .ASPIC}
       end
     ;
 
-  sys_mem_alloc (sizeof(out_p^), out_p); {allocate root output file descriptor}
-  out_p^.prev_p := nil;                {indicate this is root output file}
-  file_open_write_text (fnam_out, osuff, out_p^.conn, stat); {open the output file}
+  sys_mem_alloc (sizeof(e.out_p^), e.out_p); {allocate root output file descriptor}
+  e.out_p^.prev_p := nil;              {indicate this is root output file}
+  file_open_write_text (fnam_out, osuff, e.out_p^.conn, stat); {open the output file}
   sys_error_abort (stat, '', '', nil, 0);
 {
 *   Initialize list of input file command names.
@@ -337,14 +337,14 @@ otherwise                              {anything else, like .ASPIC}
   addcmd ('LOOP');                     {30}
   addcmd ('ENDLOOP');                  {31}
 
-  inline_func_init;                    {init for processing inline functions}
+  escr_inline_func_init (e);           {init for processing inline functions}
 {
 *   Process the input file and write the output file.
 }
 loop_line:                             {back here each new line from input file}
-  if not infile_getline(str_p) then begin {get next input line, end of input this block ?}
-    if exblock_p^.prev_p = nil then goto leave; {end of top level execution block ?}
-    err_atline ('pic', 'exblock_inend', nil, 0); {input end before execution block end}
+  if not escr_infile_getline (e, str_p) then begin {get next input line, end of input this block ?}
+    if e.exblock_p^.prev_p = nil then goto leave; {end of top level execution block ?}
+    escr_err_atline (e, 'pic', 'exblock_inend', nil, 0); {input end before execution block end}
     end;
 {
 *   Handle blank lines.  These are passed to the output file if not in a nested
@@ -353,9 +353,9 @@ loop_line:                             {back here each new line from input file}
 }
   string_unpad (str_p);                {delete trailing space from the input line}
   if str_p^.len = 0 then begin         {this is a blank line ?}
-    if exblock_p^.prev_p = nil
+    if e.exblock_p^.prev_p = nil
       then begin                       {in top level execution block}
-        ibuf.len := 0;                 {"copy" the input line to the output line}
+        e.ibuf.len := 0;               {"copy" the input line to the output line}
         goto no_cmd;                   {pass to output file}
         end
       else begin                       {in a nested execution block}
@@ -368,84 +368,84 @@ loop_line:                             {back here each new line from input file}
 *   and not written to the output file.  This is different from regular
 *   assembler comments, which are copied to the output file.
 }
-  ip := 1;                             {init input line parse index}
-  while ip < str_p^.len do begin       {scan forwards to first non-blank}
-    if str_p^.str[ip] <> ' ' then exit; {found first non-blank ?}
-    ip := ip + 1;
+  e.ip := 1;                           {init input line parse index}
+  while e.ip < str_p^.len do begin     {scan forwards to first non-blank}
+    if str_p^.str[e.ip] <> ' ' then exit; {found first non-blank ?}
+    e.ip := e.ip + 1;
     end;
   if                                   {this is a preprocessor comment line ?}
-      (ip < str_p^.len) and then       {at least two chars starting at first non-blank ?}
-      (str_p^.str[ip] = '/') and (str_p^.str[ip + 1] = '/') {starts with "//" ?}
+      (e.ip < str_p^.len) and then     {at least two chars starting at first non-blank ?}
+      (str_p^.str[e.ip] = '/') and (str_p^.str[e.ip + 1] = '/') {starts with "//" ?}
     then goto loop_line;               {totally ignore this line}
 
-  if inhibit_p^.inh
+  if e.inhibit_p^.inh
     then begin                         {execution is inhibited}
-      string_copy (str_p^, ibuf);      {copy line without expanding inline functions}
+      string_copy (str_p^, e.ibuf);    {copy line without expanding inline functions}
       end
     else begin                         {normal execution}
-      inline_expand_line (str_p^, ibuf); {expand all inline functions on this line}
+      escr_inline_expand_line (e, str_p^, e.ibuf); {expand all inline functions on this line}
       end
     ;
-  ip := 1;                             {init IBUF parse index}
-  string_token (ibuf, ip, cmd, stat);  {get first input line token into CMD}
+  e.ip := 1;                           {init IBUF parse index}
+  string_token (e.ibuf, e.ip, e.cmd, stat); {get first input line token into CMD}
   if sys_error(stat) then goto no_cmd; {definitely no preproc command on this line ?}
-  if cmd.len < 2 then goto no_cmd;     {not long enough to be preproc command ?}
-  if cmd.str[1] <> '/' then goto no_cmd; {token doesn't have preproc cmd prefix ?}
+  if e.cmd.len < 2 then goto no_cmd;   {not long enough to be preproc command ?}
+  if e.cmd.str[1] <> '/' then goto no_cmd; {token doesn't have preproc cmd prefix ?}
 
-  for i := 1 to cmd.len - 1 do begin   {shift command name to delete leading "/"}
-    cmd.str[i] := cmd.str[i + 1];
+  for i := 1 to e.cmd.len - 1 do begin {shift command name to delete leading "/"}
+    e.cmd.str[i] := e.cmd.str[i + 1];
     end;
-  cmd.len := cmd.len - 1;              {update command length for "/" removed}
-  string_upcase (cmd);                 {make upper case for keyword matching}
+  e.cmd.len := e.cmd.len - 1;          {update command length for "/" removed}
+  string_upcase (e.cmd);               {make upper case for keyword matching}
 {
 *   The line in IBUF contains a preprocessor command.  The upper case command
 *   name with the leading "/" stripped is in CMD.
 }
-  uptocomm (ibuf, nclen);              {get line length with comment stripped}
-  ibuf.len := nclen;
+  escr_uptocomm (e, e.ibuf, nclen);    {get line length with comment stripped}
+  e.ibuf.len := nclen;
 {
 *   Handle the specific preprocessor command.
 }
-  string_tkpick (cmd, cmdlist, pick);  {pick command name from list}
+  string_tkpick (e.cmd, cmdlist, pick); {pick command name from list}
   sys_error_none (stat);               {init to no error in command routine}
   case pick of                         {which preprocessor command is it ?}
-1:  escr_cmd_inbit (stat);
-2:  escr_cmd_outbit (stat);
-3:  escr_cmd_flag (stat);
-4:  escr_cmd_var (stat);
-5:  escr_cmd_set (stat);
-6:  escr_cmd_const (stat);
-7:  escr_cmd_del (stat);
-8:  escr_cmd_sylist (stat);
-9:  escr_cmd_include (stat);
-10: escr_cmd_write (stat);
-11: escr_cmd_show (stat);
-12: escr_cmd_subroutine (stat);
-13: escr_cmd_endsub (stat);
-14: escr_cmd_call (stat);
-15: escr_cmd_return (stat);
-16: escr_cmd_if (stat);
-17: escr_cmd_then (stat);
-18: escr_cmd_else (stat);
-19: escr_cmd_endif (stat);
-20: escr_cmd_block (stat);
-21: escr_cmd_repeat (stat);
-22: escr_cmd_quit (stat);
-23: escr_cmd_endblock (stat);
-24: escr_cmd_writeto (stat);
-25: escr_cmd_writeend (stat);
+1:  escr_cmd_inbit (e, stat);
+2:  escr_cmd_outbit (e, stat);
+3:  escr_cmd_flag (e, stat);
+4:  escr_cmd_var (e, stat);
+5:  escr_cmd_set (e, stat);
+6:  escr_cmd_const (e, stat);
+7:  escr_cmd_del (e, stat);
+8:  escr_cmd_sylist (e, stat);
+9:  escr_cmd_include (e, stat);
+10: escr_cmd_write (e, stat);
+11: escr_cmd_show (e, stat);
+12: escr_cmd_subroutine (e, stat);
+13: escr_cmd_endsub (e, stat);
+14: escr_cmd_call (e, stat);
+15: escr_cmd_return (e, stat);
+16: escr_cmd_if (e, stat);
+17: escr_cmd_then (e, stat);
+18: escr_cmd_else (e, stat);
+19: escr_cmd_endif (e, stat);
+20: escr_cmd_block (e, stat);
+21: escr_cmd_repeat (e, stat);
+22: escr_cmd_quit (e, stat);
+23: escr_cmd_endblock (e, stat);
+24: escr_cmd_writeto (e, stat);
+25: escr_cmd_writeend (e, stat);
 26: begin                              {/STOP}
-      if inhibit_p^.inh then goto done_cmd; {execution is inhibited ?}
+      if e.inhibit_p^.inh then goto done_cmd; {execution is inhibited ?}
       goto leave_all;
       end;
-27: escr_cmd_macro (stat);
-28: escr_cmd_endmac (stat);
-29: escr_cmd_quitmac (stat);
-30: escr_cmd_loop (stat);
-31: escr_cmd_endloop (stat);
+27: escr_cmd_macro (e, stat);
+28: escr_cmd_endmac (e, stat);
+29: escr_cmd_quitmac (e, stat);
+30: escr_cmd_loop (e, stat);
+31: escr_cmd_endloop (e, stat);
 
 otherwise
-    sys_msg_parm_vstr (msg_parm[1], cmd);
+    sys_msg_parm_vstr (msg_parm[1], e.cmd);
     sys_message_parms ('file', 'test_client_cmd_bad', msg_parm, 1);
     sys_stat_set (sys_subsys_k, sys_stat_failed_k, stat);
     goto error;
@@ -453,19 +453,19 @@ otherwise
 
 done_cmd:                              {done processing the preprocessor command}
   if sys_error(stat) then goto error;
-  if not inhibit_p^.inh then begin     {don't check unused tokens if not executed}
-    get_end;                           {error if input line not exhausted}
+  if not e.inhibit_p^.inh then begin   {don't check unused tokens if not executed}
+    escr_get_end (e);                  {error if input line not exhausted}
     end;
-  if obuf.len > 0 then write_obuf;     {write any line fragment left in out buffer}
+  if e.obuf.len > 0 then escr_write_obuf (e); {write any line fragment left in out buffer}
   goto loop_line;
 {
 *   This input line does not contain a preprocessor command.
 }
 no_cmd:
-  if inhibit_p^.inh then goto loop_line; {execution inhibited for this line ?}
-  if macro_run (stat) then goto loop_line; {macro invocation on this line processed ?}
+  if e.inhibit_p^.inh then goto loop_line; {execution inhibited for this line ?}
+  if escr_macro_run (e, stat) then goto loop_line; {macro invocation on this line processed ?}
   if sys_error(stat) then goto error;
-  write_vstr (ibuf, stat);
+  escr_write_vstr (e, e.ibuf, stat);
   if sys_error(stat) then goto error;
   goto loop_line;
 {
@@ -473,17 +473,17 @@ no_cmd:
 }
 error:
   sys_error_print (stat, '', '', nil, 0); {show the error indicated by STAT}
-  err_atline ('', '', nil, 0);         {show current input hierarchy position and bomb}
+  escr_err_atline (e, '', '', nil, 0); {show current input hierarchy position and bomb}
 
 leave:
-  if inhibit_p <> nil then begin       {still inside execution inhibit ?}
-    case inhibit_p^.inhty of           {what kind of inhibit it is ?}
-inhty_if_k: begin                      {in IF construct}
+  if e.inhibit_p <> nil then begin     {still inside execution inhibit ?}
+    case e.inhibit_p^.inhty of         {what kind of inhibit it is ?}
+escr_inhty_if_k: begin                 {in IF construct}
         sys_message_bomb ('pic', 'err_end_inh_if', nil, 0);
         end;
       end;                             {end of inhibit type cases}
     end;                               {end of inhibit exists at end of source stream}
 
 leave_all:                             {common exit point}
-  close_out_all (false);               {close and keep all output files}
+  escr_close_out_all (e, false);       {close and keep all output files}
   end.

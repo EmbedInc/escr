@@ -14,12 +14,12 @@
 *   execution block always holds a local labels list.
 }
 module escr_loclab;
-define loclab_get;
+define escr_loclab_get;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
-*   Subroutine LOCLAB_GET (NAME, STR_P)
+*   Subroutine ESCR_LOCLAB_GET (E, NAME, STR_P)
 *
 *   Get the expansion of the local label NAME.  STR_P is returned pointing to
 *   the expansion string.
@@ -34,7 +34,8 @@ define loclab_get;
 *   Local label names are case_sensitive when labels in the output language are
 *   case-sensitive.
 }
-procedure loclab_get (                 {get expansion of generic local label name}
+procedure escr_loclab_get (            {get expansion of generic local label name}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {generic local label name}
   in out  exp: univ string_var_arg_t); {returned full label name (expansion)}
   val_param;
@@ -58,8 +59,8 @@ begin
   tk.max := size_char(tk.str);
 
   string_copy (name, lname);           {make local copy of generic label name}
-  case lang of                         {which output language is this?}
-lang_aspic_k: begin                    {all the case-insensitive languages}
+  case e.lang of                       {which output language is this?}
+escr_lang_aspic_k: begin               {all the case-insensitive languages}
       string_upcase (lname);           {upper case to avoid case aliases}
       end;
     end;
@@ -105,7 +106,7 @@ lang_aspic_k: begin                    {all the case-insensitive languages}
     0,                                 {no fixed field width, use what it takes}
     [string_fi_unsig_k],               {the input number is unsigned}
     stat);
-  escr_err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   e.labeln := e.labeln + 1;            {update unique number of next time}
 
   jj := 3 - tk.len;                    {number of leading zeros to add}

@@ -1,30 +1,31 @@
 {   Collection of subroutines for getting command parameters.
 }
 module escr_get;
-define get_token;
-define get_tkraw;
-define get_tkrawc;
+define escr_get_token;
+define escr_get_tkraw;
+define escr_get_tkrawc;
 define escr_get_end;
 define escr_get_keyword;
-define get_dtype;
-define get_val;
-define get_val_dtype;
-define get_bool;
-define get_int;
-define get_time;
-define get_fp;
-define get_str;
+define escr_get_dtype;
+define escr_get_val;
+define escr_get_val_dtype;
+define escr_get_bool;
+define escr_get_int;
+define escr_get_time;
+define escr_get_fp;
+define escr_get_str;
 define escr_get_args_str;
-%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
+%include 'escr2.ins.pas';
 {
 ****************************************************************************
 *
-*   Function GET_TOKEN (TK)
+*   Function ESCR_GET_TOKEN (E, TK)
 *
 *   Return TRUE and the next input line token in TK if one is available.
 *   If not, the function returns FALSE and TK as the empty string.
 }
-function get_token (                   {get next input stream token}
+function  escr_get_token (             {get next input stream token}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     tk: univ string_var_arg_t)   {the returned token}
   :boolean;                            {TRUE if token was available}
   val_param;
@@ -33,26 +34,26 @@ var
   stat: sys_err_t;
 
 begin
-  get_token := true;                   {init to returning with a token}
+  escr_get_token := true;              {init to returning with a token}
   string_token (e.ibuf, e.ip, e.lparm, stat); {try to get the next token}
   if not sys_error(stat) then begin    {got it ?}
     string_copy (e.lparm, tk);
     return;
     end;
   if string_eos(stat) then begin       {hit end of input line ?}
-    get_token := false;                {indicate no token found}
+    escr_get_token := false;           {indicate no token found}
     tk.len := 0;
     return;
     end;
 
   sys_error_print (stat, '', '', nil, 0); {abort with error}
-  escr_err_atline ('', '', nil, 0);
+  escr_err_atline (e, '', '', nil, 0);
   return;                              {keep compiler from complaining}
   end;
 {
 ********************************************************************************
 *
-*   Function GET_TKRAW (TK)
+*   Function ESCR_GET_TKRAW (E, TK)
 *
 *   Get the next token without any interpretation.  The same syntax rules for
 *   token delimiting still apply, but the token is not altered in any way.  If
@@ -60,7 +61,8 @@ begin
 *   blanks are considered part of the token until the closing quote.  Quotes
 *   can be either quote characters (") or apostrophies (').
 }
-function get_tkraw (                   {get next raw input stream token}
+function escr_get_tkraw (              {get next raw input stream token}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     tk: univ string_var_arg_t)   {the returned token}
   :boolean;                            {TRUE if token was available}
   val_param;
@@ -71,7 +73,7 @@ var
   c: char;                             {current character}
 
 begin
-  get_tkraw := false;                  {init to no token available}
+  escr_get_tkraw := false;             {init to no token available}
   tk.len := 0;
 
   while e.ip <= e.ibuf.len do begin    {skip over blanks at current position}
@@ -79,7 +81,7 @@ begin
     e.ip := e.ip + 1;                  {skip over this blank}
     end;
   if e.ip > e.ibuf.len then return;    {no token before end of input string ?}
-  get_tkraw := true;                   {will be returning with a token}
+  escr_get_tkraw := true;              {will be returning with a token}
 
   quote := false;                      {init to not within a quoted string}
   while e.ip <= e.ibuf.len do begin    {scan the remainder of the input string}
@@ -107,12 +109,13 @@ begin
 {
 ********************************************************************************
 *
-*   Function GET_TKRAW (TK)
+*   Function ESCR_GET_TKRAW (E, TK)
 *
 *   Like GET_TKRAW except that tokens are delimited by single commas surrounded
 *   by any number of spaces.
 }
-function get_tkrawc (                  {get next raw token, comma delimited}
+function escr_get_tkrawc (             {get next raw token, comma delimited}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     tk: univ string_var_arg_t)   {the returned token}
   :boolean;                            {TRUE if token was available}
   val_param;
@@ -124,7 +127,7 @@ var
   blcnt: sys_int_machine_t;            {number of blank characters skipped over}
 
 begin
-  get_tkrawc := false;                 {init to no token available}
+  escr_get_tkrawc := false;            {init to no token available}
   tk.len := 0;
 
   while e.ip <= e.ibuf.len do begin    {skip over blanks at current position}
@@ -132,7 +135,7 @@ begin
     e.ip := e.ip + 1;                  {skip over this blank}
     end;
   if e.ip > e.ibuf.len then return;    {no token before end of input string ?}
-  get_tkrawc := true;                  {will be returning with a token}
+  escr_get_tkrawc := true;             {will be returning with a token}
 
   quote := false;                      {init to not within a quoted string}
   blcnt := 0;                          {init to no blanks skipped over}
@@ -175,12 +178,13 @@ otherwise                              {all other characters}
 {
 ****************************************************************************
 *
-*   Subroutine GET_END
+*   Subroutine ESCR_GET_END (E)
 *
 *   Abort with error indicating the current input line if the input line
 *   was not exhausted.
 }
-procedure escr_get_end;                {make sure no more tokens left on input line}
+procedure escr_get_end (               {make sure no more tokens left on input line}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param;
 
 const
@@ -194,16 +198,16 @@ var
 begin
   tk.max := size_char(tk.str);         {init local var string}
 
-  if not get_token (tk) then return;   {hit end of line as expected ?}
+  if not escr_get_token (e, tk) then return; {hit end of line as expected ?}
 
   sys_msg_parm_vstr (msg_parm[1], e.cmd);
   sys_msg_parm_vstr (msg_parm[2], tk);
-  escr_err_atline ('pic', 'parm_extra', msg_parm, 2);
+  escr_err_atline (e, 'pic', 'parm_extra', msg_parm, 2);
   end;
 {
 ****************************************************************************
 *
-*   Subroutine GET_KEYWORD (KLIST, PICK)
+*   Subroutine ESCR_GET_KEYWORD (E, KLIST, PICK)
 *
 *   Get the next token and compare it to the list of keywords in KLIST.
 *   PICK is returned the 1-N number of the keyword matched by the token.
@@ -214,6 +218,7 @@ begin
 *   The keywords in KLIST must be upper case and separated by blanks.
 }
 procedure escr_get_keyword (           {get one of list of keywords from input stream}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      klist: string;               {keywords, upper case separated by blanks}
   out     pick: sys_int_machine_t);    {1-N keyword number, 0 = no token available}
   val_param;
@@ -224,7 +229,7 @@ var
 begin
   tk.max := size_char(tk.str);         {init local var string}
 
-  if not get_token (tk) then begin     {no token available ?}
+  if not escr_get_token (e, tk) then begin {no token available ?}
     pick := 0;
     return;
     end;
@@ -232,20 +237,21 @@ begin
   string_upcase (tk);                  {make upper case for keyword matching}
   string_tkpick80 (tk, klist, pick);   {pick the token from the list}
   if pick <= 0 then begin              {token didn't match any keyword ?}
-    escr_err_parm_bad (tk);            {abort with bad parameter to this command}
+    escr_err_parm_bad (e, tk);         {abort with bad parameter to this command}
     end;
   end;
 {
 ****************************************************************************
 *
-*   Function GET_DTYPE (DTYPE)
+*   Function ESCR_GET_DTYPE (E, DTYPE)
 *
 *   Get the next token and return the ID of the data type it selects.
 *   The function returns TRUE if a data type was selected and FALSE
 *   if no token was available.  The program is aborted on error with
 *   an appropriate message if the token does not select a data type.
 }
-function get_dtype (                   {get data type ID from input stream}
+function escr_get_dtype (              {get data type ID from input stream}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     dtype: escr_dtype_k_t)       {returned data type ID}
   :boolean;                            {TRUE if input token was available}
   val_param;
@@ -254,8 +260,8 @@ var
   pick: sys_int_machine_t;             {number of token picked from list}
 
 begin
-  get_dtype := false;                  {init to no token available}
-  escr_get_keyword ('BOOL INTEGER REAL STRING TIME', pick); {get the selected keyword}
+  escr_get_dtype := false;             {init to no token available}
+  escr_get_keyword (e, 'BOOL INTEGER REAL STRING TIME', pick); {get the selected keyword}
   case pick of
 0:  return;
 1:  dtype := escr_dtype_bool_k;
@@ -266,30 +272,31 @@ begin
 otherwise
     writeln ('Internal screwup in program ESCR.  Unexpected PICK value');
     writeln ('in GET_DTYPE.');
-    escr_err_atline ('', '', nil, 0);
+    escr_err_atline (e, '', '', nil, 0);
     end;
-  get_dtype := true;                   {indicate returning with a data type}
+  escr_get_dtype := true;              {indicate returning with a data type}
   end;
 {
 ****************************************************************************
 *
-*   Function GET_VAL (VAL)
+*   Function ESCR_GET_VAL (E, VAL)
 *
 *   Get the next input term and returns its value in VAL.  The function
 *   returns TRUE if an input term was available, FALSE otherwise.
 }
-function get_val (                     {get value of next input stream token}
+function escr_get_val (                {get value of next input stream token}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     val: escr_val_t)             {returned value}
   :boolean;                            {TRUE if token available}
   val_param;
 
 begin
-  get_val := term_get (e.ibuf, e.ip, val);
+  escr_get_val := escr_term_get (e, e.ibuf, e.ip, val);
   end;
 {
 ****************************************************************************
 *
-*   Function GET_VAL_DTYPE (VAL)
+*   Function ESCR_GET_VAL_DTYPE (E, VAL)
 *
 *   Get the next input term value into VAL.  The value will be converted
 *   to the data type indicated by VAL.DTYPE.  The program will bomb with
@@ -298,7 +305,8 @@ begin
 *   The function returns TRUE if an input term was available, FALSE
 *   otherwise.
 }
-function get_val_dtype (               {get next input value, to dtype of VAL}
+function escr_get_val_dtype (          {get next input value, to dtype of VAL}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  val: escr_val_t)             {returned value, DTYPE specifies data type}
   :boolean;                            {TRUE if token available}
   val_param;
@@ -307,15 +315,15 @@ var
   v: escr_val_t;
 
 begin
-  get_val_dtype := false;              {init to no term available}
-  if not get_val (v) then return;      {get the term in its native format}
-  get_val_dtype := true;               {indicate term was available}
-  escr_val_copy (v, val);              {copy and convert term to returned value}
+  escr_get_val_dtype := false;         {init to no term available}
+  if not escr_get_val (e, v) then return; {get the term in its native format}
+  escr_get_val_dtype := true;          {indicate term was available}
+  escr_val_copy (e, v, val);           {copy and convert term to returned value}
   end;
 {
 ****************************************************************************
 *
-*   Function GET_BOOL (B)
+*   Function ESCR_GET_BOOL (E, B)
 *
 *   Get the next token and return its boolean value in B.  The function
 *   returns TRUE if a token was available.  If no token is available,
@@ -323,7 +331,8 @@ begin
 *   with appropriate error message if the token can not be converted
 *   to a boolean value.
 }
-function get_bool (                    {get the next token as a boolean}
+function escr_get_bool (               {get the next token as a boolean}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     b: boolean)                  {returned boolean value}
   :boolean;                            {TRUE if input token was available}
   val_param;
@@ -332,15 +341,15 @@ var
   val: escr_val_t;                     {term value}
 
 begin
-  get_bool := false;                   {init to no term available}
-  if not get_val (val) then return;    {no input term ?}
-  get_bool := true;
-  b := val_bool (val);                 {pass back term boolean value}
+  escr_get_bool := false;              {init to no term available}
+  if not escr_get_val (e, val) then return; {no input term ?}
+  escr_get_bool := true;
+  b := escr_val_bool (e, val);         {pass back term boolean value}
   end;
 {
 ****************************************************************************
 *
-*   Function GET_INT (I)
+*   Function ESCR_GET_INT (E, I)
 *
 *   Get the next token and return its integer value in I.  The function
 *   returns TRUE if a token was available.  If no token is available,
@@ -348,7 +357,8 @@ begin
 *   with appropriate error message if the token can not be converted
 *   to an integer.
 }
-function get_int (                     {get the next token as an integer}
+function escr_get_int (                {get the next token as an integer}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     i: sys_int_max_t)            {returned integer value}
   :boolean;                            {TRUE if input token was available}
   val_param;
@@ -357,15 +367,15 @@ var
   val: escr_val_t;                     {term value}
 
 begin
-  get_int := false;                    {init to no term available}
-  if not get_val (val) then return;    {no input term ?}
-  get_int := true;
-  i := val_int (val);                  {pass back term integer value}
+  escr_get_int := false;               {init to no term available}
+  if not escr_get_val (e, val) then return; {no input term ?}
+  escr_get_int := true;
+  i := escr_val_int (e, val);          {pass back term integer value}
   end;
 {
 ****************************************************************************
 *
-*   Function GET_TIME (TIME)
+*   Function ESCR_GET_TIME (E, TIME)
 *
 *   Get the next token and return its time value in TIME.  The function
 *   returns TRUE if a token was available.  If no token is available,
@@ -373,7 +383,8 @@ begin
 *   with appropriate error message if the token can not be converted
 *   to a time.
 }
-function get_time (                    {get the next token as a time value}
+function escr_get_time (               {get the next token as a time value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     time: sys_clock_t)           {returned time value}
   :boolean;                            {TRUE if input token was available}
   val_param;
@@ -382,15 +393,15 @@ var
   val: escr_val_t;                     {term value}
 
 begin
-  get_time := false;                   {init to no term available}
-  if not get_val (val) then return;    {no input term ?}
-  get_time := true;
-  time := val_time (val);              {pass back term time value}
+  escr_get_time := false;              {init to no term available}
+  if not escr_get_val (e, val) then return; {no input term ?}
+  escr_get_time := true;
+  time := escr_val_time (e, val);      {pass back term time value}
   end;
 {
 ****************************************************************************
 *
-*   Function GET_FP (FP)
+*   Function ESCR_GET_FP (E, FP)
 *
 *   Get the next token and return its floating point value in FP.  The function
 *   returns TRUE if a token was available.  If no token is available,
@@ -398,7 +409,8 @@ begin
 *   with appropriate error message if the token can not be converted
 *   to a floating point value.
 }
-function get_fp (                      {get next token as floating point value}
+function escr_get_fp (                 {get next token as floating point value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     fp: sys_fp_max_t)            {returned floating point value}
   :boolean;                            {TRUE if input token was available}
   val_param;
@@ -407,15 +419,15 @@ var
   val: escr_val_t;                     {term value}
 
 begin
-  get_fp := false;                     {init to no term available}
-  if not get_val (val) then return;    {no input term ?}
-  get_fp := true;
-  fp := val_fp (val);                  {pass back term floating point value}
+  escr_get_fp := false;                {init to no term available}
+  if not escr_get_val (e, val) then return; {no input term ?}
+  escr_get_fp := true;
+  fp := escr_val_fp (e, val);          {pass back term floating point value}
   end;
 {
 ****************************************************************************
 *
-*   Function GET_STR (STR)
+*   Function ESCR_GET_STR (E, STR)
 *
 *   Get the next token and return its string value in STR.  The function
 *   returns TRUE if a token was available.  If no token is available,
@@ -423,7 +435,8 @@ begin
 *   types have a string representation, so this routine will not fail
 *   due to incompatible token data type.
 }
-function get_str (                     {get the next token as a string}
+function escr_get_str (                {get the next token as a string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  str: univ string_var_arg_t)  {returned string}
   :boolean;                            {TRUE if input token was available}
   val_param;
@@ -432,20 +445,21 @@ var
   val: escr_val_t;                     {term value}
 
 begin
-  get_str := false;                    {init to no term available}
-  if not get_val (val) then return;    {no input term ?}
-  get_str := true;
-  escr_val_str (val, str);             {pass back string value}
+  escr_get_str := false;               {init to no term available}
+  if not escr_get_val (e, val) then return; {no input term ?}
+  escr_get_str := true;
+  escr_val_str (e, val, str);          {pass back string value}
   end;
 {
 ****************************************************************************
 *
-*   Subroutine GET_ARGS_STR (STR)
+*   Subroutine ESCR_GET_ARGS_STR (E, STR)
 *
 *   Get the concatenation of the string represenation of all remaining arguments.
 *   The input line is guaranteed to be exhausted after this call.
 }
 procedure escr_get_args_str (          {get string representation of remaining parameters}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  str: univ string_var_arg_t); {concatenation of remaining args converted to strings}
   val_param;
 
@@ -461,7 +475,7 @@ begin
   str.len := 0;                        {init return string to empty}
 
 loop:                                  {back here each new input argument}
-  if not get_str(tk) then return;      {get string representation of next argument}
+  if not escr_get_str (e, tk) then return; {get string representation of next argument}
   string_append (str, tk);             {append it to end of return string}
   goto loop;                           {back to get next argument}
   end;

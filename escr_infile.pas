@@ -2,13 +2,13 @@
 }
 module escr_infile;
 define escr_infile_open;
-define infile_getline;
+define escr_infile_getline;
 define escr_infile_skipline;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
-*   Subroutine INFILE_OPEN (FNAM, INFILE_P, STAT)
+*   Subroutine ESCR_INFILE_OPEN (E, FNAM, INFILE_P, STAT)
 *
 *   Return the pointer to the input file descriptor in INFILE_P for the file
 *   indicated by FNAM.  If the file was previously read, then INFILE_P is
@@ -18,6 +18,7 @@ define escr_infile_skipline;
 *   stored in memory.
 }
 procedure escr_infile_open (           {get input file descriptor for input file}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {file name}
   out     infile_p: escr_infile_p_t;   {returned pointer to input file descriptor}
   out     stat: sys_err_t);            {completion status}
@@ -94,7 +95,7 @@ begin
 {
 ********************************************************************************
 *
-*   Function INFILE_GETLINE (STR_P)
+*   Function ESCR_INFILE_GETLINE (E, STR_P)
 *
 *   Get the next input stream source line by returning STR_P pointing to it.
 *   The function returns TRUE if a source line was successfully returned, and
@@ -108,7 +109,8 @@ begin
 *   current execution block as required.  FALSE is only returned when the end
 *   of the top level input file for the current execution block is encountered.
 }
-function infile_getline (              {get next input stream source line}
+function escr_infile_getline (         {get next input stream source line}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  str_p: string_var_p_t)       {returned pointer to source line}
   :boolean;                            {TRUE if returning with line, FALSE for end input}
   val_param;
@@ -121,7 +123,7 @@ label
   retry;
 
 begin
-  infile_getline := false;             {init to end of input reached}
+  escr_infile_getline := false;        {init to end of input reached}
 
   if e.exblock_p = nil then begin
     writeln ('INTERNAL ERROR: No execution block defined in INFILE_GETLINE.');
@@ -138,7 +140,7 @@ retry:                                 {back here after popping back to prev inp
     goto retry;                        {try again with this new input file}
     end;
   str_p := line_p^.str_p;              {return pointer to this input line}
-  infile_getline := true;              {indicate returning with input line}
+  escr_infile_getline := true;         {indicate returning with input line}
 
   pos_p^.last_p := line_p;             {save pointer to new current input line}
   pos_p^.line_p := line_p^.next_p;     {advance to next input line for next time}
@@ -146,21 +148,22 @@ retry:                                 {back here after popping back to prev inp
 {
 ********************************************************************************
 *
-*   Subroutine INFILE_SKIPLINE
+*   Subroutine ESCR_INFILE_SKIPLINE (E)
 *
 *   Skip to the next input line.  This is the same as reading and ignoring the next
 *   input line.  It is a error if currently at the input stream end of the current
 *   execution block.
 }
-procedure escr_infile_skipline;        {skip next input file line}
+procedure escr_infile_skipline (       {skip next input file line}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param;
 
 var
   str_p: string_var_p_t;               {pointer to input line to ignore}
 
 begin
-  if not infile_getline (str_p) then begin {try to get next input line}
+  if not escr_infile_getline (e, str_p) then begin {try to get next input line}
     writeln ('INTERNAL ERROR: End of execution block encountered in INFILE_SKIPLINE.');
-    escr_err_atline ('', '', nil, 0);
+    escr_err_atline (e, '', '', nil, 0);
     end;
   end;

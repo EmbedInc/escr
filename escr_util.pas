@@ -15,7 +15,7 @@ define escr_uptocomm;
 {
 ********************************************************************************
 *
-*   Subroutine WRITE_VSTR (S, STAT)
+*   Subroutine ESCR_WRITE_VSTR (E, S, STAT)
 *
 *   Write the string in S as the next line to the current output file.
 }
@@ -31,7 +31,7 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine WRITE_OBUF
+*   Subroutine ESCR_WRITE_OBUF (E)
 *
 *   Write the contents of the global string OBUF as the next line to the
 *   output file.  OBUF is reset to empty.  The program is aborted on
@@ -45,14 +45,14 @@ var
   stat: sys_err_t;
 
 begin
-  escr_write_vstr (e.obuf, stat);      {write OBUF as next output file line}
-  escr_err_atline_abort (stat, '', '', nil, 0); {abort showing input line number on error}
+  escr_write_vstr (e, e.obuf, stat);   {write OBUF as next output file line}
+  escr_err_atline_abort (e, stat, '', '', nil, 0); {abort showing input line number on error}
   e.obuf.len := 0;                     {reset the output line buffer to empty}
   end;
 {
 ********************************************************************************
 *
-*   Subroutine SHOW_OBUF
+*   Subroutine ESCR_SHOW_OBUF (E)
 *
 *   Write the contents of the global string OBUF as the next line to standard
 *   output.  OBUF is reset to empty.
@@ -68,7 +68,7 @@ begin
 {
 ********************************************************************************
 *
-*   Function STR_TO_TIME (S, TIME)
+*   Function ESCR_STR_TO_TIME (E, E, S, TIME)
 *
 *   Interpret the string S to the absolute time and return the result in
 *   the time descriptor TIME.  The function returns TRUE on success and FALSE
@@ -188,7 +188,7 @@ have_date:                             {DATE is all filled in}
 {
 ********************************************************************************
 *
-*   Subroutine STR_FROM_TIME (TIME, S)
+*   Subroutine ESCR_STR_FROM_TIME (E, TIME, S)
 *
 *   Create the string representation into S of the absolute time in TIME.
 }
@@ -214,32 +214,32 @@ begin
     date);                             {returned expaneded date/time descriptor}
 
   sys_date_string (date, sys_dstr_year_k, 4, s, stat); {year}
-  escr_err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   string_append1 (s, '/');
   sys_date_string (date, sys_dstr_mon_k, 2, tk, stat); {month}
-  escr_err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   string_append (s, tk);
   string_append1 (s, '/');
   sys_date_string (date, sys_dstr_day_k, 2, tk, stat); {day}
-  escr_err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   string_append (s, tk);
   string_append1 (s, '.');
   sys_date_string (date, sys_dstr_hour_k, 2, tk, stat); {hour}
-  escr_err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   string_append (s, tk);
   string_append1 (s, ':');
   sys_date_string (date, sys_dstr_min_k, 2, tk, stat); {minute}
-  escr_err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   string_append (s, tk);
   string_append1 (s, ':');
   sys_date_string (date, sys_dstr_sec_frac_k, 9, tk, stat); {seconds}
-  escr_err_atline_abort (stat, '', '', nil, 0);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   string_append (s, tk);
   end;
 {
 ********************************************************************************
 *
-*   Subroutine STR_FROM_FP (TK, FP)
+*   Subroutine ESCR_STR_FROM_FP (E, TK, FP)
 *
 *   Convert the floating point value FP to it's official Escr string
 *   representation.  The result must always contain a decimal point or
@@ -270,7 +270,7 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine CLOSE_OUT (DEL)
+*   Subroutine ESCR_CLOSE_OUT (E, DEL)
 *
 *   Close the current output file and pop back to the previous output file.
 *   OUT_P will be NIL if the original output file is closed.  The closed file
@@ -300,7 +300,7 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine CLOSE_OUT_ALL (DEL)
+*   Subroutine ESCR_CLOSE_OUT_ALL (E, DEL)
 *
 *   Close all the output files.  The files are deleted when DEL if TRUE.  OUT_P
 *   will be NIL when this routine returns.
@@ -312,13 +312,13 @@ procedure escr_close_out_all (         {close all output files}
 
 begin
   while e.out_p <> nil do begin        {loop until all output files closed}
-    escr_close_out (del);              {delete this output file, pop back to previous}
+     escr_close_out (e, del);          {delete this output file, pop back to previous}
     end;
   end;
 {
 ********************************************************************************
 *
-*   Subroutine UPTOCOMM (S, NCLEN)
+*   Subroutine ESCR_UPTOCOMM (E, S, NCLEN)
 *
 *   Finds the length of the string S with the assembler end of line comment and
 *   any blanks preceeding it removed.  The resulting line length is returned in

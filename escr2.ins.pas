@@ -59,7 +59,18 @@ procedure escr_cmd_endsub (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_flag (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_if (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_cmd_inbit (
+  in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
 
@@ -74,6 +85,11 @@ procedure escr_cmd_loop (
   val_param; extern;
 
 procedure escr_cmd_macro (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_cmd_outbit (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
@@ -184,6 +200,13 @@ procedure escr_err_dtype_unimp (       {unimplemented data type internal error}
   in      routine: string);            {name of the routine where data type unimplemented}
   options (val_param, noreturn, extern);
 
+procedure escr_err_lang (              {unexpected input language identifier}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      lang: escr_lang_k_t;         {the language identifier}
+  in      module: string;              {source module name where error encountered}
+  in      checkpoint: sys_int_machine_t); {unique number for this occurrence}
+  options (val_param, noreturn, extern);
+
 procedure escr_err_sym_not_found (     {symbol not found}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t); {symbol name that was not found}
@@ -266,6 +289,7 @@ procedure escr_exblock_repeat (        {loop back to start of block}
   val_param; extern;
 
 procedure escr_format_fp (             {create specifically formatted floating point string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fp: sys_fp_max_t;            {input floating point value}
   in      fmt: univ string_var_arg_t;  {format string}
   in out  s: univ string_var_arg_t;    {returned floating point string}
@@ -273,6 +297,7 @@ procedure escr_format_fp (             {create specifically formatted floating p
   val_param; extern;
 
 procedure escr_format_int (            {create specifically formatted integer string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      i: sys_int_max_t;            {input integer value}
   in      fmt: univ string_var_arg_t;  {format string}
   in out  s: univ string_var_arg_t;    {returned integer string}
@@ -401,6 +426,12 @@ procedure escr_inline_func (           {perform inline function operation}
   in out  lot: string_var8192_t);      {string to append function expansion to}
   val_param; extern;
 
+procedure escr_loclab_get (            {get expansion of generic local label name}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {generic local label name}
+  in out  exp: univ string_var_arg_t); {returned full label name (expansion)}
+  val_param; extern;
+
 function escr_loop_iter (              {advance to next loop iteration}
   in out  e: escr_t)                   {state for this use of the ESCR system}
   :boolean;                            {looped back, not terminated}
@@ -416,16 +447,19 @@ procedure escr_show_obuf (             {write line to standard output from OBUF}
   val_param; extern;
 
 procedure escr_str_from_time (         {make string from absolute time descriptor}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      time: sys_clock_t;           {input absolute time descriptor}
   in out  s: univ string_var_arg_t);   {returned string representation of the time}
   val_param; extern;
 
 procedure escr_str_from_fp (           {make string from floating point value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fp: double;                  {floating point input value}
   in out  s: univ string_var_arg_t);   {returned string representation}
   val_param; extern;
 
 function escr_str_to_time (            {make absolute time descriptor from string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      s: univ string_var_arg_t;    {input string}
   out     time: sys_clock_t)           {returned time descriptor}
   :boolean;                            {TRUE on success}
@@ -530,6 +564,7 @@ function escr_val_time (               {convert to time value or bomb with error
   val_param; extern;
 
 function escr_val_isbool (             {check for VAL can be converted to boolean}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      val: escr_val_t;             {input value to check}
   out     b: boolean)                  {boolean value, unaltered if VAL not boolean}
   :boolean;                            {TRUE if returning boolean value in B}
@@ -544,12 +579,14 @@ function escr_val_isint (              {distinguish between INT or FP, error if 
   val_param; extern;
 
 function escr_val_size (               {return minimum required size of VAL_T structure}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      dtype: escr_dtype_k_t;       {data type of the value}
   in      len: sys_int_machine_t)      {max string chars to hold, ignored other dtypes}
   :sys_int_adr_t;
   val_param; extern;
 
 procedure escr_val_str (               {convert value to its string representation}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      val: escr_val_t;             {the source value}
   in out  str: univ string_var_arg_t); {returned string}
   val_param; extern;
