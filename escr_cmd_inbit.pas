@@ -24,7 +24,7 @@
 }
 module escr_cmd_inbit;
 define escr_cmd_inbit;
-%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
 
 procedure escr_cmd_inbit (
   out     stat: sys_err_t);
@@ -45,7 +45,7 @@ var
   strbit: string_var16_t;              {decimal integer I/O bit number string}
   tk: string_var80_t;                  {scratch token}
   syname: string_var32_t;              {scratch symbol name}
-  sym_p: sym_p_t;                      {pointer to newly created symbol}
+  sym_p: escr_sym_p_t;                 {pointer to newly created symbol}
   msg_parm:                            {parameter references for messages}
     array[1..max_msg_parms] of sys_parm_msg_t;
 
@@ -131,7 +131,7 @@ otherwise
 
   escr_sym_new_const (                 {create the constant}
     syname,                            {name of the constant}
-    dtype_str_k,                       {value will be a string}
+    escr_dtype_str_k,                  {value will be a string}
     tk.len,                            {string length}
     true,                              {make this new symbol global}
     sym_p);                            {returned pointer to the new symbol}
@@ -161,7 +161,7 @@ otherwise
 
   escr_sym_new_const (                 {create the constant}
     syname,                            {name of the constant}
-    dtype_str_k,                       {value will be a string}
+    escr_dtype_str_k,                  {value will be a string}
     tk.len,                            {string length}
     true,                              {make this new symbol global}
     sym_p);                            {returned pointer to the new symbol}
@@ -187,7 +187,7 @@ otherwise
 
   escr_sym_new_const (                 {create the constant}
     syname,                            {name of the constant}
-    dtype_int_k,                       {value will be integer}
+    escr_dtype_int_k,                  {value will be integer}
     0,                                 {unused for integer data type}
     true,                              {make this new symbol global}
     sym_p);                            {returned pointer to the new symbol}

@@ -11,7 +11,7 @@ define escr_err_parm_missing;
 define escr_err_dtype_unimp;
 define escr_err_check_symname;
 define escr_err_sym_not_found;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 {
 ****************************************************************************
 *
@@ -34,9 +34,9 @@ const
 var
   msg_parm:                            {parameter references for messages}
     array[1..max_msg_parms] of sys_parm_msg_t;
-  block_p: exblock_p_t;                {pointer to nested execution block state}
-  inpos_p: inpos_p_t;                  {pointer to nested input position state}
-  line_p: inline_p_t;                  {pointer to definition of one input stream line}
+  block_p: escr_exblock_p_t;           {pointer to nested execution block state}
+  inpos_p: escr_inpos_p_t;             {pointer to nested input position state}
+  line_p: escr_inline_p_t;             {pointer to definition of one input stream line}
 
 begin
   escr_close_out_all (true);           {close and delete all output files}
@@ -100,7 +100,7 @@ begin
 *   Show the data type and value of VAL.
 }
 procedure escr_err_val (               {show value and data type of offending value}
-  in      val: val_t);                 {the value}
+  in      val: escr_val_t);            {the value}
   val_param;
 
 const
@@ -112,21 +112,21 @@ var
 
 begin
   case val.dtype of                    {what is the value's data type ?}
-dtype_bool_k: begin                    {boolean}
+escr_dtype_bool_k: begin               {boolean}
       if val.bool
         then sys_msg_parm_str (msg_parm[1], 'TRUE')
         else sys_msg_parm_str (msg_parm[1], 'FALSE');
       sys_message_parms ('pic', 'term_val_bool', msg_parm, 1);
       end;
-dtype_int_k: begin                     {integer}
+escr_dtype_int_k: begin                {integer}
       sys_msg_parm_int (msg_parm[1], val.int);
       sys_message_parms ('pic', 'term_val_int', msg_parm, 1);
       end;
-dtype_fp_k: begin                      {floating point}
+escr_dtype_fp_k: begin                 {floating point}
       sys_msg_parm_fp2 (msg_parm[1], val.fp);
       sys_message_parms ('pic', 'term_val_fp', msg_parm, 1);
       end;
-dtype_str_k: begin                     {string}
+escr_dtype_str_k: begin                {string}
       sys_msg_parm_vstr (msg_parm[1], val.str);
       sys_message_parms ('pic', 'term_val_str', msg_parm, 1);
       end;
@@ -232,7 +232,7 @@ begin
 *   in routine ROUTINE.  The program will be aborted with error.
 }
 procedure escr_err_dtype_unimp (       {unimplemented data type internal error}
-  in      dtype: dtype_k_t;            {unimplemented data type}
+  in      dtype: escr_dtype_k_t;       {unimplemented data type}
   in      routine: string);            {name of the routine where data type unimplemented}
   options (val_param, noreturn);
 

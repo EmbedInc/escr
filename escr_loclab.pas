@@ -15,7 +15,7 @@
 }
 module escr_loclab;
 define loclab_get;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
@@ -43,7 +43,7 @@ var
   lname: string_var80_t;               {local copy of label name, generic and full}
   fname: string_var80_t;               {full label name, name used in output file}
   tk: string_var32_t;                  {scratch token}
-  ex_p: exblock_p_t;                   {pointer to execution block with labels table}
+  ex_p: escr_exblock_p_t;              {pointer to execution block with labels table}
   pos: string_hash_pos_t;              {position within local labels table}
   name_p: string_var_p_t;              {scratch pointer to name string}
   dat_p: ^string_var_p_t;              {pointer data for a table entry}

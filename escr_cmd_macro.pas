@@ -6,7 +6,7 @@ define escr_cmd_macro;
 define escr_cmd_endmac;
 define escr_cmd_quitmac;
 define macro_run;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
@@ -24,14 +24,14 @@ procedure escr_cmd_macro (
 var
   name: string_var80_t;                {macro name}
   sz: sys_int_adr_t;                   {size of new descriptor}
-  sym_p: sym_p_t;                      {pointer to new name symbol}
+  sym_p: escr_sym_p_t;                 {pointer to new name symbol}
 
 begin
   name.max := size_char(name.str);     {init local var string}
 
   escr_inh_new;                        {create new execution inhibit layer}
-  e.inhibit_p^.inhty := inhty_blkdef_k; {inhibit it due to reading block definition}
-  e.inhibit_p^.blkdef_type := exblock_mac_k; {block type is macro}
+  e.inhibit_p^.inhty := escr_inhty_blkdef_k; {inhibit it due to reading block definition}
+  e.inhibit_p^.blkdef_type := escr_exblock_mac_k; {block type is macro}
   if e.inhibit_p^.inh then return;     {previously inhibited, don't define macro}
   e.inhibit_p^.inh := true;            {inhibit execution during macro definition}
 
@@ -40,9 +40,9 @@ begin
   escr_err_check_symname (name);       {check for valid symbol name}
 
   sz :=                                {make size of whole macro symbol}
-    offset(sym_t.macro_line_p) + size_min(sym_t.macro_line_p);
+    offset(escr_sym_t.macro_line_p) + size_min(escr_sym_t.macro_line_p);
   escr_sym_new (name, sz, false, sym_p); {create new symbol for macro name}
-  sym_p^.stype := sym_macro_k;         {this symbol is a macro name}
+  sym_p^.stype := escr_sym_macro_k;    {this symbol is a macro name}
   sym_p^.macro_line_p :=               {save pointer to macro definition line}
     e.exblock_p^.inpos_p^.last_p;
   end;
@@ -66,8 +66,8 @@ begin
     end;
 
   if                                   {not defining a macro ?}
-      (e.inhibit_p^.inhty <> inhty_blkdef_k) or {not in a block definition ?}
-      (e.inhibit_p^.blkdef_type <> exblock_mac_k) {block is not a macro ?}
+      (e.inhibit_p^.inhty <> escr_inhty_blkdef_k) or {not in a block definition ?}
+      (e.inhibit_p^.blkdef_type <> escr_exblock_mac_k) {block is not a macro ?}
       then begin
     escr_err_atline ('pic', 'not_in_macdef', nil, 0);
     end;
@@ -90,7 +90,7 @@ procedure escr_cmd_quitmac (
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  while e.exblock_p^.bltype <> exblock_mac_k do begin {up thru blocks until first macro}
+  while e.exblock_p^.bltype <> escr_exblock_mac_k do begin {up thru blocks until first macro}
     if e.exblock_p^.prev_p = nil then begin {at top execution block ?}
       escr_err_atline ('pic', 'not_in_macro', nil, 0); {complain not in a macro}
       end;
@@ -119,7 +119,7 @@ var
   label: string_var80_t;               {name of optional label on this line}
   name: string_var80_t;                {macro name}
   tk: string_var8192_t;                {scratch token}
-  sym_p: sym_p_t;                      {pointer to macro symbol}
+  sym_p: escr_sym_p_t;                 {pointer to macro symbol}
   str_p: string_var_p_t;               {pointer to input line}
   oldlen: string_index_t;              {original length of input buffer with comment}
   nclen: string_index_t;               {length of input line with comment stripped}
@@ -148,7 +148,7 @@ begin
   if not get_token(name) then goto nomac; {get the opcode name into NAME}
   escr_sym_find (name, sym_p);         {get symbol from macro name}
   if sym_p = nil then goto nomac;      {no such symbol ?}
-  if sym_p^.stype <> sym_macro_k then goto nomac; {not a macro ?}
+  if sym_p^.stype <> escr_sym_macro_k then goto nomac; {not a macro ?}
 {
 *   This line is a macro invocation.  SYM_P is pointing to the macro definition
 *   symbol, LABEL contains the name of any label on this line, and NAME is the
@@ -156,7 +156,7 @@ begin
 }
   escr_exblock_new;                    {create new execution block}
   e.exblock_p^.sym_p := sym_p;         {set pointer to symbol for this block}
-  e.exblock_p^.bltype := exblock_mac_k; {new block is a macro}
+  e.exblock_p^.bltype := escr_exblock_mac_k; {new block is a macro}
   e.exblock_p^.args := true;           {this block can take arguments}
   escr_exblock_loclab_init;            {create table for local labels}
 

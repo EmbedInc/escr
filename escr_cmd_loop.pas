@@ -4,7 +4,7 @@ module escr_cmd_loop;
 define escr_cmd_loop;
 define loop_iter;
 define escr_cmd_endloop;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
@@ -18,13 +18,13 @@ procedure escr_cmd_loop (
   val_param;
 
 var
-  loop_p: loop_p_t;                    {pointer to loop descriptor}
+  loop_p: escr_loop_p_t;               {pointer to loop descriptor}
   pick: sys_int_machine_t;             {number of keyword picked from list}
   name: string_var80_t;                {variable name}
   tk: string_var32_t;                  {scratch token}
   name_p: string_var_p_t;              {scratch string pointer}
-  sym_p: sym_p_t;                      {pointer to symbol name}
-  sym_pp: sym_pp_t;                    {pointer to data in symbol table entry}
+  sym_p: escr_sym_p_t;                 {pointer to symbol name}
+  sym_pp: escr_sym_pp_t;               {pointer to data in symbol table entry}
   slist_p: string_list_p_t;            {points to strings list}
   pos: string_hash_pos_t;              {symbol table position handle}
   found: boolean;                      {symbol table entry found}
@@ -40,7 +40,7 @@ begin
   escr_exblock_new;                    {create new execution block state}
   e.exblock_p^.start_p :=              {save pointer to starting line of this block}
     e.exblock_p^.prev_p^.inpos_p^.last_p;
-  e.exblock_p^.bltype := exblock_loop_k; {indicate LOOP ... ENDLOOP type}
+  e.exblock_p^.bltype := escr_exblock_loop_k; {indicate LOOP ... ENDLOOP type}
   escr_exblock_inline_set (            {set next source line to execute}
     e.exblock_p^.prev_p^.inpos_p^.line_p);
 
@@ -49,7 +49,7 @@ begin
   escr_get_keyword ('SYMBOLS FOR FROM N', pick); {get looptype keyword}
   util_mem_grab (                      {allocate loop descriptor}
     sizeof(loop_p^), e.exblock_p^.mem_p^, false, loop_p);
-  loop_p^.looptype := looptype_unc_k;  {init loop descriptor to default}
+  loop_p^.looptype := escr_looptype_unc_k; {init loop descriptor to default}
   loop_p^.var_p := nil;                {init to no loop variable}
 
   case pick of
@@ -67,7 +67,7 @@ begin
 *   /LOOP SYMBOLS
 }
 1: begin
-  loop_p^.looptype := looptype_sym_k;  {looping over list of symbols}
+  loop_p^.looptype := escr_looptype_sym_k; {looping over list of symbols}
 
   if not get_token (name)              {get the variable name into NAME}
     then escr_err_parm_missing ('', '', nil, 0);
@@ -100,8 +100,8 @@ begin
 }
   escr_sym_new_var (                   {create the loop variable}
     name,                              {name of variable to create}
-    dtype_str_k,                       {variable's data type}
-    max_namelen_k,                     {max length}
+    escr_dtype_str_k,                  {variable's data type}
+    escr_max_namelen_k,                {max length}
     false,                             {local, not global}
     sym_p);                            {returned pointer to the new variable}
   loop_p^.var_p := sym_p;              {save pointer to the loop variable}
@@ -155,7 +155,7 @@ loop_from:                             {common code with /LOOP FROM}
   if loop_p^.for_inc = 0 then begin    {invalid iteration increment ?}
     escr_err_atline ('pic', 'err_loopinc0', nil, 0);
     end;
-  loop_p^.looptype := looptype_for_k;  {FOR loop}
+  loop_p^.looptype := escr_looptype_for_k; {FOR loop}
   loop_p^.for_curr := loop_p^.for_start; {init value for first iteration}
 
   if
@@ -175,7 +175,7 @@ loop_from:                             {common code with /LOOP FROM}
   if name.len > 0 then begin           {need to create loop variable ?}
     escr_sym_new_var (                 {create the loop variable}
       name,                            {name of the variable to create}
-      dtype_int_k,                     {data type will be integer}
+      escr_dtype_int_k,                {data type will be integer}
       0,                               {additional length parameter, unused}
       false,                           {variable will be local, not global}
       sym_p);                          {returned pointer to the new variable symbol}
@@ -198,7 +198,7 @@ loop_from:                             {common code with /LOOP FROM}
 *   /LOOP N n
 }
 4: begin
-  loop_p^.looptype := looptype_for_k;  {this will be FOR loop with no variable}
+  loop_p^.looptype := escr_looptype_for_k; {this will be FOR loop with no variable}
   loop_p^.for_start := 1;              {starting value}
   loop_p^.for_curr := 1;               {value for first iteration}
   loop_p^.for_inc := 1;                {increment each iteration}
@@ -233,8 +233,8 @@ function loop_iter                     {advance to next loop iteration}
   val_param;
 
 var
-  loop_p: loop_p_t;                    {pointer to loop descriptor}
-  sym_p: sym_p_t;                      {scratch symbol descriptor pointer}
+  loop_p: escr_loop_p_t;               {pointer to loop descriptor}
+  sym_p: escr_sym_p_t;                 {scratch symbol descriptor pointer}
 
 label
   loop;
@@ -242,7 +242,7 @@ label
 begin
   loop_iter := false;                  {init to loop terminated}
 
-  if e.exblock_p^.bltype <> exblock_loop_k {not in explicit loop block ?}
+  if e.exblock_p^.bltype <> escr_exblock_loop_k {not in explicit loop block ?}
     then goto loop;                    {loop back unconditionally}
   loop_p := e.exblock_p^.loop_p;       {get pointer to loop descriptor}
   if loop_p = nil then goto loop;      {no loop data ?}
@@ -253,13 +253,13 @@ begin
 *   Unconditional loop.  There is no loop state to advance and no terminating
 *   condition to check.
 }
-looptype_unc_k: ;
+escr_looptype_unc_k: ;
 {
 ******************************
 *
 *   Looping thru a previously saved list of symbol names.
 }
-looptype_sym_k: begin                  {looping thru list of symbols}
+escr_looptype_sym_k: begin             {looping thru list of symbols}
   while true do begin
     string_list_pos_rel (loop_p^.sym_list_p^, 1); {advance to next symbols list entry}
     if loop_p^.sym_list_p^.str_p = nil {hit end of list ?}
@@ -278,7 +278,7 @@ looptype_sym_k: begin                  {looping thru list of symbols}
 *
 *   Integer counted loop.
 }
-looptype_for_k: begin
+escr_looptype_for_k: begin
   loop_p^.for_curr :=                  {advance loop value to next iteration}
     loop_p^.for_curr + loop_p^.for_inc;
 
@@ -323,7 +323,7 @@ label
 begin
   sys_error_none (stat);               {init to no error occurred}
 
-  if e.exblock_p^.bltype <> exblock_loop_k then begin {not in LOOP block type ?}
+  if e.exblock_p^.bltype <> escr_exblock_loop_k then begin {not in LOOP block type ?}
     escr_err_atline ('pic', 'err_endblock_type', nil, 0);
     end;
   if e.exblock_p^.inpos_p^.prev_p <> nil then begin {block ended in include file ?}

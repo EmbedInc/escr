@@ -10,7 +10,7 @@
 }
 module escr_cmd_flag;
 define escr_cmd_flag;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 
 procedure escr_cmd_flag (
   out     stat: sys_err_t);
@@ -23,7 +23,7 @@ var
   bitstr: string_var32_t;              {bit number string}
   syname: string_var32_t;              {scratch symbol name}
   tk: string_var132_t;                 {scratch token for string conversion}
-  sym_p: sym_p_t;                      {pointer to symbol to create or update}
+  sym_p: escr_sym_p_t;                 {pointer to symbol to create or update}
 
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
@@ -61,7 +61,7 @@ begin
   if sym_p = nil then begin            {doesn't already exist, need to create ?}
     escr_sym_new_const (               {create the new symbol}
       syname,                          {name of symbol to create}
-      dtype_int_k,                     {value will be integer}
+      escr_dtype_int_k,                {value will be integer}
       0,                               {length, not used with integer type}
       true,                            {make new symbol global}
       sym_p);                          {returned pointer to the new symbol}
@@ -78,7 +78,7 @@ begin
   if sym_p = nil then begin            {doesn't already exist, need to create ?}
     escr_sym_new_const (               {create the new symbol}
       syname,                          {name of symbol to create}
-      dtype_int_k,                     {value will be integer}
+      escr_dtype_int_k,                {value will be integer}
       0,                               {length, not used with integer type}
       true,                            {make new symbol global}
       sym_p);                          {returned pointer to the new symbol}
@@ -101,7 +101,7 @@ begin
 
   escr_sym_new_const (                 {create the string constant}
     syname,                            {name of constant to create}
-    dtype_str_k,                       {value will be a string}
+    escr_dtype_str_k,                  {value will be a string}
     tk.len,                            {string length}
     true,                              {make new symbol global}
     sym_p);                            {returned pointer to the new symbol}

@@ -4,7 +4,7 @@ module escr_infile;
 define escr_infile_open;
 define infile_getline;
 define escr_infile_skipline;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
@@ -19,16 +19,16 @@ define escr_infile_skipline;
 }
 procedure escr_infile_open (           {get input file descriptor for input file}
   in      fnam: univ string_var_arg_t; {file name}
-  out     infile_p: infile_p_t;        {returned pointer to input file descriptor}
+  out     infile_p: escr_infile_p_t;   {returned pointer to input file descriptor}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
   tnam: string_treename_t;             {full pathname of the input file}
-  file_p: infile_p_t;                  {points to current input files list entry}
+  file_p: escr_infile_p_t;             {points to current input files list entry}
   conn: file_conn_t;                   {connection to the input file}
-  line_p: inline_p_t;                  {points to current input line descriptor}
-  line_pp: inline_pp_t;                {points to where to link next line descriptor to}
+  line_p: escr_inline_p_t;             {points to current input line descriptor}
+  line_pp: escr_inline_pp_t;           {points to where to link next line descriptor to}
   p: string_index_t;                   {index into BUF}
   buf: string_var8192_t;               {one line input buffer}
 
@@ -114,8 +114,8 @@ function infile_getline (              {get next input stream source line}
   val_param;
 
 var
-  pos_p: inpos_p_t;                    {pointer to input position state}
-  line_p: inline_p_t;                  {pointer to input line info}
+  pos_p: escr_inpos_p_t;               {pointer to input position state}
+  line_p: escr_inline_p_t;             {pointer to input line info}
 
 label
   retry;

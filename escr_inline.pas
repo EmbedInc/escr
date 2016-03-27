@@ -2,7 +2,7 @@
 }
 module escr_inline;
 define escr_inline_expand_line;
-%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
 {
 *   Private routines used inside this module only.
 }

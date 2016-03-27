@@ -5,7 +5,7 @@
 module escr_func;
 define escr_inline_func_init;
 define escr_inline_func;
-%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
 
 const
 {
@@ -132,10 +132,10 @@ var
   r: sys_fp_max_t;                     {scratch floating point}
   i, n: sys_int_max_t;                 {scratch integers}
   ii: sys_int_machine_t;               {scratch integer}
-  sym_p: sym_p_t;                      {scratch pointer to a ESCR symbol}
+  sym_p: escr_sym_p_t;                 {scratch pointer to a ESCR symbol}
   fp24: pic_fp24_t;                    {PIC 24 bit floating point number}
   fp32f: pic_fp32f_t;                  {32 bit fast floating point for dsPICs}
-  val, val2: val_t;                    {arguments or other intermediate values}
+  val, val2: escr_val_t;               {arguments or other intermediate values}
   time: sys_clock_t;                   {scratch absolute time value}
   tstat: string_tnstat_k_t;            {treename translation result status}
   tzone: sys_tzone_k_t;                {ID for timezone to convert strings for}
@@ -143,7 +143,7 @@ var
   daysave: sys_daysave_k_t;            {daylight savings time strategy}
   date: sys_date_t;                    {expanded date/time descriptor}
   isint: boolean;                      {TRUE for integer arguments}
-  dtype: dtype_k_t;                    {scratch data type ID}
+  dtype: escr_dtype_k_t;               {scratch data type ID}
   ccond: sys_compare_t;                {set of comparison conditions for TRUE result}
   seqflags: string_seq_t;              {modifier flags for getting sequence number}
   str_p: string_var_p_t;               {scratch string pointer}
@@ -163,7 +163,7 @@ label
 *   Get the next argument value into VAL.  Returns TRUE if argument was available.
 }
 function gval (                        {get next function argument}
-  out     val: val_t)                  {returned value}
+  out     val: escr_val_t)             {returned value}
   :boolean;                            {TRUE if argument was available}
   val_param;
 
@@ -184,7 +184,7 @@ function gbool (                       {get the next argument as a boolean}
   val_param;
 
 var
-  val: val_t;                          {term value}
+  val: escr_val_t;                     {term value}
 
 begin
   gbool := false;                      {init to no argument available}
@@ -206,7 +206,7 @@ function gint (                        {get the next argument as a integer}
   val_param;
 
 var
-  val: val_t;                          {term value}
+  val: escr_val_t;                     {term value}
 
 begin
   gint := false;                       {init to no argument available}
@@ -228,7 +228,7 @@ function gtime (                       {get next argument as time value}
   val_param;
 
 var
-  val: val_t;                          {term value}
+  val: escr_val_t;                     {term value}
 
 begin
   gtime := false;                      {init to no argument available}
@@ -250,7 +250,7 @@ function gfp (                         {get the next argument as a floating poin
   val_param;
 
 var
-  val: val_t;                          {term value}
+  val: escr_val_t;                     {term value}
 
 begin
   gfp := false;                        {init to no argument available}
@@ -272,7 +272,7 @@ function gstr (                        {get string value of next argument}
   val_param;
 
 var
-  val: val_t;                          {term value}
+  val: escr_val_t;                     {term value}
 
 begin
   gstr := false;                       {init to no argument available}
@@ -382,7 +382,7 @@ begin
 *   comparison is included in COND.
 }
 function compare_strings (             {compare string representation of two values}
-  in      v1, v2: val_t;               {input values, V1 will be compared to V2}
+  in      v1, v2: escr_val_t;          {input values, V1 will be compared to V2}
   in      cond: sys_compare_t)         {comparison conditions to result in TRUE}
   :boolean;
   val_param;
@@ -396,7 +396,7 @@ begin
   s2.max := size_char(s2.str);
   compare_strings := false;            {keep compiler from complaining}
 
-  if v1.dtype = dtype_str_k
+  if v1.dtype = escr_dtype_str_k
     then begin                         {V1 is already string}
       s1_p := addr(v1.str);
       end
@@ -406,7 +406,7 @@ begin
       end
     ;
 
-  if v2.dtype = dtype_str_k
+  if v2.dtype = escr_dtype_str_k
     then begin                         {V2 is already string}
       s2_p := addr(v2.str);
       end
@@ -648,17 +648,17 @@ ret_r:                                 {common code to return FP value in R}
 }
 12: begin                              {+}
   i := 0;                              {init the result}
-  dtype := dtype_int_k;                {init result data type}
+  dtype := escr_dtype_int_k;           {init result data type}
   while term_get (fstr, p, val) do begin {loop once for each argument}
     case val.dtype of                  {what is data type of this argument}
 
-dtype_int_k: begin                     {argument is integer}
+escr_dtype_int_k: begin                {argument is integer}
         case dtype of                  {what is current output data type ?}
-dtype_int_k: begin                     {INTEGER + INTEGER}
+escr_dtype_int_k: begin                {INTEGER + INTEGER}
             i := i + val.int;
             end;
-dtype_fp_k,                            {REAL + INTEGER}
-dtype_time_k: begin                    {TIME + INTEGER}
+escr_dtype_fp_k,                       {REAL + INTEGER}
+escr_dtype_time_k: begin               {TIME + INTEGER}
             r := r + val.int;
             end;
 otherwise
@@ -666,16 +666,16 @@ otherwise
           end;
         end;
 
-dtype_fp_k: begin                      {argument is REAL}
+escr_dtype_fp_k: begin                 {argument is REAL}
         case dtype of                  {what is current output data type ?}
-dtype_int_k: begin                     {INTEGER + REAL}
+escr_dtype_int_k: begin                {INTEGER + REAL}
             r := i + val.fp;
-            dtype := dtype_fp_k;
+            dtype := escr_dtype_fp_k;
             end;
-dtype_fp_k: begin                      {REAL + REAL}
+escr_dtype_fp_k: begin                 {REAL + REAL}
             r := r + val.fp;
             end;
-dtype_time_k: begin                    {TIME + REAL}
+escr_dtype_time_k: begin               {TIME + REAL}
             r := r + val.fp;
             end;
 otherwise
@@ -683,20 +683,20 @@ otherwise
           end;
         end;
 
-dtype_time_k: begin                    {argument is TIME}
+escr_dtype_time_k: begin               {argument is TIME}
         case dtype of                  {what is current output data type ?}
-dtype_int_k: begin                     {INTEGER + TIME}
+escr_dtype_int_k: begin                {INTEGER + TIME}
             r := i;
             end;
-dtype_fp_k: ;                          {REAL + TIME}
-dtype_time_k: begin                    {TIME + TIME}
+escr_dtype_fp_k: ;                     {REAL + TIME}
+escr_dtype_time_k: begin               {TIME + TIME}
             escr_err_atline ('pic', 'time_time', nil, 0);
             end;
 otherwise
           goto arg_not_num_time;
           end;
         time := val.time;
-        dtype := dtype_time_k;
+        dtype := escr_dtype_time_k;
         end;
 
 otherwise                              {unexpected argument data type}
@@ -705,9 +705,9 @@ otherwise                              {unexpected argument data type}
     end;                               {back to get next argument}
 
   case dtype of                        {what is result data type ?}
-dtype_int_k: goto ret_i;               {INTEGER}
-dtype_fp_k: goto ret_r;                {REAL}
-dtype_time_k: goto ret_time_r;         {TIME}
+escr_dtype_int_k: goto ret_i;          {INTEGER}
+escr_dtype_fp_k: goto ret_r;           {REAL}
+escr_dtype_time_k: goto ret_time_r;    {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "+"');
@@ -739,15 +739,15 @@ ret_i:                                 {common code to return integer value in I
   if not term_get (fstr, p, val) then goto arg_missing;
   case val.dtype of                    {what is data type of first argument ?}
 
-dtype_int_k: begin                     {INTEGER first arg}
+escr_dtype_int_k: begin                {INTEGER first arg}
       i := val.int;
       if not term_get (fstr, p, val) then goto arg_missing;
       case val.dtype of
-dtype_int_k: begin                     {INTEGER - INTEGER}
+escr_dtype_int_k: begin                {INTEGER - INTEGER}
           i := i - val.int;
           goto ret_i;
           end;
-dtype_fp_k: begin                      {INTEGER - REAL}
+escr_dtype_fp_k: begin                 {INTEGER - REAL}
           r := i - val.fp;
           goto ret_r;
           end;
@@ -756,15 +756,15 @@ otherwise
         end;
       end;
 
-dtype_fp_k: begin                      {REAL first arg}
+escr_dtype_fp_k: begin                 {REAL first arg}
       r := val.fp;
       if not term_get (fstr, p, val) then goto arg_missing;
       case val.dtype of
-dtype_int_k: begin                     {REAL - INTEGER}
+escr_dtype_int_k: begin                {REAL - INTEGER}
           r := r - val.int;
           goto ret_r;
           end;
-dtype_fp_k: begin                      {REAL - REAL}
+escr_dtype_fp_k: begin                 {REAL - REAL}
           r := r - val.fp;
           goto ret_r;
           end;
@@ -773,19 +773,19 @@ otherwise
         end;
       end;
 
-dtype_time_k: begin                    {TIME first arg}
+escr_dtype_time_k: begin               {TIME first arg}
       time := val.time;
       if not term_get (fstr, p, val) then goto arg_missing;
       case val.dtype of
-dtype_int_k: begin                     {TIME - INTEGER}
+escr_dtype_int_k: begin                {TIME - INTEGER}
           r := -val.int;
           goto ret_time_r;
           end;
-dtype_fp_k: begin                      {TIME - REAL}
+escr_dtype_fp_k: begin                 {TIME - REAL}
           r := -val.fp;
           goto ret_time_r;
           end;
-dtype_time_k: begin                    {TIME - TIME}
+escr_dtype_time_k: begin               {TIME - TIME}
           time := sys_clock_sub (time, val.time); {make relative time difference}
           r := sys_clock_to_fp2 (time); {convert to seconds}
           goto ret_r;
@@ -1002,8 +1002,8 @@ otherwise
   ccond := [sys_compare_lt_k];         {comparison conditions for TRUE}
 
   if                                   {at least one argument is a string ?}
-      (val.dtype = dtype_str_k) or
-      (val2.dtype = dtype_str_k)
+      (val.dtype = escr_dtype_str_k) or
+      (val2.dtype = escr_dtype_str_k)
       then begin
     b := compare_strings (val, val2, ccond); {do string compare}
     goto ret_b;                        {return the boolean value in B}
@@ -1011,12 +1011,12 @@ otherwise
 
   case val.dtype of                    {what is data type of first argument ?}
 
-dtype_int_k: begin                     {INTEGER first argument}
+escr_dtype_int_k: begin                {INTEGER first argument}
       case val2.dtype of
-dtype_int_k: begin                     {INTEGER, INTEGER}
+escr_dtype_int_k: begin                {INTEGER, INTEGER}
           b := val.int < val2.int;
           end;
-dtype_fp_k: begin                      {INTEGER, REAL}
+escr_dtype_fp_k: begin                 {INTEGER, REAL}
           b := val.int < val2.fp;
           end;
 otherwise
@@ -1024,12 +1024,12 @@ otherwise
         end;
       end;
 
-dtype_fp_k: begin                      {REAL first arg}
+escr_dtype_fp_k: begin                 {REAL first arg}
       case val2.dtype of
-dtype_int_k: begin                     {REAL, INTEGER}
+escr_dtype_int_k: begin                {REAL, INTEGER}
           b := val.fp < val2.int;
           end;
-dtype_fp_k: begin                      {REAL, REAL}
+escr_dtype_fp_k: begin                 {REAL, REAL}
           b := val.fp < val2.fp;
           end;
 otherwise
@@ -1037,9 +1037,9 @@ otherwise
         end;
       end;
 
-dtype_time_k: begin                    {TIME first arg}
+escr_dtype_time_k: begin               {TIME first arg}
       case val2.dtype of
-dtype_time_k: begin                    {TIME, TIME}
+escr_dtype_time_k: begin               {TIME, TIME}
           comp := sys_clock_compare (val.time, val2.time);
           b := comp in ccond;
           end;
@@ -1068,8 +1068,8 @@ ret_b:                                 {return the boolean value in B}
   ccond := [sys_compare_lt_k, sys_compare_eq_k]; {comparison conditions for TRUE}
 
   if                                   {at least one argument is a string ?}
-      (val.dtype = dtype_str_k) or
-      (val2.dtype = dtype_str_k)
+      (val.dtype = escr_dtype_str_k) or
+      (val2.dtype = escr_dtype_str_k)
       then begin
     b := compare_strings (val, val2, ccond); {do string compare}
     goto ret_b;                        {return the boolean value in B}
@@ -1077,12 +1077,12 @@ ret_b:                                 {return the boolean value in B}
 
   case val.dtype of                    {what is data type of first argument ?}
 
-dtype_int_k: begin                     {INTEGER first argument}
+escr_dtype_int_k: begin                {INTEGER first argument}
       case val2.dtype of
-dtype_int_k: begin                     {INTEGER, INTEGER}
+escr_dtype_int_k: begin                {INTEGER, INTEGER}
           b := val.int <= val2.int;
           end;
-dtype_fp_k: begin                      {INTEGER, REAL}
+escr_dtype_fp_k: begin                 {INTEGER, REAL}
           b := val.int <= val2.fp;
           end;
 otherwise
@@ -1090,12 +1090,12 @@ otherwise
         end;
       end;
 
-dtype_fp_k: begin                      {REAL first arg}
+escr_dtype_fp_k: begin                 {REAL first arg}
       case val2.dtype of
-dtype_int_k: begin                     {REAL, INTEGER}
+escr_dtype_int_k: begin                {REAL, INTEGER}
           b := val.fp <= val2.int;
           end;
-dtype_fp_k: begin                      {REAL, REAL}
+escr_dtype_fp_k: begin                 {REAL, REAL}
           b := val.fp <= val2.fp;
           end;
 otherwise
@@ -1103,9 +1103,9 @@ otherwise
         end;
       end;
 
-dtype_time_k: begin                    {TIME first arg}
+escr_dtype_time_k: begin               {TIME first arg}
       case val2.dtype of
-dtype_time_k: begin                    {TIME, TIME}
+escr_dtype_time_k: begin               {TIME, TIME}
           comp := sys_clock_compare (val.time, val2.time);
           b := comp in ccond;
           end;
@@ -1131,8 +1131,8 @@ otherwise
   ccond := [sys_compare_eq_k];         {comparison conditions for TRUE}
 
   if                                   {at least one argument is a string ?}
-      (val.dtype = dtype_str_k) or
-      (val2.dtype = dtype_str_k)
+      (val.dtype = escr_dtype_str_k) or
+      (val2.dtype = escr_dtype_str_k)
       then begin
     b := compare_strings (val, val2, ccond); {do string compare}
     goto ret_b;                        {return the boolean value in B}
@@ -1140,9 +1140,9 @@ otherwise
 
   case val.dtype of                    {what is data type of first argument ?}
 
-dtype_bool_k: begin                    {BOOL first argument}
+escr_dtype_bool_k: begin               {BOOL first argument}
       case val2.dtype of
-dtype_bool_k: begin                    {BOOL, BOOL}
+escr_dtype_bool_k: begin               {BOOL, BOOL}
           b := val.bool = val2.bool;
           end;
 otherwise
@@ -1150,12 +1150,12 @@ otherwise
         end;
       end;
 
-dtype_int_k: begin                     {INTEGER first argument}
+escr_dtype_int_k: begin                {INTEGER first argument}
       case val2.dtype of
-dtype_int_k: begin                     {INTEGER, INTEGER}
+escr_dtype_int_k: begin                {INTEGER, INTEGER}
           b := val.int = val2.int;
           end;
-dtype_fp_k: begin                      {INTEGER, REAL}
+escr_dtype_fp_k: begin                 {INTEGER, REAL}
           b := val.int = val2.fp;
           end;
 otherwise
@@ -1163,12 +1163,12 @@ otherwise
         end;
       end;
 
-dtype_fp_k: begin                      {REAL first arg}
+escr_dtype_fp_k: begin                 {REAL first arg}
       case val2.dtype of
-dtype_int_k: begin                     {REAL, INTEGER}
+escr_dtype_int_k: begin                {REAL, INTEGER}
           b := val.fp = val2.int;
           end;
-dtype_fp_k: begin                      {REAL, REAL}
+escr_dtype_fp_k: begin                 {REAL, REAL}
           b := val.fp = val2.fp;
           end;
 otherwise
@@ -1176,9 +1176,9 @@ otherwise
         end;
       end;
 
-dtype_time_k: begin                    {TIME first arg}
+escr_dtype_time_k: begin               {TIME first arg}
       case val2.dtype of
-dtype_time_k: begin                    {TIME, TIME}
+escr_dtype_time_k: begin               {TIME, TIME}
           comp := sys_clock_compare (val.time, val2.time);
           b := comp in ccond;
           end;
@@ -1204,8 +1204,8 @@ otherwise
   ccond := [sys_compare_gt_k, sys_compare_eq_k]; {comparison conditions for TRUE}
 
   if                                   {at least one argument is a string ?}
-      (val.dtype = dtype_str_k) or
-      (val2.dtype = dtype_str_k)
+      (val.dtype = escr_dtype_str_k) or
+      (val2.dtype = escr_dtype_str_k)
       then begin
     b := compare_strings (val, val2, ccond); {do string compare}
     goto ret_b;                        {return the boolean value in B}
@@ -1213,12 +1213,12 @@ otherwise
 
   case val.dtype of                    {what is data type of first argument ?}
 
-dtype_int_k: begin                     {INTEGER first argument}
+escr_dtype_int_k: begin                {INTEGER first argument}
       case val2.dtype of
-dtype_int_k: begin                     {INTEGER, INTEGER}
+escr_dtype_int_k: begin                {INTEGER, INTEGER}
           b := val.int >= val2.int;
           end;
-dtype_fp_k: begin                      {INTEGER, REAL}
+escr_dtype_fp_k: begin                 {INTEGER, REAL}
           b := val.int >= val2.fp;
           end;
 otherwise
@@ -1226,12 +1226,12 @@ otherwise
         end;
       end;
 
-dtype_fp_k: begin                      {REAL first arg}
+escr_dtype_fp_k: begin                 {REAL first arg}
       case val2.dtype of
-dtype_int_k: begin                     {REAL, INTEGER}
+escr_dtype_int_k: begin                {REAL, INTEGER}
           b := val.fp >= val2.int;
           end;
-dtype_fp_k: begin                      {REAL, REAL}
+escr_dtype_fp_k: begin                 {REAL, REAL}
           b := val.fp >= val2.fp;
           end;
 otherwise
@@ -1239,9 +1239,9 @@ otherwise
         end;
       end;
 
-dtype_time_k: begin                    {TIME first arg}
+escr_dtype_time_k: begin               {TIME first arg}
       case val2.dtype of
-dtype_time_k: begin                    {TIME, TIME}
+escr_dtype_time_k: begin               {TIME, TIME}
           comp := sys_clock_compare (val.time, val2.time);
           b := comp in ccond;
           end;
@@ -1267,8 +1267,8 @@ otherwise
   ccond := [sys_compare_gt_k];         {comparison conditions for TRUE}
 
   if                                   {at least one argument is a string ?}
-      (val.dtype = dtype_str_k) or
-      (val2.dtype = dtype_str_k)
+      (val.dtype = escr_dtype_str_k) or
+      (val2.dtype = escr_dtype_str_k)
       then begin
     b := compare_strings (val, val2, ccond); {do string compare}
     goto ret_b;                        {return the boolean value in B}
@@ -1276,12 +1276,12 @@ otherwise
 
   case val.dtype of                    {what is data type of first argument ?}
 
-dtype_int_k: begin                     {INTEGER first argument}
+escr_dtype_int_k: begin                {INTEGER first argument}
       case val2.dtype of
-dtype_int_k: begin                     {INTEGER, INTEGER}
+escr_dtype_int_k: begin                {INTEGER, INTEGER}
           b := val.int > val2.int;
           end;
-dtype_fp_k: begin                      {INTEGER, REAL}
+escr_dtype_fp_k: begin                 {INTEGER, REAL}
           b := val.int > val2.fp;
           end;
 otherwise
@@ -1289,12 +1289,12 @@ otherwise
         end;
       end;
 
-dtype_fp_k: begin                      {REAL first arg}
+escr_dtype_fp_k: begin                 {REAL first arg}
       case val2.dtype of
-dtype_int_k: begin                     {REAL, INTEGER}
+escr_dtype_int_k: begin                {REAL, INTEGER}
           b := val.fp > val2.int;
           end;
-dtype_fp_k: begin                      {REAL, REAL}
+escr_dtype_fp_k: begin                 {REAL, REAL}
           b := val.fp > val2.fp;
           end;
 otherwise
@@ -1302,9 +1302,9 @@ otherwise
         end;
       end;
 
-dtype_time_k: begin                    {TIME first arg}
+escr_dtype_time_k: begin               {TIME first arg}
       case val2.dtype of
-dtype_time_k: begin                    {TIME, TIME}
+escr_dtype_time_k: begin               {TIME, TIME}
           comp := sys_clock_compare (val.time, val2.time);
           b := comp in ccond;
           end;
@@ -1330,8 +1330,8 @@ otherwise
   ccond := [sys_compare_lt_k, sys_compare_gt_k]; {comparison conditions for TRUE}
 
   if                                   {at least one argument is a string ?}
-      (val.dtype = dtype_str_k) or
-      (val2.dtype = dtype_str_k)
+      (val.dtype = escr_dtype_str_k) or
+      (val2.dtype = escr_dtype_str_k)
       then begin
     b := compare_strings (val, val2, ccond); {do string compare}
     goto ret_b;                        {return the boolean value in B}
@@ -1339,9 +1339,9 @@ otherwise
 
   case val.dtype of                    {what is data type of first argument ?}
 
-dtype_bool_k: begin                    {BOOL first argument}
+escr_dtype_bool_k: begin               {BOOL first argument}
       case val2.dtype of
-dtype_bool_k: begin                    {BOOL, BOOL}
+escr_dtype_bool_k: begin               {BOOL, BOOL}
           b := val.bool <> val2.bool;
           end;
 otherwise
@@ -1349,12 +1349,12 @@ otherwise
         end;
       end;
 
-dtype_int_k: begin                     {INTEGER first argument}
+escr_dtype_int_k: begin                {INTEGER first argument}
       case val2.dtype of
-dtype_int_k: begin                     {INTEGER, INTEGER}
+escr_dtype_int_k: begin                {INTEGER, INTEGER}
           b := val.int <> val2.int;
           end;
-dtype_fp_k: begin                      {INTEGER, REAL}
+escr_dtype_fp_k: begin                 {INTEGER, REAL}
           b := val.int <> val2.fp;
           end;
 otherwise
@@ -1362,12 +1362,12 @@ otherwise
         end;
       end;
 
-dtype_fp_k: begin                      {REAL first arg}
+escr_dtype_fp_k: begin                 {REAL first arg}
       case val2.dtype of
-dtype_int_k: begin                     {REAL, INTEGER}
+escr_dtype_int_k: begin                {REAL, INTEGER}
           b := val.fp <> val2.int;
           end;
-dtype_fp_k: begin                      {REAL, REAL}
+escr_dtype_fp_k: begin                 {REAL, REAL}
           b := val.fp <> val2.fp;
           end;
 otherwise
@@ -1375,9 +1375,9 @@ otherwise
         end;
       end;
 
-dtype_time_k: begin                    {TIME first arg}
+escr_dtype_time_k: begin               {TIME first arg}
       case val2.dtype of
-dtype_time_k: begin                    {TIME, TIME}
+escr_dtype_time_k: begin               {TIME, TIME}
           comp := sys_clock_compare (val.time, val2.time);
           b := comp in ccond;
           end;
@@ -1613,22 +1613,22 @@ ret_bi:                                {return boolean or integer depending on I
 
 ret_val:                               {return value in VAL in its data type}
   case val.dtype of                    {what data type is it ?}
-dtype_bool_k: begin
+escr_dtype_bool_k: begin
       b := val.bool;
       goto ret_b;
       end;
-dtype_int_k: begin
+escr_dtype_int_k: begin
       i := val.int;
       goto ret_i;
       end;
-dtype_fp_k: begin
+escr_dtype_fp_k: begin
       r := val.fp;
       goto ret_r;
       end;
-dtype_str_k: begin
+escr_dtype_str_k: begin
       return_string (val.str);
       end;
-dtype_time_k: begin
+escr_dtype_time_k: begin
       time := val.time;
       goto ret_time;
       end;
@@ -1978,13 +1978,13 @@ otherwise
     end;
   dtype := val.dtype;                  {init returned data type to first argument}
   case val.dtype of                    {what is data type of first argument ?}
-dtype_int_k: begin                     {first arg is INTEGER}
+escr_dtype_int_k: begin                {first arg is INTEGER}
       i := val.int;
       end;
-dtype_fp_k: begin                      {first arg is REAL}
+escr_dtype_fp_k: begin                 {first arg is REAL}
       r := val.fp;
       end;
-dtype_time_k: begin                    {first arg is TIME}
+escr_dtype_time_k: begin               {first arg is TIME}
       time := val.time;
       end;
 otherwise
@@ -1994,12 +1994,12 @@ otherwise
   while term_get (fstr, p, val) do begin {loop once for each subsequent argument}
     case val.dtype of                  {what is data type of this argument ?}
 
-dtype_int_k: begin                     {... INTEGER}
+escr_dtype_int_k: begin                {... INTEGER}
         case dtype of
-dtype_int_k: begin                     {INTEGER, INTEGER}
+escr_dtype_int_k: begin                {INTEGER, INTEGER}
             i := max(i, val.int);
             end;
-dtype_fp_k: begin                      {REAL, INTEGER}
+escr_dtype_fp_k: begin                 {REAL, INTEGER}
             r := max(r, val.int);
             end;
 otherwise
@@ -2007,13 +2007,13 @@ otherwise
           end;
         end;
 
-dtype_fp_k: begin                      {... REAL}
+escr_dtype_fp_k: begin                 {... REAL}
         case dtype of
-dtype_int_k: begin                     {INTEGER, REAL}
+escr_dtype_int_k: begin                {INTEGER, REAL}
             r := max(i, val.fp);
-            dtype := dtype_fp_k;
+            dtype := escr_dtype_fp_k;
             end;
-dtype_fp_k: begin                      {REAL, REAL}
+escr_dtype_fp_k: begin                 {REAL, REAL}
             r := max(r, val.fp);
             end;
 otherwise
@@ -2021,9 +2021,9 @@ otherwise
           end;
         end;
 
-dtype_time_k: begin                    {... TIME}
+escr_dtype_time_k: begin               {... TIME}
         case dtype of
-dtype_time_k: begin                    {TIME, TIME}
+escr_dtype_time_k: begin               {TIME, TIME}
             if sys_clock_compare (val.time, time) = sys_compare_gt_k then begin
               time := val.time;
               end;
@@ -2039,9 +2039,9 @@ otherwise                              {unexpected argument data type}
     end;                               {back to get next argument}
 
   case dtype of                        {what is result data type ?}
-dtype_int_k: goto ret_i;               {INTEGER}
-dtype_fp_k: goto ret_r;                {REAL}
-dtype_time_k: goto ret_time;           {TIME}
+escr_dtype_int_k: goto ret_i;          {INTEGER}
+escr_dtype_fp_k: goto ret_r;           {REAL}
+escr_dtype_time_k: goto ret_time;      {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "MAX"');
@@ -2059,13 +2059,13 @@ dtype_time_k: goto ret_time;           {TIME}
     end;
   dtype := val.dtype;                  {init returned data type to first argument}
   case val.dtype of                    {what is data type of first argument ?}
-dtype_int_k: begin                     {first arg is INTEGER}
+escr_dtype_int_k: begin                {first arg is INTEGER}
       i := val.int;
       end;
-dtype_fp_k: begin                      {first arg is REAL}
+escr_dtype_fp_k: begin                 {first arg is REAL}
       r := val.fp;
       end;
-dtype_time_k: begin                    {first arg is TIME}
+escr_dtype_time_k: begin               {first arg is TIME}
       time := val.time;
       end;
 otherwise
@@ -2075,12 +2075,12 @@ otherwise
   while term_get (fstr, p, val) do begin {loop once for each subsequent argument}
     case val.dtype of                  {what is data type of this argument ?}
 
-dtype_int_k: begin                     {... INTEGER}
+escr_dtype_int_k: begin                {... INTEGER}
         case dtype of
-dtype_int_k: begin                     {INTEGER, INTEGER}
+escr_dtype_int_k: begin                {INTEGER, INTEGER}
             i := min(i, val.int);
             end;
-dtype_fp_k: begin                      {REAL, INTEGER}
+escr_dtype_fp_k: begin                 {REAL, INTEGER}
             r := min(r, val.int);
             end;
 otherwise
@@ -2088,13 +2088,13 @@ otherwise
           end;
         end;
 
-dtype_fp_k: begin                      {... REAL}
+escr_dtype_fp_k: begin                 {... REAL}
         case dtype of
-dtype_int_k: begin                     {INTEGER, REAL}
+escr_dtype_int_k: begin                {INTEGER, REAL}
             r := min(i, val.fp);
-            dtype := dtype_fp_k;
+            dtype := escr_dtype_fp_k;
             end;
-dtype_fp_k: begin                      {REAL, REAL}
+escr_dtype_fp_k: begin                 {REAL, REAL}
             r := min(r, val.fp);
             end;
 otherwise
@@ -2102,9 +2102,9 @@ otherwise
           end;
         end;
 
-dtype_time_k: begin                    {... TIME}
+escr_dtype_time_k: begin               {... TIME}
         case dtype of
-dtype_time_k: begin                    {TIME, TIME}
+escr_dtype_time_k: begin               {TIME, TIME}
             if sys_clock_compare (val.time, time) = sys_compare_lt_k then begin
               time := val.time;
               end;
@@ -2120,9 +2120,9 @@ otherwise                              {unexpected argument data type}
     end;                               {back to get next argument}
 
   case dtype of                        {what is result data type ?}
-dtype_int_k: goto ret_i;               {INTEGER}
-dtype_fp_k: goto ret_r;                {REAL}
-dtype_time_k: goto ret_time;           {TIME}
+escr_dtype_int_k: goto ret_i;          {INTEGER}
+escr_dtype_fp_k: goto ret_r;           {REAL}
+escr_dtype_time_k: goto ret_time;      {TIME}
     end;
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], 'ESCR_FUNC, function "MIN"');
@@ -2215,26 +2215,26 @@ dtype_time_k: goto ret_time;           {TIME}
 
 1:  begin                              {TYPE, symbol type}
       case sym_p^.stype of
-sym_var_k: string_vstring (tk, 'VAR'(0), -1);
-sym_const_k: string_vstring (tk, 'CONST'(0), -1);
-sym_subr_k: string_vstring (tk, 'SUBR'(0), -1);
-sym_macro_k: string_vstring (tk, 'MACRO'(0), -1);
+escr_sym_var_k: string_vstring (tk, 'VAR'(0), -1);
+escr_sym_const_k: string_vstring (tk, 'CONST'(0), -1);
+escr_sym_subr_k: string_vstring (tk, 'SUBR'(0), -1);
+escr_sym_macro_k: string_vstring (tk, 'MACRO'(0), -1);
         end;
       end;
 
 2:  begin                              {DTYPE, symbol data type}
       case sym_p^.stype of
-sym_var_k: dtype := sym_p^.var_val.dtype;
-sym_const_k: dtype := sym_p^.const_val.dtype;
+escr_sym_var_k: dtype := sym_p^.var_val.dtype;
+escr_sym_const_k: dtype := sym_p^.const_val.dtype;
 otherwise                              {this symbol has no data type}
         goto ret_str;                  {return empty string}
         end;
       case dtype of                    {which data type is it ?}
-dtype_bool_k: string_vstring (tk, 'BOOL'(0), -1);
-dtype_int_k: string_vstring (tk, 'INTEGER'(0), -1);
-dtype_fp_k: string_vstring (tk, 'REAL'(0), -1);
-dtype_str_k: string_vstring (tk, 'STRING'(0), -1);
-dtype_time_k: string_vstring (tk, 'TIME'(0), -1);
+escr_dtype_bool_k: string_vstring (tk, 'BOOL'(0), -1);
+escr_dtype_int_k: string_vstring (tk, 'INTEGER'(0), -1);
+escr_dtype_fp_k: string_vstring (tk, 'REAL'(0), -1);
+escr_dtype_str_k: string_vstring (tk, 'STRING'(0), -1);
+escr_dtype_time_k: string_vstring (tk, 'TIME'(0), -1);
         end;
       end;                             {end of DTYPE keyword case}
 

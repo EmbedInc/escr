@@ -8,7 +8,7 @@ define escr_sym_new_var;
 define escr_sym_find;
 define escr_sym_del;
 define escr_sym_del_name;
-%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
 {
 ********************************************************************************
 *
@@ -28,7 +28,7 @@ var
 begin
   sym_name := false;                   {init to not a valid symbol name}
 
-  if name.len > max_namelen_k then return; {name is too long ?}
+  if name.len > escr_max_namelen_k then return; {name is too long ?}
   if name.len < 1 then return;         {name is too short ?}
 
   for i := 1 to name.len do begin      {once for each character in name}
@@ -68,7 +68,7 @@ procedure escr_sym_new (               {create new symbol}
   in      name: univ string_var_arg_t; {symbol name}
   in      sz: sys_int_adr_t;           {size of the whole symbol descriptor}
   in      global: boolean;             {create global, not local symbol}
-  out     sym_p: sym_p_t);             {returned pointer to symbol info}
+  out     sym_p: escr_sym_p_t);        {returned pointer to symbol info}
   val_param;
 
 const
@@ -76,10 +76,10 @@ const
 
 var
   name_p: string_var_p_t;              {pointer to name in symbol table}
-  sym_pp: sym_pp_t;                    {pointer to symbol pointer in table entry}
-  prev_p: sym_p_t;                     {pointer to previous version of symbol}
+  sym_pp: escr_sym_pp_t;               {pointer to symbol pointer in table entry}
+  prev_p: escr_sym_p_t;                {pointer to previous version of symbol}
   vern: sys_int_machine_t;             {1-N version number of the new symbol}
-  lsym_p: sylist_p_t;                  {pointer to local symbol list entry for ex block}
+  lsym_p: escr_sylist_p_t;             {pointer to local symbol list entry for ex block}
   pos: string_hash_pos_t;              {handle to position in symbol table}
   found: boolean;                      {TRUE if name found in symbol table}
   msg_parm:                            {parameter references for messages}
@@ -99,7 +99,7 @@ begin
       string_hash_ent_atpos (pos, name_p, sym_pp); {look up existing symbol info}
       prev_p := sym_pp^;               {get pointer to curr symbol of this name}
       vern := prev_p^.vern + 1;        {make version number of this new symbol}
-      if vern > max_symvers_k then begin {already at maximum allowed version ?}
+      if vern > escr_max_symvers_k then begin {already at maximum allowed version ?}
         sys_msg_parm_vstr (msg_parm[1], name);
         escr_err_atline ('pic', 'sym_maxvers', msg_parm, 1); {max versions exceeded error}
         return;
@@ -167,36 +167,36 @@ local:                                 {create symbol as local}
 }
 procedure escr_sym_new_const (         {create new symbol for a constant}
   in      name: univ string_var_arg_t; {symbol name}
-  in      dtype: dtype_k_t;            {data type of the constant}
+  in      dtype: escr_dtype_k_t;       {data type of the constant}
   in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
-  out     sym_p: sym_p_t);             {returned pointer to symbol info}
+  out     sym_p: escr_sym_p_t);        {returned pointer to symbol info}
   val_param;
 
 var
   sz: sys_int_adr_t;                   {total symbol descriptor size required}
 
 begin
-  sz := offset(sym_t.const_val) + val_size(dtype, len); {total symbol descriptor size}
+  sz := offset(escr_sym_t.const_val) + val_size(dtype, len); {total symbol descriptor size}
   escr_sym_new (name, sz, global, sym_p); {create the basic symbol}
-  sym_p^.stype := sym_const_k;         {set symbol type}
+  sym_p^.stype := escr_sym_const_k;    {set symbol type}
   sym_p^.const_val.dtype := dtype;     {set data type of this constant}
   case dtype of                        {what is the data type ?}
-dtype_bool_k: begin                    {boolean}
+escr_dtype_bool_k: begin               {boolean}
       sym_p^.const_val.bool := false;
       end;
-dtype_int_k: begin                     {integer}
+escr_dtype_int_k: begin                {integer}
       sym_p^.const_val.int := 0;
       end;
-dtype_fp_k: begin                      {floating point}
+escr_dtype_fp_k: begin                 {floating point}
       sym_p^.const_val.fp := 0.0;
       end;
-dtype_str_k: begin                     {string}
+escr_dtype_str_k: begin                {string}
       sym_p^.const_val.str.max := len;
       sym_p^.const_val.str.len := 0;
       sym_p^.const_val.str.str[1] := chr(0);
       end;
-dtype_time_k: begin                    {time}
+escr_dtype_time_k: begin               {time}
       sym_p^.const_val.time := sys_clock;
       end;
 otherwise
@@ -217,36 +217,36 @@ otherwise
 }
 procedure escr_sym_new_var (           {create new symbol for a variable}
   in      name: univ string_var_arg_t; {symbol name}
-  in      dtype: dtype_k_t;            {data type of the variable}
+  in      dtype: escr_dtype_k_t;       {data type of the variable}
   in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
-  out     sym_p: sym_p_t);             {returned pointer to symbol info}
+  out     sym_p: escr_sym_p_t);        {returned pointer to symbol info}
   val_param;
 
 var
   sz: sys_int_adr_t;                   {total symbol descriptor size required}
 
 begin
-  sz := offset(sym_t.var_val) + val_size(dtype, len); {total symbol descriptor size}
+  sz := offset(escr_sym_t.var_val) + val_size(dtype, len); {total symbol descriptor size}
   escr_sym_new (name, sz, global, sym_p); {create the basic symbol}
-  sym_p^.stype := sym_var_k;           {set symbol type}
+  sym_p^.stype := escr_sym_var_k;      {set symbol type}
   sym_p^.var_val.dtype := dtype;       {set data type of this variable}
   case dtype of                        {what is the data type ?}
-dtype_bool_k: begin                    {boolean}
+escr_dtype_bool_k: begin               {boolean}
       sym_p^.var_val.bool := false;
       end;
-dtype_int_k: begin                     {integer}
+escr_dtype_int_k: begin                {integer}
       sym_p^.var_val.int := 0;
       end;
-dtype_fp_k: begin                      {floating point}
+escr_dtype_fp_k: begin                 {floating point}
       sym_p^.var_val.fp := 0.0;
       end;
-dtype_str_k: begin                     {string}
+escr_dtype_str_k: begin                {string}
       sym_p^.var_val.str.max := len;
       sym_p^.var_val.str.len := 0;
       sym_p^.var_val.str.str[1] := chr(0);
       end;
-dtype_time_k: begin                    {time}
+escr_dtype_time_k: begin               {time}
       sym_p^.var_val.time := sys_clock_from_fp_rel (0.0);
       end;
 otherwise
@@ -264,12 +264,12 @@ otherwise
 }
 procedure escr_sym_find (              {look up symbol in symbol table}
   in      name: univ string_var_arg_t; {symbol name}
-  out     sym_p: sym_p_t);             {returned pointer to symbol, NIL if not found}
+  out     sym_p: escr_sym_p_t);        {returned pointer to symbol, NIL if not found}
   val_param;
 
 var
   name_p: string_var_p_t;              {pointer to name in symbol table}
-  sym_pp: sym_pp_t;                    {pointer to symbol pointer in table entry}
+  sym_pp: escr_sym_pp_t;               {pointer to symbol pointer in table entry}
 
 begin
   string_hash_ent_lookup (             {look up name in symbol table}
@@ -295,15 +295,15 @@ begin
 *   of the same name stacked later than the indicated symbol are also deleted.
 }
 procedure escr_sym_del (               {delete specific symbol version}
-  in out  sym_p: sym_p_t);             {pointer to symbol to delete, returned NIL}
+  in out  sym_p: escr_sym_p_t);        {pointer to symbol to delete, returned NIL}
   val_param;
 
 var
-  s_p, s2_p: sym_p_t;                  {scratch symbol pointers}
-  lsym_p: sylist_p_t;                  {pointer to one local symbols list entry}
-  lsym_pp: sylist_pp_t;                {pointer to link to current local symbol list entry}
+  s_p, s2_p: escr_sym_p_t;             {scratch symbol pointers}
+  lsym_p: escr_sylist_p_t;             {pointer to one local symbols list entry}
+  lsym_pp: escr_sylist_pp_t;           {pointer to link to current local symbol list entry}
   name_p: string_var_p_t;              {pointer to name in symbol table}
-  sym_pp: sym_pp_t;                    {pointer to symbol pointer in table entry}
+  sym_pp: escr_sym_pp_t;               {pointer to symbol pointer in table entry}
   pos: string_hash_pos_t;              {handle to position in symbol table}
   found: boolean;                      {TRUE if name found in symbol table}
 
@@ -388,8 +388,8 @@ const
 
 var
   name_p: string_var_p_t;              {pointer to name in symbol table}
-  sym_pp: sym_pp_t;                    {pointer to symbol pointer in table entry}
-  sym_p: sym_p_t;                      {pointer to symbol descriptor to delete}
+  sym_pp: escr_sym_pp_t;               {pointer to symbol pointer in table entry}
+  sym_p: escr_sym_p_t;                 {pointer to symbol descriptor to delete}
   pos: string_hash_pos_t;              {handle to position in symbol table}
   found: boolean;                      {TRUE if name found in symbol table}
   msg_parm:                            {parameter references for messages}

@@ -2,7 +2,7 @@
 }
 module escr_term;
 define term_get;
-%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
 {
 ****************************************************************************
 *
@@ -21,7 +21,7 @@ define term_get;
 function term_get (                    {get value of next term in list}
   in      fstr: univ string_var_arg_t; {source string, term will be next token}
   in out  p: string_index_t;           {source string parse index}
-  out     val: val_t)                  {returned value of the term}
+  out     val: escr_val_t)             {returned value of the term}
   :boolean;                            {TRUE if term was available}
   val_param;
 
@@ -30,7 +30,7 @@ const
 
 var
   pick: sys_int_machine_t;             {number of token picked from list}
-  sym_p: sym_p_t;                      {pointer to constant or variable descriptor}
+  sym_p: escr_sym_p_t;                 {pointer to constant or variable descriptor}
   c: char;                             {scratch character}
   tk: string_var8192_t;                {token parsed from input string}
   tku: string_var32_t;                 {scratch upper case token}
@@ -67,7 +67,7 @@ begin
 *   in TK already has any surrounding quotes removed by STRING_TOKEN.
 }
   if (c = '''') or (c = '"') then begin {token was a quoted text string ?}
-    val.dtype := dtype_str_k;          {pass back value as text string}
+    val.dtype := escr_dtype_str_k;     {pass back value as text string}
     val.str.max := size_char(val.str.str);
     string_copy (tk, val.str);         {return the string}
     return;
@@ -77,7 +77,7 @@ begin
 }
   string_t_int_max (tk, val.int, stat); {try converting to integer}
   if not sys_error(stat) then begin    {integer conversion succeeded ?}
-    val.dtype := dtype_int_k;
+    val.dtype := escr_dtype_int_k;
     return;
     end;
 {
@@ -85,14 +85,14 @@ begin
 }
   string_t_fpmax (tk, val.fp, [], stat); {try converting to floating point}
   if not sys_error(stat) then begin    {floating point conversion succeeded ?}
-    val.dtype := dtype_fp_k;
+    val.dtype := escr_dtype_fp_k;
     return;
     end;
 {
 *   Check for time.
 }
   if escr_str_to_time (tk, val.time) then begin
-    val.dtype := dtype_time_k;
+    val.dtype := escr_dtype_time_k;
     return;
     end;
 {
@@ -103,7 +103,7 @@ begin
   string_tkpick80 (tku, 'FALSE TRUE', pick);
   if pick > 0 then begin               {token matched one of the keywords ?}
     val.bool := pick = 2;
-    val.dtype := dtype_bool_k;
+    val.dtype := escr_dtype_bool_k;
     return;
     end;
 {
@@ -113,12 +113,12 @@ begin
   escr_sym_find (tk, sym_p);           {lookup name in symbol table}
   if sym_p = nil then goto not_sym;    {no such symbol ?}
   case sym_p^.stype of                 {what kind of symbol is it ?}
-sym_var_k: begin                       {symbol is a variable}
+escr_sym_var_k: begin                  {symbol is a variable}
       escr_val_init (sym_p^.var_val.dtype, val); {set up VAL for this data type}
       escr_val_copy (sym_p^.var_val, val); {return the variable's value}
       return;
       end;
-sym_const_k: begin                     {symbol is a constant}
+escr_sym_const_k: begin                {symbol is a constant}
       escr_val_init (sym_p^.const_val.dtype, val); {set up VAL for this data type}
       escr_val_copy (sym_p^.const_val, val); {return the constant's value}
       return;

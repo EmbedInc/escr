@@ -15,7 +15,7 @@ define escr_exblock_arg_get_bl;
 define escr_exblock_arg_get;
 define escr_exblock_repeat;
 define escr_exblock_quit;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
@@ -33,7 +33,7 @@ const
 
 var
   mem_p: util_mem_context_p_t;         {mem context for block, deleted when block closed}
-  bl_p: exblock_p_t;                   {points to new execution block created}
+  bl_p: escr_exblock_p_t;              {points to new execution block created}
   nlev: sys_int_machine_t;             {new block nesting level, top = 0}
   msg_parm:                            {parameter references for messages}
     array[1..max_msg_parms] of sys_parm_msg_t;
@@ -47,8 +47,8 @@ begin
     else begin                         {creating nested block}
       util_mem_context_get (e.exblock_p^.mem_p^, mem_p); {create new mem context for block}
       nlev := e.exblock_p^.level + 1;  {nesting level one more than parent block}
-      if nlev > max_blklev_k then begin {new block would be nested too deep ?}
-        sys_msg_parm_int (msg_parm[1], max_blklev_k);
+      if nlev > escr_max_blklev_k then begin {new block would be nested too deep ?}
+        sys_msg_parm_int (msg_parm[1], escr_max_blklev_k);
         escr_err_atline ('pic', 'err_maxnest_block', msg_parm, 1);
         end;
       end
@@ -69,7 +69,7 @@ begin
   escr_inh_new;                        {make execution inhibit state for this block}
   bl_p^.inh_p := e.inhibit_p;          {save pointer top inhibit for this block}
   bl_p^.loop_p := nil;                 {init to block is not a explicit loop}
-  bl_p^.bltype := exblock_top_k;       {init to top block type}
+  bl_p^.bltype := escr_exblock_top_k;  {init to top block type}
   bl_p^.loclab := nil;                 {init to no list of local labels}
   bl_p^.args := false;                 {init to this block does not take arguments}
   bl_p^.iter1 := true;                 {init to executing the first iteration}
@@ -89,8 +89,8 @@ procedure escr_exblock_close;          {close curr execution block and delete te
 
 var
   mem_p: util_mem_context_p_t;         {points to mem context for the block}
-  sym_p: sym_p_t;                      {pointer to symbol to delete}
-  inhprev_p: inh_p_t;                  {inhibit to restore to}
+  sym_p: escr_sym_p_t;                 {pointer to symbol to delete}
+  inhprev_p: escr_inh_p_t;             {inhibit to restore to}
 
 begin
 {
@@ -146,8 +146,8 @@ begin
 
   string_hash_create (                 {create the label names hash table}
     e.exblock_p^.loclab,               {returned handle to the loc labels table}
-    lab_nbuck_k,                       {number of hash buckets to create}
-    lab_maxlen_k,                      {max length of table entry names}
+    escr_lab_nbuck_k,                  {number of hash buckets to create}
+    escr_lab_maxlen_k,                 {max length of table entry names}
     sizeof(string_var_p_t),            {size of data stored for each entry}
     [string_hashcre_nodel_k],          {won't individually deallocate entries}
     e.exblock_p^.mem_p^);              {pointer to parent memory context}
@@ -162,7 +162,7 @@ begin
 *   is more like a "CALL".
 }
 procedure escr_exblock_inline_set (    {go to new input source position in curr block}
-  in      line_p: inline_p_t);         {pointer to next input line to use}
+  in      line_p: escr_inline_p_t);    {pointer to next input line to use}
   val_param;
 
 begin
@@ -189,14 +189,14 @@ begin
 *   previous position will be restored when the new position state is deleted.
 }
 procedure escr_exblock_inline_push (   {push new source line location for exec block}
-  in      line_p: inline_p_t);         {pointer to next input line to use}
+  in      line_p: escr_inline_p_t);    {pointer to next input line to use}
   val_param;
 
 const
   max_msg_parms = 1;                   {max parameters we can pass to a message}
 
 var
-  pos_p: inpos_p_t;                    {pointer to new nested input position state}
+  pos_p: escr_inpos_p_t;               {pointer to new nested input position state}
   level: sys_int_machine_t;            {new input file nesting level, top = 0}
   msg_parm:                            {parameter references for messages}
     array[1..max_msg_parms] of sys_parm_msg_t;
@@ -205,8 +205,8 @@ begin
   level := 0;                          {init to this is top input file this block}
   if e.exblock_p^.inpos_p <> nil then begin {there is a previous input file this block ?}
     level := e.exblock_p^.inpos_p^.level + 1; {make nesting level of new input file}
-    if level > max_inclev_k then begin {would exceed input file nesting level ?}
-      sys_msg_parm_int (msg_parm[1], max_inclev_k);
+    if level > escr_max_inclev_k then begin {would exceed input file nesting level ?}
+      sys_msg_parm_int (msg_parm[1], escr_max_inclev_k);
       escr_err_atline ('pic', 'err_maxnext_file', msg_parm, 1);
       end;
     end;
@@ -242,7 +242,7 @@ procedure escr_exblock_arg_addn (      {add argument to current block, specific 
   val_param;
 
 var
-  arg_p: arg_p_t;                      {points to newly created argument descriptor}
+  arg_p: escr_arg_p_t;                 {points to newly created argument descriptor}
 
 begin
   e.exblock_p^.args := true;           {this block definitely takes arguments}
@@ -291,13 +291,13 @@ begin
 *   sequentially starting at 1.
 }
 procedure escr_exblock_arg_get_bl (    {get value of execution block argument}
-  in      bl: exblock_t;               {execution block to get argument of}
+  in      bl: escr_exblock_t;          {execution block to get argument of}
   in      n: sys_int_machine_t;        {1-N sequential argument number}
   out     val_p: string_var_p_t);      {pointer to argument value, NIL if not exist}
   val_param;
 
 var
-  arg_p: arg_p_t;                      {pointer to current argument descriptor}
+  arg_p: escr_arg_p_t;                 {pointer to current argument descriptor}
 
 begin
   val_p := nil;                        {init to argument does not exist}
@@ -324,7 +324,7 @@ procedure escr_exblock_arg_get (       {get value of currently visible argument}
   val_param;
 
 var
-  bl_p: exblock_p_t;                   {pointer to execution block with arguments}
+  bl_p: escr_exblock_p_t;              {pointer to execution block with arguments}
 
 begin
   val_p := nil;                        {init to argument doesn't exist}
@@ -370,7 +370,7 @@ procedure escr_exblock_quit;
   val_param;
 
 var
-  inh_p: inh_p_t;                      {scratch pointer to execution inhibit state}
+  inh_p: escr_inh_p_t;                 {scratch pointer to execution inhibit state}
 
 begin
   inh_p := e.inhibit_p;                {init to top execution inhibit}

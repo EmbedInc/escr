@@ -8,7 +8,7 @@
 }
 program escr;
 define com;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 
 const
   max_msg_parms = 2;                   {max parameters we can pass to a message}

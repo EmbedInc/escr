@@ -15,7 +15,7 @@ define get_time;
 define get_fp;
 define get_str;
 define escr_get_args_str;
-%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
 {
 ****************************************************************************
 *
@@ -246,7 +246,7 @@ begin
 *   an appropriate message if the token does not select a data type.
 }
 function get_dtype (                   {get data type ID from input stream}
-  out     dtype: dtype_k_t)            {returned data type ID}
+  out     dtype: escr_dtype_k_t)       {returned data type ID}
   :boolean;                            {TRUE if input token was available}
   val_param;
 
@@ -258,11 +258,11 @@ begin
   escr_get_keyword ('BOOL INTEGER REAL STRING TIME', pick); {get the selected keyword}
   case pick of
 0:  return;
-1:  dtype := dtype_bool_k;
-2:  dtype := dtype_int_k;
-3:  dtype := dtype_fp_k;
-4:  dtype := dtype_str_k;
-5:  dtype := dtype_time_k;
+1:  dtype := escr_dtype_bool_k;
+2:  dtype := escr_dtype_int_k;
+3:  dtype := escr_dtype_fp_k;
+4:  dtype := escr_dtype_str_k;
+5:  dtype := escr_dtype_time_k;
 otherwise
     writeln ('Internal screwup in program ESCR.  Unexpected PICK value');
     writeln ('in GET_DTYPE.');
@@ -279,7 +279,7 @@ otherwise
 *   returns TRUE if an input term was available, FALSE otherwise.
 }
 function get_val (                     {get value of next input stream token}
-  out     val: val_t)                  {returned value}
+  out     val: escr_val_t)             {returned value}
   :boolean;                            {TRUE if token available}
   val_param;
 
@@ -299,12 +299,12 @@ begin
 *   otherwise.
 }
 function get_val_dtype (               {get next input value, to dtype of VAL}
-  in out  val: val_t)                  {returned value, DTYPE specifies data type}
+  in out  val: escr_val_t)             {returned value, DTYPE specifies data type}
   :boolean;                            {TRUE if token available}
   val_param;
 
 var
-  v: val_t;
+  v: escr_val_t;
 
 begin
   get_val_dtype := false;              {init to no term available}
@@ -329,7 +329,7 @@ function get_bool (                    {get the next token as a boolean}
   val_param;
 
 var
-  val: val_t;                          {term value}
+  val: escr_val_t;                     {term value}
 
 begin
   get_bool := false;                   {init to no term available}
@@ -354,7 +354,7 @@ function get_int (                     {get the next token as an integer}
   val_param;
 
 var
-  val: val_t;                          {term value}
+  val: escr_val_t;                     {term value}
 
 begin
   get_int := false;                    {init to no term available}
@@ -379,7 +379,7 @@ function get_time (                    {get the next token as a time value}
   val_param;
 
 var
-  val: val_t;                          {term value}
+  val: escr_val_t;                     {term value}
 
 begin
   get_time := false;                   {init to no term available}
@@ -404,7 +404,7 @@ function get_fp (                      {get next token as floating point value}
   val_param;
 
 var
-  val: val_t;                          {term value}
+  val: escr_val_t;                     {term value}
 
 begin
   get_fp := false;                     {init to no term available}
@@ -429,7 +429,7 @@ function get_str (                     {get the next token as a string}
   val_param;
 
 var
-  val: val_t;                          {term value}
+  val: escr_val_t;                     {term value}
 
 begin
   get_str := false;                    {init to no term available}

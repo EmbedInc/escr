@@ -11,7 +11,7 @@ define escr_str_from_fp;
 define escr_close_out;
 define escr_close_out_all;
 define escr_uptocomm;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
@@ -20,6 +20,7 @@ define escr_uptocomm;
 *   Write the string in S as the next line to the current output file.
 }
 procedure escr_write_vstr (            {write var string to current output file}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      s: univ string_var_arg_t;    {the string to write}
   out     stat: sys_err_t);            {completion status}
   val_param;
@@ -36,7 +37,8 @@ begin
 *   output file.  OBUF is reset to empty.  The program is aborted on
 *   any error.
 }
-procedure escr_write_obuf;             {write line to output file from OBUF}
+procedure escr_write_obuf (            {write line to output file from OBUF}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param;
 
 var
@@ -55,7 +57,8 @@ begin
 *   Write the contents of the global string OBUF as the next line to standard
 *   output.  OBUF is reset to empty.
 }
-procedure escr_show_obuf;              {write line to standard output from OBUF}
+procedure escr_show_obuf (             {write line to standard output from OBUF}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param;
 
 begin
@@ -71,7 +74,8 @@ begin
 *   the time descriptor TIME.  The function returns TRUE on success and FALSE
 *   if the input string is not a valid date/time string.
 }
-function escr_str_to_time (                 {make absolute time descriptor from string}
+function escr_str_to_time (            {make absolute time descriptor from string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      s: univ string_var_arg_t;    {input string}
   out     time: sys_clock_t)           {returned time descriptor}
   :boolean;                            {TRUE on success}
@@ -89,7 +93,7 @@ label
 
 begin
   tk.max := size_char(tk.str);         {init local var string}
-  escr_str_to_time := false;                {init to input string not valid time}
+  escr_str_to_time := false;           {init to input string not valid time}
 
   p := 1;                              {init S parse index}
   string_token_anyd (                  {extract year number field}
@@ -179,7 +183,7 @@ begin
 
 have_date:                             {DATE is all filled in}
   time := sys_clock_from_date (date);  {make absolute time descripor}
-  escr_str_to_time := true;                 {indicate string conversion was successful}
+  escr_str_to_time := true;            {indicate string conversion was successful}
   end;
 {
 ********************************************************************************
@@ -189,6 +193,7 @@ have_date:                             {DATE is all filled in}
 *   Create the string representation into S of the absolute time in TIME.
 }
 procedure escr_str_from_time (         {make string from absolute time descriptor}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      time: sys_clock_t;           {input absolute time descriptor}
   in out  s: univ string_var_arg_t);   {returned string representation of the time}
   val_param;
@@ -241,6 +246,7 @@ begin
 *   exponential notation to distinguish it from a integer string.
 }
 procedure escr_str_from_fp (           {make string from floating point value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fp: double;                  {floating point input value}
   in out  s: univ string_var_arg_t);   {returned string representation}
   val_param;
@@ -271,11 +277,12 @@ begin
 *   will be deleted when DEL is TRUE.
 }
 procedure escr_close_out (             {close the current output file, pop previous}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      del: boolean);               {delete the file}
   val_param;
 
 var
-  o_p: outfile_p_t;                    {pointer to state of output file to close}
+  o_p: escr_outfile_p_t;               {pointer to state of output file to close}
   stat: sys_err_t;
 
 begin
@@ -299,6 +306,7 @@ begin
 *   will be NIL when this routine returns.
 }
 procedure escr_close_out_all (         {close all output files}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      del: boolean);               {delete the file files}
   val_param;
 
@@ -317,6 +325,7 @@ begin
 *   NCLEN.
 }
 procedure escr_uptocomm (              {find line length without comment}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      s: univ string_var_arg_t;    {the input string}
   out     nclen: string_index_t);      {string length with comment removed}
   val_param;

@@ -5,7 +5,7 @@ define escr_cmd_block;
 define escr_cmd_repeat;
 define escr_cmd_quit;
 define escr_cmd_endblock;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
@@ -19,7 +19,7 @@ begin
   escr_exblock_new;                    {create new execution block state}
   e.exblock_p^.start_p :=              {save pointer to starting line of this block}
     e.exblock_p^.prev_p^.inpos_p^.last_p;
-  e.exblock_p^.bltype := exblock_blk_k; {indicate BLOCK ... ENBLOCK type}
+  e.exblock_p^.bltype := escr_exblock_blk_k; {indicate BLOCK ... ENBLOCK type}
   escr_exblock_inline_set (            {set next source line to execute}
     e.exblock_p^.prev_p^.inpos_p^.line_p);
   end;
@@ -65,7 +65,7 @@ begin
   if e.exblock_p^.prev_p = nil then begin {in root execution block}
     escr_err_atline ('pic', 'err_endblock_root', nil, 0);
     end;
-  if e.exblock_p^.bltype <> exblock_blk_k then begin {not in BLOCK ... ENDBLOCK block type ?}
+  if e.exblock_p^.bltype <> escr_exblock_blk_k then begin {not in BLOCK ... ENDBLOCK block type ?}
     escr_err_atline ('pic', 'err_endblock_type', nil, 0);
     end;
   if e.exblock_p^.inpos_p^.prev_p <> nil then begin {block ended in include file ?}

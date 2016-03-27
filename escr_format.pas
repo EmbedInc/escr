@@ -3,7 +3,7 @@
 module escr_format;
 define escr_format_int;
 define escr_format_fp;
-%include 'escr.ins.pas';
+%include 'escr2.ins.pas';
 {
 ********************************************************************************
 *

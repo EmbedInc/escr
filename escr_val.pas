@@ -12,7 +12,7 @@ define escr_val_text;
 define val_size;
 define escr_val_init;
 define val_time;
-%include '/cognivision_links/dsee_libs/pic/escr.ins.pas';
+%include '/cognivision_links/dsee_libs/pic/escr2.ins.pas';
 {
 ****************************************************************************
 *
@@ -23,25 +23,25 @@ define val_time;
 *   of OVAL is irrelevant on entry.
 }
 procedure escr_val_copy (              {copy a VAL_T value}
-  in      ival: val_t;                 {the input value}
-  out     oval: val_t);                {the output value}
+  in      ival: escr_val_t;            {the input value}
+  out     oval: escr_val_t);           {the output value}
   val_param;
 
 begin
   case oval.dtype of                   {what data type converting to ?}
-dtype_bool_k: begin                    {to BOOLEAN}
+escr_dtype_bool_k: begin               {to BOOLEAN}
     oval.bool := val_bool (ival);
     end;
-dtype_int_k: begin                     {to INTEGER}
+escr_dtype_int_k: begin                {to INTEGER}
     oval.int := val_int (ival);
     end;
-dtype_fp_k: begin                      {to FLOATING POINT}
+escr_dtype_fp_k: begin                 {to FLOATING POINT}
     oval.fp := val_fp (ival);
     end;
-dtype_str_k: begin                     {to STRING}
+escr_dtype_str_k: begin                {to STRING}
     escr_val_str (ival, oval.str);
     end;
-dtype_time_k: begin                    {to TIME}
+escr_dtype_time_k: begin               {to TIME}
     oval.time := val_time (ival);
     end;
 otherwise                              {unimplemented output data type}
@@ -57,7 +57,7 @@ otherwise                              {unimplemented output data type}
 *   unambiguously converted to a boolean.
 }
 function val_bool (                    {return boolean value or bomb with error}
-  in      val: val_t)                  {source value}
+  in      val: escr_val_t)             {source value}
   :boolean;                            {the boolean value of VAL}
   val_param;
 
@@ -71,12 +71,12 @@ begin
 
   case val.dtype of                    {what is the input value data type ?}
 
-dtype_bool_k: begin                    {input data type is boolean}
+escr_dtype_bool_k: begin               {input data type is boolean}
       val_bool := val.bool;
       return;
       end;
 
-dtype_str_k: begin                     {input data type is string}
+escr_dtype_str_k: begin                {input data type is string}
       string_copy (val.str, tk);       {make local copy of string}
       string_upcase (tk);              {make upper case for keyword matching}
       string_tkpick80 (tk, 'TRUE FALSE', pick);
@@ -107,7 +107,7 @@ dtype_str_k: begin                     {input data type is string}
 *   unambiguously converted to an integer.
 }
 function val_int (                     {return integer value or bomb with error}
-  in      val: val_t)                  {source value}
+  in      val: escr_val_t)             {source value}
   :sys_int_max_t;                      {integer value of VAL}
   val_param;
 
@@ -118,11 +118,11 @@ var
 begin
   val_int := 0;                        {stop compiler from complaining}
   case val.dtype of                    {what is the input data type ?}
-dtype_int_k: begin                     {integer}
+escr_dtype_int_k: begin                {integer}
       val_int := val.int;
       return;
       end;
-dtype_str_k: begin                     {string}
+escr_dtype_str_k: begin                {string}
       string_t_int_max (val.str, i, stat); {try converting to integer}
       if not sys_error(stat) then begin {conversion was successful ?}
         val_int := i;
@@ -145,7 +145,7 @@ dtype_str_k: begin                     {string}
 *   error message if VAL can't be converted to a absolute time.
 }
 function val_time (                    {convert to time value or bomb with error}
-  in      val: val_t)                  {source value}
+  in      val: escr_val_t)             {source value}
   :sys_clock_t;                        {time value of VAL}
   val_param;
 
@@ -155,10 +155,10 @@ var
 begin
   val_time := val.time;                {init for easy case}
   case val.dtype of                    {what is the input data type ?}
-dtype_time_k: begin                    {time}
+escr_dtype_time_k: begin               {time}
       return;
       end;
-dtype_str_k: begin                     {string}
+escr_dtype_str_k: begin                {string}
       if escr_str_to_time (val.str, time) then begin {successfully converted ?}
         val_time := time;              {pass back the result}
         return;
@@ -180,7 +180,7 @@ dtype_str_k: begin                     {string}
 *   unambiguously converted to floating point.
 }
 function val_fp (                      {return FP value or bomb with error}
-  in      val: val_t)                  {source value}
+  in      val: escr_val_t)             {source value}
   :sys_fp_max_t;                       {floating point value of VAL}
   val_param;
 
@@ -191,15 +191,15 @@ var
 begin
   val_fp := 0.0;                       {stop compiler from complaining}
   case val.dtype of                    {what is the input data type ?}
-dtype_int_k: begin                     {integer}
+escr_dtype_int_k: begin                {integer}
       val_fp := val.int;
       return;
       end;
-dtype_fp_k: begin                      {floating point}
+escr_dtype_fp_k: begin                 {floating point}
       val_fp := val.fp;
       return;
       end;
-dtype_str_k: begin                     {string}
+escr_dtype_str_k: begin                {string}
       string_t_fpmax (val.str, fp, [], stat); {try converting to floating point}
       if not sys_error(stat) then begin {conversion was successful ?}
         val_fp := fp;
@@ -225,7 +225,7 @@ dtype_str_k: begin                     {string}
 *   appropriate error message if VAL does not represent a numeric value.
 }
 function val_isint (                   {determine INT or FP, error if neither}
-  in      val: val_t;                  {the source value}
+  in      val: escr_val_t;             {the source value}
   out     vi: sys_int_max_t;           {returned integer value, if integer}
   out     vf: sys_fp_max_t)            {returned floating point value}
   :boolean;                            {TRUE if integer, FALSE if floating point}
@@ -239,17 +239,17 @@ var
 begin
   val_isint := false;                  {init to value is not integer}
   case val.dtype of                    {what is the input data type ?}
-dtype_int_k: begin                     {integer}
+escr_dtype_int_k: begin                {integer}
       vi := val.int;
       vf := val.int;
       val_isint := true;
       return;
       end;
-dtype_fp_k: begin                      {floating point}
+escr_dtype_fp_k: begin                 {floating point}
       vf := val.fp;
       return;
       end;
-dtype_str_k: begin                     {string}
+escr_dtype_str_k: begin                {string}
       string_t_int_max (val.str, i, stat); {try converting to integer}
       if not sys_error(stat) then begin {conversion was successful ?}
         vi := i;
@@ -280,7 +280,7 @@ dtype_str_k: begin                     {string}
 *   the function returns FALSE and B is not altered.
 }
 function val_isbool (                  {check for VAL can be converted to boolean}
-  in      val: val_t;                  {input value to check}
+  in      val: escr_val_t;             {input value to check}
   out     b: boolean)                  {boolean value, unaltered if VAL not boolean}
   :boolean;                            {TRUE if returning boolean value in B}
   val_param;
@@ -294,10 +294,10 @@ begin
 
   val_isbool := false;                 {init to VAL is not boolean}
   case val.dtype of                    {what is the input data type ?}
-dtype_bool_k: begin                    {boolean}
+escr_dtype_bool_k: begin               {boolean}
       b := val.bool;
       end;
-dtype_str_k: begin                     {string}
+escr_dtype_str_k: begin                {string}
       string_copy (val.str, tk);       {make local copy of string}
       string_upcase (tk);              {make upper case for keyword matching}
       string_tkpick80 (tk, 'TRUE FALSE', pick);
@@ -326,32 +326,32 @@ otherwise
 *   never bombs on error because all values have a string representation.
 }
 procedure escr_val_str (               {make string representation of value in VAL}
-  in      val: val_t;                  {the source value}
+  in      val: escr_val_t;             {the source value}
   in out  str: univ string_var_arg_t); {returned string}
   val_param;
 
 begin
   case val.dtype of                    {what is the input value data type ?}
 
-dtype_bool_k: begin                    {BOOLEAN}
+escr_dtype_bool_k: begin               {BOOLEAN}
       if val.bool
         then string_vstring (str, 'TRUE'(0), -1)
         else string_vstring (str, 'FALSE'(0), -1);
       end;
 
-dtype_int_k: begin                     {INTEGER}
+escr_dtype_int_k: begin                {INTEGER}
       string_f_int (str, val.int);
       end;
 
-dtype_fp_k: begin                      {REAL}
+escr_dtype_fp_k: begin                 {REAL}
       escr_str_from_fp (val.fp, str);
       end;
 
-dtype_str_k: begin                     {STRING}
+escr_dtype_str_k: begin                {STRING}
       string_copy (val.str, str);
       end;
 
-dtype_time_k: begin                    {TIME}
+escr_dtype_time_k: begin               {TIME}
       escr_str_from_time (val.time, str);
       end;
 
@@ -370,7 +370,7 @@ otherwise
 *   input language.
 }
 procedure escr_val_text (              {make output language text representation}
-  in      val: val_t;                  {the source value}
+  in      val: escr_val_t;             {the source value}
   in out  str: univ string_var_arg_t); {returned string}
   val_param;
 
@@ -390,17 +390,17 @@ begin
 
   case val.dtype of                    {what is the input value data type ?}
 
-dtype_bool_k: begin                    {BOOLEAN}
+escr_dtype_bool_k: begin               {BOOLEAN}
       if val.bool
         then string_vstring (str, '1'(0), -1) {true}
         else string_vstring (str, '0'(0), -1); {false}
       end;
 
-dtype_int_k: begin                     {INTEGER}
+escr_dtype_int_k: begin                {INTEGER}
       string_f_int (str, val.int);
       end;
 
-dtype_fp_k: begin                      {REAL}
+escr_dtype_fp_k: begin                 {REAL}
       case lang of                     {what is the input language ?}
 lang_aspic_k: begin                    {MPASM}
           fp24 := pic_fp24_f_real (val.fp); {convert to PIC 24 bit FP}
@@ -428,7 +428,7 @@ otherwise
         end;                           {end of language cases}
       end;                             {end of FP data type case}
 
-dtype_str_k: begin                     {STRING}
+escr_dtype_str_k: begin                {STRING}
       s_p := univ_ptr(addr(val.str));  {point to source string}
 ret_string:                            {common code to return string S_P^}
       str.len := 0;                    {init output string to empty}
@@ -443,7 +443,7 @@ ret_string:                            {common code to return string S_P^}
       string_append1 (str, '"');       {trailing quote}
       end;
 
-dtype_time_k: begin                    {TIME}
+escr_dtype_time_k: begin               {TIME}
       escr_str_from_time (val.time, tk); {make time string in TK}
       s_p := univ_ptr(addr(tk));       {point to string to return}
       goto ret_string;                 {return as text string}
@@ -469,7 +469,7 @@ otherwise
 *   LEN is ignored for all other data types.
 }
 function val_size (                    {return minimum required size of VAL_T structure}
-  in      dtype: dtype_k_t;            {data type of the value}
+  in      dtype: escr_dtype_k_t;       {data type of the value}
   in      len: sys_int_machine_t)      {max string chars to hold, ignored other dtypes}
   :sys_int_adr_t;
   val_param;
@@ -477,24 +477,24 @@ function val_size (                    {return minimum required size of VAL_T st
 begin
   case dtype of                        {what data type is it ?}
 
-dtype_bool_k: begin
-      val_size := offset(val_t.bool) + size_min(val_t.bool);
+escr_dtype_bool_k: begin
+      val_size := offset(escr_val_t.bool) + size_min(escr_val_t.bool);
       end;
 
-dtype_int_k: begin
-      val_size := offset(val_t.int) + size_min(val_t.int);
+escr_dtype_int_k: begin
+      val_size := offset(escr_val_t.int) + size_min(escr_val_t.int);
       end;
 
-dtype_fp_k: begin
-      val_size := offset(val_t.fp) + size_min(val_t.fp);
+escr_dtype_fp_k: begin
+      val_size := offset(escr_val_t.fp) + size_min(escr_val_t.fp);
       end;
 
-dtype_str_k: begin
-      val_size := offset(val_t.str) + string_size(len);
+escr_dtype_str_k: begin
+      val_size := offset(escr_val_t.str) + string_size(len);
       end;
 
-dtype_time_k: begin
-      val_size := offset(val_t.time) + size_min(val_t.time);
+escr_dtype_time_k: begin
+      val_size := offset(escr_val_t.time) + size_min(escr_val_t.time);
       end;
 
 otherwise
@@ -513,14 +513,14 @@ otherwise
 *   be a short version as used in some cases, such as for symbol values.
 }
 procedure escr_val_init (              {initialize full VAL_T descriptor to data type}
-  in      dtype: dtype_k_t;            {data type to set up VAL for}
-  out     val: val_t);                 {full value descriptor to initialize}
+  in      dtype: escr_dtype_k_t;       {data type to set up VAL for}
+  out     val: escr_val_t);            {full value descriptor to initialize}
   val_param;
 
 begin
   val.dtype := dtype;                  {set the data type}
   case dtype of                        {what data type being initialized to ?}
-dtype_str_k: begin                     {STRING}
+escr_dtype_str_k: begin                {STRING}
       val.str.max := size_char(val.str.str);
       val.str.len := 0;
       end;
