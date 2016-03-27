@@ -200,9 +200,6 @@ escr_inhty_blk_k: (                    {in execution block}
   escr_p_t = ^escr_t;
   escr_t = record                      {state for one use of the ESCR system}
     out_p: escr_outfile_p_t;           {points to current output file info, NIL = none}
-    nflags: sys_int_machine_t;         {total number of flags bits created}
-    flag_byten: sys_int_machine_t;     {number of flag bytes (words on PIC 30) created}
-    flag_bitn: sys_int_machine_t;      {0-N bit number of next flag within flag byte/word}
     sym: string_hash_handle_t;         {symbol table}
     mem_sytable_p: util_mem_context_p_t; {pointer to mem context for global symbol table}
     mem_sym_p: util_mem_context_p_t;   {pointer to mem context for global symbol data}
