@@ -38,6 +38,7 @@ call src_pas %srcdir% %libname%_infile
 call src_pas %srcdir% %libname%_inh
 call src_pas %srcdir% %libname%_inline
 call src_pas %srcdir% %libname%_loclab
+call src_pas %srcdir% %libname%_open
 call src_pas %srcdir% %libname%_sym
 call src_pas %srcdir% %libname%_term
 call src_pas %srcdir% %libname%_util

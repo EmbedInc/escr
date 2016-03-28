@@ -302,7 +302,7 @@ begin
 *
 *   Subroutine ESCR_CLOSE_OUT_ALL (E, DEL)
 *
-*   Close all the output files.  The files are deleted when DEL if TRUE.  OUT_P
+*   Close all the output files.  The files are deleted when DEL is TRUE.  OUT_P
 *   will be NIL when this routine returns.
 }
 procedure escr_close_out_all (         {close all output files}

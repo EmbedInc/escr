@@ -16,6 +16,7 @@ escr_infile.obj
 escr_inh.obj
 escr_inline.obj
 escr_loclab.obj
+escr_open.obj
 escr_sym.obj
 escr_term.obj
 escr_util.obj

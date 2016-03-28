@@ -1,6 +1,9 @@
 {   Application interface to the Embed Inc scripting engine, ESCR.
 }
 const
+{
+*   Fixed configuration parameters.
+}
   escr_max_symvers_k = 32;             {max allowed symbol versions of same name}
   escr_max_inclev_k = 32;              {max include file nesting level per block}
   escr_max_blklev_k = 128;             {max execution block nesting level}
@@ -9,7 +12,16 @@ const
   escr_lab_log2buck_k = 5;             {Log2 buckets in local labels tables}
   escr_lab_maxlen_k = 32;              {maximum length of undecorated local label names}
   escr_string_var_len_k = 1024;        {number of characters a string variable can hold}
+{
+*   Status codes.
+}
+  escr_subsys_k = -62;                 {ESCR subsystem ID}
 
+  escr_err_nomcontext_k = 1;           {unable to allocate dynamic memory context}
+  escr_err_nomem_k = 2;                {unable to allocate dynamic memory}
+{
+*   Derived constants.
+}
   escr_sym_nbuck_k =                   {number of buckets in symbol table}
     lshft(1, escr_sym_log2buck_k);
   escr_lab_nbuck_k =                   {number of buckets in local labels tables}
@@ -18,7 +30,6 @@ const
 type
   escr_inline_p_t = ^escr_inline_t;    {pointer to line within input file}
   escr_inline_pp_t = ^escr_inline_p_t;
-  escr_infile_p_t = ^escr_infile_t;    {pointer to one input file stored in memory}
   escr_exblock_p_t = ^escr_exblock_t;  {pointer to info about one nested executable block}
   escr_inh_p_t = ^escr_inh_t;          {pointer to state for one execution inhibit layer}
 
@@ -92,6 +103,7 @@ escr_sym_macro_k: (                    {macro}
       );
     end;
 
+  escr_infile_p_t = ^escr_infile_t;
   escr_infile_t = record               {information about one input file}
     next_p: escr_infile_p_t;           {points to next input file in the list}
     tnam: string_treename_t;           {full treename of the input file}
@@ -212,22 +224,35 @@ escr_inhty_blk_k: (                    {in execution block}
 
   escr_p_t = ^escr_t;
   escr_t = record                      {state for one use of the ESCR system}
-    out_p: escr_outfile_p_t;           {points to current output file info, NIL = none}
-    nflags: sys_int_machine_t;         {total number of flags bits created}
-    flag_byten: sys_int_machine_t;     {number of flag bytes (words on PIC 30) created}
-    flag_bitn: sys_int_machine_t;      {0-N bit number of next flag within flag byte/word}
-    sym: string_hash_handle_t;         {symbol table}
+    mem_p: util_mem_context_p_t;       {top mem context for all other dynamic mem}
     mem_sytable_p: util_mem_context_p_t; {pointer to mem context for global symbol table}
-    mem_sym_p: util_mem_context_p_t;   {pointer to mem context for global symbol data}
-    mem_top_p: util_mem_context_p_t;   {points to general mem context for top level data}
+    mem_sym_p: util_mem_context_p_t;   {pointer to mem context for symbol data}
+    mem_top_p: util_mem_context_p_t;   {points to mem context for top execution block}
+    sym: string_hash_handle_t;         {main symbol table}
     files_p: escr_infile_p_t;          {points to list of input files}
-    exblock_p: escr_exblock_p_t;       {points to info about current execution block}
-    inhibit_p: escr_inh_p_t;           {points to current execution inhibit info}
-    lang: escr_lang_k_t;               {input file language ID}
-    labeln: sys_int_conv32_t;          {sequential number for next unique label}
-    cmd: string_var32_t;               {name of current command, upper case}
     ibuf: string_var8192_t;            {current input line after function expansions}
     ip: string_index_t;                {IBUF parse index}
     lparm: string_var8192_t;           {last parameter parsed from input line}
+    cmd: string_var32_t;               {name of current command, upper case}
+    exblock_p: escr_exblock_p_t;       {points to info about current execution block}
+    inhibit_p: escr_inh_p_t;           {points to current execution inhibit info}
+    out_p: escr_outfile_p_t;           {points to current output file info, NIL = none}
     obuf: string_var8192_t;            {one line output buffer}
+    labeln: sys_int_conv32_t;          {sequential number for next unique label}
+    lang: escr_lang_k_t;               {input file language ID}
+    nflags: sys_int_machine_t;         {total number of flags bits created}
+    flag_byten: sys_int_machine_t;     {number of flag bytes (words on PIC 30) created}
+    flag_bitn: sys_int_machine_t;      {0-N bit number of next flag within flag byte/word}
     end;
+{
+*   Entry points.
+}
+procedure escr_close (                 {end a use of the ESCR system}
+  in out  e_p: escr_p_t);              {pointer to ESCR use state, returned NIL}
+  val_param; extern;
+
+procedure escr_open (                  {start a new ouse of the ESCR system}
+  in out  mem: util_mem_context_t;     {parent memory context, will make sub context}
+  out     e_p: escr_p_t;               {will point to new initialized ESCR use state}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
