@@ -1,11 +1,8 @@
 escr_cmd.obj
 escr_cmd_block.obj
-escr_cmd_flag.obj
 escr_cmd_if.obj
-escr_cmd_inbit.obj
 escr_cmd_loop.obj
 escr_cmd_macro.obj
-escr_cmd_outbit.obj
 escr_cmd_subr.obj
 escr_err.obj
 escr_exblock.obj
@@ -15,9 +12,11 @@ escr_get.obj
 escr_infile.obj
 escr_inh.obj
 escr_inline.obj
-escr_loclab.obj
 escr_open.obj
+escr_run.obj
 escr_sym.obj
+escr_sym_cmd.obj
 escr_term.obj
+escr_ulab.obj
 escr_util.obj
 escr_val.obj

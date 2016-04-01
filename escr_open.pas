@@ -11,6 +11,36 @@ define escr_close;
 {
 ********************************************************************************
 *
+*   Local subroutine ESCR_SYTABLE_INIT (E, SYTABLE, STAT)
+*
+*   Initialize the symbol table SYTABLE.
+}
+procedure escr_sytable_init (          {initialize a symbol table}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     sytable: escr_sytable_t;     {the symbol table to initialize}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+begin
+  sys_error_none (stat);               {init to no error encountered}
+
+  util_mem_context_get (e.mem_p^, sytable.mem_p); {create mem context for sym table}
+  if sytable.mem_p = nil then begin    {didn't get new memory context ?}
+    sys_stat_set (escr_subsys_k, escr_err_nomcontext_k, stat);
+    return;
+    end;
+
+  string_hash_create (                 {create the symbol names hash table}
+    sytable.hash,                      {handle to the hash table}
+    escr_sym_nbuck_k,                  {number of hash buckets}
+    escr_max_namelen_k,                {max characters for hash table entry name}
+    sizeof(escr_sym_pp_t),             {size of data to store each hash table entry}
+    [],                                {make mem context, allow deleting entries}
+    sytable.mem_p^);                   {parent memory context}
+  end;
+{
+********************************************************************************
+*
 *   Subroutine ESCR_OPEN (MEM, E_P, STAT)
 *
 *   Create a new ESCR system use state.  This must be the first routine called
@@ -36,7 +66,40 @@ var
 
 label
   err_nocontext, err;
+{
+******************************
+*
+*   Subroutine ADDCMD (NAME, ROUTINE_P, STAT)
+*   This routine is local to ESCR_OPEN.
+*
+*   Add the intrinsic command NAME to the commands symbol table.  NAME is a
+*   Pascal string, not a var string.  ROUTINE_P is the pointer to the command
+*   routine.
+}
+type
+  cmd_routine_p_t = ^procedure (
+    in out e: escr_t;
+    out   stat: sys_err_t);
+    val_param;
 
+procedure addcmd (                     {add intrinsic command to commands table}
+  in      name: string;                {command name}
+  in      routine_p: cmd_routine_p_t;  {pointer to command routine}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+begin
+  escr_icmd_add (                      {add intrinsic command to commands table}
+    e_p^,                              {state for this use of the ESCR library}
+    string_v(name),                    {command name}
+    escr_icmd_p_t(routine_p),          {pointer to command routine}
+    stat);
+  end;
+{
+******************************
+*
+*   Start of ESCR_OPEN.
+}
 begin
   sys_error_none (stat);               {init to no error encountered}
 
@@ -49,14 +112,20 @@ begin
     sys_stat_parm_int (sizeof(e_p^), stat);
     goto err;
     end;
-
   e_p^.mem_p := mem_p;                 {save pointer to our top mem context}
-  util_mem_context_get (mem_p^, e_p^.mem_sytable_p); {create context for symbol table}
-  if e_p^.mem_sytable_p = nil then goto err_nocontext;
-  util_mem_context_get (mem_p^, e_p^.mem_sym_p); {create context for symbol table data}
-  if e_p^.mem_sym_p = nil then goto err_nocontext;
-  util_mem_context_get (mem_p^, e_p^.mem_top_p); {create context for top execution block}
-  if e_p^.mem_top_p = nil then goto err_nocontext;
+
+  escr_sytable_init (e_p^, e_p^.sym_var, stat); {init variables/constants symbol table}
+  if sys_error(stat) then return;
+  escr_sytable_init (e_p^, e_p^.sym_sub, stat); {init subroutines symbol table}
+  if sys_error(stat) then return;
+  escr_sytable_init (e_p^, e_p^.sym_mac, stat); {init macros symbol table}
+  if sys_error(stat) then return;
+  escr_sytable_init (e_p^, e_p^.sym_fun, stat); {init functions symbol table}
+  if sys_error(stat) then return;
+  escr_sytable_init (e_p^, e_p^.sym_cmd, stat); {init commands symbol table}
+  if sys_error(stat) then return;
+  escr_sytable_init (e_p^, e_p^.sym_lab, stat); {init labels symbol table}
+  if sys_error(stat) then return;
   {
   *   Do basic initialization, pointer to NIL, strings to empty, etc.
   }
@@ -69,33 +138,51 @@ begin
   e_p^.cmd.max := size_char(e_p^.cmd.str);
   e_p^.cmd.len := 0;
   e_p^.exblock_p := nil;
-  e_p^.inhibit_p := nil;
+  e_p^.inhroot.prev_p := nil;
+  e_p^.inhroot.inh := false;
+  e_p^.inhroot.inhty := escr_inhty_root_k;
+  e_p^.inhibit_p := addr(e_p^.inhroot);
   e_p^.out_p := nil;
   e_p^.obuf.max := size_char(e_p^.obuf.str);
   e_p^.obuf.len := 0;
-  e_p^.labeln := 1;
-  e_p^.lang := escr_lang_aspic_k;
-  e_p^.nflags := 0;
-  e_p^.flag_byten := 0;
-  e_p^.flag_bitn := 0;
-  {
-  *   Do higher level initialization now that all fields have at least legal
-  *   values.
-  }
-  string_hash_create (                 {create the symbol table}
-    e_p^.sym,                          {symbol table to create}
-    escr_sym_nbuck_k,                  {number of buckets in the hash table}
-    escr_max_namelen_k,                {max allowed characters in symbol name}
-    sizeof(escr_sym_p_t),              {size of data stored in each table entry}
-    [string_hashcre_memdir_k],         {use the supplied memory context directly}
-    e_p^.mem_sytable_p^);              {pointer to memory context to use}
-
-  escr_inh_new (e_p^);                 {create the root execution inhibit state}
-  e_p^.inhibit_p^.inhty := escr_inhty_root_k;
-  escr_exblock_new (e_p^);             {create top level execution block}
-  escr_exblock_loclab_init (e_p^);     {top level block always has local labels}
-
+  e_p^.ulabn := 1;
+{
+*   Do higher level initialization now that all fields have at least legal
+*   values.
+}
   escr_inline_func_init (e_p^);        {init for processing inline functions}
+  {
+  *   Add the standard commands to the commands symbol table.
+  }
+  addcmd ('BLOCK', addr(escr_cmd_block), stat); if sys_error(stat) then return;
+  addcmd ('CALL', addr(escr_cmd_call), stat); if sys_error(stat) then return;
+  addcmd ('CONST', addr(escr_cmd_const), stat); if sys_error(stat) then return;
+  addcmd ('DEL', addr(escr_cmd_del), stat); if sys_error(stat) then return;
+  addcmd ('ELSE', addr(escr_cmd_else), stat); if sys_error(stat) then return;
+  addcmd ('ENDBLOCK', addr(escr_cmd_endblock), stat); if sys_error(stat) then return;
+  addcmd ('ENDIF', addr(escr_cmd_endif), stat); if sys_error(stat) then return;
+  addcmd ('ENDLOOP', addr(escr_cmd_endloop), stat); if sys_error(stat) then return;
+  addcmd ('ENDMAC', addr(escr_cmd_endmac), stat); if sys_error(stat) then return;
+  addcmd ('ENDSUB', addr(escr_cmd_endsub), stat); if sys_error(stat) then return;
+  addcmd ('IF', addr(escr_cmd_if), stat); if sys_error(stat) then return;
+  addcmd ('INCLUDE', addr(escr_cmd_include), stat); if sys_error(stat) then return;
+  addcmd ('LOOP', addr(escr_cmd_loop), stat); if sys_error(stat) then return;
+  addcmd ('MACRO', addr(escr_cmd_macro), stat); if sys_error(stat) then return;
+  addcmd ('QUIT', addr(escr_cmd_quit), stat); if sys_error(stat) then return;
+  addcmd ('QUITMAC', addr(escr_cmd_quitmac), stat); if sys_error(stat) then return;
+  addcmd ('REPEAT', addr(escr_cmd_repeat), stat); if sys_error(stat) then return;
+  addcmd ('RETURN', addr(escr_cmd_return), stat); if sys_error(stat) then return;
+  addcmd ('SET', addr(escr_cmd_set), stat); if sys_error(stat) then return;
+  addcmd ('SHOW', addr(escr_cmd_show), stat); if sys_error(stat) then return;
+  addcmd ('STOP', addr(escr_cmd_stop), stat); if sys_error(stat) then return;
+  addcmd ('SUBROUTINE', addr(escr_cmd_subroutine), stat); if sys_error(stat) then return;
+  addcmd ('SYLIST', addr(escr_cmd_sylist), stat); if sys_error(stat) then return;
+  addcmd ('THEN', addr(escr_cmd_then), stat); if sys_error(stat) then return;
+  addcmd ('VAR', addr(escr_cmd_var), stat); if sys_error(stat) then return;
+  addcmd ('WRITE', addr(escr_cmd_write), stat); if sys_error(stat) then return;
+  addcmd ('WRITEEND', addr(escr_cmd_writeend), stat); if sys_error(stat) then return;
+  addcmd ('WRITETO', addr(escr_cmd_writeto), stat); if sys_error(stat) then return;
+
   return;
 
 err_nocontext:                         {could get new memory context}

@@ -6,3 +6,28 @@ msg err1
 msg err2
   lan english -def
     Unable to allocate dynamic memory of %p1i bytes.
+msg err3
+  lan english -def
+    The maximum versions of symbol "%p2s" already exist on attempt to
+    create a new version.
+msg err4
+  lan english -def
+    Symbol "%p1s" not found.
+msg err5
+  lan english -def
+    Unexpected end of input encountered.
+msg err6
+  lan english -def
+    Command "%p1s" is unrecognized.
+msg err7
+  lan english -def
+    Symbol "%p1s" is not a command as expected.
+msg err8
+  lan english -def
+    Label "%p1s" was not found.
+msg err9
+  lan english -def
+    Symbol "%p1s" is not a label.
+msg err10
+  lan english -def
+    In nested input file at end of block.

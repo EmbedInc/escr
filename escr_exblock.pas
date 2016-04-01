@@ -6,7 +6,7 @@
 module escr_exblock;
 define escr_exblock_new;
 define escr_exblock_close;
-define escr_exblock_loclab_init;
+define escr_exblock_ulab_init;
 define escr_exblock_inline_set;
 define escr_exblock_inline_push;
 define escr_exblock_arg_addn;
@@ -42,7 +42,7 @@ var
 begin
   if e.exblock_p = nil
     then begin                         {creating top level block}
-      util_mem_context_get (e.mem_top_p^, mem_p); {create mem context for top block}
+      util_mem_context_get (e.mem_p^, mem_p); {create mem context for top block}
       nlev := 0;                       {set nesting level for top block}
       end
     else begin                         {creating nested block}
@@ -61,26 +61,26 @@ begin
   bl_p^.level := nlev;                 {set 0-N nesting level of this block}
   bl_p^.start_p := nil;                {indicate definition start line not set yet}
   bl_p^.sym_p := nil;                  {init to no symbol exists to represent this block}
-  bl_p^.mem_p := mem_p;                {save memory context delete when block closed}
+  bl_p^.mem_p := mem_p;                {save memory context to delete when block closed}
   bl_p^.arg_p := nil;                  {init arguments list to empty}
   bl_p^.arg_last_p := nil;
   bl_p^.nargs := 0;
   bl_p^.locsym_p := nil;               {init to no local symbols created this block}
   bl_p^.inpos_p := nil;                {indicate source reading position not filled in}
-  escr_inh_new (e);                    {make execution inhibit state for this block}
-  bl_p^.inh_p := e.inhibit_p;          {save pointer top inhibit for this block}
+  bl_p^.previnh_p := e.inhibit_p;      {save pointer to inhibit before this block}
   bl_p^.loop_p := nil;                 {init to block is not a explicit loop}
   bl_p^.bltype := escr_exblock_top_k;  {init to top block type}
-  bl_p^.loclab := nil;                 {init to no list of local labels}
+  bl_p^.ulab := nil;                   {init to no list of unique labels}
   bl_p^.args := false;                 {init to this block does not take arguments}
   bl_p^.iter1 := true;                 {init to executing the first iteration}
 
   e.exblock_p := bl_p;                 {make the new block current}
+  escr_inh_new (e);                    {make top execution inhbit for this block}
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_CLOSE (E)
+*   Subroutine ESCR_EXBLOCK_CLOSE (E, STAT)
 *
 *   Close the current execution block, deallocate any associated resources, and
 *   make the previous execution block current.
@@ -92,7 +92,6 @@ procedure escr_exblock_close (         {close curr execution block and delete te
 var
   mem_p: util_mem_context_p_t;         {points to mem context for the block}
   sym_p: escr_sym_p_t;                 {pointer to symbol to delete}
-  inhprev_p: escr_inh_p_t;             {inhibit to restore to}
 
 begin
 {
@@ -105,18 +104,7 @@ begin
     escr_sym_del (e, sym_p);           {delete it and the local symbols list entry}
     end;
 
-  inhprev_p := e.exblock_p^.inh_p^.prev_p; {get pointer to inhibit to restore to}
-  while e.inhibit_p <> inhprev_p do begin {scan back to inibit to restore to}
-    escr_inh_end (e);                  {delete top inhibit}
-    if e.inhibit_p = nil then begin    {didn't find inhibit to restore to ?}
-      writeln ('INTERNAL ERROR: Inhibit to restore to not found in BLOCK_CLOSE.');
-      escr_err_atline (e, '', '', nil, 0);
-      end;
-    end;
-
-  if e.exblock_p^.loclab <> nil then begin {delete local labels list if exists}
-    string_hash_delete (e.exblock_p^.loclab);
-    end;
+  e.inhibit_p := e.exblock_p^.previnh_p; {restore to inhibit before this block}
 
   mem_p := e.exblock_p^.mem_p;         {save memory context for this block}
   e.exblock_p := e.exblock_p^.prev_p;  {make parent execution block current}
@@ -125,32 +113,32 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_LOCLAB_INIT (E)
+*   Subroutine ESCR_EXBLOCK_ULAB_INIT (E)
 *
-*   Create the list of local labels for this execution block and initialize the
+*   Create the list of unique labels for this execution block and initialize the
 *   list to empty.  This routine should be called at most once per execution
 *   block.  This routine is intended to be called when the execution block is
-*   created, if it is the type of block that has its own local labels context.
+*   created, if it is the type of block that has its own unique labels context.
 *
-*   The local labels list is initialized to non-existant when the bare block is
+*   The unique labels list is initialized to non-existant when the bare block is
 *   first created.
 *
-*   It is a hard error if this routine is called with the local labels list
+*   It is a hard error if this routine is called with the unique labels list
 *   already existing.
 }
-procedure escr_exblock_loclab_init (   {create and init local symbols list in this block}
+procedure escr_exblock_ulab_init (     {create unique labels list in this block}
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param;
 
 begin
-  if e.exblock_p^.loclab <> nil then begin {local labels list already exists ?}
+  if e.exblock_p^.ulab <> nil then begin {unique labels list already exists ?}
     escr_err_atline (e, 'pic', 'err_loclab_exist', nil, 0);
     end;
 
-  string_hash_create (                 {create the label names hash table}
-    e.exblock_p^.loclab,               {returned handle to the loc labels table}
-    escr_lab_nbuck_k,                  {number of hash buckets to create}
-    escr_lab_maxlen_k,                 {max length of table entry names}
+  string_hash_create (                 {create the unique labels hash table}
+    e.exblock_p^.ulab,                 {returned handle to the unique labels table}
+    escr_ulab_nbuck_k,                 {number of hash buckets to create}
+    escr_ulab_maxlen_k,                {max length of table entry names}
     sizeof(string_var_p_t),            {size of data stored for each entry}
     [string_hashcre_nodel_k],          {won't individually deallocate entries}
     e.exblock_p^.mem_p^);              {pointer to parent memory context}
@@ -161,8 +149,8 @@ begin
 *   Subroutine ESCR_EXBLOCK_INLINE_SET (E, LINE_P)
 *
 *   Set a new source input stream position for the current block.  The previous
-*   position will be lost.  This is more like a "GOTO", whereas EXBLOCK_INLINE_PUSH
-*   is more like a "CALL".
+*   position will be lost.  This is more like a GOTO, whereas
+*   EXBLOCK_INLINE_PUSH is more like a CALL.
 }
 procedure escr_exblock_inline_set (    {go to new input source position in curr block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -358,7 +346,7 @@ procedure escr_exblock_repeat (        {loop back to start of block}
   val_param;
 
 begin
-  while e.inhibit_p <> e.exblock_p^.inh_p do begin {pop back to base block inhibit}
+  while e.inhibit_p^.prev_p <> e.exblock_p^.previnh_p do begin {back to base block inhibit}
     escr_inh_end (e);                  {delete this inhibit}
     end;
 
@@ -384,10 +372,10 @@ var
   inh_p: escr_inh_p_t;                 {scratch pointer to execution inhibit state}
 
 begin
-  inh_p := e.inhibit_p;                {init to top execution inhibit}
+  inh_p := e.inhibit_p;                {init to current execution inhibit}
   while true do begin                  {loop to base execution inhibit this block}
     inh_p^.inh := true;                {disable execution at this level}
-    if inh_p = e.exblock_p^.inh_p then exit; {at base inhibit for the block ?}
+    if inh_p^.prev_p = e.exblock_p^.previnh_p then exit; {at base inhibit for the block ?}
     inh_p := inh_p^.prev_p;            {back to previous execution inhibit}
     end;
   end;

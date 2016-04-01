@@ -9,8 +9,8 @@ const
   escr_max_blklev_k = 128;             {max execution block nesting level}
   escr_max_namelen_k = 80;             {max characters in symbol name}
   escr_sym_log2buck_k = 7;             {Log2 buckets in symbol tables}
-  escr_lab_log2buck_k = 5;             {Log2 buckets in local labels tables}
-  escr_lab_maxlen_k = 32;              {maximum length of undecorated local label names}
+  escr_ulab_log2buck_k = 5;            {Log2 buckets in local labels tables}
+  escr_ulab_maxlen_k = 32;             {maximum length of undecorated local label names}
   escr_string_var_len_k = 1024;        {number of characters a string variable can hold}
 {
 *   Status codes.
@@ -19,32 +19,38 @@ const
 
   escr_err_nomcontext_k = 1;           {unable to allocate dynamic memory context}
   escr_err_nomem_k = 2;                {unable to allocate dynamic memory}
+  escr_err_sytoomany_k = 3;            {max versions of symbol already exist}
+  escr_err_nfsym_k = 4;                {symbol not found}
+  escr_err_inend_k = 5;                {end of input before end of block}
+  escr_err_cmdbad_k = 6;               {unrecognized command}
+  escr_err_notcmd_k = 7;               {symbol is not a command}
+  escr_err_nflab_k = 8;                {label not found}
+  escr_err_notlab_k = 9;               {symbol is not a label}
+  escr_err_nestblc_k = 10;             {in nested input on block close}
 {
 *   Derived constants.
 }
-  escr_sym_nbuck_k =                   {number of buckets in symbol table}
+  escr_sym_nbuck_k =                   {number of buckets in symbol tables}
     lshft(1, escr_sym_log2buck_k);
-  escr_lab_nbuck_k =                   {number of buckets in local labels tables}
-    lshft(1, escr_lab_log2buck_k);
+  escr_ulab_nbuck_k =                  {number of buckets in unique labels tables}
+    lshft(1, escr_ulab_log2buck_k);
 
 type
   escr_inline_p_t = ^escr_inline_t;    {pointer to line within input file}
   escr_inline_pp_t = ^escr_inline_p_t;
   escr_exblock_p_t = ^escr_exblock_t;  {pointer to info about one nested executable block}
   escr_inh_p_t = ^escr_inh_t;          {pointer to state for one execution inhibit layer}
+  escr_p_t = ^escr_t;                  {pointer to ESCR system use state}
 
   escr_suff_k_t = (                    {input file suffix ID}
     escr_suff_ins_aspic_k,             {.ins.aspic}
     escr_suff_aspic_k,                 {.aspic}
     escr_suff_ins_dspic_k,             {.ins.dspic}
-    escr_suff_dspic_k,                 {.dspic}
-    escr_suff_es_k,                    {.es}
-    escr_suff_escr_k);                 {.escr}
+    escr_suff_dspic_k);                {.dspic}
 
   escr_lang_k_t = (                    {input source language ID}
     escr_lang_aspic_k,                 {MPASM}
-    escr_lang_dspic_k,                 {ASM30}
-    escr_lang_escr_k);                 {Embed script}
+    escr_lang_dspic_k);                {ASM30}
 
   escr_dtype_k_t = (                   {data type ID}
     escr_dtype_bool_k,                 {boolean}
@@ -73,15 +79,51 @@ escr_dtype_time_k: (                   {absolute time descriptor}
       );
     end;
 
+  escr_sytable_p_t = ^escr_sytable_t;
+  escr_sytable_t = record              {symbol table}
+    mem_p: util_mem_context_p_t;       {top mem context, used for symbol data directly}
+    hash: string_hash_handle_t;        {handle to symbol names hash table}
+    end;
+
   escr_sym_k_t = (                     {symbol type}
     escr_sym_var_k,                    {variable}
     escr_sym_const_k,                  {constant}
-    escr_sym_subr_k,                   {subroutine}
-    escr_sym_macro_k);                 {macro}
+    escr_sym_subr_k,                   {subroutine, defined by user code}
+    escr_sym_isubr_k,                  {intrinsic subroutine, compiled code}
+    escr_sym_cmd_k,                    {command, defined by user code}
+    escr_sym_icmd_k,                   {intrinsic command, compiled routine}
+    escr_sym_func_k,                   {function, defined by user code}
+    escr_sym_ifunc_k,                  {intrinsic function, compiled routine}
+    escr_sym_macro_k,                  {macro, defined by user code}
+    escr_sym_imacro_k,                 {intrinsic macro, compiled routine}
+    escr_sym_label_k);                 {label for a specific input files line}
+
+  escr_isubr_p_t = ^procedure (        {template for subroutine implemented by compiled code}
+    in    e_p: escr_p_t;               {points to state for this use of the ESCR system}
+    out   stat: sys_err_t);            {completion status}
+    val_param;
+
+  escr_icmd_p_t = ^procedure (         {template for compiled command routine}
+    in    e_p: escr_p_t;               {points to state for this use of the ESCR system}
+    out   stat: sys_err_t);            {completion status}
+    val_param;
+
+  escr_ifunc_p_t = ^procedure (        {template for compiled function routine}
+    in    e_p: escr_p_t;               {points to state for this use of the ESCR system}
+    in    fstr: univ string_var_arg_t; {function source string, delimiters removed}
+    in out exp: univ string_var_arg_t; {resulting function expansion, starts empty}
+    out   stat: sys_err_t);            {completion status}
+    val_param;
+
+  escr_imacro_p_t = ^procedure (       {template for compiled macro routine}
+    in    e_p: escr_p_t;               {points to state for this use of the ESCR system}
+    out   stat: sys_err_t);            {completion status}
+    val_param;
 
   escr_sym_p_t = ^escr_sym_t;
   escr_sym_pp_t = ^escr_sym_p_t;
   escr_sym_t = record                  {all the info about one symbol}
+    table_p: escr_sytable_p_t;         {points to symbol table this symbol is in}
     prev_p: escr_sym_p_t;              {points to previous (older) symbol of this name}
     next_p: escr_sym_p_t;              {points to next (newer) symbol of this name}
     name_p: string_var_p_t;            {pointer to symbol name}
@@ -95,11 +137,29 @@ escr_sym_var_k: (                      {variable}
 escr_sym_const_k: (                    {constant}
       const_val: escr_val_t;           {the constant's data type and value}
       );
-escr_sym_subr_k: (                     {subroutine}
+escr_sym_subr_k: (                     {subroutine defined by user code}
       subr_line_p: escr_inline_p_t;    {points to first line of subroutine definition}
+      );
+escr_sym_isubr_k: (                    {intrinsic subroutine, implemented by compiled code}
+      isubr_p: escr_isubr_p_t;         {points to routine that implements the subroutine}
       );
 escr_sym_macro_k: (                    {macro}
       macro_line_p: escr_inline_p_t;   {points to first line of macro definition}
+      );
+escr_sym_func_k: (                     {function defined by user code}
+      func_line_p: escr_inline_p_t;    {points to first line of function definition}
+      );
+escr_sym_ifunc_k: (                    {intrisic function, implemented by compiled routine}
+      ifunc_p: escr_ifunc_p_t;         {pointer to routine that implements the function}
+      );
+escr_sym_cmd_k: (                      {command defined by user code}
+      cmd_line_p: escr_inline_p_t;     {points to first line of command definition}
+      );
+escr_sym_icmd_k: (                     {intrisic command, implemented by compiled routine}
+      icmd_p: escr_icmd_p_t;           {pointer to routine that implements the command}
+      );
+escr_sym_label_k: (                    {label for specific line in input files}
+      label_line_p: escr_inline_p_t;   {points to first line of command definition}
       );
     end;
 
@@ -117,19 +177,19 @@ escr_sym_macro_k: (                    {macro}
     str_p: string_var_p_t;             {pointer to string for this line}
     end;
 
+  escr_inpos_p_t = ^escr_inpos_t;
+  escr_inpos_t = record                {one level in current input files position}
+    prev_p: escr_inpos_p_t;            {points to previous level, back there on EOF}
+    level: sys_int_machine_t;          {nesting level within block, top = 0}
+    line_p: escr_inline_p_t;           {points to next input line}
+    last_p: escr_inline_p_t;           {points to last input line read}
+    end;
+
   escr_sylist_p_t = ^escr_sylist_t;
   escr_sylist_pp_t = ^escr_sylist_p_t;
   escr_sylist_t = record               {one entry in list of local symbols of a block}
     next_p: escr_sylist_p_t;           {points to next list entry, NIL = last}
     sym_p: escr_sym_p_t;               {points to symbol local to this block}
-    end;
-
-  escr_inpos_p_t = ^escr_inpos_t;
-  escr_inpos_t = record                {one level in current input files position}
-    prev_p: escr_inpos_p_t;            {points to previous level, back there on EOF}
-    level: sys_int_machine_t;          {nesting depth, top = 0}
-    line_p: escr_inline_p_t;           {points to next input line}
-    last_p: escr_inline_p_t;           {points to last input line read}
     end;
 
   escr_arg_p_t = ^escr_arg_t;
@@ -164,10 +224,12 @@ escr_looptype_for_k: (                 {loop over integer values with fixed incr
 
   escr_exblock_k_t = (                 {types of execution block}
     escr_exblock_top_k,                {top level initial unnested block}
-    escr_exblock_sub_k,                {subroutine}
-    escr_exblock_mac_k,                {macro}
     escr_exblock_blk_k,                {BLOCK ... ENDBLOCK}
-    escr_exblock_loop_k);              {LOOP ... ENDLOOP}
+    escr_exblock_loop_k,               {LOOP ... ENDLOOP}
+    escr_exblock_sub_k,                {subroutine}
+    escr_exblock_cmd_k,                {command}
+    escr_exblock_func_k,               {function}
+    escr_exblock_mac_k);               {macro}
 
   escr_exblock_t = record              {info about one nested execution block}
     prev_p: escr_exblock_p_t;          {pointer to previous execution block, NIL at top}
@@ -180,10 +242,10 @@ escr_looptype_for_k: (                 {loop over integer values with fixed incr
     nargs: sys_int_machine_t;          {number of arguments in arguments list}
     locsym_p: escr_sylist_p_t;         {points to list of symbols local to this block}
     inpos_p: escr_inpos_p_t;           {points to current nested input file position}
-    inh_p: escr_inh_p_t;               {points to original execution inhibit for this block}
+    previnh_p: escr_inh_p_t;           {points to previous inhibit before this block}
     loop_p: escr_loop_p_t;             {points to loop definition, NIL = none}
     bltype: escr_exblock_k_t;          {type of execution block}
-    loclab: string_hash_handle_t;      {table of local labels, NIL for none, use parent}
+    ulab: string_hash_handle_t;        {table of local labels, NIL for none, use parent}
     args: boolean;                     {this block takes arguments}
     iter1: boolean;                    {executing first iteration, not subsequent}
     end;
@@ -222,27 +284,25 @@ escr_inhty_blk_k: (                    {in execution block}
     conn: file_conn_t;                 {connection to this output file}
     end;
 
-  escr_p_t = ^escr_t;
   escr_t = record                      {state for one use of the ESCR system}
-    mem_p: util_mem_context_p_t;       {top mem context for all other dynamic mem}
-    mem_sytable_p: util_mem_context_p_t; {pointer to mem context for global symbol table}
-    mem_sym_p: util_mem_context_p_t;   {pointer to mem context for symbol data}
-    mem_top_p: util_mem_context_p_t;   {points to mem context for top execution block}
-    sym: string_hash_handle_t;         {main symbol table}
+    mem_p: util_mem_context_p_t;       {top mem context for all dynamic mem}
+    sym_var: escr_sytable_t;           {symbol table for variables and constants}
+    sym_sub: escr_sytable_t;           {symbol table for subroutines}
+    sym_mac: escr_sytable_t;           {symbol table for macros}
+    sym_fun: escr_sytable_t;           {symbol table for functions}
+    sym_cmd: escr_sytable_t;           {symbol table for commands}
+    sym_lab: escr_sytable_t;           {symbol table for input file line labels}
     files_p: escr_infile_p_t;          {points to list of input files}
     ibuf: string_var8192_t;            {current input line after function expansions}
     ip: string_index_t;                {IBUF parse index}
     lparm: string_var8192_t;           {last parameter parsed from input line}
-    cmd: string_var32_t;               {name of current command, upper case}
+    cmd: string_var32_t;               {name of current command}
     exblock_p: escr_exblock_p_t;       {points to info about current execution block}
-    inhibit_p: escr_inh_p_t;           {points to current execution inhibit info}
+    inhroot: escr_inh_t;               {root execution inhibit, always enabled}
+    inhibit_p: escr_inh_p_t;           {points to current execution inhibit}
     out_p: escr_outfile_p_t;           {points to current output file info, NIL = none}
     obuf: string_var8192_t;            {one line output buffer}
-    labeln: sys_int_conv32_t;          {sequential number for next unique label}
-    lang: escr_lang_k_t;               {input file language ID}
-    nflags: sys_int_machine_t;         {total number of flags bits created}
-    flag_byten: sys_int_machine_t;     {number of flag bytes (words on PIC 30) created}
-    flag_bitn: sys_int_machine_t;      {0-N bit number of next flag within flag byte/word}
+    ulabn: sys_int_conv32_t;           {sequential number for next unique label}
     end;
 {
 *   Entry points.
@@ -255,4 +315,11 @@ procedure escr_open (                  {start a new ouse of the ESCR system}
   in out  mem: util_mem_context_t;     {parent memory context, will make sub context}
   out     e_p: escr_p_t;               {will point to new initialized ESCR use state}
   out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_icmd_add (              {add intrinsic command}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {name of the command to add}
+  in      routine_p: escr_icmd_p_t;    {pointer to routine that implements the command}
+  out     stat: sys_err_t);
   val_param; extern;

@@ -22,12 +22,9 @@ call src_insall %srcdir% %libname%
 
 call src_pas %srcdir% %libname%_cmd
 call src_pas %srcdir% %libname%_cmd_block
-call src_pas %srcdir% %libname%_cmd_flag
 call src_pas %srcdir% %libname%_cmd_if
-call src_pas %srcdir% %libname%_cmd_inbit
 call src_pas %srcdir% %libname%_cmd_loop
 call src_pas %srcdir% %libname%_cmd_macro
-call src_pas %srcdir% %libname%_cmd_outbit
 call src_pas %srcdir% %libname%_cmd_subr
 call src_pas %srcdir% %libname%_err
 call src_pas %srcdir% %libname%_exblock
@@ -37,10 +34,12 @@ call src_pas %srcdir% %libname%_get
 call src_pas %srcdir% %libname%_infile
 call src_pas %srcdir% %libname%_inh
 call src_pas %srcdir% %libname%_inline
-call src_pas %srcdir% %libname%_loclab
 call src_pas %srcdir% %libname%_open
+call src_pas %srcdir% %libname%_run
 call src_pas %srcdir% %libname%_sym
+call src_pas %srcdir% %libname%_sym_cmd
 call src_pas %srcdir% %libname%_term
+call src_pas %srcdir% %libname%_ulab
 call src_pas %srcdir% %libname%_util
 call src_pas %srcdir% %libname%_val
 

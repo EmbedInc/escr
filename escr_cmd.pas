@@ -30,6 +30,7 @@ define escr_cmd_write;
 define escr_cmd_show;
 define escr_cmd_writeto;
 define escr_cmd_writeend;
+define escr_cmd_stop;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -112,7 +113,7 @@ done_cmdline:                          {done reading command line except initial
 *   proper parameters already exists.
 }
   if not (scmd = scmd_exist_k) then goto make_new; {not asked to re-use existing ?}
-  escr_sym_find (e, name, sym_p);      {look for existing symbol of this name}
+  escr_sym_find (e, name, e.sym_var, sym_p); {look for existing symbol of this name}
   if sym_p = nil then goto make_new;   {no such symbol ?}
   if sym_p^.stype <> escr_sym_var_k then goto make_new; {symbol isn't a variable ?}
   if sym_p^.var_val.dtype <> dtype then goto make_new; {symbol isn't right dtype ?}
@@ -127,7 +128,9 @@ done_cmdline:                          {done reading command line except initial
 *   Create a new symbol according to the specifications.
 }
 make_new:                              {a new symbol needs to be created}
-  escr_sym_new_var (e, name, dtype, escr_string_var_len_k, global, sym_p); {create the variable}
+  escr_sym_new_var (                   {create the variable}
+    e, name, dtype, escr_string_var_len_k, global, sym_p, stat);
+  if sys_error(stat) then return;
   if hval then begin                   {set new variable to the specified initial value ?}
     if not escr_get_val_dtype (e, sym_p^.var_val) {get value and convert to var's data type}
       then escr_err_parm_missing (e, '', '', nil, 0);
@@ -159,7 +162,7 @@ begin
   if not escr_get_token (e, name)      {get the variable name into NAME}
     then escr_err_parm_missing (e, '', '', nil, 0);
 
-  escr_sym_find (e, name, sym_p);      {get pointer to the symbol descriptor}
+  escr_sym_find (e, name, e.sym_var, sym_p); {get pointer to the symbol descriptor}
   if sym_p = nil then begin            {no such symbol ?}
     sys_msg_parm_vstr (msg_parm[1], name);
     escr_err_atline (e, 'pic', 'sym_not_found', msg_parm, 1);
@@ -224,7 +227,9 @@ escr_dtype_str_k: begin                {STRING}
       len := val.str.len;              {number of characters in the string}
       end;
     end;
-  escr_sym_new_const (e, name, val.dtype, len, true, sym_p); {create the new constant symbol}
+  escr_sym_new_const (                 {create the new constant symbol}
+    e, name, val.dtype, len, true, sym_p, stat);
+  if sys_error(stat) then return;
   escr_val_copy (e, val, sym_p^.const_val); {copy the value into the constant descriptor}
   end;
 {
@@ -248,7 +253,7 @@ begin
     then escr_err_parm_missing (e, '', '', nil, 0);
   escr_get_end (e);                    {no more parameters allowed}
 
-  escr_sym_del_name (e, name);         {delete the symbol}
+  escr_sym_del_name (e, e.sym_var, name, stat); {delete the symbol}
   end;
 {
 ********************************************************************************
@@ -261,15 +266,6 @@ procedure escr_cmd_sylist (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
-
-var
-  pos: string_hash_pos_t;              {symbol table position handle}
-  nsym: sys_int_machine_t;             {number of symbols found}
-  sym_pp: escr_sym_pp_t;               {pointer to data in symbol table entry}
-  sym_p: escr_sym_p_t;                 {pointer to individual symbol descriptor}
-  name_p: string_var_p_t;              {pointer to symbol name string}
-  tk: string_var32_t;                  {scratch token for number conversion}
-  found: boolean;                      {symbol table entry found}
 {
 ********************
 *
@@ -332,57 +328,107 @@ otherwise
 {
 ********************
 *
+*   Local subroutine WRITE_SYMBOL (SYM)
+*   This subroutine is local to ESCR_CMD_SYLIST.
+*
+*   Write the information for symbol SYM.
+}
+procedure write_symbol (               {write info about all versions of a symbol}
+  in      sym: escr_sym_t);            {the current version of the symbol}
+  val_param; internal;
+
+var
+  sym_p: escr_sym_p_t;                 {pointer to individual symbol descriptor}
+  tk: string_var32_t;                  {scratch token for number conversion}
+
+begin
+  tk.max := size_char(tk.str);         {init local var string}
+
+  sym_p := addr(sym);                  {init pointer to current version of symbol}
+  while sym_p <> nil do begin          {once for each version of this symbol name}
+    string_appends (e.obuf, '; '(0));
+    string_append (e.obuf, sym_p^.name_p^); {symbol name}
+    string_appends (e.obuf, ':'(0));
+    string_f_int (tk, sym_p^.vern);    {symbol version number}
+    string_append (e.obuf, tk);
+    string_append1 (e.obuf, ' ');
+    case sym_p^.stype of               {what is the symbol type ?}
+
+escr_sym_var_k: begin                  {symbol is a variable}
+        string_appends (e.obuf, ' variable '(0));
+        write_val (sym_p^.var_val);
+        end;
+
+escr_sym_const_k: begin                {symbol is a constant}
+        string_appends (e.obuf, ' constant '(0));
+        write_val (sym_p^.const_val);
+        end;
+
+escr_sym_subr_k: begin                 {symbol is a subroutine name}
+        string_appends (e.obuf, ' subroutine, line '(0));
+        string_f_int (tk, sym_p^.subr_line_p^.lnum);
+        string_append (e.obuf, tk);
+        string_appends (e.obuf, ' of '(0));
+        string_append (e.obuf, sym_p^.subr_line_p^.file_p^.tnam);
+        end;
+
+otherwise
+      string_appends (e.obuf, '(symbol type '(0));
+      string_f_int (tk, ord(sym_p^.stype));
+      string_append (e.obuf, tk);
+      string_appends (e.obuf, ' unknown)'(0));
+      end;                             {end of symbol type cases}
+    escr_write_obuf (e);               {write output line for this symbol}
+    sym_p := sym_p^.prev_p;            {switch to previous version of this symbol}
+    end;                               {back and show previous symbol version}
+  end;
+{
+********************
+*
+*   Local subroutine DO_SYTABLE (TBL)
+*   This subroutine is local to ESCR_CMD_SYLIST.
+*
+*   Show the data for all symbols in the symbol table TBL.
+}
+procedure do_sytable (                 {show symbols in specific symbol table}
+  in      tbl: escr_sytable_t);        {the symbol table to show symbols of}
+  val_param;
+
+var
+  pos: string_hash_pos_t;              {symbol table position handle}
+  found: boolean;                      {symbol table entry found}
+  name_p: string_var_p_t;              {pointer to symbol name string}
+  sym_pp: escr_sym_pp_t;               {pointer to data in symbol table entry}
+  sym_p: escr_sym_p_t;                 {pointer to individual symbol descriptor}
+
+begin
+  string_hash_pos_first (tbl.hash, pos, found);
+
+  while found do begin                 {once for each symbol in the symbol table}
+    string_hash_ent_atpos (pos, name_p, sym_pp); {get info from this table entry}
+    sym_p := sym_pp^;                  {get pointer to current symbol}
+    write_symbol (sym_p^);             {write information about this symbol}
+    string_hash_pos_next (pos, found); {advance to next symbol table entry}
+    end;                               {back to process this new symbol table entry}
+  end;
+{
+********************
+*
 *   Executable code for routine ESCR_CMD_SYLIST.
 }
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
-  tk.max := size_char(tk.str);         {init local var string}
 
   escr_get_end (e);                    {no command parameters allowed}
 
   string_appends (e.obuf, ';'(0));     {leave blank comment line before list}
   escr_write_obuf (e);
 
-  nsym := 0;                           {init number of symbols listed}
-  string_hash_pos_first (e.sym, pos, found);
-
-  while found do begin                 {once for each symbol in the symbol table}
-    string_hash_ent_atpos (pos, name_p, sym_pp); {get info from this table entry}
-    sym_p := sym_pp^;                  {get pointer to current symbol}
-    while sym_p <> nil do begin        {once for each version of this symbol name}
-      string_appends (e.obuf, '; '(0));
-      string_append (e.obuf, sym_p^.name_p^); {symbol name}
-      string_appends (e.obuf, ':'(0));
-      string_f_int (tk, sym_p^.vern);  {symbol version number}
-      string_append (e.obuf, tk);
-      string_append1 (e.obuf, ' ');
-      case sym_p^.stype of             {what is the symbol type ?}
-escr_sym_var_k: begin                  {symbol is a variable}
-  string_appends (e.obuf, ' variable '(0));
-  write_val (sym_p^.var_val);
-  end;
-escr_sym_const_k: begin                {symbol is a constant}
-  string_appends (e.obuf, ' constant '(0));
-  write_val (sym_p^.const_val);
-  end;
-escr_sym_subr_k: begin                 {symbol is a subroutine name}
-  string_appends (e.obuf, ' subroutine, line '(0));
-  string_f_int (tk, sym_p^.subr_line_p^.lnum);
-  string_append (e.obuf, tk);
-  string_appends (e.obuf, ' of '(0));
-  string_append (e.obuf, sym_p^.subr_line_p^.file_p^.tnam);
-  end;
-otherwise
-        string_appends (e.obuf, '(symbol type '(0));
-        string_f_int (tk, ord(sym_p^.stype));
-        string_append (e.obuf, tk);
-        string_appends (e.obuf, ' unknown)'(0));
-        end;                           {end of symbol type cases}
-      escr_write_obuf (e);             {write output line for this symbol}
-      sym_p := sym_p^.prev_p;          {switch to previous version of this symbol}
-      end;                             {back and show previous symbol version}
-    string_hash_pos_next (pos, found); {advance to next symbol table entry}
-    end;                               {back to process this new symbol table entry}
+  do_sytable (e.sym_var);
+  do_sytable (e.sym_sub);
+  do_sytable (e.sym_mac);
+  do_sytable (e.sym_fun);
+  do_sytable (e.sym_cmd);
   end;
 {
 ********************************************************************************
@@ -519,4 +565,29 @@ begin
   if e.out_p = nil then return;        {no current output file at all ?}
   if e.out_p^.prev_p = nil then return; {don't close the original output file}
   escr_close_out (e, false);           {close current output file, pop back to previous}
+  end;
+{
+********************************************************************************
+*
+*   /STOP
+}
+procedure escr_cmd_stop (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+begin
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
+
+  escr_get_end (e);                    {no more parameters allowed}
+
+  while e.exblock_p^.prev_p <> nil do begin {loop until only top block left}
+    escr_exblock_close (e);
+    end;
+
+  while e.exblock_p^.inpos_p^.prev_p <> nil do begin {back to top file}
+    escr_infile_pop (e);
+    end;
+
+  e.exblock_p^.inpos_p^.line_p := nil; {as if hit end of input file}
   end;

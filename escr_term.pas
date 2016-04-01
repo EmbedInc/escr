@@ -111,7 +111,7 @@ begin
 *   Check for symbol reference.
 }
   if not escr_sym_name (e, tk) then goto not_sym; {token is not a valid symbol name}
-  escr_sym_find (e, tk, sym_p);        {lookup name in symbol table}
+  escr_sym_find (e, tk, e.sym_var, sym_p); {lookup name in var/const symbol table}
   if sym_p = nil then goto not_sym;    {no such symbol ?}
   case sym_p^.stype of                 {what kind of symbol is it ?}
 escr_sym_var_k: begin                  {symbol is a variable}

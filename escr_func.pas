@@ -6,7 +6,6 @@ module escr_func;
 define escr_inline_func_init;
 define escr_inline_func;
 %include 'escr2.ins.pas';
-%include 'pic.ins.pas';
 
 const
 {
@@ -37,7 +36,7 @@ begin
 {
 *   Build the list of function names.
 }
-  string_append_token (fnames, string_v('FP24I')); {1}
+  string_append_token (fnames, string_v('LAB')); {1}
   string_append_token (fnames, string_v('STR')); {2}
   string_append_token (fnames, string_v('QSTR')); {3}
   string_append_token (fnames, string_v('FFTC2')); {4}
@@ -91,17 +90,13 @@ begin
   string_append_token (fnames, string_v('ARG')); {52}
   string_append_token (fnames, string_v('INT')); {53}
   string_append_token (fnames, string_v('FP')); {54}
-  string_append_token (fnames, string_v('FP32F')); {55}
-  string_append_token (fnames, string_v('FP24_INT')); {56}
-  string_append_token (fnames, string_v('FP32F_INT')); {57}
+  string_append_token (fnames, string_v('E')); {55}
+  string_append_token (fnames, string_v('CCODE')); {56}
+  string_append_token (fnames, string_v('SYM')); {57}
   string_append_token (fnames, string_v('MAX')); {58}
   string_append_token (fnames, string_v('MIN')); {59}
   string_append_token (fnames, string_v('ENG')); {60}
   string_append_token (fnames, string_v('LOG')); {61}
-  string_append_token (fnames, string_v('E')); {62}
-  string_append_token (fnames, string_v('CCODE')); {63}
-  string_append_token (fnames, string_v('SYM')); {64}
-  string_append_token (fnames, string_v('LAB')); {65}
   end;
 {
 ****************************************************************************
@@ -136,8 +131,6 @@ var
   i, n: sys_int_max_t;                 {scratch integers}
   ii: sys_int_machine_t;               {scratch integer}
   sym_p: escr_sym_p_t;                 {scratch pointer to a ESCR symbol}
-  fp24: pic_fp24_t;                    {PIC 24 bit floating point number}
-  fp32f: pic_fp32f_t;                  {32 bit fast floating point for dsPICs}
   val, val2: escr_val_t;               {arguments or other intermediate values}
   time: sys_clock_t;                   {scratch absolute time value}
   tstat: string_tnstat_k_t;            {treename translation result status}
@@ -155,7 +148,7 @@ var
   stat: sys_err_t;
 
 label
-  notind, ret_str, ret_r, ret_time_r, ret_time, ret_ir, ret_i, ret_b, ret_bi,
+  ret_str, ret_r, ret_time_r, ret_time, ret_ir, ret_i, ret_b, ret_bi,
   ret_val, have_seqparm, done_func, error, arg_not_num_time, arg_not_num,
   arg_dtype_bad, arg_bad_tk, arg_error, arg_missing;
 {
@@ -445,83 +438,17 @@ begin
     end;
   escr_err_atline_abort (e, stat, '', '', nil, 0);
   string_upcase (funn);                {make upper case for keyword matching}
-{
-*   The upper case function name is in FUNN and it is guaranteed to be at
-*   least one character long.
-*
-*   Now check for this is the ASM30 register indirect addressing syntax
-*   instead of a preprocessor inline function.  This syntax always starts
-*   a W0 - W15 register name, possibly preceded by "++" or "--".
-}
-  if e.lang <> escr_lang_dspic_k then goto notind; {wrong language ?}
-
-  pf := 1;                             {init FUNN parse index}
-  {
-  *   Skip accross any leading "+" or "-" characters.
-  }
-  while pf <= funn.len do begin        {scan forward}
-    if not ((funn.str[pf] = '+') or (funn.str[pf] = '-')) then exit; {not + or - ?}
-    pf := pf + 1;                      {advance to the next name character}
-    end;                               {back to check next function name character}
-  {
-  *   Check for remaining name starts with Wn, there N is a 0-9 digit.
-  }
-  if pf > funn.len then goto notind;   {check for "W"}
-  if funn.str[pf] <> 'W' then goto notind;
-  pf := pf + 1;
-
-  if pf > funn.len then goto notind;   {check for 0-9 digit}
-  if
-      (ord(funn.str[pf]) < ord('0')) or
-      (ord(funn.str[pf]) > ord('9'))
-    then goto notind;
-  {
-  *   This inline function is really a register indirect syntax.  Restore
-  *   the original text to the output string.
-  }
-  string_append1 (lot, '[');
-  string_append (lot, fstr);
-  string_append1 (lot, ']');
-  return;
-notind:                                {not ASM30 register indirect syntax}
-
   string_tkpick (funn, fnames, pick);  {pick the function name from the list}
   case pick of                         {which function is it ?}
 {
 ********************
 *
-*   FP24I fp
+*   LAB name
 }
 1: begin
-  if not gfp(r) then goto arg_missing; {get the floating point value into R}
-  fp24 := pic_fp24_f_real (r);         {convert to PIC 24 bit representation}
-  case e.lang of                       {what is the input source language}
-
-escr_lang_aspic_k: begin               {language is MPASM}
-  string_appends (tk, 'h'''(0));       {force HEX format}
-  string_f_int8h (tk2, fp24.b2);
-  string_append (tk, tk2);
-  string_f_int8h (tk2, fp24.b1);
-  string_append (tk, tk2);
-  string_f_int8h (tk2, fp24.b0);
-  string_append (tk, tk2);
-  string_append1 (tk, '''');
-  end;                                 {end of MPASM language case}
-
-escr_lang_dspic_k: begin               {language is ASM30}
-  string_appends (tk, '0x'(0));        {force HEX format}
-  string_f_int8h (tk2, fp24.b2);
-  string_append (tk, tk2);
-  string_f_int8h (tk2, fp24.b1);
-  string_append (tk, tk2);
-  string_f_int8h (tk2, fp24.b0);
-  string_append (tk, tk2);
-  end;                                 {end of ASM30 language case}
-
-otherwise
-    escr_err_lang (e, e.lang, 'ESCR_FUNC', 1);
-    end;
-  string_append (lot, tk);
+  if not gkeyw(tk) then goto arg_missing; {get local label name into TK}
+  escr_ulab_get (e, tk, tk2);          {get the full expanded name of this local label}
+  string_append (lot, tk2);
   end;
 {
 ********************
@@ -883,7 +810,7 @@ otherwise
 }
 19: begin
   if not escr_term_get (e, fstr, p, val) then goto arg_missing;
-  escr_val_text (e, val, tk);          {convert to native assembler format string}
+  escr_val_text (e, val, tk);          {convert to output file language syntax}
   string_append (lot, tk);             {write to the output string}
   end;
 {
@@ -1827,8 +1754,21 @@ otherwise
   case pick of                         {what type of symbol to look for ?}
 
 1:  begin                              {PSYM, any escr symbol}
-      escr_sym_find (e, tk2, sym_p);
-      b := sym_p <> nil;
+      b := false;                      {init to symbol not found}
+      escr_sym_find (e, tk2, e.sym_var, sym_p);
+      b := b or (sym_p <> nil);
+      if b then goto ret_b;
+      escr_sym_find (e, tk2, e.sym_sub, sym_p);
+      b := b or (sym_p <> nil);
+      if b then goto ret_b;
+      escr_sym_find (e, tk2, e.sym_mac, sym_p);
+      b := b or (sym_p <> nil);
+      if b then goto ret_b;
+      escr_sym_find (e, tk2, e.sym_fun, sym_p);
+      b := b or (sym_p <> nil);
+      if b then goto ret_b;
+      escr_sym_find (e, tk2, e.sym_cmd, sym_p);
+      b := b or (sym_p <> nil);
       end;
 
 2:  begin                              {EVAR}
@@ -1914,60 +1854,109 @@ otherwise
 {
 ********************
 *
-*   FP32F fp
+*   E [arg]
 }
 55: begin
-  if not gfp(r) then goto arg_missing; {get the floating point value into R}
-  fp32f := pic_fp32f_f_real (r);       {convert to 32 bit fast dsPIC floating point}
-  tk.len := 0;                         {init returned string to empty}
-  case e.lang of                       {what is the input source language}
-
-escr_lang_aspic_k: begin               {language is MPASM}
-  string_appends (tk, 'h'''(0));       {force HEX format}
-  string_f_int16h (tk2, fp32f.w1);     {write high word in HEX}
-  string_append (tk, tk2);
-  string_f_int16h (tk2, fp32f.w0);     {write low word in HEX}
-  string_append (tk, tk2);
-  string_append1 (tk, '''');
-  end;                                 {end of MPASM language case}
-
-escr_lang_dspic_k: begin               {language is ASM30}
-  string_appends (tk, '0x'(0));        {force HEX format}
-  string_f_int16h (tk2, fp32f.w1);     {write high word in HEX}
-  string_append (tk, tk2);
-  string_f_int16h (tk2, fp32f.w0);     {write low word in HEX}
-  string_append (tk, tk2);
-  end;                                 {end of ASM30 language case}
-
-otherwise
-    escr_err_lang (e, e.lang, 'ESCR_FUNC', 1);
+  if not escr_term_get (e, fstr, p, val) then begin
+    r := ek;
+    goto ret_r;
     end;
-  string_append (lot, tk);
+
+  a1 := escr_val_fp (e, val);
+  r := exp(a1);
+  goto ret_r;
   end;
 {
 ********************
 *
-*   FP24_INT fp
+*   CCODE chr
 }
 56: begin
-  if not gfp(r) then goto arg_missing; {get the floating point value into R}
-  fp24 := pic_fp24_f_real (r);         {convert to PIC 24 bit representation}
-  i := fp24.b0;
-  i := i ! lshft(fp24.b1, 8);
-  i := i ! lshft(fp24.b2, 16);
+  if not gstr (tk) then goto arg_missing;
+  if tk.len <> 1 then begin
+     escr_err_atline (e, 'pic', 'ccode_strlen', nil, 0);
+    end;
+  i := ord(tk.str[1]);                 {return the internal character code}
   goto ret_i;
   end;
 {
 ********************
 *
-*   FP32F_INT fp
+*   SYM name [qual]
 }
 57: begin
-  if not gfp(r) then goto arg_missing; {get the floating point value into R}
-  fp32f := pic_fp32f_f_real (r);       {convert to 32 bit fast dsPIC floating point}
-  i := fp32f.w0;
-  i := i ! lshft(fp32f.w1, 16);
-  goto ret_i;
+  if not gstr (tk) then goto arg_missing; {get symbol name into TK}
+  escr_sym_find (e, tk, e.sym_var, sym_p); {look up as variable or constant}
+  if sym_p = nil then begin
+    escr_sym_find (e, tk, e.sym_sub, sym_p); {look up as subroutine}
+    end;
+  if sym_p = nil then begin
+    escr_sym_find (e, tk, e.sym_mac, sym_p); {look up as macro}
+    end;
+  if sym_p = nil then begin
+    escr_sym_find (e, tk, e.sym_cmd, sym_p); {look up as command}
+    end;
+  if sym_p = nil then begin
+    escr_sym_find (e, tk, e.sym_fun, sym_p); {look up as function}
+    end;
+  if sym_p = nil then escr_err_sym_not_found (e, tk);
+
+  if gkeyw (tk)
+    then begin                         {QUAL keyword is in TK}
+      string_tkpick80 (tk,             {resolve the QUAL keyword}
+        'TYPE DTYPE',
+        pick);
+      if pick = 0 then goto arg_bad_tk;
+      end
+    else begin                         {no QUAL keyword}
+      pick := 1;                       {default to first keyword in the list}
+      end
+    ;
+
+  tk.len := 0;                         {init returned string to empty}
+  case pick of                         {which QUAL keyword is it ?}
+
+1:  begin                              {TYPE, symbol type}
+      case sym_p^.stype of
+escr_sym_var_k: begin
+          string_vstring (tk, 'VAR'(0), -1);
+          end;
+escr_sym_const_k: begin
+          string_vstring (tk, 'CONST'(0), -1);
+          end;
+escr_sym_subr_k, escr_sym_isubr_k: begin
+          string_vstring (tk, 'SUBR'(0), -1);
+          end;
+escr_sym_cmd_k, escr_sym_icmd_k: begin
+          string_vstring (tk, 'CMD'(0), -1);
+          end;
+escr_sym_func_k, escr_sym_ifunc_k: begin
+          string_vstring (tk, 'FUNC'(0), -1);
+          end;
+escr_sym_macro_k, escr_sym_imacro_k: begin
+          string_vstring (tk, 'MACRO'(0), -1);
+          end;
+        end;
+      end;
+
+2:  begin                              {DTYPE, symbol data type}
+      case sym_p^.stype of
+escr_sym_var_k: dtype := sym_p^.var_val.dtype;
+escr_sym_const_k: dtype := sym_p^.const_val.dtype;
+otherwise                              {this symbol has no data type}
+        goto ret_str;                  {return empty string}
+        end;
+      case dtype of                    {which data type is it ?}
+escr_dtype_bool_k: string_vstring (tk, 'BOOL'(0), -1);
+escr_dtype_int_k: string_vstring (tk, 'INTEGER'(0), -1);
+escr_dtype_fp_k: string_vstring (tk, 'REAL'(0), -1);
+escr_dtype_str_k: string_vstring (tk, 'STRING'(0), -1);
+escr_dtype_time_k: string_vstring (tk, 'TIME'(0), -1);
+        end;
+      end;                             {end of DTYPE keyword case}
+
+    end;                               {end of QUAL keyword cases}
+  goto ret_str;                        {return the string in TK}
   end;
 {
 ********************
@@ -2162,97 +2151,6 @@ escr_dtype_time_k: goto ret_time;      {TIME}
     then  escr_err_atline (e, 'pic', 'log_neg', nil, 0);
   r := ln(a1);
   goto ret_r;
-  end;
-{
-********************
-*
-*   E [arg]
-}
-62: begin
-  if not escr_term_get (e, fstr, p, val) then begin
-    r := ek;
-    goto ret_r;
-    end;
-
-  a1 := escr_val_fp (e, val);
-  r := exp(a1);
-  goto ret_r;
-  end;
-{
-********************
-*
-*   CCODE chr
-}
-63: begin
-  if not gstr (tk) then goto arg_missing;
-  if tk.len <> 1 then begin
-     escr_err_atline (e, 'pic', 'ccode_strlen', nil, 0);
-    end;
-  i := ord(tk.str[1]);                 {return the internal character code}
-  goto ret_i;
-  end;
-{
-********************
-*
-*   SYM name [qual]
-}
-64: begin
-  if not gstr (tk) then goto arg_missing; {get symbol name into TK}
-  escr_sym_find (e, tk, sym_p);        {look up the symbol name}
-  if sym_p = nil then  escr_err_sym_not_found (e, tk);
-
-  if gkeyw (tk)
-    then begin                         {QUAL keyword is in TK}
-      string_tkpick80 (tk,             {resolve the QUAL keyword}
-        'TYPE DTYPE',
-        pick);
-      if pick = 0 then goto arg_bad_tk;
-      end
-    else begin                         {no QUAL keyword}
-      pick := 1;                       {default to first keyword in the list}
-      end
-    ;
-
-  tk.len := 0;                         {init returned string to empty}
-  case pick of                         {which QUAL keyword is it ?}
-
-1:  begin                              {TYPE, symbol type}
-      case sym_p^.stype of
-escr_sym_var_k: string_vstring (tk, 'VAR'(0), -1);
-escr_sym_const_k: string_vstring (tk, 'CONST'(0), -1);
-escr_sym_subr_k: string_vstring (tk, 'SUBR'(0), -1);
-escr_sym_macro_k: string_vstring (tk, 'MACRO'(0), -1);
-        end;
-      end;
-
-2:  begin                              {DTYPE, symbol data type}
-      case sym_p^.stype of
-escr_sym_var_k: dtype := sym_p^.var_val.dtype;
-escr_sym_const_k: dtype := sym_p^.const_val.dtype;
-otherwise                              {this symbol has no data type}
-        goto ret_str;                  {return empty string}
-        end;
-      case dtype of                    {which data type is it ?}
-escr_dtype_bool_k: string_vstring (tk, 'BOOL'(0), -1);
-escr_dtype_int_k: string_vstring (tk, 'INTEGER'(0), -1);
-escr_dtype_fp_k: string_vstring (tk, 'REAL'(0), -1);
-escr_dtype_str_k: string_vstring (tk, 'STRING'(0), -1);
-escr_dtype_time_k: string_vstring (tk, 'TIME'(0), -1);
-        end;
-      end;                             {end of DTYPE keyword case}
-
-    end;                               {end of QUAL keyword cases}
-  goto ret_str;                        {return the string in TK}
-  end;
-{
-********************
-*
-*   LAB name
-}
-65: begin
-  if not gkeyw(tk) then goto arg_missing; {get local label name into TK}
-  escr_loclab_get (e, tk, tk2);        {get the full expanded name of this local label}
-  string_append (lot, tk2);
   end;
 {
 ********************

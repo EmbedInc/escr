@@ -83,7 +83,7 @@ begin
   string_list_init (slist_p^, e.exblock_p^.mem_p^); {init names list}
   slist_p^.deallocable := false;       {not individually deacllocatable}
 
-  string_hash_pos_first (e.sym, pos, found);
+  string_hash_pos_first (e.sym_var.hash, pos, found);
   while found do begin                 {once for each symbol in the symbol table}
     string_hash_ent_atpos (pos, name_p, sym_pp); {get info from this table entry}
     sym_p := sym_pp^;                  {get pointer to this symbol}
@@ -99,12 +99,15 @@ begin
 {
 *   Initialze the loop state to the first names list entry.
 }
-  escr_sym_new_var (e,                 {create the loop variable}
+  escr_sym_new_var (                   {create the loop variable}
+    e,                                 {state for this use of the ESCR system}
     name,                              {name of variable to create}
     escr_dtype_str_k,                  {variable's data type}
     escr_max_namelen_k,                {max length}
     false,                             {local, not global}
-    sym_p);                            {returned pointer to the new variable}
+    sym_p,                             {returned pointer to the new variable}
+    stat);
+  escr_err_atline_abort (e, stat, '', '', nil, 0);
   loop_p^.var_p := sym_p;              {save pointer to the loop variable}
 
   string_list_pos_abs (slist_p^, 1);   {go to first list entry}
@@ -174,12 +177,15 @@ loop_from:                             {common code with /LOOP FROM}
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
   if name.len > 0 then begin           {need to create loop variable ?}
-    escr_sym_new_var (e,               {create the loop variable}
+    escr_sym_new_var (                 {create the loop variable}
+      e,                               {state for this use of the ESCR system}
       name,                            {name of the variable to create}
       escr_dtype_int_k,                {data type will be integer}
       0,                               {additional length parameter, unused}
       false,                           {variable will be local, not global}
-      sym_p);                          {returned pointer to the new variable symbol}
+      sym_p,                           {returned pointer to the new variable symbol}
+      stat);
+    escr_err_atline_abort (e, stat, '', '', nil, 0);
     loop_p^.var_p := sym_p;            {save pointer to the loop variable}
     sym_p^.var_val.int := loop_p^.for_curr; {init to value for first iteration}
     end;
@@ -267,7 +273,8 @@ escr_looptype_sym_k: begin             {looping thru list of symbols}
     if loop_p^.sym_list_p^.str_p = nil {hit end of list ?}
       then return;
 
-    escr_sym_find (e, loop_p^.sym_list_p^.str_p^, sym_p); {try to find the symbol}
+    escr_sym_find (                    {try to find the symbol}
+      e, loop_p^.sym_list_p^.str_p^, e.sym_var, sym_p);
     if sym_p = nil then next;          {this symbol got deleted, skip it}
 
     string_copy (                      {copy new name into loop variable}

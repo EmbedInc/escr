@@ -31,7 +31,7 @@ begin
   name.max := size_char(name.str);     {init local var string}
 
   escr_inh_new (e);                    {create new execution inhibit layer}
-  e.inhibit_p^.inhty := escr_inhty_blkdef_k; {inhibit it due to reading block definition}
+  e.inhibit_p^.inhty := escr_inhty_blkdef_k; {inhibit due to reading block definition}
   e.inhibit_p^.blkdef_type := escr_exblock_mac_k; {block type is macro}
   if e.inhibit_p^.inh then return;     {previously inhibited, don't define macro}
   e.inhibit_p^.inh := true;            {inhibit execution during macro definition}
@@ -42,7 +42,19 @@ begin
 
   sz :=                                {make size of whole macro symbol}
     offset(escr_sym_t.macro_line_p) + size_min(escr_sym_t.macro_line_p);
-  escr_sym_new (e, name, sz, false, sym_p); {create new symbol for macro name}
+  escr_sym_new (                       {create new symbol for the macro name}
+    e,                                 {state for this use of the ESCR library}
+    name,                              {symbol name}
+    sz,                                {symbol descriptor size}
+    false,                             {try to make local}
+    e.sym_mac,                         {symbol table to add symbol to}
+    sym_p,                             {pointer to new symbol}
+    stat);
+  if sys_error(stat) then begin        {error ?}
+    escr_inh_end (e);                  {delete the execution inhibit}
+    return;                            {return with error}
+    end;
+
   sym_p^.stype := escr_sym_macro_k;    {this symbol is a macro name}
   sym_p^.macro_line_p :=               {save pointer to macro definition line}
     e.exblock_p^.inpos_p^.last_p;
@@ -124,7 +136,6 @@ var
   name: string_var80_t;                {macro name}
   tk: string_var8192_t;                {scratch token}
   sym_p: escr_sym_p_t;                 {pointer to macro symbol}
-  str_p: string_var_p_t;               {pointer to input line}
   oldlen: string_index_t;              {original length of input buffer with comment}
   nclen: string_index_t;               {length of input line with comment stripped}
 
@@ -150,7 +161,7 @@ begin
     if not escr_get_token (e, label) then goto nomac; {get the label name into LABEL}
     end;
   if not escr_get_token (e, name) then goto nomac; {get the opcode name into NAME}
-  escr_sym_find (e, name, sym_p);      {get symbol from macro name}
+  escr_sym_find (e, name, e.sym_mac, sym_p); {get symbol from macro name}
   if sym_p = nil then goto nomac;      {no such symbol ?}
   if sym_p^.stype <> escr_sym_macro_k then goto nomac; {not a macro ?}
 {
@@ -162,7 +173,7 @@ begin
   e.exblock_p^.sym_p := sym_p;         {set pointer to symbol for this block}
   e.exblock_p^.bltype := escr_exblock_mac_k; {new block is a macro}
   e.exblock_p^.args := true;           {this block can take arguments}
-  escr_exblock_loclab_init (e);        {create table for local labels}
+  escr_exblock_ulab_init (e);          {create table for local labels}
 
   if label.len > 0 then begin          {label exists on this line ?}
     escr_exblock_arg_addn (e, label, -1); {label name is special argument -1}
@@ -174,7 +185,7 @@ begin
     escr_exblock_arg_add (e, tk);      {add as next argument to new execution block}
     end;
   escr_exblock_inline_set (e, sym_p^.macro_line_p); {go to macro definition line}
-  discard( escr_infile_getline (e, str_p) ); {advance past macro definition line}
+  escr_infile_skipline (e);            {skip over macro definition line}
   escr_macro_run := true;              {indicate macro invocation processed}
   return;
 

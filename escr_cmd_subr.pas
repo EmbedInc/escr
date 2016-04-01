@@ -41,7 +41,12 @@ begin
 
   sz :=                                {make size of whole subroutine symbol}
     offset(escr_sym_t.subr_line_p) + size_min(escr_sym_t.subr_line_p);
-  escr_sym_new (e, name, sz, false, sym_p); {create new symbol for subroutine name}
+  escr_sym_new (                       {create new symbol for subroutine name}
+    e, name, sz, false, e.sym_sub, sym_p, stat);
+  if sys_error(stat) then begin        {error ?}
+    escr_inh_end (e);                  {delete the inhibit created earlier}
+    return;                            {return with error}
+    end;
   sym_p^.stype := escr_sym_subr_k;     {this symbol is a subroutine name}
   sym_p^.subr_line_p :=                {save pointer to subroutine definition line}
     e.exblock_p^.inpos_p^.last_p;
@@ -97,7 +102,6 @@ var
   name: string_var80_t;                {subroutine name}
   tk: string_var8192_t;                {scratch token}
   sym_p: escr_sym_p_t;                 {pointer to definition symbol}
-  str_p: string_var_p_t;               {pointer to input line}
   msg_parm:                            {parameter references for messages}
     array[1..max_msg_parms] of sys_parm_msg_t;
 
@@ -109,7 +113,7 @@ begin
   if not escr_get_token (e, name)      {get subroutine name}
     then escr_err_parm_missing (e, '', '', nil, 0);
   escr_err_check_symname (e, name);    {check for valid symbol name}
-  escr_sym_find (e, name, sym_p);      {get symbol from subroutine name}
+  escr_sym_find (e, name, e.sym_sub, sym_p); {get symbol from subroutine name}
   if sym_p = nil then  escr_err_sym_not_found (e, name); {no such symbol ?}
   if sym_p^.stype <> escr_sym_subr_k then begin {symbol not a subroutine ?}
     sys_msg_parm_vstr (msg_parm[1], name);
@@ -126,8 +130,8 @@ begin
     escr_exblock_arg_add (e, tk);      {add as next argument to new execution block}
     end;
   escr_exblock_inline_set (e, sym_p^.subr_line_p); {go to subroutine definition line}
-  discard( escr_infile_getline (e, str_p) ); {advance past subroutine definition line}
-  escr_exblock_loclab_init (e);        {create table for local labels}
+  escr_infile_skipline (e);            {skip over subroutine definition line}
+  escr_exblock_ulab_init (e);          {create table for local labels}
   end;
 {
 ********************************************************************************

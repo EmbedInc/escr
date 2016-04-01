@@ -5,4 +5,3 @@ been expanded and functions resolved.  This won't be simple to fix.  Some
 commands need to be at least partially executed during inhibits since they
 may change the inhibit state.  Command line function expansion may need to
 be moved into each command (yuk).
-

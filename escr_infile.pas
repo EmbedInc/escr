@@ -2,6 +2,7 @@
 }
 module escr_infile;
 define escr_infile_open;
+define escr_infile_pop;
 define escr_infile_getline;
 define escr_infile_skipline;
 %include 'escr2.ins.pas';
@@ -17,7 +18,7 @@ define escr_infile_skipline;
 *   input file descriptor.  Each unique input file is only read once and
 *   stored in memory.
 }
-procedure escr_infile_open (           {get input file descriptor for input file}
+procedure escr_infile_open (           {find file data or read it into memory}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {file name}
   out     infile_p: escr_infile_p_t;   {returned pointer to input file descriptor}
@@ -54,7 +55,7 @@ begin
   if sys_error(stat) then return;
 
   util_mem_grab (                      {alloc mem for the input file descriptor}
-    sizeof(file_p^), e.mem_top_p^, false, file_p);
+    sizeof(file_p^), e.mem_p^, false, file_p);
   file_p^.next_p := e.files_p;         {fill in input file descriptor}
   file_p^.tnam.max := size_char(file_p^.tnam.str);
   string_copy (tnam, file_p^.tnam);
@@ -76,11 +77,11 @@ begin
     string_unpad (buf);                {remove trailing blanks from this line}
 
     util_mem_grab (                    {alloc mem for this input line descriptor}
-      sizeof(line_p^), e.mem_top_p^, false, line_p);
+      sizeof(line_p^), e.mem_p^, false, line_p);
     line_p^.next_p := nil;             {init to no following line}
     line_p^.file_p := file_p;          {point to parent file}
     line_p^.lnum := conn.lnum;         {save input line number}
-    string_alloc (buf.len, e.mem_top_p^, false, line_p^.str_p); {alloc mem for input line string}
+    string_alloc (buf.len, e.mem_p^, false, line_p^.str_p); {alloc mem for input line string}
     string_copy (buf, line_p^.str_p^); {save this input line string in memory}
     line_pp^ := line_p;                {link new line descriptor to end of list}
     line_pp := addr(line_p^.next_p);   {update where to write next forward link}
@@ -95,24 +96,49 @@ begin
 {
 ********************************************************************************
 *
-*   Function ESCR_INFILE_GETLINE (E, STR_P)
+*   Subroutine ESCR_INFILE_POP (E)
+*
+*   Pop back one level of input file state within the current execution block.
+*   If the top level of the block is popped, then its INPOS_P pointer is set to
+*   NIL.  Nothing is done if this pointer is already NIL.
+}
+procedure escr_infile_pop (            {pop back one nested input file level}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param;
+
+var
+  pos_p: escr_inpos_p_t;               {pointer to input position state}
+
+begin
+  if e.exblock_p = nil then return;    {no current execution block ?}
+
+  pos_p := e.exblock_p^.inpos_p;       {get pointer to curr input position}
+  if pos_p = nil then return;          {already popped everything ?}
+
+  e.exblock_p^.inpos_p := pos_p^.prev_p; {pop back one level}
+  util_mem_ungrab (pos_p, e.exblock_p^.mem_p^); {deallocate old input position descriptor}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_INFILE_GETLINE (E, STR_P)
 *
 *   Get the next input stream source line by returning STR_P pointing to it.
-*   The function returns TRUE if a source line was successfully returned, and
-*   FALSE if the end of the input stream was encountered.  LAST_P in the current
-*   input stream position state is updated to point to the returned line.
-*   LINE_P in the position state is updated to point to the next input line.
-*   LINE_P will be set to NIL when the last line in the current input file
-*   is returned.
+*   STR_P will be returned NIL when the input stream has been exhausted.
+*
+*   LAST_P in the current input stream position state is updated to point to the
+*   returned line.  LINE_P in the position state is updated to point to the next
+*   input line.  LINE_P will be set to NIL when the last line in the current
+*   input file is returned.
 *
 *   This function automatically pops back to the parent input file within the
-*   current execution block as required.  FALSE is only returned when the end
-*   of the top level input file for the current execution block is encountered.
+*   current execution block as required.  STR_P is only returned NIL when the
+*   end of the top level input file for the current execution block is
+*   encountered.
 }
-function escr_infile_getline (         {get next input stream source line}
+procedure escr_infile_getline (        {get next input stream source line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  str_p: string_var_p_t)       {returned pointer to source line}
-  :boolean;                            {TRUE if returning with line, FALSE for end input}
+  out     str_p: string_var_p_t);      {returned pointer to source line or NIL}
   val_param;
 
 var
@@ -123,7 +149,7 @@ label
   retry;
 
 begin
-  escr_infile_getline := false;        {init to end of input reached}
+  str_p := nil;                        {init to end of input is reached}
 
   if e.exblock_p = nil then begin
     writeln ('INTERNAL ERROR: No execution block defined in INFILE_GETLINE.');
@@ -133,14 +159,13 @@ begin
 retry:                                 {back here after popping back to prev input file}
   pos_p := e.exblock_p^.inpos_p;       {get pointer to input position state}
   if pos_p = nil then return;          {input stream exhausted this execution block ?}
+
   line_p := pos_p^.line_p;             {get pointer to next input stream line info}
   if line_p = nil then begin           {end of current input file ?}
-    e.exblock_p^.inpos_p := pos_p^.prev_p; {pop back to previous nested input position}
-    util_mem_ungrab (pos_p, e.exblock_p^.mem_p^); {deallocate old input position descriptor}
+    escr_infile_pop (e);               {pop back one input file level}
     goto retry;                        {try again with this new input file}
     end;
   str_p := line_p^.str_p;              {return pointer to this input line}
-  escr_infile_getline := true;         {indicate returning with input line}
 
   pos_p^.last_p := line_p;             {save pointer to new current input line}
   pos_p^.line_p := line_p^.next_p;     {advance to next input line for next time}
@@ -162,7 +187,8 @@ var
   str_p: string_var_p_t;               {pointer to input line to ignore}
 
 begin
-  if not escr_infile_getline (e, str_p) then begin {try to get next input line}
+  escr_infile_getline (e, str_p);      {get the next input line}
+  if str_p = nil then begin
     writeln ('INTERNAL ERROR: End of execution block encountered in INFILE_SKIPLINE.');
     escr_err_atline (e, '', '', nil, 0);
     end;

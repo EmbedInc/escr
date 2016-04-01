@@ -1,4 +1,4 @@
-{   Private include file for used by the modules that implement the ESCR
+{   Private include file for use by the modules that implement the ESCR
 *   subsystem.
 }
 %include 'base.ins.pas';
@@ -59,17 +59,7 @@ procedure escr_cmd_endsub (
   out     stat: sys_err_t);
   val_param; extern;
 
-procedure escr_cmd_flag (
-  in out  e: escr_t;
-  out     stat: sys_err_t);
-  val_param; extern;
-
 procedure escr_cmd_if (
-  in out  e: escr_t;
-  out     stat: sys_err_t);
-  val_param; extern;
-
-procedure escr_cmd_inbit (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
@@ -85,11 +75,6 @@ procedure escr_cmd_loop (
   val_param; extern;
 
 procedure escr_cmd_macro (
-  in out  e: escr_t;
-  out     stat: sys_err_t);
-  val_param; extern;
-
-procedure escr_cmd_outbit (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
@@ -120,6 +105,11 @@ procedure escr_cmd_set (
   val_param; extern;
 
 procedure escr_cmd_show (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_cmd_stop (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
@@ -262,6 +252,10 @@ procedure escr_exblock_close (         {close curr execution block and delete te
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
+procedure escr_infile_pop (            {pop back one nested input file level}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param; extern;
+
 procedure escr_exblock_inline_push (   {push new source line location for exec block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      line_p: escr_inline_p_t);    {pointer to next input line to use}
@@ -272,7 +266,7 @@ procedure escr_exblock_inline_set (    {go to new input source position in curr 
   in      line_p: escr_inline_p_t);    {pointer to next input line to use}
   val_param; extern;
 
-procedure escr_exblock_loclab_init (   {create and init local symbols list in this block}
+procedure escr_exblock_ulab_init (     {create unique labels list in this block}
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
@@ -385,13 +379,12 @@ function escr_get_val_dtype (          {get next input value, to dtype of VAL}
   :boolean;                            {TRUE if token available}
   val_param; extern;
 
-function escr_infile_getline (         {get next input stream source line}
+procedure escr_infile_getline (        {get next input stream source line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  str_p: string_var_p_t)       {returned pointer to source line}
-  :boolean;                            {TRUE if returning with line, FALSE for end input}
+  out     str_p: string_var_p_t);      {returned pointer to source line or NIL}
   val_param; extern;
 
-procedure escr_infile_open (           {get input file descriptor for input file}
+procedure escr_infile_open (           {find file data or read it into memory}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {file name}
   out     infile_p: escr_infile_p_t;   {returned pointer to input file descriptor}
@@ -426,9 +419,9 @@ procedure escr_inline_func (           {perform inline function operation}
   in out  lot: string_var8192_t);      {string to append function expansion to}
   val_param; extern;
 
-procedure escr_loclab_get (            {get expansion of generic local label name}
+procedure escr_ulab_get (              {get expansion of generic unique label name}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t; {generic local label name}
+  in      name: univ string_var_arg_t; {generic unique label name}
   in out  exp: univ string_var_arg_t); {returned full label name (expansion)}
   val_param; extern;
 
@@ -441,6 +434,34 @@ function escr_macro_run (              {run macro if present on curr input line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     stat: sys_err_t)             {completion status}
   :boolean; extern;                    {macro was processed}
+
+procedure escr_run (                   {run starting at first line of first input file}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_run_atlabel (           {run starting at label}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {name of label to start running at}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_run_atline (            {run starting at specific input files line}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      line_p: escr_inline_p_t;     {pointer to first input files line to execute}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_run_file (              {run starting at first line of first input file}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fnam: univ string_var_arg_t; {name of file to run script code from}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_run_stop (              {unconditionally stop execution}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
 
 procedure escr_show_obuf (             {write line to standard output from OBUF}
   in out  e: escr_t);                  {state for this use of the ESCR system}
@@ -472,12 +493,15 @@ procedure escr_sym_del (               {delete specific symbol version}
 
 procedure escr_sym_del_name (          {delete symbol by name}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t); {symbol name}
+  in out  sytable: escr_sytable_t;     {symbol table to delete symbol from}
+  in      name: univ string_var_arg_t; {symbol name}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_sym_find (              {look up symbol in symbol table}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
+  in out  sytable: escr_sytable_t;     {symbol table to look up name in}
   out     sym_p: escr_sym_p_t);        {returned pointer to symbol, NIL if not found}
   val_param; extern;
 
@@ -492,7 +516,18 @@ procedure escr_sym_new (               {create new symbol}
   in      name: univ string_var_arg_t; {symbol name}
   in      sz: sys_int_adr_t;           {size of the whole symbol descriptor}
   in      global: boolean;             {create global, not local symbol}
-  out     sym_p: escr_sym_p_t);        {returned pointer to symbol info}
+  in out  sytable: escr_sytable_t;     {symbol table to add symbol to}
+  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_sym_new_cmd (           {create new user-defined command symbol}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {symbol name}
+  in      line_p: escr_inline_p_t;     {pointer to first line of command definition}
+  in      global: boolean;             {create global, not local symbol}
+  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_sym_new_const (         {create new symbol for a constant}
@@ -501,7 +536,17 @@ procedure escr_sym_new_const (         {create new symbol for a constant}
   in      dtype: escr_dtype_k_t;       {data type of the constant}
   in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
-  out     sym_p: escr_sym_p_t);        {returned pointer to symbol info}
+  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_sym_new_icmd (          {create new intrinsic command symbol}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {symbol name}
+  in      routine_p: escr_icmd_p_t;    {pointer to routine to command routine}
+  in      global: boolean;             {create global, not local symbol}
+  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_sym_new_var (           {create new symbol for a variable}
@@ -510,7 +555,8 @@ procedure escr_sym_new_var (           {create new symbol for a variable}
   in      dtype: escr_dtype_k_t;       {data type of the variable}
   in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
-  out     sym_p: escr_sym_p_t);        {returned pointer to symbol info}
+  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 function escr_term_get (               {get value of next term in list}

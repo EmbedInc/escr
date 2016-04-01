@@ -23,12 +23,19 @@ var
   inh_p: escr_inh_p_t;                 {pointer to new inhibit descriptor}
 
 begin
+  if e.exblock_p = nil then begin
+    writeln ('Attempt to create execution inhibit without execution block.');
+    escr_err_atline (e, '', '', nil, 0);
+    end;
+
   util_mem_grab (                      {allocate memory for the new inhibit}
-    sizeof(inh_p^), e.mem_top_p^, true, inh_p);
+    sizeof(inh_p^), e.exblock_p^.mem_p^, true, inh_p);
   inh_p^.prev_p := e.inhibit_p;        {point back to previous layered inhibit}
   inh_p^.inh := false;                 {init to execution enabled}
-  if e.inhibit_p <> nil then inh_p^.inh := e.inhibit_p^.inh; {copy previous enable if available}
-  inh_p^.inhty := escr_inhty_blk_k;    {init to ihibit for execution block}
+  if e.inhibit_p <> nil then begin     {copy previous inhibit if available}
+    inh_p^.inh := e.inhibit_p^.inh;
+    end;
+  inh_p^.inhty := escr_inhty_blk_k;    {init to inhibit for execution block}
   inh_p^.blk_p := e.exblock_p;
 
   e.inhibit_p := inh_p;                {set the new inhibit as current}
@@ -53,7 +60,12 @@ var
     array[1..max_msg_parms] of sys_parm_msg_t;
 
 begin
-  if e.inhibit_p = e.exblock_p^.inh_p^.prev_p then begin {going too far for this block ?}
+  if e.inhibit_p = nil then begin
+    writeln ('INTERNAL ERROR: Attempting to delete root inhibit.');
+    escr_err_atline (e, '', '', nil, 0);
+    end;
+
+  if e.inhibit_p^.prev_p = e.exblock_p^.previnh_p then begin {going too far for this block ?}
     case e.inhibit_p^.inhty of         {what type of inhibit is it ?}
 escr_inhty_if_k: begin                 {IF construct}
         escr_err_atline (e, 'pic', 'err_nest_ih_if', nil, 0);
@@ -66,5 +78,5 @@ otherwise
 
   inh_p := e.inhibit_p;                {save pointer to inhibit to delete}
   e.inhibit_p := inh_p^.prev_p;        {make previous inhibit current}
-  util_mem_ungrab (inh_p, e.mem_top_p^); {deallocate the old inhibit descriptor}
+  util_mem_ungrab (inh_p, e.mem_p^);   {deallocate the old inhibit descriptor}
   end;

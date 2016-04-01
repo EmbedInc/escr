@@ -13,7 +13,6 @@ define escr_val_size;
 define escr_val_init;
 define escr_val_time;
 %include 'escr2.ins.pas';
-%include 'pic.ins.pas';
 {
 ****************************************************************************
 *
@@ -386,11 +385,9 @@ procedure escr_val_text (              {make output language text representation
 
 var
   i: sys_int_machine_t;                {scratch loop counter}
-  fp24: pic_fp24_t;                    {PIC 24 bit floating point number}
   tk: string_var32_t;                  {scratch token}
   c: char;                             {scratch character}
   s_p: string_var_p_t;                 {scratch pointer to a string}
-  stat: sys_err_t;
 
 label
   ret_string;
@@ -411,31 +408,7 @@ escr_dtype_int_k: begin                {INTEGER}
       end;
 
 escr_dtype_fp_k: begin                 {REAL}
-      case e.lang of                   {what is the input language ?}
-escr_lang_aspic_k: begin               {MPASM}
-          fp24 := pic_fp24_f_real (val.fp); {convert to PIC 24 bit FP}
-          str.len := 0;
-          string_appends (str, 'h'''(0));
-          string_f_int_max_base (      {high byte}
-            tk, fp24.b2, 16, 2, [string_fi_leadz_k, string_fi_unsig_k], stat);
-          escr_err_atline_abort (e, stat, '', '', nil, 0);
-          string_append (str, tk);
-          string_f_int_max_base (      {middle byte}
-            tk, fp24.b1, 16, 2, [string_fi_leadz_k, string_fi_unsig_k], stat);
-          escr_err_atline_abort (e, stat, '', '', nil, 0);
-          string_append (str, tk);
-          string_f_int_max_base (      {low byte}
-            tk, fp24.b0, 16, 2, [string_fi_leadz_k, string_fi_unsig_k], stat);
-          escr_err_atline_abort (e, stat, '', '', nil, 0);
-          string_append (str, tk);
-          string_append1 (str, '''');
-          end;
-escr_lang_dspic_k: begin               {ASM30}
-          escr_str_from_fp (e, val.fp, str);
-          end;
-otherwise
-        escr_err_lang (e, e.lang, 'ESCR_VAL', 1);
-        end;                           {end of language cases}
+      string_f_fp_free (str, val.fp, 6);
       end;                             {end of FP data type case}
 
 escr_dtype_str_k: begin                {STRING}

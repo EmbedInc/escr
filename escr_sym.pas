@@ -48,33 +48,43 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_NEW (E, NAME, SZ, GLOBAL, SYM_P)
+*   Subroutine ESCR_SYM_NEW (E, NAME, SZ, GLOBAL, SYTABLE, SYM_P, STAT)
 *
-*   Create a new symbol and return SYM_P pointing to the new symbol descriptor.
-*   The caller must ensure that NAME is a valid symbol name, although this is
-*   not checked.  SZ is the size of the whole symbol descriptor to create.  This
-*   varies depending on the type of symbol and the value associated with it.
-*   When GLOBAL is true, a global symbol will be created.  When GLOBAL is false
-*   a local symbol is create that will be automatically deleted when the current
+*   Low level routine to add or create a new version of a symbol in a specific
+*   symbol table.
+*
+*   NAME is the name of the symbol to create or add a new version of.  NAME must
+*   be a valid symbol name, but that is not checked here.
+*
+*   SZ is the size of the whole symbol descriptor to create.  This varies
+*   depending on the type of symbol and the data associated with it.
+*
+*   GLOBAL indicates that the new symbol is to have global scope.  When false, a
+*   local symbol is created that will automatically be deleted when the current
 *   execution block ends.  All symbols in the top block are created global
 *   regardless of the value of GLOBAL.
 *
-*   All the symbol descriptor fields are set except the symbol type and any
-*   type-specific data.
+*   SYTABLE is the symbol table to create the new symbol in.  For example, E.SYM
+*   is the symbol table for variables and constants.
 *
-*   The program will bomb with error if the maximum allowed versions of the
-*   symbol already exist.
+*   SYM_P is returned pointing to the new symbol descriptor.  It will be filled
+*   in except for the symbol type and fields that depend on the symbol type.
+*   SYM_P is returned NIL on any error.  In that case STAT will be set to
+*   indicate the error.
+*
+*   STAT is always the normal status when returning with a new symbol, as
+*   indicated by SYM_P not being the NIL pointer.  STAT will always indicate a
+*   error when SYM_P is NIL.
 }
 procedure escr_sym_new (               {create new symbol}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
   in      sz: sys_int_adr_t;           {size of the whole symbol descriptor}
   in      global: boolean;             {create global, not local symbol}
-  out     sym_p: escr_sym_p_t);        {returned pointer to symbol info}
+  in out  sytable: escr_sytable_t;     {symbol table to add symbol to}
+  out     sym_p: escr_sym_p_t;         {returned pointer to symbol info}
+  out     stat: sys_err_t);            {completion status}
   val_param;
-
-const
-  max_msg_parms = 1;                   {max parameters we can pass to a message}
 
 var
   name_p: string_var_p_t;              {pointer to name in symbol table}
@@ -84,15 +94,15 @@ var
   lsym_p: escr_sylist_p_t;             {pointer to local symbol list entry for ex block}
   pos: string_hash_pos_t;              {handle to position in symbol table}
   found: boolean;                      {TRUE if name found in symbol table}
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
 
 label
   local;
 
 begin
+  sym_p := nil;                        {init to not returning with new symbol}
+
   string_hash_pos_lookup (             {find position of name in symbol table}
-    e.sym,                             {table to find position in}
+    sytable.hash,                      {hash table to find position in}
     name,                              {name to find position of}
     pos,                               {returned position}
     found);                            {TRUE if name found in table}
@@ -102,8 +112,8 @@ begin
       prev_p := sym_pp^;               {get pointer to curr symbol of this name}
       vern := prev_p^.vern + 1;        {make version number of this new symbol}
       if vern > escr_max_symvers_k then begin {already at maximum allowed version ?}
-        sys_msg_parm_vstr (msg_parm[1], name);
-        escr_err_atline (e, 'pic', 'sym_maxvers', msg_parm, 1); {max versions exceeded error}
+        sys_stat_set (escr_subsys_k, escr_err_sytoomany_k, stat);
+        sys_stat_parm_vstr (name, stat);
         return;
         end;
       end
@@ -124,7 +134,15 @@ begin
 *   Now create the new symbol descriptor and install it.
 }
     util_mem_grab (                    {allocate memory for new symbol descriptor}
-      sz, e.mem_sym_p^, true, sym_p);
+      sz, sytable.mem_p^, true, sym_p);
+    if sym_p = nil then begin
+      sys_stat_set (escr_subsys_k, escr_err_nomem_k, stat);
+      sys_stat_parm_int (sz, stat);
+      return;
+      end;
+    sys_error_none (stat);             {will return with new symbol}
+
+    sym_p^.table_p := addr(sytable);   {point to symbol table this symbol is in}
     sym_p^.prev_p := prev_p;           {point back to previous version of this symbol}
     sym_p^.next_p := nil;              {init to no following symbol of this name}
     sym_p^.name_p := name_p;           {point to name string in symbol table}
@@ -158,7 +176,7 @@ local:                                 {create symbol as local}
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_NEW_CONST (E, NAME, DTYPE, LEN, GLOBAL, SYM_P)
+*   Subroutine ESCR_SYM_NEW_CONST (E, NAME, DTYPE, LEN, GLOBAL, SYM_P, STAT)
 *
 *   Create a new symbol for a constant.  NAME is the name of the new symbol,
 *   DTYPE is the data type, and LEN is an extra argument for the data type.
@@ -173,7 +191,8 @@ procedure escr_sym_new_const (         {create new symbol for a constant}
   in      dtype: escr_dtype_k_t;       {data type of the constant}
   in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
-  out     sym_p: escr_sym_p_t);        {returned pointer to symbol info}
+  out     sym_p: escr_sym_p_t;         {returned pointer to symbol info}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
@@ -182,7 +201,10 @@ var
 begin
   sz := offset(escr_sym_t.const_val) + {total symbol descriptor size}
     escr_val_size (e, dtype, len);
-  escr_sym_new (e, name, sz, global, sym_p); {create the basic symbol}
+  escr_sym_new (                       {create the basic symbol}
+    e, name, sz, global, e.sym_var, sym_p, stat);
+  if sym_p = nil then return;          {error ?}
+
   sym_p^.stype := escr_sym_const_k;    {set symbol type}
   sym_p^.const_val.dtype := dtype;     {set data type of this constant}
   case dtype of                        {what is the data type ?}
@@ -204,13 +226,13 @@ escr_dtype_time_k: begin               {time}
       sym_p^.const_val.time := sys_clock;
       end;
 otherwise
-    escr_err_dtype_unimp (e, dtype, 'SYM_NEW_CONST');
+    escr_err_dtype_unimp (e, dtype, 'ESCR_SYM_NEW_CONST');
     end;
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_NEW_VAR (E, NAME, DTYPE, LEN, GLOBAL, SYM_P)
+*   Subroutine ESCR_SYM_NEW_VAR (E, NAME, DTYPE, LEN, GLOBAL, SYM_P, STAT)
 *
 *   Create a new symbol for a variable.  NAME is the name of the new symbol,
 *   DTYPE is the data type, and LEN is an extra argument for the data type.
@@ -225,7 +247,8 @@ procedure escr_sym_new_var (           {create new symbol for a variable}
   in      dtype: escr_dtype_k_t;       {data type of the variable}
   in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
-  out     sym_p: escr_sym_p_t);        {returned pointer to symbol info}
+  out     sym_p: escr_sym_p_t;         {returned pointer to symbol info}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
@@ -234,7 +257,10 @@ var
 begin
   sz := offset(escr_sym_t.var_val) +   {total symbol descriptor size}
     escr_val_size (e, dtype, len);
-  escr_sym_new (e, name, sz, global, sym_p); {create the basic symbol}
+  escr_sym_new (                       {create the basic symbol}
+    e, name, sz, global, e.sym_var, sym_p, stat);
+  if sym_p = nil then return;          {error ?}
+
   sym_p^.stype := escr_sym_var_k;      {set symbol type}
   sym_p^.var_val.dtype := dtype;       {set data type of this variable}
   case dtype of                        {what is the data type ?}
@@ -262,15 +288,16 @@ otherwise
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_FIND (E, NAME, SYM_P)
+*   Subroutine ESCR_SYM_FIND (E, NAME, SYTABLE, SYM_P)
 *
-*   Look up a name in the symbol table.  If a symbol table entry with that
-*   name exists, then SYM_P is returned pointing to the symbol descriptor.
+*   Look up a name in the symbol table SYTABLE.  If a symbol table entry with
+*   that name exists, then SYM_P is returned pointing to the symbol descriptor.
 *   If the named symbol does not exist, then SYM_P is returned nil.
 }
 procedure escr_sym_find (              {look up symbol in symbol table}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
+  in out  sytable: escr_sytable_t;     {symbol table to look up name in}
   out     sym_p: escr_sym_p_t);        {returned pointer to symbol, NIL if not found}
   val_param;
 
@@ -280,7 +307,7 @@ var
 
 begin
   string_hash_ent_lookup (             {look up name in symbol table}
-    e.sym,                             {table to look up name in}
+    sytable.hash,                      {hash table to look up name in}
     name,                              {the name to look up}
     name_p,                            {returned pointer to name in table entry}
     sym_pp);                           {returned pointer to table entry data area}
@@ -312,6 +339,7 @@ var
   lsym_pp: escr_sylist_pp_t;           {pointer to link to current local symbol list entry}
   name_p: string_var_p_t;              {pointer to name in symbol table}
   sym_pp: escr_sym_pp_t;               {pointer to symbol pointer in table entry}
+  tbl_p: escr_sytable_p_t;             {pointer to symbol table this symbol is in}
   pos: string_hash_pos_t;              {handle to position in symbol table}
   found: boolean;                      {TRUE if name found in symbol table}
 
@@ -342,7 +370,7 @@ begin
       lsym_p := lsym_pp^;              {get pointer to this local symbols list entry}
       if lsym_p = nil then begin       {exhausted local symbols list ?}
         writeln ('INTERNAL ERROR: Symbol "', sym_p^.name_p^.str:sym_p^.name_p^.len, '"');
-        writeln ('  not found in local symbols list.  (SYM_DEL)');
+        writeln ('  not found in local symbols list.  (ESCR_SYM_DEL)');
         sys_bomb;
         end;
       if lsym_p^.sym_p = sym_p then exit; {found local symbols list entry for this sym ?}
@@ -358,11 +386,13 @@ begin
 {
 *   Done deleting local symbols list entry, if any.
 }
+  tbl_p := sym_p^.table_p;             {get pointer to the symbol table}
+
   string_hash_pos_lookup (             {find position of symbol table entry}
-    e.sym, sym_p^.name_p^, pos, found);
+    tbl_p^.hash, sym_p^.name_p^, pos, found);
   if not found then begin
     writeln ('INTERNAL ERROR: Symbol "', sym_p^.name_p^.str:sym_p^.name_p^.len, '"');
-    writeln ('  not found in symbol table.  (SYM_DEL)');
+    writeln ('  not found in symbol table.  (ESCR_SYM_DEL)');
     sys_bomb;
     end;
 
@@ -378,22 +408,22 @@ begin
       end
     ;
 
-  util_mem_ungrab (sym_p, e.mem_sym_p^); {deallocate the symbol descriptor}
+  util_mem_ungrab (sym_p, tbl_p^.mem_p^); {deallocate the symbol descriptor}
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_DEL_NAME (E, NAME)
+*   Subroutine ESCR_SYM_DEL_NAME (E, SYTABLE, NAME, STAT)
 *
-*   Delete the most recently created version of the symbol of name NAME.
+*   Delete the most recently created version of the symbol of name NAME from the
+*   symbol table SYTABLE.
 }
 procedure escr_sym_del_name (          {delete symbol by name}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t); {symbol name}
+  in out  sytable: escr_sytable_t;     {symbol table to delete symbol from}
+  in      name: univ string_var_arg_t; {symbol name}
+  out     stat: sys_err_t);            {completion status}
   val_param;
-
-const
-  max_msg_parms = 1;                   {max parameters we can pass to a message}
 
 var
   name_p: string_var_p_t;              {pointer to name in symbol table}
@@ -401,18 +431,18 @@ var
   sym_p: escr_sym_p_t;                 {pointer to symbol descriptor to delete}
   pos: string_hash_pos_t;              {handle to position in symbol table}
   found: boolean;                      {TRUE if name found in symbol table}
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
+
   string_hash_pos_lookup (             {find position of name in symbol table}
-    e.sym,                             {table to find position in}
+    sytable.hash,                      {hash table to find position in}
     name,                              {name to find position of}
     pos,                               {returned position}
     found);                            {TRUE if name found in table}
   if not found then begin              {name not found ?}
-    sys_msg_parm_vstr (msg_parm[1], name);
-    escr_err_atline (e, 'pic', 'sym_not_found_del', msg_parm, 1);
+    sys_stat_set (escr_subsys_k, escr_err_nfsym_k, stat); {symbol not found}
+    sys_stat_parm_vstr (name, stat);   {symbol name}
     return;
     end;
 
