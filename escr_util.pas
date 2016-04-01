@@ -26,6 +26,11 @@ procedure escr_write_vstr (            {write var string to current output file}
   val_param;
 
 begin
+  if e.out_p = nil then begin          {no output file ?}
+    sys_stat_set (escr_subsys_k, escr_err_noutfile_k, stat);
+    return;
+    end;
+
   file_write_text (s, e.out_p^.conn, stat); {write string as next output file line}
   end;
 {

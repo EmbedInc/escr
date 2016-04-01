@@ -221,15 +221,16 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_RUN_FILE (E, FNAM, STAT)
+*   Subroutine ESCR_RUN_FILE (E, FNAM, SUFF, STAT)
 *
-*   Excute script code starting at the first line of the indicated file.  The
+*   Execute script code starting at the first line of the indicated file.  The
 *   file will be read and saved in memory before any code is executed.  If the
 *   file was previously read into memory, then it will not be read again.
 }
 procedure escr_run_file (              {run starting at first line of first input file}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {name of file to run script code from}
+  in      suff: string;                {allowed file name suffixes, blank separated}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
@@ -239,7 +240,7 @@ var
 begin
   escr_infile_open (                   {find file data or read it into memory}
     e,                                 {state for this use of the ESCR system}
-    fnam,                              {file name}
+    fnam, suff,                        {file name and allowed suffixes}
     infile_p,                          {returned pointer to file data}
     stat);
   if sys_error(stat) then return;

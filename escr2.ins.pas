@@ -170,15 +170,6 @@ procedure escr_err_atline (            {show error followed by source line numbe
   in      n_parms: sys_int_machine_t); {number of parameters in PARMS}
   options (val_param, noreturn, extern);
 
-procedure escr_err_atline_abort (      {bomb with msg and source line on error}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      stat: sys_err_t;             {error code, nothing done if no error}
-  in      subsys: string;              {subsystem name of caller's message}
-  in      msg: string;                 {name of caller's message within subsystem}
-  in      parms: univ sys_parm_msg_ar_t; {array of parameter descriptors}
-  in      n_parms: sys_int_machine_t); {number of parameters in PARMS}
-  val_param; extern;
-
 procedure escr_err_check_symname (     {abort with error on invalid symbol name}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t); {symbol name to check}
@@ -387,6 +378,7 @@ procedure escr_infile_getline (        {get next input stream source line}
 procedure escr_infile_open (           {find file data or read it into memory}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {file name}
+  in      suff: string;                {allowed file name suffixes, blank separated}
   out     infile_p: escr_infile_p_t;   {returned pointer to input file descriptor}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
@@ -452,12 +444,6 @@ procedure escr_run_atline (            {run starting at specific input files lin
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_run_file (              {run starting at first line of first input file}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      fnam: univ string_var_arg_t; {name of file to run script code from}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
 procedure escr_run_stop (              {unconditionally stop execution}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     stat: sys_err_t);            {completion status}
@@ -505,12 +491,6 @@ procedure escr_sym_find (              {look up symbol in symbol table}
   out     sym_p: escr_sym_p_t);        {returned pointer to symbol, NIL if not found}
   val_param; extern;
 
-function escr_sym_name (               {check for valid symbol name}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t) {the name to check}
-  :boolean;                            {TRUE if valid symbol name, FALSE otherwise}
-  val_param; extern;
-
 procedure escr_sym_new (               {create new symbol}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
@@ -544,16 +524,6 @@ procedure escr_sym_new_icmd (          {create new intrinsic command symbol}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
   in      routine_p: escr_icmd_p_t;    {pointer to routine to command routine}
-  in      global: boolean;             {create global, not local symbol}
-  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
-procedure escr_sym_new_var (           {create new symbol for a variable}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t; {symbol name}
-  in      dtype: escr_dtype_k_t;       {data type of the variable}
-  in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
   out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}

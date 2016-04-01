@@ -150,14 +150,12 @@ begin
     sym_p^.scope_p := nil;             {init to global symbol}
     sym_pp^ := sym_p;                  {point symbol table to this new version}
 
-    if e.exblock_p^.prev_p = nil then return; {don't make local if in top block}
+    if e.exblock_p = nil then return;  {no block, can't be local to block ?}
     if not global then goto local;     {create as local symbol ?}
     if                                 {check for previous version is local}
         (prev_p <> nil) and then       {previous version of this symbol exists ?}
         (prev_p^.scope_p <> nil)       {and that version is local ?}
       then goto local;                 {then make this new version local too}
-
-    sym_p^.scope_p := nil;             {indicate this is a global symbol}
     return;
 {
 *   Create the new symbol as a local symbol.  The symbol will be flagged as

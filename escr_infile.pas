@@ -9,7 +9,7 @@ define escr_infile_skipline;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_INFILE_OPEN (E, FNAM, INFILE_P, STAT)
+*   Subroutine ESCR_INFILE_OPEN (E, FNAM, SUFF, INFILE_P, STAT)
 *
 *   Return the pointer to the input file descriptor in INFILE_P for the file
 *   indicated by FNAM.  If the file was previously read, then INFILE_P is
@@ -17,16 +17,22 @@ define escr_infile_skipline;
 *   read into memory and INFILE_P is returned pointing to the newly created
 *   input file descriptor.  Each unique input file is only read once and
 *   stored in memory.
+*
+*   SUFF is the list of suffixes allowed on the file name.  These are separated
+*   by blanks.  The file must end in one of these suffixes.  When SUFF is blank,
+*   then the file name is FNAM exactly.  The suffix number actually used is
+*   saved in the input file descriptor.  The first suffix is 1.  The special
+*   value 0 results when SUFF is blank
 }
 procedure escr_infile_open (           {find file data or read it into memory}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {file name}
+  in      suff: string;                {allowed file name suffixes, blank separated}
   out     infile_p: escr_infile_p_t;   {returned pointer to input file descriptor}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
-  tnam: string_treename_t;             {full pathname of the input file}
   file_p: escr_infile_p_t;             {points to current input files list entry}
   conn: file_conn_t;                   {connection to the input file}
   line_p: escr_inline_p_t;             {points to current input line descriptor}
@@ -35,14 +41,16 @@ var
   buf: string_var8192_t;               {one line input buffer}
 
 begin
-  tnam.max := size_char(tnam.str);     {init local var strings}
-  buf.max := size_char(buf.str);
+  buf.max := size_char(buf.str);       {init local var strings}
   sys_error_none (stat);               {init to no error encountered}
 
-  string_treename (fnam, tnam);        {make full input file treename}
+  file_open_read_text (fnam, suff, conn, stat); {open the new input file}
+  if sys_error(stat) then return;
+
   file_p := e.files_p;                 {init to first entry in cached files list}
   while file_p <> nil do begin         {scan thru list of files already read and cached}
-    if string_equal (file_p^.tnam, tnam) then begin {found requested file in list ?}
+    if string_equal (file_p^.tnam, conn.tnam) then begin {found requested file in list ?}
+      file_close (conn);               {don't need the physical file anymore}
       infile_p := file_p;              {pass back pointer to existing file info}
       return;
       end;
@@ -51,14 +59,12 @@ begin
 {
 *   The requested file has not previously been read and saved in memory.
 }
-  file_open_read_text (tnam, '', conn, stat); {open the new input file}
-  if sys_error(stat) then return;
-
   util_mem_grab (                      {alloc mem for the input file descriptor}
     sizeof(file_p^), e.mem_p^, false, file_p);
   file_p^.next_p := e.files_p;         {fill in input file descriptor}
   file_p^.tnam.max := size_char(file_p^.tnam.str);
-  string_copy (tnam, file_p^.tnam);
+  string_copy (conn.tnam, file_p^.tnam);
+  file_p^.suffn := conn.ext_num;       {save number of file name suffix actually used}
   file_p^.lines_p := nil;
 
   e.files_p := file_p;                 {link this descriptor to start of files list}

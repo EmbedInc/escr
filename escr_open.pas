@@ -7,6 +7,7 @@
 module escr_open;
 define escr_open;
 define escr_close;
+define escr_incsuff;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -146,6 +147,7 @@ begin
   e_p^.obuf.max := size_char(e_p^.obuf.str);
   e_p^.obuf.len := 0;
   e_p^.ulabn := 1;
+  e_p^.incsuff := '';
 {
 *   Do higher level initialization now that all fields have at least legal
 *   values.
@@ -219,4 +221,22 @@ begin
   util_mem_context_del (mem_p);        {delete the mem context}
 
   e_p := nil;                          {indicate use state no longer exists}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_INCSUFF (E, SUFF)
+*
+*   Sets the list of allowed suffixes of include file names.  Each suffix is
+*   blank-separated.  SUFF of all blank requires the include file name to be
+*   exactly as specified.  This can also be one option when suffixes are
+*   supplied by adding the suffix "" (in quotes).
+}
+procedure escr_incsuff (               {set allowed suffixes for include file names}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      suff: string);               {suffixes, blank separated}
+  val_param;
+
+begin
+  e.incsuff := suff;
   end;

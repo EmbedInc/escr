@@ -468,16 +468,11 @@ begin
   if sys_error(stat) then return;
   file_currdir_set (newdir, stat);     {go to source file's directory for include file open}
   if sys_error(stat) then return;
-  escr_infile_open (e, fnam, file_p, stat); {get pointer to info about the new file}
+  escr_infile_open (e, fnam, e.incsuff, file_p, stat); {get pointer to info about the new file}
   file_currdir_set (olddir, stat2);
   if sys_error(stat) then return;
   sys_error_abort (stat2, '', '', nil, 0);
   escr_exblock_inline_push (e, file_p^.lines_p); {set next line to first line in new file}
-
-  string_appends (e.obuf, ';--Start of file "'(0));
-  string_append (e.obuf, file_p^.tnam);
-  string_appends (e.obuf, '"'(0));
-  escr_write_obuf (e);
   end;
 {
 ********************************************************************************

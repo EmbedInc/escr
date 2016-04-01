@@ -27,6 +27,7 @@ const
   escr_err_nflab_k = 8;                {label not found}
   escr_err_notlab_k = 9;               {symbol is not a label}
   escr_err_nestblc_k = 10;             {in nested input on block close}
+  escr_err_noutfile_k = 11;            {no output file, but attempt to write to it}
 {
 *   Derived constants.
 }
@@ -167,6 +168,7 @@ escr_sym_label_k: (                    {label for specific line in input files}
   escr_infile_t = record               {information about one input file}
     next_p: escr_infile_p_t;           {points to next input file in the list}
     tnam: string_treename_t;           {full treename of the input file}
+    suffn: sys_int_machine_t;          {file name suffix number actually used}
     lines_p: escr_inline_p_t;          {pointer to first line of file}
     end;
 
@@ -303,12 +305,22 @@ escr_inhty_blk_k: (                    {in execution block}
     out_p: escr_outfile_p_t;           {points to current output file info, NIL = none}
     obuf: string_var8192_t;            {one line output buffer}
     ulabn: sys_int_conv32_t;           {sequential number for next unique label}
+    incsuff: string;                   {allowed suffixes for include file names}
     end;
 {
 *   Entry points.
 }
 procedure escr_close (                 {end a use of the ESCR system}
   in out  e_p: escr_p_t);              {pointer to ESCR use state, returned NIL}
+  val_param; extern;
+
+procedure escr_err_atline_abort (      {bomb with msg and source line on error}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      stat: sys_err_t;             {error code, nothing done if no error}
+  in      subsys: string;              {subsystem name of caller's message}
+  in      msg: string;                 {name of caller's message within subsystem}
+  in      parms: univ sys_parm_msg_ar_t; {array of parameter descriptors}
+  in      n_parms: sys_int_machine_t); {number of parameters in PARMS}
   val_param; extern;
 
 procedure escr_open (                  {start a new ouse of the ESCR system}
@@ -322,4 +334,32 @@ procedure escr_icmd_add (              {add intrinsic command}
   in      name: univ string_var_arg_t; {name of the command to add}
   in      routine_p: escr_icmd_p_t;    {pointer to routine that implements the command}
   out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_incsuff (               {set allowed suffixes for include file names}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      suff: string);               {suffixes, blank separated}
+  val_param; extern;
+
+procedure escr_run_file (              {run starting at first line of first input file}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fnam: univ string_var_arg_t; {name of file to run script code from}
+  in      suff: string;                {allowed file name suffixes, blank separated}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+function escr_sym_name (               {check for valid symbol name}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t) {the name to check}
+  :boolean;                            {TRUE if valid symbol name, FALSE otherwise}
+  val_param; extern;
+
+procedure escr_sym_new_var (           {create new symbol for a variable}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {symbol name}
+  in      dtype: escr_dtype_k_t;       {data type of the variable}
+  in      len: sys_int_machine_t;      {extra length parameter used for some data types}
+  in      global: boolean;             {create global, not local symbol}
+  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;

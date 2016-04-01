@@ -20,27 +20,27 @@ call src_msg %srcdir% %libname%
 
 call src_insall %srcdir% %libname%
 
-call src_pas %srcdir% %libname%_cmd
-call src_pas %srcdir% %libname%_cmd_block
-call src_pas %srcdir% %libname%_cmd_if
-call src_pas %srcdir% %libname%_cmd_loop
-call src_pas %srcdir% %libname%_cmd_macro
-call src_pas %srcdir% %libname%_cmd_subr
-call src_pas %srcdir% %libname%_err
-call src_pas %srcdir% %libname%_exblock
-call src_pas %srcdir% %libname%_format
-call src_pas %srcdir% %libname%_func
-call src_pas %srcdir% %libname%_get
-call src_pas %srcdir% %libname%_infile
-call src_pas %srcdir% %libname%_inh
-call src_pas %srcdir% %libname%_inline
-call src_pas %srcdir% %libname%_open
-call src_pas %srcdir% %libname%_run
-call src_pas %srcdir% %libname%_sym
-call src_pas %srcdir% %libname%_sym_cmd
-call src_pas %srcdir% %libname%_term
-call src_pas %srcdir% %libname%_ulab
-call src_pas %srcdir% %libname%_util
-call src_pas %srcdir% %libname%_val
+call src_pas %srcdir% %libname%_cmd %1
+call src_pas %srcdir% %libname%_cmd_block %1
+call src_pas %srcdir% %libname%_cmd_if %1
+call src_pas %srcdir% %libname%_cmd_loop %1
+call src_pas %srcdir% %libname%_cmd_macro %1
+call src_pas %srcdir% %libname%_cmd_subr %1
+call src_pas %srcdir% %libname%_err %1
+call src_pas %srcdir% %libname%_exblock %1
+call src_pas %srcdir% %libname%_format %1
+call src_pas %srcdir% %libname%_func %1
+call src_pas %srcdir% %libname%_get %1
+call src_pas %srcdir% %libname%_infile %1
+call src_pas %srcdir% %libname%_inh %1
+call src_pas %srcdir% %libname%_inline %1
+call src_pas %srcdir% %libname%_open %1
+call src_pas %srcdir% %libname%_run %1
+call src_pas %srcdir% %libname%_sym %1
+call src_pas %srcdir% %libname%_sym_cmd %1
+call src_pas %srcdir% %libname%_term %1
+call src_pas %srcdir% %libname%_ulab %1
+call src_pas %srcdir% %libname%_util %1
+call src_pas %srcdir% %libname%_val %1
 
 call src_lib %srcdir% %libname%

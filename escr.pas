@@ -7,7 +7,8 @@
 *   By default, the output file is written to the current directory.
 }
 program escr;
-%include 'escr2.ins.pas';
+%include 'base.ins.pas';
+%include 'escr.ins.pas';
 
 const
   max_msg_parms = 2;                   {max parameters we can pass to a message}
@@ -36,13 +37,11 @@ label
   next_opt, err_parm, parm_bad, done_opts;
 
 begin
-  escr_open (util_top_mem_context, e_p, stat); {create ESCR system use state}
-  sys_error_abort (stat, '', '', nil, 0);
-{
-*   Initialize our state before reading the command line options.
-}
   string_cmline_init;                  {init for reading the command line}
   iname_set := false;                  {no input file name specified}
+
+  escr_open (util_top_mem_context, e_p, stat); {create ESCR system use state}
+  sys_error_abort (stat, '', '', nil, 0);
 {
 *   Back here each new command line option.
 }
@@ -178,7 +177,13 @@ done_opts:                             {done with all the command line options}
     sys_message_bomb ('file', 'no_input_filename', nil, 0);
     end;
 
-  escr_run_file (e_p^, fnam_in, stat); {execute from start of input file}
+  escr_incsuff (e_p^, '.escr .es');    {required include file name suffixes}
+
+  escr_run_file (                      {execute from start of input file}
+    e_p^,                              {state for this use of the ESCR system}
+    fnam_in,                           {generic input file name}
+    '.escr .es',                       {allowed file name suffixes}
+    stat);
   escr_err_atline_abort (e_p^, stat, '', '', nil, 0);
 
   escr_close (e_p);                    {end this use of the ESCR system}
