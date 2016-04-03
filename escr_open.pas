@@ -7,7 +7,7 @@
 module escr_open;
 define escr_open;
 define escr_close;
-define escr_incsuff;
+define escr_set_incsuff;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -215,7 +215,7 @@ var
 begin
   if e_p = nil then return;            {no state to deallocate ?}
 
-  escr_close_out_all (e_p^, false);    {close all output files}
+  escr_out_close_all (e_p^, false);    {close all output files}
 
   mem_p := e_p^.mem_p;                 {get pointer to top memory context}
   util_mem_context_del (mem_p);        {delete the mem context}
@@ -232,7 +232,7 @@ begin
 *   exactly as specified.  This can also be one option when suffixes are
 *   supplied by adding the suffix "" (in quotes).
 }
-procedure escr_incsuff (               {set allowed suffixes for include file names}
+procedure escr_set_incsuff (           {set allowed suffixes for include file names}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      suff: string);               {suffixes, blank separated}
   val_param;

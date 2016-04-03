@@ -31,3 +31,15 @@ msg err9
 msg err10
   lan english -def
     In nested input file at end of block.
+msg err11
+  lan english -def
+    No output file exists on attempt to write to it.
+msg err12
+  lan english -def
+    No output file exists on attempt to close it.
+msg err13
+  lan english -def
+    Attempt to close the preprocessor output file.
+msg err14
+  lan english -def
+    Bad input line.

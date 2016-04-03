@@ -177,7 +177,7 @@ done_opts:                             {done with all the command line options}
     sys_message_bomb ('file', 'no_input_filename', nil, 0);
     end;
 
-  escr_incsuff (e_p^, '.escr .es');    {required include file name suffixes}
+  escr_set_incsuff (e_p^, '.escr .es'); {required include file name suffixes}
 
   escr_run_file (                      {execute from start of input file}
     e_p^,                              {state for this use of the ESCR system}

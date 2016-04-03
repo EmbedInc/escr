@@ -4,7 +4,6 @@ module escr_err;
 define escr_err_atline;
 define escr_err_atline_abort;
 define escr_err_val;
-define escr_err_lang;
 define escr_err_parm_bad;
 define escr_err_parm_last_bad;
 define escr_err_parm_missing;
@@ -40,7 +39,7 @@ var
   line_p: escr_inline_p_t;             {pointer to definition of one input stream line}
 
 begin
-  escr_close_out_all (e, true);        {close and delete all output files}
+  escr_out_close_all (e, true);        {close and delete all output files}
 
   sys_message_parms (subsys, msg, parms, n_parms); {write caller's message}
 
@@ -137,33 +136,6 @@ otherwise
     sys_msg_parm_int (msg_parm[1], ord(val.dtype));
     sys_message_parms ('pic', 'term_val_unk', msg_parm, 1);
     end;
-  end;
-{
-****************************************************************************
-*
-*   Subroutine ESCR_ERR_LANG (E, LANG, MODULE, CHECKPOINT)
-*
-*   Unexpected input language identifier encountered.
-}
-procedure escr_err_lang (              {unexpected input language identifier}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      lang: escr_lang_k_t;         {the language identifier}
-  in      module: string;              {source module name where error encountered}
-  in      checkpoint: sys_int_machine_t); {unique number for this occurrence}
-  options (val_param, noreturn);
-
-const
-  max_msg_parms = 3;                   {max parameters we can pass to a message}
-
-var
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
-
-begin
-  sys_msg_parm_int (msg_parm[1], ord(lang));
-  sys_msg_parm_str (msg_parm[2], module);
-  sys_msg_parm_int (msg_parm[3], checkpoint);
-  escr_err_atline (e, 'pic', 'err_lang', msg_parm, 3);
   end;
 {
 ****************************************************************************

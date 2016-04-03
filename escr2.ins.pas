@@ -152,16 +152,6 @@ procedure escr_cmd_writeto (
 *
 *   Other entry points.
 }
-procedure escr_close_out (             {close the current output file, pop previous}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      del: boolean);               {delete the file}
-  val_param; extern;
-
-procedure escr_close_out_all (         {close all output files}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      del: boolean);               {delete the files}
-  val_param; extern;
-
 procedure escr_err_atline (            {show error followed by source line number}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      subsys: string;              {name of subsystem, used to find message file}
@@ -179,13 +169,6 @@ procedure escr_err_dtype_unimp (       {unimplemented data type internal error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      dtype: escr_dtype_k_t;       {unimplemented data type}
   in      routine: string);            {name of the routine where data type unimplemented}
-  options (val_param, noreturn, extern);
-
-procedure escr_err_lang (              {unexpected input language identifier}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      lang: escr_lang_k_t;         {the language identifier}
-  in      module: string;              {source module name where error encountered}
-  in      checkpoint: sys_int_machine_t); {unique number for this occurrence}
   options (val_param, noreturn, extern);
 
 procedure escr_err_sym_not_found (     {symbol not found}
@@ -427,6 +410,11 @@ function escr_macro_run (              {run macro if present on curr input line}
   out     stat: sys_err_t)             {completion status}
   :boolean; extern;                    {macro was processed}
 
+procedure escr_out_close (             {close the current output file, pop previous}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      del: boolean);               {delete the file}
+  val_param; extern;
+
 procedure escr_run (                   {run starting at first line of first input file}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     stat: sys_err_t);            {completion status}
@@ -614,7 +602,8 @@ procedure escr_val_text (              {make output language text representation
   val_param; extern;
 
 procedure escr_write_obuf (            {write line to output file from OBUF}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_write_vstr (            {write var string to current output file}

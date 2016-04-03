@@ -2,58 +2,12 @@
 *   any of the other modules.
 }
 module escr_util;
-define escr_write_vstr;
-define escr_write_obuf;
 define escr_show_obuf;
 define escr_str_to_time;
 define escr_str_from_time;
 define escr_str_from_fp;
-define escr_close_out;
-define escr_close_out_all;
 define escr_uptocomm;
 %include 'escr2.ins.pas';
-{
-********************************************************************************
-*
-*   Subroutine ESCR_WRITE_VSTR (E, S, STAT)
-*
-*   Write the string in S as the next line to the current output file.
-}
-procedure escr_write_vstr (            {write var string to current output file}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      s: univ string_var_arg_t;    {the string to write}
-  out     stat: sys_err_t);            {completion status}
-  val_param;
-
-begin
-  if e.out_p = nil then begin          {no output file ?}
-    sys_stat_set (escr_subsys_k, escr_err_noutfile_k, stat);
-    return;
-    end;
-
-  file_write_text (s, e.out_p^.conn, stat); {write string as next output file line}
-  end;
-{
-********************************************************************************
-*
-*   Subroutine ESCR_WRITE_OBUF (E)
-*
-*   Write the contents of the global string OBUF as the next line to the
-*   output file.  OBUF is reset to empty.  The program is aborted on
-*   any error.
-}
-procedure escr_write_obuf (            {write line to output file from OBUF}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
-  val_param;
-
-var
-  stat: sys_err_t;
-
-begin
-  escr_write_vstr (e, e.obuf, stat);   {write OBUF as next output file line}
-  escr_err_atline_abort (e, stat, '', '', nil, 0); {abort showing input line number on error}
-  e.obuf.len := 0;                     {reset the output line buffer to empty}
-  end;
 {
 ********************************************************************************
 *
@@ -271,54 +225,6 @@ begin
     7,                                 {max digits allowed right of point}
     [string_ffp_exp_eng_k],            {exponent multiple of 3 when used}
     stat);
-  end;
-{
-********************************************************************************
-*
-*   Subroutine ESCR_CLOSE_OUT (E, DEL)
-*
-*   Close the current output file and pop back to the previous output file.
-*   OUT_P will be NIL if the original output file is closed.  The closed file
-*   will be deleted when DEL is TRUE.
-}
-procedure escr_close_out (             {close the current output file, pop previous}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      del: boolean);               {delete the file}
-  val_param;
-
-var
-  o_p: escr_outfile_p_t;               {pointer to state of output file to close}
-  stat: sys_err_t;
-
-begin
-  o_p := e.out_p;                      {save pointer to state of the file to delete}
-  if o_p = nil then return;            {no current output file, nothing to do ?}
-  e.out_p := o_p^.prev_p;              {pop back to previous output file}
-
-  file_close (o_p^.conn);              {close the file}
-  if del then begin                    {supposed to delete the file ?}
-    file_delete_name (o_p^.conn.tnam, stat); {try to delete the file}
-    end;
-
-  sys_mem_dealloc (o_p);               {deallocate the descriptor for this output file}
-  end;
-{
-********************************************************************************
-*
-*   Subroutine ESCR_CLOSE_OUT_ALL (E, DEL)
-*
-*   Close all the output files.  The files are deleted when DEL is TRUE.  OUT_P
-*   will be NIL when this routine returns.
-}
-procedure escr_close_out_all (         {close all output files}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      del: boolean);               {delete the file files}
-  val_param;
-
-begin
-  while e.out_p <> nil do begin        {loop until all output files closed}
-     escr_close_out (e, del);          {delete this output file, pop back to previous}
-    end;
   end;
 {
 ********************************************************************************

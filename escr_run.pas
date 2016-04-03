@@ -60,11 +60,16 @@ loop_line:
 
   string_unpad (str_p^);               {delete trailing space from the input line}
 {
-*   Handle blank line.  These are passed to the output file if not in a nested
-*   execution block.  Otherwise, blank lines are completely ignored, and are not
-*   copied to the output file.
+*   Handle blank line.
+*
+*   These are ignored in script mode.
+*
+*   In preprocessor mode, these are written to the output file if not in a
+*   nested execution block.
 }
   if str_p^.len = 0 then begin         {this is a blank line ?}
+    if not (escr_flag_preproc_k in e.flags) {in script mode ?}
+      then goto loop_line;             {ignore the blank line}
     if e.exblock_p^.prev_p = nil then begin {in top level execution block ?}
       e.ibuf.len := 0;                 {"copy" the input line to the output line}
       goto no_cmd;                     {pass to output file}
@@ -72,9 +77,7 @@ loop_line:
     goto loop_line;                    {ignore this line}
     end;
 {
-*   Check for "//" comment.  These lines are ignored at the preprocessor level
-*   and not written to the output file.  This is different from regular
-*   assembler comments, which are copied to the output file.
+*   Check for "//" comment.  These lines are ignored.
 }
   e.ip := 1;                           {init input line parse index}
   while e.ip < str_p^.len do begin     {scan forwards to first non-blank}
@@ -143,12 +146,20 @@ otherwise
   if not e.inhibit_p^.inh then begin   {don't check unused tokens if not executed}
     escr_get_end (e);                  {error if input line not exhausted}
     end;
-  if e.obuf.len > 0 then escr_write_obuf (e); {write any line fragment left in out buffer}
+  if e.obuf.len > 0 then escr_write_obuf (e, stat); {write any line fragment left in out buffer}
+  if sys_error(stat) then return;
   goto loop_line;
 {
-*   This input line does not contain a preprocessor command.
+*   This input line does not contain a command.
 }
 no_cmd:
+  if not (escr_flag_preproc_k in e.flags) then begin {in script mode ?}
+    sys_stat_set (escr_subsys_k, escr_err_badinline_k, stat); {bad input line}
+    return;
+    end;
+  {
+  *   In preprocessor mode.
+  }
   if e.inhibit_p^.inh then goto loop_line; {execution inhibited for this line ?}
   if escr_macro_run (e, stat) then goto loop_line; {macro invocation on this line processed ?}
   if sys_error(stat) then return;

@@ -328,13 +328,14 @@ otherwise
 {
 ********************
 *
-*   Local subroutine WRITE_SYMBOL (SYM)
+*   Local subroutine WRITE_SYMBOL (SYM, STAT)
 *   This subroutine is local to ESCR_CMD_SYLIST.
 *
 *   Write the information for symbol SYM.
 }
 procedure write_symbol (               {write info about all versions of a symbol}
-  in      sym: escr_sym_t);            {the current version of the symbol}
+  in      sym: escr_sym_t;             {the current version of the symbol}
+  out     stat: sys_err_t);            {completion status}
   val_param; internal;
 
 var
@@ -378,20 +379,22 @@ otherwise
       string_append (e.obuf, tk);
       string_appends (e.obuf, ' unknown)'(0));
       end;                             {end of symbol type cases}
-    escr_write_obuf (e);               {write output line for this symbol}
+    escr_write_obuf (e, stat);         {write output line for this symbol}
+    if sys_error(stat) then return;
     sym_p := sym_p^.prev_p;            {switch to previous version of this symbol}
     end;                               {back and show previous symbol version}
   end;
 {
 ********************
 *
-*   Local subroutine DO_SYTABLE (TBL)
+*   Local subroutine DO_SYTABLE (TBL, STAT)
 *   This subroutine is local to ESCR_CMD_SYLIST.
 *
 *   Show the data for all symbols in the symbol table TBL.
 }
 procedure do_sytable (                 {show symbols in specific symbol table}
-  in      tbl: escr_sytable_t);        {the symbol table to show symbols of}
+  in      tbl: escr_sytable_t;         {the symbol table to show symbols of}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
@@ -407,7 +410,8 @@ begin
   while found do begin                 {once for each symbol in the symbol table}
     string_hash_ent_atpos (pos, name_p, sym_pp); {get info from this table entry}
     sym_p := sym_pp^;                  {get pointer to current symbol}
-    write_symbol (sym_p^);             {write information about this symbol}
+    write_symbol (sym_p^, stat);       {write information about this symbol}
+    if sys_error(stat) then return;
     string_hash_pos_next (pos, found); {advance to next symbol table entry}
     end;                               {back to process this new symbol table entry}
   end;
@@ -422,13 +426,18 @@ begin
   escr_get_end (e);                    {no command parameters allowed}
 
   string_appends (e.obuf, ';'(0));     {leave blank comment line before list}
-  escr_write_obuf (e);
+  escr_write_obuf (e, stat);
+  if sys_error(stat) then return;
 
-  do_sytable (e.sym_var);
-  do_sytable (e.sym_sub);
-  do_sytable (e.sym_mac);
-  do_sytable (e.sym_fun);
-  do_sytable (e.sym_cmd);
+  do_sytable (e.sym_var, stat);
+  if sys_error(stat) then return;
+  do_sytable (e.sym_sub, stat);
+  if sys_error(stat) then return;
+  do_sytable (e.sym_mac, stat);
+  if sys_error(stat) then return;
+  do_sytable (e.sym_fun, stat);
+  if sys_error(stat) then return;
+  do_sytable (e.sym_cmd, stat);
   end;
 {
 ********************************************************************************
@@ -489,8 +498,9 @@ procedure escr_cmd_write (
 
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
+
   escr_get_args_str (e, e.obuf);       {get all arguments concatenated as strings}
-  escr_write_obuf (e);
+  escr_write_obuf (e, stat);
   end;
 {
 ********************************************************************************
@@ -522,7 +532,6 @@ procedure escr_cmd_writeto (
 
 var
   fnam: string_treename_t;             {name of new file to write to}
-  o_p: escr_outfile_p_t;               {pointer to new output file descriptor}
 
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
@@ -532,15 +541,7 @@ begin
     then escr_err_parm_missing (e, '', '', nil, 0);
   escr_get_end (e);                    {no more parameters allowed}
 
-  sys_mem_alloc (sizeof(o_p^), o_p);   {allocate new output file descriptor}
-  file_open_write_text (fnam, '', o_p^.conn, stat);
-  if sys_error(stat) then begin        {error opening file ?}
-    sys_mem_dealloc (o_p);
-    return;
-    end;
-
-  o_p^.prev_p := e.out_p;              {save pointer to old output file}
-  e.out_p := o_p;                      {switch to new output file}
+  escr_out_open (e, fnam, stat);       {save curr state, open new file}
   end;
 {
 ********************************************************************************
@@ -557,9 +558,20 @@ begin
 
   escr_get_end (e);                    {no more parameters allowed}
 
-  if e.out_p = nil then return;        {no current output file at all ?}
-  if e.out_p^.prev_p = nil then return; {don't close the original output file}
-  escr_close_out (e, false);           {close current output file, pop back to previous}
+  if e.out_p = nil then begin          {no current output file at all ?}
+    sys_stat_set (escr_subsys_k, escr_err_noutcl_k, stat);
+    return;
+    end;
+
+  if                                   {trying to close preprocessor output file}
+      (e.out_p^.prev_p = nil) and      {this is the top level output file ?}
+      (escr_flag_preproc_k in e.flags) {in preprocessor mode ?}
+      then begin
+    sys_stat_set (escr_subsys_k, escr_err_topoutcl_k, stat);
+    return;
+    end;
+
+  escr_out_close (e, false);           {close current output file, pop back to previous}
   end;
 {
 ********************************************************************************

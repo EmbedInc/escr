@@ -35,6 +35,7 @@ call src_pas %srcdir% %libname%_infile %1
 call src_pas %srcdir% %libname%_inh %1
 call src_pas %srcdir% %libname%_inline %1
 call src_pas %srcdir% %libname%_open %1
+call src_pas %srcdir% %libname%_out %1
 call src_pas %srcdir% %libname%_run %1
 call src_pas %srcdir% %libname%_sym %1
 call src_pas %srcdir% %libname%_sym_cmd %1

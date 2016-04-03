@@ -9,8 +9,8 @@ const
   escr_max_blklev_k = 128;             {max execution block nesting level}
   escr_max_namelen_k = 80;             {max characters in symbol name}
   escr_sym_log2buck_k = 7;             {Log2 buckets in symbol tables}
-  escr_ulab_log2buck_k = 5;            {Log2 buckets in local labels tables}
-  escr_ulab_maxlen_k = 32;             {maximum length of undecorated local label names}
+  escr_ulab_log2buck_k = 5;            {Log2 buckets in unique labels tables}
+  escr_ulab_maxlen_k = 32;             {maximum length of undecorated unique label names}
   escr_string_var_len_k = 1024;        {number of characters a string variable can hold}
 {
 *   Status codes.
@@ -27,7 +27,10 @@ const
   escr_err_nflab_k = 8;                {label not found}
   escr_err_notlab_k = 9;               {symbol is not a label}
   escr_err_nestblc_k = 10;             {in nested input on block close}
-  escr_err_noutfile_k = 11;            {no output file, but attempt to write to it}
+  escr_err_noutwr_k = 11;              {no output file on attempt to write to it}
+  escr_err_noutcl_k = 12;              {no output file on attempt to close it}
+  escr_err_topoutcl_k = 13;            {top output file on attempt to close it}
+  escr_err_badinline_k = 14;           {bad input line}
 {
 *   Derived constants.
 }
@@ -42,16 +45,6 @@ type
   escr_exblock_p_t = ^escr_exblock_t;  {pointer to info about one nested executable block}
   escr_inh_p_t = ^escr_inh_t;          {pointer to state for one execution inhibit layer}
   escr_p_t = ^escr_t;                  {pointer to ESCR system use state}
-
-  escr_suff_k_t = (                    {input file suffix ID}
-    escr_suff_ins_aspic_k,             {.ins.aspic}
-    escr_suff_aspic_k,                 {.aspic}
-    escr_suff_ins_dspic_k,             {.ins.dspic}
-    escr_suff_dspic_k);                {.dspic}
-
-  escr_lang_k_t = (                    {input source language ID}
-    escr_lang_aspic_k,                 {MPASM}
-    escr_lang_dspic_k);                {ASM30}
 
   escr_dtype_k_t = (                   {data type ID}
     escr_dtype_bool_k,                 {boolean}
@@ -286,6 +279,10 @@ escr_inhty_blk_k: (                    {in execution block}
     conn: file_conn_t;                 {connection to this output file}
     end;
 
+  escr_flag_k_t = (                    {individual system-wide flags}
+    escr_flag_preproc_k);              {preprocessor, non-commands written to out file}
+  escr_flags_t = set of escr_flag_k_t; {all the flags in one word}
+
   escr_t = record                      {state for one use of the ESCR system}
     mem_p: util_mem_context_p_t;       {top mem context for all dynamic mem}
     sym_var: escr_sytable_t;           {symbol table for variables and constants}
@@ -306,6 +303,7 @@ escr_inhty_blk_k: (                    {in execution block}
     obuf: string_var8192_t;            {one line output buffer}
     ulabn: sys_int_conv32_t;           {sequential number for next unique label}
     incsuff: string;                   {allowed suffixes for include file names}
+    flags: escr_flags_t;               {system-wide control flags}
     end;
 {
 *   Entry points.
@@ -336,9 +334,15 @@ procedure escr_icmd_add (              {add intrinsic command}
   out     stat: sys_err_t);
   val_param; extern;
 
-procedure escr_incsuff (               {set allowed suffixes for include file names}
+procedure escr_out_close_all (         {close all output files}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      suff: string);               {suffixes, blank separated}
+  in      del: boolean);               {delete the files}
+  val_param; extern;
+
+procedure escr_out_open (              {open new output file, save previous state}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fnam: univ string_var_arg_t; {name of file to switch writing to}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_run_file (              {run starting at first line of first input file}
@@ -346,6 +350,16 @@ procedure escr_run_file (              {run starting at first line of first inpu
   in      fnam: univ string_var_arg_t; {name of file to run script code from}
   in      suff: string;                {allowed file name suffixes, blank separated}
   out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_set_incsuff (           {set allowed suffixes for include file names}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      suff: string);               {suffixes, blank separated}
+  val_param; extern;
+
+procedure escr_set_preproc (           {set preprocessor mode on/off}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      on: boolean);                {enables preprocessor mode, default off}
   val_param; extern;
 
 function escr_sym_name (               {check for valid symbol name}

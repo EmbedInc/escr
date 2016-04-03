@@ -13,6 +13,7 @@ escr_infile.obj
 escr_inh.obj
 escr_inline.obj
 escr_open.obj
+escr_out.obj
 escr_run.obj
 escr_sym.obj
 escr_sym_cmd.obj
