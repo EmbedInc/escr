@@ -43,3 +43,6 @@ msg err13
 msg err14
   lan english -def
     Bad input line.
+msg err15
+  lan english -def
+    Starting string for syntax range is empty.

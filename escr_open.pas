@@ -148,10 +148,35 @@ begin
   e_p^.obuf.len := 0;
   e_p^.ulabn := 1;
   e_p^.incsuff := '';
+  e_p^.cmdst.max := size_char(e_p^.cmdst.str);
+  e_p^.cmdst.len := 0;
+  e_p^.syexcl_p := nil;
+  e_p^.commscr_p := nil;
+  e_p^.commdat_p := nil;
+  e_p^.syfunc.st.max := size_char(e_p^.syfunc.st.str);
+  string_vstring (e_p^.syfunc.st, '[', 1);
+  e_p^.syfunc.en.max := size_char(e_p^.syfunc.en.str);
+  string_vstring (e_p^.syfunc.en, ']', 1);
+  e_p^.flags := [];
 {
 *   Do higher level initialization now that all fields have at least legal
 *   values.
 }
+  escr_commscr_add (                   {init to default ESCR comments}
+    e_p^,                              {state for this use of the ESCR system}
+    string_v('//'),                    {comment start}
+    string_v(''),                      {comment ends at end of line}
+    stat);
+  if sys_error(stat) then return;
+
+  escr_syexcl_add (                    {add exclusion for ESCR strings}
+    e_p^,                              {state for this use of the ESCR system}
+    string_v('"'),                     {quoted string start}
+    string_v('"'),                     {quoted string end}
+    true,                              {end of line always ends this exclusion}
+    stat);
+  if sys_error(stat) then return;
+
   escr_inline_func_init (e_p^);        {init for processing inline functions}
   {
   *   Add the standard commands to the commands symbol table.

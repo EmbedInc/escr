@@ -517,6 +517,17 @@ procedure escr_sym_new_icmd (          {create new intrinsic command symbol}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
+procedure escr_syrlist_add (           {add new blank entry to syntax ranges list}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  syl_p: escr_syrlist_p_t;     {pointer to list, will point to new entry}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_syrlist_clear (         {clear syntax ranges list}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  syl_p: escr_syrlist_p_t);    {pointer to list to clear, returned NIL}
+  val_param; extern;
+
 function escr_term_get (               {get value of next term in list}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fstr: univ string_var_arg_t; {source string, term will be next token}

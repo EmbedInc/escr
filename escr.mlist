@@ -17,6 +17,7 @@ escr_out.obj
 escr_run.obj
 escr_sym.obj
 escr_sym_cmd.obj
+escr_syt.obj
 escr_term.obj
 escr_ulab.obj
 escr_util.obj
