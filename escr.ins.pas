@@ -32,6 +32,8 @@ const
   escr_err_topoutcl_k = 13;            {top output file on attempt to close it}
   escr_err_badinline_k = 14;           {bad input line}
   escr_err_nosystart_k = 15;           {no syntax range start characters}
+  escr_err_exclnend_k = 16;            {syntax exclusion not ended}
+  escr_err_scommnend_k = 17;           {script comment not ended}
 {
 *   Derived constants.
 }
@@ -284,16 +286,16 @@ escr_inhty_blk_k: (                    {in execution block}
     escr_flag_preproc_k);              {preprocessor, non-commands written to out file}
   escr_flags_t = set of escr_flag_k_t; {all the flags in one word}
 
+  escr_syrange_p_t = ^escr_syrange_t;
   escr_syrange_t = record              {identification for special syntax range}
     st: string_var4_t;                 {characters to start}
     en: string_var4_t;                 {characters to end, EOL when empty}
-    eol: boolean;                      {end of line ends the syntax range}
     end;
 
   escr_syrlist_p_t = ^escr_syrlist_t;
   escr_syrlist_t = record              {list of special syntax ranges}
     next_p: escr_syrlist_p_t;          {points to next list entry}
-    range: escr_syrange_t;             {start and sequences for this range}
+    range: escr_syrange_t;             {start and end sequences for this range}
     end;
 
   escr_t = record                      {state for one use of the ESCR system}
@@ -385,7 +387,7 @@ procedure escr_out_open (              {open new output file, save previous stat
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_run_file (              {run starting at first line of first input file}
+procedure escr_run_file (              {run starting at first line file}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {name of file to run script code from}
   in      suff: string;                {allowed file name suffixes, blank separated}
@@ -402,15 +404,14 @@ procedure escr_set_preproc (           {set preprocessor mode on/off}
   in      on: boolean);                {enables preprocessor mode, default off}
   val_param; extern;
 
-procedure escr_syexcl_add (            {add identifying syntax for data comment}
+procedure escr_syexcl_add (            {add syntax exclusion}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      st: univ string_var_arg_t;   {characters that start comment}
-  in      en: univ string_var_arg_t;   {characters that end comment, blank for EOL}
-  in      eol: boolean;                {end of line ends exclusion}
+  in      st: univ string_var_arg_t;   {characters that start exclusion}
+  in      en: univ string_var_arg_t;   {characters that end exclusion, blank for EOL}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_syexcl_clear (          {clear script comment syntaxes}
+procedure escr_syexcl_clear (          {clear all syntax exclusions}
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 

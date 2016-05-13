@@ -173,7 +173,6 @@ begin
     e_p^,                              {state for this use of the ESCR system}
     string_v('"'),                     {quoted string start}
     string_v('"'),                     {quoted string end}
-    true,                              {end of line always ends this exclusion}
     stat);
   if sys_error(stat) then return;
 

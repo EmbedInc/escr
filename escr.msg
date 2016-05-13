@@ -46,3 +46,9 @@ msg err14
 msg err15
   lan english -def
     Starting string for syntax range is empty.
+msg err16
+  lan english -def
+    No end (%p2s) for syntax exclusion start (%p1s) in column %p3i.
+msg err17
+  lan english -def
+    Missing end for script comment started in column %p1s.

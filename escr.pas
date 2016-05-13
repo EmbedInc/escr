@@ -20,6 +20,7 @@ var
   fnam_in:                             {input file name}
     %include '(cog)lib/string_treename.ins.pas';
   sym_p: escr_sym_p_t;                 {pointer to symbol in symbol table}
+  iname_set: boolean;                  {TRUE if the input file name already set}
 
   opt:                                 {command line option name}
     %include '(cog)lib/string_treename.ins.pas';
@@ -28,7 +29,6 @@ var
   tk:                                  {scratch token}
     %include '(cog)lib/string8192.ins.pas';
   pick: sys_int_machine_t;             {number of token picked from list}
-  iname_set: boolean;                  {TRUE if the input file name already set}
   msg_parm:                            {parameter references for messages}
     array[1..max_msg_parms] of sys_parm_msg_t;
   stat: sys_err_t;                     {completion status code}

@@ -181,9 +181,9 @@ retry:                                 {back here after popping back to prev inp
 *
 *   Subroutine ESCR_INFILE_SKIPLINE (E)
 *
-*   Skip to the next input line.  This is the same as reading and ignoring the next
-*   input line.  It is a error if currently at the input stream end of the current
-*   execution block.
+*   Skip to the next input line.  This is the same as reading and ignoring the
+*   next input line.  It is a error if currently at the input stream end of the
+*   current execution block.
 }
 procedure escr_infile_skipline (       {skip next input file line}
   in out  e: escr_t);                  {state for this use of the ESCR system}

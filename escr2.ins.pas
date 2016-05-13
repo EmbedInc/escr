@@ -3,7 +3,6 @@
 }
 %include 'base.ins.pas';
 %include 'escr.ins.pas';
-
 {
 *   Subroutines that implement the individual preprocessor commands.  Each
 *   of these have the same interface.  See the header comments in module
@@ -408,7 +407,17 @@ function escr_loop_iter (              {advance to next loop iteration}
 function escr_macro_run (              {run macro if present on curr input line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     stat: sys_err_t)             {completion status}
-  :boolean; extern;                    {macro was processed}
+  :boolean;                            {macro was processed}
+  val_param; extern;
+
+function escr_excl_nextchar (          {get next char from string, skip over exclusions}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      stri: univ string_var_arg_t; {input string}
+  in out  p: string_index_t;           {input string parse index}
+  in out  stro: univ string_var_arg_t; {output string}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {P changed (exclusion processed)}
+  val_param; extern;
 
 procedure escr_out_close (             {close the current output file, pop previous}
   in out  e: escr_t;                   {state for this use of the ESCR system}

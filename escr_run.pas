@@ -27,13 +27,18 @@ procedure escr_run_atline (            {run starting at specific input files lin
 var
   str_p: string_var_p_t;               {pointer to current source line}
   ii: sys_int_machine_t;               {scratch integer and loop counter}
-  nclen: string_index_t;               {string length with comment removed}
+  cleft: sys_int_machine_t;            {number of characters left in string}
+  commstart: sys_int_machine_t;        {comment start column}
   sym_p: escr_sym_p_t;                 {pointer to symbol in symbol table}
+  syr_p: escr_syrlist_p_t;             {points to current syntax range list entry}
+  buf: string_var8192_t;               {temp processed input line buffer}
 
 label
-  loop_line, no_cmd;
+  loop_line, loop_srcchar, nscomme, next_scomms, done_srcline, no_cmd;
 
 begin
+  buf.max := size_char(buf.str);       {init local var string}
+
   escr_run_stop (e, stat);             {delete any current execution state}
   if sys_error(stat) then return;
 
@@ -57,8 +62,6 @@ loop_line:
     sys_stat_set (escr_subsys_k, escr_err_inend_k, stat);
     return;
     end;
-
-  string_unpad (str_p^);               {delete trailing space from the input line}
 {
 *   Handle blank line.
 *
@@ -77,42 +80,128 @@ loop_line:
     goto loop_line;                    {ignore this line}
     end;
 {
-*   Check for "//" comment.  These lines are ignored.
+*   Copy the source line into the local buffer BUF with script comments stripped
+*   off.
 }
-  e.ip := 1;                           {init input line parse index}
-  while e.ip < str_p^.len do begin     {scan forwards to first non-blank}
-    if str_p^.str[e.ip] <> ' ' then exit; {found first non-blank ?}
-    e.ip := e.ip + 1;
+  buf.len := 0;                        {init the input line to empty}
+  e.ip := 1;                           {init source line parse index}
+loop_srcchar:                          {back here to check new source line character}
+  if                                   {other than just normal character here ?}
+      escr_excl_nextchar (             {skip over syntax exclusions at this source char}
+        e,                             {state for this use of the ESCR system}
+        str_p^,                        {input string}
+        e.ip,                          {input string parse index}
+        buf,                           {output string}
+        stat)                          {completion status, always OK on function false}
+      then begin
+    if sys_error(stat) then return;
+    if e.ip > str_p^.len then goto done_srcline; {finished scanning whole source string ?}
     end;
-  if                                   {this is a preprocessor comment line ?}
-      (e.ip < str_p^.len) and then     {at least two chars starting at first non-blank ?}
-      (str_p^.str[e.ip] = '/') and (str_p^.str[e.ip + 1] = '/') {starts with "//" ?}
-    then goto loop_line;               {totally ignore this line}
+  cleft := str_p^.len - e.ip + 1;      {number of characters left in source string}
+  {
+  *   Look for comment start here.
+  }
+  syr_p := e.commscr_p;                {init to first syntax range in list}
+  while syr_p <> nil do begin          {scan the list of comment syntaxes}
+    if syr_p^.range.st.len > cleft     {comment start doesn't fit here ?}
+      then goto next_scomms;
+    for ii := 1 to syr_p^.range.st.len do begin {compare the comment start chars}
+      if str_p^.str[e.ip + ii - 1] <> syr_p^.range.st.str[ii] {mismatch ?}
+        then goto next_scomms;
+      end;
+    {
+    *   Script comment start found here.  E.IP is the source line index of the
+    *   comment start.  SYR_P is pointing to the syntax ranges list entry for
+    *   this comment type.
+    }
+    if syr_p^.range.en.len = 0 then begin {comment ends at end of line ?}
+      goto done_srcline;               {done scanning source line}
+      end;
+    string_append1 (buf, ' ');         {replace comment with single space}
+    commstart := e.ip;                 {save comment start column number}
+    e.ip := e.ip + syr_p^.range.st.len; {skip over comment start syntax}
 
+    while e.ip <= str_p^.len-syr_p^.range.en.len+1 do begin {scan remainder of source line}
+      for ii := 1 to syr_p^.range.en.len do begin {compare to comment end chars}
+        if str_p^.str[e.ip + ii - 1] <> syr_p^.range.en.str[ii] {mismatch}
+          then goto nscomme;
+        end;
+      e.ip := e.ip + syr_p^.range.en.len; {skip over comment end}
+      goto loop_srcchar;               {back to process new source chars here}
+nscomme:                               {comment doesn't end here}
+      e.ip := e.ip + 1;                {advance to next source character}
+      end;                             {back to look for comment end at new char}
+
+    sys_stat_set (escr_subsys_k, escr_err_scommnend_k, stat); {comment not ended}
+    sys_stat_parm_int (commstart, stat); {comment start column}
+    return;                            {return with error}
+
+next_scomms:                           {this comment doesn't start here, try next}
+    syr_p := syr_p^.next_p;            {advance to next comment type in list}
+    end;                               {back to check for this new comment type}
+
+  string_append1 (buf, str_p^.str[e.ip]); {copy this source character}
+  e.ip := e.ip + 1;                    {advance to next source character}
+  if e.ip <= str_p^.len then goto loop_srcchar; {back to process this new char}
+
+done_srcline:                          {done scanning source line}
+  string_unpad (buf);                  {strip trailing spaces from input line}
+  if buf.len <= 0 then begin           {result is now a blank line ?}
+    goto loop_line;                    {ignore this line}
+    end;
+{
+*   The source line has been copied to the temporary buffer BUF with script
+*   comments removed, and the result is not a blank line.
+*
+*   Copy this into the input line buffer, E.IBUF.  If execution is not inhibited
+*   here, then expand inline functions in the process.
+}
   if e.inhibit_p^.inh
     then begin                         {execution is inhibited}
-      string_copy (str_p^, e.ibuf);    {copy line without expanding inline functions}
+      string_copy (buf, e.ibuf);       {no further processing on input line}
       end
-    else begin                         {normal execution}
-      escr_inline_expand_line (e, str_p^, e.ibuf); {expand all inline functions on this line}
+    else begin                         {execution is active}
+      escr_inline_expand_line (e, buf, e.ibuf); {expand all inline functions on this line}
       end
     ;
+
+
+
+{
+****** TEMP DEBUG *****
+*
+*   Show the processed input line.
+}
+  writeln ('IBUF: ', e.ibuf.str:e.ibuf.len);
+
+{
+****** END DEBUG *****
+}
+
+
+
+{
+*   Check for the line starts with a command.  If not, jump to NO_CMD.  If so,
+*   the upper case command name will be left in E.CMD.
+}
   e.ip := 1;                           {init IBUF parse index}
   string_token (e.ibuf, e.ip, e.cmd, stat); {get first input line token into CMD}
   if sys_error(stat) then goto no_cmd; {definitely no preproc command on this line ?}
-  if e.cmd.len < 2 then goto no_cmd;   {not long enough to be preproc command ?}
-  if e.cmd.str[1] <> '/' then goto no_cmd; {token doesn't have preproc cmd prefix ?}
 
-  for ii := 1 to e.cmd.len - 1 do begin {shift command name to delete leading "/"}
-    e.cmd.str[ii] := e.cmd.str[ii + 1];
+  if e.cmdst.len > 0 then begin        {command start with special string ?}
+    if e.cmd.len < (e.cmdst.len + 1)   {not long enough to be a command ?}
+      then goto no_cmd;
+    for ii := 1 to e.cmdst.len do begin {check for command start string}
+      if e.ibuf.str[ii] <> e.cmdst.str[ii] {mismatch ?}
+        then goto no_cmd;
+      end;
+    for ii := 1 to e.cmd.len - e.cmdst.len do begin {shift to delete command start string}
+      e.cmd.str[ii] := e.cmd.str[ii + e.cmdst.len];
+      end;
+    e.cmd.len := e.cmd.len - e.cmdst.len; {update length to command start removed}
     end;
-  e.cmd.len := e.cmd.len - 1;          {update command length to "/" removed}
+
   string_upcase (e.cmd);               {make upper case for keyword matching}
-{
-*   The line in IBUF contains a command.  The upper case command name is in CMD.
-}
-  escr_uptocomm (e, e.ibuf, nclen);    {get line length with comment stripped}
-  e.ibuf.len := nclen;
 {
 *   Handle the specific preprocessor command in CMD.
 }
@@ -238,7 +327,7 @@ begin
 *   file will be read and saved in memory before any code is executed.  If the
 *   file was previously read into memory, then it will not be read again.
 }
-procedure escr_run_file (              {run starting at first line of first input file}
+procedure escr_run_file (              {run starting at first line of file}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {name of file to run script code from}
   in      suff: string;                {allowed file name suffixes, blank separated}
@@ -277,4 +366,10 @@ procedure escr_run_stop (              {unconditionally stop execution}
   val_param;
 
 begin
+
+
+
+
+
+
   end;
