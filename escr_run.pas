@@ -27,14 +27,11 @@ procedure escr_run_atline (            {run starting at specific input files lin
 var
   str_p: string_var_p_t;               {pointer to current source line}
   ii: sys_int_machine_t;               {scratch integer and loop counter}
-  cleft: sys_int_machine_t;            {number of characters left in string}
-  commstart: sys_int_machine_t;        {comment start column}
   sym_p: escr_sym_p_t;                 {pointer to symbol in symbol table}
-  syr_p: escr_syrlist_p_t;             {points to current syntax range list entry}
   buf: string_var8192_t;               {temp processed input line buffer}
 
 label
-  loop_line, loop_srcchar, nscomme, next_scomms, done_srcline, no_cmd;
+  loop_line, no_cmd;
 
 begin
   buf.max := size_char(buf.str);       {init local var string}
@@ -85,66 +82,35 @@ loop_line:
 }
   buf.len := 0;                        {init the input line to empty}
   e.ip := 1;                           {init source line parse index}
-loop_srcchar:                          {back here to check new source line character}
-  if                                   {other than just normal character here ?}
-      escr_excl_nextchar (             {skip over syntax exclusions at this source char}
-        e,                             {state for this use of the ESCR system}
-        str_p^,                        {input string}
-        e.ip,                          {input string parse index}
-        buf,                           {output string}
-        stat)                          {completion status, always OK on function false}
-      then begin
-    if sys_error(stat) then return;
-    if e.ip > str_p^.len then goto done_srcline; {finished scanning whole source string ?}
-    end;
-  cleft := str_p^.len - e.ip + 1;      {number of characters left in source string}
-  {
-  *   Look for comment start here.
-  }
-  syr_p := e.commscr_p;                {init to first syntax range in list}
-  while syr_p <> nil do begin          {scan the list of comment syntaxes}
-    if syr_p^.range.st.len > cleft     {comment start doesn't fit here ?}
-      then goto next_scomms;
-    for ii := 1 to syr_p^.range.st.len do begin {compare the comment start chars}
-      if str_p^.str[e.ip + ii - 1] <> syr_p^.range.st.str[ii] {mismatch ?}
-        then goto next_scomms;
+  while e.ip <= str_p^.len do begin    {loop until source line exhausted}
+    if                                 {syntax exclusion here ?}
+        escr_excl_check (              {skip over syntax exclusion, if present}
+          e,                           {state for this use of the ESCR system}
+          str_p^,                      {input string}
+          e.ip,                        {input string parse index}
+          e.syexcl_p,                  {points to list of syntax exclusions}
+          addr(buf),                   {pointer to string to append exclusion to}
+          stat)                        {completion status, always OK on function false}
+        then begin
+      if sys_error(stat) then return;
+      next;                            {back to check after this exclusion}
       end;
-    {
-    *   Script comment start found here.  E.IP is the source line index of the
-    *   comment start.  SYR_P is pointing to the syntax ranges list entry for
-    *   this comment type.
-    }
-    if syr_p^.range.en.len = 0 then begin {comment ends at end of line ?}
-      goto done_srcline;               {done scanning source line}
+    if                                 {comment here ?}
+        escr_excl_check (              {skip over any script comment here}
+          e,                           {state for this use of the ESCR system}
+          str_p^,                      {input string}
+          e.ip,                        {input string parse index}
+          e.commscr_p,                 {points to list of syntax exclusions}
+          nil,                         {discard the comment characters}
+          stat)                        {completion status, always OK on function false}
+        then begin
+      if sys_error(stat) then return;
+      next;                            {back to check after this comment}
       end;
-    string_append1 (buf, ' ');         {replace comment with single space}
-    commstart := e.ip;                 {save comment start column number}
-    e.ip := e.ip + syr_p^.range.st.len; {skip over comment start syntax}
+    string_append1 (buf, str_p^.str[e.ip]); {copy this source character to output string}
+    e.ip := e.ip + 1;                  {advance to next source character}
+    end;                               {back to process next source string character}
 
-    while e.ip <= str_p^.len-syr_p^.range.en.len+1 do begin {scan remainder of source line}
-      for ii := 1 to syr_p^.range.en.len do begin {compare to comment end chars}
-        if str_p^.str[e.ip + ii - 1] <> syr_p^.range.en.str[ii] {mismatch}
-          then goto nscomme;
-        end;
-      e.ip := e.ip + syr_p^.range.en.len; {skip over comment end}
-      goto loop_srcchar;               {back to process new source chars here}
-nscomme:                               {comment doesn't end here}
-      e.ip := e.ip + 1;                {advance to next source character}
-      end;                             {back to look for comment end at new char}
-
-    sys_stat_set (escr_subsys_k, escr_err_scommnend_k, stat); {comment not ended}
-    sys_stat_parm_int (commstart, stat); {comment start column}
-    return;                            {return with error}
-
-next_scomms:                           {this comment doesn't start here, try next}
-    syr_p := syr_p^.next_p;            {advance to next comment type in list}
-    end;                               {back to check for this new comment type}
-
-  string_append1 (buf, str_p^.str[e.ip]); {copy this source character}
-  e.ip := e.ip + 1;                    {advance to next source character}
-  if e.ip <= str_p^.len then goto loop_srcchar; {back to process this new char}
-
-done_srcline:                          {done scanning source line}
   string_unpad (buf);                  {strip trailing spaces from input line}
   if buf.len <= 0 then begin           {result is now a blank line ?}
     goto loop_line;                    {ignore this line}

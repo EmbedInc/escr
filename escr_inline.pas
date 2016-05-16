@@ -6,7 +6,7 @@ define escr_inline_expand_line;
 {
 *   Private routines used inside this module only.
 }
-procedure inline_expand_lrest (        {expand inline function in rest of line}
+procedure inline_expand_lrest (        {expand inline functions in rest of line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      lin: univ string_var_arg_t;  {input line, may contain inline functions}
   in      linst: string_index_t;       {LIN index at which to start}

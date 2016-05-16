@@ -410,13 +410,14 @@ function escr_macro_run (              {run macro if present on curr input line}
   :boolean;                            {macro was processed}
   val_param; extern;
 
-function escr_excl_nextchar (          {get next char from string, skip over exclusions}
+function escr_excl_check (             {check for syntax exclusion at char}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      stri: univ string_var_arg_t; {input string}
-  in out  p: string_index_t;           {input string parse index}
-  in out  stro: univ string_var_arg_t; {output string}
+  in out  p: string_index_t;           {index to check for syntax exclusion at}
+  in      excl_p: escr_syrlist_p_t;    {list of syntax ranges, each one exclusion}
+  in      stro_p: univ string_var_p_t; {points to output string}
   out     stat: sys_err_t)             {completion status}
-  :boolean;                            {P changed (exclusion processed)}
+  :boolean;                            {excl found, P changed, excl appended to STRO}
   val_param; extern;
 
 procedure escr_out_close (             {close the current output file, pop previous}

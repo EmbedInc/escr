@@ -9,7 +9,7 @@ define escr_commdat_clear;
 define escr_commdat_add;
 define escr_syexcl_clear;
 define escr_syexcl_add;
-define escr_excl_nextchar;
+define escr_excl_check;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -218,33 +218,36 @@ begin
 {
 ********************************************************************************
 *
-*   Function ESCR_EXCL_NEXTCHAR (E, STRI, P, STRO, STAT)
+*   Function ESCR_EXCL_CHECK (E, STRI, P, EXCL_P, STRO, STAT)
 *
-*   Indicate the next input string character, taking any syntax exclusions into
-*   account.
+*   Check for a syntax exclusion starting at index P in the input string STRI.
+*   EXCL_P points to a syntax ranges list.  Each range will be interepreted as
+*   one exclusion.  All exclusions in the list are checked, but only the first
+*   found is acted upon.  EXCL_P may be NIL, in which case there are no
+*   exclusions to check against, so the function always returns with no
+*   exclusion found.
 *
-*   STRI is the input string, and P its parse index.  STRO is the output string.
-*   If the character at P does not start a syntax exclusion, then nothing is
-*   done.  If a syntax exclusion or exclusions start at P, then the exclusions
-*   are appended to the output string and P advanced to after all the
-*   consecutive exclusions.  P is left one past the end of the input line if a
-*   exclusion was skipped that ended at the end of the line.
+*   When no syntax exclusion is found, not state is changed and the function
+*   returns FALSE.
 *
-*   The function returns TRUE iff P is altered, meaning one or more exclusions
-*   were skipped over and appended to STRO.  Note that in this case the caller
-*   should check P to determine whether the input line was exhausted.  If the
-*   input line ended within a exclusion and end of input line is not the valid
-*   end of the exclusion, then STAT is set to indicate the error.  STAT is
-*   returned indicating no error in all other cases.  There is therefore no need
-*   to check STAT when the function returns FALSE.
+*   When a syntax exclusion is found, the following is done:
+*
+*     - P is advanced to the first character after the syntax exclusion.
+*
+*     - The exclusion characters are appended to the string pointed to by
+*       STRO_P.  STRO_P may be NIL, in which case no attempt will be made to
+*       copy the exclusion characters.
+*
+*     - The function returns TRUE.
 }
-function escr_excl_nextchar (          {get next char from string, skip over exclusions}
+function escr_excl_check (             {check for syntax exclusion at char}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      stri: univ string_var_arg_t; {input string}
-  in out  p: string_index_t;           {input string parse index}
-  in out  stro: univ string_var_arg_t; {output string}
+  in out  p: string_index_t;           {index to check for syntax exclusion at}
+  in      excl_p: escr_syrlist_p_t;    {list of syntax ranges, each one exclusion}
+  in      stro_p: univ string_var_p_t; {points to output string}
   out     stat: sys_err_t)             {completion status}
-  :boolean;                            {P changed (exclusion processed)}
+  :boolean;                            {excl found, P changed, excl appended to STRO}
   val_param;
 
 var
@@ -254,19 +257,18 @@ var
   exstart: sys_int_machine_t;          {character index of exclusion start}
 
 label
-  retry, next_excls, excl_found, not_excle;
+  next_excls, excl_found, not_excle;
 
 begin
   sys_error_none (stat);               {init to no error}
-  escr_excl_nextchar := false;         {init to no exclusion found}
+  escr_excl_check := false;            {init to no exclusion found}
 
-retry:                                 {back here after skipping over exclusion}
   cleft := stri.len - p + 1;           {number of characters left in input string}
   if cleft <= 0 then return;           {input string already exhausted ?}
 {
 *   Scan the list of syntax exclusions looking for one that starts here.
 }
-  syr_p := e.syexcl_p;                 {init to first entry in exclusions list}
+  syr_p := excl_p;                     {init to first entry in exclusions list}
   while syr_p <> nil do begin          {back here each new syntax exclusion to check}
     if syr_p^.range.st.len > cleft     {this exclusion doesn't fit here ?}
       then goto next_excls;
@@ -289,17 +291,21 @@ next_excls:                            {this exclusion doesn't match, go on to n
 }
 excl_found:
   exstart := p;                        {save index of exclusion start}
-  escr_excl_nextchar := true;          {indicate returning with changed P}
+  escr_excl_check := true;             {indicate exclusion found}
 
   if syr_p^.range.en.len = 0 then begin {exclusion goes all the way to end of line ?}
-    for ii := p to stri.len do begin   {scan remainder of input string}
-      string_append1 (stro, stri.str[ii]); {copy this character to output string}
+    if stro_p <> nil then begin        {output string was provided ?}
+      for ii := p to stri.len do begin {scan remainder of input string}
+        string_append1 (stro_p^, stri.str[ii]); {copy this character to output string}
+        end;
       end;
     p := stri.len + 1;                 {indicate input string exhausted}
     return;
     end;
 
-  string_append (stro, syr_p^.range.st); {copy exclusion start to output string}
+  if stro_p <> nil then begin
+    string_append (stro_p^, syr_p^.range.st); {copy exclusion start to output string}
+    end;
   p := p + syr_p^.range.st.len;        {skip over exclusion start}
 
   while p <= stri.len do begin         {scan forwards looking for exclusion end}
@@ -312,12 +318,16 @@ excl_found:
     {
     *   The syntax exclusion end pattern starts at the current position.
     }
-    string_append (stro, syr_p^.range.en); {copy exclusion end to output string}
+    if stro_p <> nil then begin
+      string_append (stro_p^, syr_p^.range.en); {copy exclusion end to output string}
+      end;
     p := p + syr_p^.range.en.len;      {skip over exclusion end pattern}
-    goto retry;                        {back to check right after this exclusion}
+    return;
 
 not_excle:                             {exclusion doesn't end here}
-    string_append1 (stro, stri.str[p]); {copy this excluded char to output string}
+    if stro_p <> nil then begin
+      string_append1 (stro_p^, stri.str[p]); {copy this excluded char to output string}
+      end;
     p := p + 1;                        {advance to next input string char}
     end;                               {back and check next input string char}
 {
