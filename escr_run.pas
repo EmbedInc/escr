@@ -164,22 +164,6 @@ done_srcline:                          {done scanning source line}
       escr_inline_expand_line (e, buf, e.ibuf); {expand all inline functions on this line}
       end
     ;
-
-
-
-{
-****** TEMP DEBUG *****
-*
-*   Show the processed input line.
-}
-  writeln ('IBUF: ', e.ibuf.str:e.ibuf.len);
-
-{
-****** END DEBUG *****
-}
-
-
-
 {
 *   Check for the line starts with a command.  If not, jump to NO_CMD.  If so,
 *   the upper case command name will be left in E.CMD.

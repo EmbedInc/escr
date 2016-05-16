@@ -32,7 +32,7 @@ begin
     sizeof(inh_p^), e.exblock_p^.mem_p^, true, inh_p);
   inh_p^.prev_p := e.inhibit_p;        {point back to previous layered inhibit}
   inh_p^.inh := false;                 {init to execution enabled}
-  if e.inhibit_p <> nil then begin     {copy previous inhibit if available}
+  if e.inhibit_p <> nil then begin     {copy previous inhibit on/off if available}
     inh_p^.inh := e.inhibit_p^.inh;
     end;
   inh_p^.inhty := escr_inhty_blk_k;    {init to inhibit for execution block}
@@ -78,5 +78,5 @@ otherwise
 
   inh_p := e.inhibit_p;                {save pointer to inhibit to delete}
   e.inhibit_p := inh_p^.prev_p;        {make previous inhibit current}
-  util_mem_ungrab (inh_p, e.mem_p^);   {deallocate the old inhibit descriptor}
+  util_mem_ungrab (inh_p, e.exblock_p^.mem_p^); {deallocate the old inhibit descriptor}
   end;
