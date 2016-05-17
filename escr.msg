@@ -52,3 +52,6 @@ msg err16
 msg err17
   lan english -def
     Missing end for script comment started in column %p1s.
+msg err18
+  lan english -def
+    End of function "%p1s" not found.

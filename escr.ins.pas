@@ -34,6 +34,7 @@ const
   escr_err_nosystart_k = 15;           {no syntax range start characters}
   escr_err_exclnend_k = 16;            {syntax exclusion not ended}
   escr_err_scommnend_k = 17;           {script comment not ended}
+  escr_err_funcnend_k = 18;            {function not ended}
 {
 *   Derived constants.
 }

@@ -380,7 +380,8 @@ procedure escr_inh_end (               {end the current execution inhibit}
 procedure escr_inline_expand_line (    {expand all inline functions of a line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      lin: univ string_var_arg_t;  {input line, may contain inline functions}
-  out     lot: string_var8192_t);      {output line, contains no inline functions}
+  out     lot: string_var8192_t;       {output line, contains no inline functions}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_inline_func_init (      {one-time init for processing inline funcs}
@@ -389,8 +390,9 @@ procedure escr_inline_func_init (      {one-time init for processing inline func
 
 procedure escr_inline_func (           {perform inline function operation}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      fstr: univ string_var_arg_t; {function source string, delimiters removed}
-  in out  lot: string_var8192_t);      {string to append function expansion to}
+  in      fstr: univ string_var_arg_t; {function source string, start/end removed}
+  in out  lot: string_var8192_t;       {string to append function expansion to}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_ulab_get (              {get expansion of generic unique label name}

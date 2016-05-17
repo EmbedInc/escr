@@ -101,7 +101,7 @@ begin
 {
 ****************************************************************************
 *
-*   Subroutine ESTR_INLINE_FUNC (E, FSTR, LOT)
+*   Subroutine ESTR_INLINE_FUNC (E, FSTR, LOT, STAT)
 *
 *   Perform the operation indicated by the inline function in FSTR.  The
 *   resulting expansion, if any, is appended to LOT.  FSTR contains exactly
@@ -109,8 +109,9 @@ begin
 }
 procedure escr_inline_func (           {perform inline function operation}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      fstr: univ string_var_arg_t; {function source string, brackets removed}
-  in out  lot: string_var8192_t);      {string to append function expansion to}
+  in      fstr: univ string_var_arg_t; {function source string, start/end removed}
+  in out  lot: string_var8192_t;       {string to append function expansion to}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
 const
@@ -145,7 +146,6 @@ var
   str_p: string_var_p_t;               {scratch string pointer}
   msg_parm:                            {parameter references for messages}
     array[1..max_msg_parms] of sys_parm_msg_t;
-  stat: sys_err_t;
 
 label
   ret_str, ret_r, ret_time_r, ret_time, ret_ir, ret_i, ret_b, ret_bi,
@@ -429,6 +429,7 @@ begin
   tk2.max := size_char(tk2.str);
   tk3.max := size_char(tk3.str);
   val.str.max := size_char(val.str.str);
+  sys_error_none (stat);               {init to no error encountered}
 
   p := 1;                              {init parse index}
   string_token (fstr, p, funn, stat);  {get function name}

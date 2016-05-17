@@ -95,7 +95,7 @@ loop_line:
       if sys_error(stat) then return;
       next;                            {back to check after this exclusion}
       end;
-    if                                 {comment here ?}
+    if                                 {script comment here ?}
         escr_excl_check (              {skip over any script comment here}
           e,                           {state for this use of the ESCR system}
           str_p^,                      {input string}
@@ -127,7 +127,8 @@ loop_line:
       string_copy (buf, e.ibuf);       {no further processing on input line}
       end
     else begin                         {execution is active}
-      escr_inline_expand_line (e, buf, e.ibuf); {expand all inline functions on this line}
+      escr_inline_expand_line (e, buf, e.ibuf, stat); {expand all inline functions on this line}
+      if sys_error(stat) then return;
       end
     ;
 {
