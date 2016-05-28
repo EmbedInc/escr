@@ -296,7 +296,7 @@ begin
     stat);
   if sys_error(stat) then return;
 
-  if infile_p = nil                    {nothing to run (shouldn' happen) ?}
+  if infile_p = nil                    {nothing to run (shouldn't happen) ?}
     then return;
 
   escr_run_atline (                    {run the user code}
@@ -317,10 +317,9 @@ procedure escr_run_stop (              {unconditionally stop execution}
   val_param;
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
 
-
-
-
-
-
+  while e.exblock_p <> nil do begin    {in a execution block ?}
+    escr_exblock_close (e);            {not anymore}
+    end;                               {back to close parent block, if any}
   end;

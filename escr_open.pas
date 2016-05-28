@@ -56,7 +56,7 @@ begin
 *   some reason, then E_P will be returned NIL and STAT will indicate the error
 *   condition.
 }
-procedure escr_open (                  {start a new ouse of the ESCR system}
+procedure escr_open (                  {start a new use of the ESCR system}
   in out  mem: util_mem_context_t;     {parent memory context, will make sub context}
   out     e_p: escr_p_t;               {will point to new initialized ESCR use state}
   out     stat: sys_err_t);            {completion status}
@@ -116,17 +116,17 @@ begin
   e_p^.mem_p := mem_p;                 {save pointer to our top mem context}
 
   escr_sytable_init (e_p^, e_p^.sym_var, stat); {init variables/constants symbol table}
-  if sys_error(stat) then return;
+  if sys_error(stat) then goto err;
   escr_sytable_init (e_p^, e_p^.sym_sub, stat); {init subroutines symbol table}
-  if sys_error(stat) then return;
+  if sys_error(stat) then goto err;
   escr_sytable_init (e_p^, e_p^.sym_mac, stat); {init macros symbol table}
-  if sys_error(stat) then return;
+  if sys_error(stat) then goto err;
   escr_sytable_init (e_p^, e_p^.sym_fun, stat); {init functions symbol table}
-  if sys_error(stat) then return;
+  if sys_error(stat) then goto err;
   escr_sytable_init (e_p^, e_p^.sym_cmd, stat); {init commands symbol table}
-  if sys_error(stat) then return;
+  if sys_error(stat) then goto err;
   escr_sytable_init (e_p^, e_p^.sym_lab, stat); {init labels symbol table}
-  if sys_error(stat) then return;
+  if sys_error(stat) then goto err;
   {
   *   Do basic initialization, pointer to NIL, strings to empty, etc.
   }
@@ -167,51 +167,51 @@ begin
     string_v('//'),                    {comment start}
     string_v(''),                      {comment ends at end of line}
     stat);
-  if sys_error(stat) then return;
+  if sys_error(stat) then goto err;
 
   escr_syexcl_add (                    {add exclusion for ESCR strings}
     e_p^,                              {state for this use of the ESCR system}
     string_v('"'),                     {quoted string start}
     string_v('"'),                     {quoted string end}
     stat);
-  if sys_error(stat) then return;
+  if sys_error(stat) then goto err;
 
   escr_inline_func_init (e_p^);        {init for processing inline functions}
   {
   *   Add the standard commands to the commands symbol table.
   }
-  addcmd ('BLOCK', addr(escr_cmd_block), stat); if sys_error(stat) then return;
-  addcmd ('CALL', addr(escr_cmd_call), stat); if sys_error(stat) then return;
-  addcmd ('CONST', addr(escr_cmd_const), stat); if sys_error(stat) then return;
-  addcmd ('DEL', addr(escr_cmd_del), stat); if sys_error(stat) then return;
-  addcmd ('ELSE', addr(escr_cmd_else), stat); if sys_error(stat) then return;
-  addcmd ('ENDBLOCK', addr(escr_cmd_endblock), stat); if sys_error(stat) then return;
-  addcmd ('ENDIF', addr(escr_cmd_endif), stat); if sys_error(stat) then return;
-  addcmd ('ENDLOOP', addr(escr_cmd_endloop), stat); if sys_error(stat) then return;
-  addcmd ('ENDMAC', addr(escr_cmd_endmac), stat); if sys_error(stat) then return;
-  addcmd ('ENDSUB', addr(escr_cmd_endsub), stat); if sys_error(stat) then return;
-  addcmd ('IF', addr(escr_cmd_if), stat); if sys_error(stat) then return;
-  addcmd ('INCLUDE', addr(escr_cmd_include), stat); if sys_error(stat) then return;
-  addcmd ('LOOP', addr(escr_cmd_loop), stat); if sys_error(stat) then return;
-  addcmd ('MACRO', addr(escr_cmd_macro), stat); if sys_error(stat) then return;
-  addcmd ('QUIT', addr(escr_cmd_quit), stat); if sys_error(stat) then return;
-  addcmd ('QUITMAC', addr(escr_cmd_quitmac), stat); if sys_error(stat) then return;
-  addcmd ('REPEAT', addr(escr_cmd_repeat), stat); if sys_error(stat) then return;
-  addcmd ('RETURN', addr(escr_cmd_return), stat); if sys_error(stat) then return;
-  addcmd ('SET', addr(escr_cmd_set), stat); if sys_error(stat) then return;
-  addcmd ('SHOW', addr(escr_cmd_show), stat); if sys_error(stat) then return;
-  addcmd ('STOP', addr(escr_cmd_stop), stat); if sys_error(stat) then return;
-  addcmd ('SUBROUTINE', addr(escr_cmd_subroutine), stat); if sys_error(stat) then return;
-  addcmd ('SYLIST', addr(escr_cmd_sylist), stat); if sys_error(stat) then return;
-  addcmd ('THEN', addr(escr_cmd_then), stat); if sys_error(stat) then return;
-  addcmd ('VAR', addr(escr_cmd_var), stat); if sys_error(stat) then return;
-  addcmd ('WRITE', addr(escr_cmd_write), stat); if sys_error(stat) then return;
-  addcmd ('WRITEEND', addr(escr_cmd_writeend), stat); if sys_error(stat) then return;
-  addcmd ('WRITETO', addr(escr_cmd_writeto), stat); if sys_error(stat) then return;
+  addcmd ('BLOCK', addr(escr_cmd_block), stat); if sys_error(stat) then goto err;
+  addcmd ('CALL', addr(escr_cmd_call), stat); if sys_error(stat) then goto err;
+  addcmd ('CONST', addr(escr_cmd_const), stat); if sys_error(stat) then goto err;
+  addcmd ('DEL', addr(escr_cmd_del), stat); if sys_error(stat) then goto err;
+  addcmd ('ELSE', addr(escr_cmd_else), stat); if sys_error(stat) then goto err;
+  addcmd ('ENDBLOCK', addr(escr_cmd_endblock), stat); if sys_error(stat) then goto err;
+  addcmd ('ENDIF', addr(escr_cmd_endif), stat); if sys_error(stat) then goto err;
+  addcmd ('ENDLOOP', addr(escr_cmd_endloop), stat); if sys_error(stat) then goto err;
+  addcmd ('ENDMAC', addr(escr_cmd_endmac), stat); if sys_error(stat) then goto err;
+  addcmd ('ENDSUB', addr(escr_cmd_endsub), stat); if sys_error(stat) then goto err;
+  addcmd ('IF', addr(escr_cmd_if), stat); if sys_error(stat) then goto err;
+  addcmd ('INCLUDE', addr(escr_cmd_include), stat); if sys_error(stat) then goto err;
+  addcmd ('LOOP', addr(escr_cmd_loop), stat); if sys_error(stat) then goto err;
+  addcmd ('MACRO', addr(escr_cmd_macro), stat); if sys_error(stat) then goto err;
+  addcmd ('QUIT', addr(escr_cmd_quit), stat); if sys_error(stat) then goto err;
+  addcmd ('QUITMAC', addr(escr_cmd_quitmac), stat); if sys_error(stat) then goto err;
+  addcmd ('REPEAT', addr(escr_cmd_repeat), stat); if sys_error(stat) then goto err;
+  addcmd ('RETURN', addr(escr_cmd_return), stat); if sys_error(stat) then goto err;
+  addcmd ('SET', addr(escr_cmd_set), stat); if sys_error(stat) then goto err;
+  addcmd ('SHOW', addr(escr_cmd_show), stat); if sys_error(stat) then goto err;
+  addcmd ('STOP', addr(escr_cmd_stop), stat); if sys_error(stat) then goto err;
+  addcmd ('SUBROUTINE', addr(escr_cmd_subroutine), stat); if sys_error(stat) then goto err;
+  addcmd ('SYLIST', addr(escr_cmd_sylist), stat); if sys_error(stat) then goto err;
+  addcmd ('THEN', addr(escr_cmd_then), stat); if sys_error(stat) then goto err;
+  addcmd ('VAR', addr(escr_cmd_var), stat); if sys_error(stat) then goto err;
+  addcmd ('WRITE', addr(escr_cmd_write), stat); if sys_error(stat) then goto err;
+  addcmd ('WRITEEND', addr(escr_cmd_writeend), stat); if sys_error(stat) then goto err;
+  addcmd ('WRITETO', addr(escr_cmd_writeto), stat); if sys_error(stat) then goto err;
 
   return;
 
-err_nocontext:                         {could get new memory context}
+err_nocontext:                         {could not get new memory context}
   sys_stat_set (escr_subsys_k, escr_err_nomcontext_k, stat);
 
 err:                                   {return with error, STAT already set}

@@ -364,7 +364,7 @@ procedure escr_err_atline_abort (      {bomb with msg and source line on error}
   in      n_parms: sys_int_machine_t); {number of parameters in PARMS}
   val_param; extern;
 
-procedure escr_open (                  {start a new ouse of the ESCR system}
+procedure escr_open (                  {start a new use of the ESCR system}
   in out  mem: util_mem_context_t;     {parent memory context, will make sub context}
   out     e_p: escr_p_t;               {will point to new initialized ESCR use state}
   out     stat: sys_err_t);            {completion status}

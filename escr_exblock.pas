@@ -80,7 +80,7 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_CLOSE (E, STAT)
+*   Subroutine ESCR_EXBLOCK_CLOSE (E)
 *
 *   Close the current execution block, deallocate any associated resources, and
 *   make the previous execution block current.
@@ -94,6 +94,7 @@ var
   sym_p: escr_sym_p_t;                 {pointer to symbol to delete}
 
 begin
+  if e.exblock_p = nil then return;    {nothing to close ?}
 {
 *   Delete the local symbols.  SYM_DEL will delete a symbol and all later
 *   versions of it.  It will also delete the entry for that symbol from the
