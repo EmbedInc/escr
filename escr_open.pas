@@ -78,6 +78,15 @@ label
 *   routine.
 }
 type
+  {
+  *   A separate template for a command routine is defined here.  This is the
+  *   same as the official ESCR_ICMD_P_T except that the first argument is the
+  *   library use state directly defined for IN and OUT use, as apposed to a
+  *   pointer to the library use state.  The former is how command routines are
+  *   actually defined, but the ESCR_ICMD_P_T template can't be defined that way
+  *   due to circular dependencies that would be required of such a definition.
+  *   Both definitions should result in the same code.
+  }
   cmd_routine_p_t = ^procedure (
     in out e: escr_t;
     out   stat: sys_err_t);
@@ -94,6 +103,46 @@ begin
     e_p^,                              {state for this use of the ESCR library}
     string_v(name),                    {command name}
     escr_icmd_p_t(routine_p),          {pointer to command routine}
+    stat);
+  end;
+{
+******************************
+*
+*   Subroutine ADDFUNC (NAME, ROUTINE_P, STAT)
+*   This routine is local to ESCR_OPEN.
+*
+*   Add the intrinsic function NAME to the functions symbol table.  NAME is a
+*   Pascal string, not a var string.  ROUTINE_P is the pointer to the function
+*   routine.
+}
+type
+  {
+  *   A separate template for a function routine is defined here.  This is the
+  *   same as the official ESCR_IFUNC_P_T except that the first argument is the
+  *   library use state directly defined for IN and OUT use, as apposed to a
+  *   pointer to the library use state.  The former is how function routines are
+  *   actually defined, but the ESCR_IFUNC_P_T template can't be defined that
+  *   way due to circular dependencies that would be required of such a
+  *   definition.  Both definitions should result in the same code.
+  }
+  func_routine_p_t = ^procedure (
+    in out e: escr_t;                  {library use state}
+    in out instr: escr_instr_t;        {function source string, name and parameters}
+    in out exp: univ string_var_arg_t; {resulting function expansion, starts empty}
+    out   stat: sys_err_t);
+    val_param;
+
+procedure addfunc (                    {add intrinsic function to functions table}
+  in      name: string;                {function name}
+  in      function_p: func_routine_p_t; {pointer to function routine}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+begin
+  escr_ifunc_add (                     {add intrinsic function to functions table}
+    e_p^,                              {state for this use of the ESCR library}
+    string_v(name),                    {function name}
+    escr_ifunc_p_t(function_p),        {pointer to function routine}
     stat);
   end;
 {
@@ -175,8 +224,6 @@ begin
     string_v('"'),                     {quoted string end}
     stat);
   if sys_error(stat) then goto err;
-
-  escr_inline_func_init (e_p^);        {init for processing inline functions}
   {
   *   Add the standard commands to the commands symbol table.
   }
@@ -208,6 +255,10 @@ begin
   addcmd ('WRITE', addr(escr_cmd_write), stat); if sys_error(stat) then goto err;
   addcmd ('WRITEEND', addr(escr_cmd_writeend), stat); if sys_error(stat) then goto err;
   addcmd ('WRITETO', addr(escr_cmd_writeto), stat); if sys_error(stat) then goto err;
+  {
+  *   Add the intrinsic functions to the functions symbol table.
+  }
+  addfunc ('+', addr(escr_ifun_add), stat); if sys_error(stat) then goto err;
 
   return;
 

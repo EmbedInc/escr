@@ -1,11 +1,57 @@
-{   The code in this module performs the processing of the inline function.
-*   The mechanics of detecting the inline functions and handling their
-*   nested expansions is done in the INLINE module.
+{   Module that contains intrinsic function routines.  These are the functions
+*   that are pre-defined and implemented with compiled code.  Some large
+*   intrinsic function routines are in their own modules, called
+*   ESCR_IFUN_<name>.  The small intrinsic function routines are collected here.
+*
+*   All the intrinsic function routines have this interface:
+*
+*      escr_ifun_<name> (E, INSTR, EXP, STAT)
+*
+*   The function invocation is in INSTR.  This is the string starting with the
+*   function name and including the function arguments.  It does not contain
+*   whatever syntax was used to indicate the start and end of the function
+*   invocation.  The parse index in INSTR is set to next character after the
+*   delimiter after the function name.  In other words, it is ready to parse the
+*   first parameter.  There is no guarantee there are any parameters.  If there
+*   are no parameters, then the parse index will be past the end of the string.
+*
+*   The function routine must write the expansion of the function to EXP.  EXP
+*   is a string initalized to empty.
+*
+*   STAT has been initialized to indicate no error.  If a error is encountered,
+*   STAT must be set accordingly.
 }
-module escr_func;
-define escr_inline_func_init;
-define escr_inline_func;
+module escr_ifun;
+define escr_ifun_add;
 %include 'escr2.ins.pas';
+{
+********************************************************************************
+*
+*   + arg1 ... argn
+*
+*   Returns the sum of all arguments.
+}
+procedure escr_ifun_add (
+  in out  e: escr_t;
+  in out  instr: escr_instr_t;
+  in out  exp: univ string_var_arg_t;
+  out     stat: sys_err_t);
+  val_param;
+
+begin
+  string_appends (exp, '42'(0));
+  end;
+
+
+
+(*******************************************************************************
+********************************************************************************
+**
+**   The remainder of this file is commented out.  It contains the old
+**   subroutine that contained a explicitly list of hard-coded functions that
+**   were not stored in the symbol table.
+**
+
 
 const
 {
@@ -18,86 +64,6 @@ const
   env = 1.0 / ek;                      {1 / e}
   ln2 = ln(2.0);                       {natural log of 2}
 
-var
-  fnames: string_var1024_t;            {all the inline function names, upper case}
-{
-****************************************************************************
-*
-*   Initialize for processing inline functions.  This routine must be called
-*   once before the other routines in this module.
-}
-procedure escr_inline_func_init (      {one-time init for processing inline funcs}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
-  val_param;
-
-begin
-  fnames.max := size_char(fnames.str); {init function names list to empty}
-  fnames.len := 0;
-{
-*   Build the list of function names.
-}
-  string_append_token (fnames, string_v('LAB')); {1}
-  string_append_token (fnames, string_v('STR')); {2}
-  string_append_token (fnames, string_v('QSTR')); {3}
-  string_append_token (fnames, string_v('FFTC2')); {4}
-  string_append_token (fnames, string_v('FFFREQ')); {5}
-  string_append_token (fnames, string_v('SIN')); {6}
-  string_append_token (fnames, string_v('COS')); {7}
-  string_append_token (fnames, string_v('TAN')); {8}
-  string_append_token (fnames, string_v('PI')); {9}
-  string_append_token (fnames, string_v('RDEG')); {10}
-  string_append_token (fnames, string_v('DEGR')); {11}
-  string_append_token (fnames, string_v('+')); {12}
-  string_append_token (fnames, string_v('-')); {13}
-  string_append_token (fnames, string_v('*')); {14}
-  string_append_token (fnames, string_v('/')); {15}
-  string_append_token (fnames, string_v('DIV')); {16}
-  string_append_token (fnames, string_v('RND')); {17}
-  string_append_token (fnames, string_v('TRUNC')); {18}
-  string_append_token (fnames, string_v('V')); {19}
-  string_append_token (fnames, string_v('ABS')); {20}
-  string_append_token (fnames, string_v('EXP')); {21}
-  string_append_token (fnames, string_v('LOG2')); {22}
-  string_append_token (fnames, string_v('SQRT')); {23}
-  string_append_token (fnames, string_v('SHIFTR')); {24}
-  string_append_token (fnames, string_v('SHIFTL')); {25}
-  string_append_token (fnames, string_v('<')); {26}
-  string_append_token (fnames, string_v('<=')); {27}
-  string_append_token (fnames, string_v('=')); {28}
-  string_append_token (fnames, string_v('>=')); {29}
-  string_append_token (fnames, string_v('>')); {30}
-  string_append_token (fnames, string_v('<>')); {31}
-  string_append_token (fnames, string_v('NOT')); {32}
-  string_append_token (fnames, string_v('AND')); {33}
-  string_append_token (fnames, string_v('OR')); {34}
-  string_append_token (fnames, string_v('XOR')); {35}
-  string_append_token (fnames, string_v('UCASE')); {36}
-  string_append_token (fnames, string_v('LCASE')); {37}
-  string_append_token (fnames, string_v('~')); {38}
-  string_append_token (fnames, string_v('SLEN')); {39}
-  string_append_token (fnames, string_v('CHAR')); {40}
-  string_append_token (fnames, string_v('SUBSTR')); {41}
-  string_append_token (fnames, string_v('TNAM')); {42}
-  string_append_token (fnames, string_v('LNAM')); {43}
-  string_append_token (fnames, string_v('IF')); {44}
-  string_append_token (fnames, string_v('CHARS')); {45}
-  string_append_token (fnames, string_v('SINDX')); {46}
-  string_append_token (fnames, string_v('SEQ')); {47}
-  string_append_token (fnames, string_v('NOW')); {48}
-  string_append_token (fnames, string_v('DATE')); {49}
-  string_append_token (fnames, string_v('EVAR')); {50}
-  string_append_token (fnames, string_v('EXIST')); {51}
-  string_append_token (fnames, string_v('ARG')); {52}
-  string_append_token (fnames, string_v('INT')); {53}
-  string_append_token (fnames, string_v('FP')); {54}
-  string_append_token (fnames, string_v('E')); {55}
-  string_append_token (fnames, string_v('CCODE')); {56}
-  string_append_token (fnames, string_v('SYM')); {57}
-  string_append_token (fnames, string_v('MAX')); {58}
-  string_append_token (fnames, string_v('MIN')); {59}
-  string_append_token (fnames, string_v('ENG')); {60}
-  string_append_token (fnames, string_v('LOG')); {61}
-  end;
 {
 ****************************************************************************
 *
@@ -2202,3 +2168,4 @@ arg_missing:                           {a required argument is missing}
   sys_msg_parm_vstr (msg_parm[1], funn);
   escr_err_atline (e, 'pic', 'func_arg_missing', msg_parm, 1);
   end;
+*)

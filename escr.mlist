@@ -7,8 +7,8 @@ escr_cmd_subr.obj
 escr_err.obj
 escr_exblock.obj
 escr_format.obj
-escr_func.obj
 escr_get.obj
+escr_ifun.obj
 escr_infile.obj
 escr_inh.obj
 escr_inline.obj
@@ -17,6 +17,7 @@ escr_out.obj
 escr_run.obj
 escr_sym.obj
 escr_sym_cmd.obj
+escr_sym_func.obj
 escr_syt.obj
 escr_term.obj
 escr_ulab.obj

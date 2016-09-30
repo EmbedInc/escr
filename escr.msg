@@ -55,3 +55,6 @@ msg err17
 msg err18
   lan english -def
     End of function "%p1s" not found.
+msg err19
+  lan english -def
+    No such function "%p1s".

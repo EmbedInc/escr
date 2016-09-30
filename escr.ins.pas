@@ -35,6 +35,8 @@ const
   escr_err_exclnend_k = 16;            {syntax exclusion not ended}
   escr_err_scommnend_k = 17;           {script comment not ended}
   escr_err_funcnend_k = 18;            {function not ended}
+  escr_err_funcnfnd_k = 19;            {function not found}
+  escr_err_notfunc_k = 20;             {symbol is not a function}
 {
 *   Derived constants.
 }
@@ -96,6 +98,11 @@ escr_dtype_time_k: (                   {absolute time descriptor}
     escr_sym_imacro_k,                 {intrinsic macro, compiled routine}
     escr_sym_label_k);                 {label for a specific input files line}
 
+  escr_instr_t = record                {input string to be parsed}
+    p: string_index_t;                 {1-N string string parse index}
+    s: string_var8192_t;               {the string}
+    end;
+
   escr_isubr_p_t = ^procedure (        {template for subroutine implemented by compiled code}
     in    e_p: escr_p_t;               {points to state for this use of the ESCR system}
     out   stat: sys_err_t);            {completion status}
@@ -108,7 +115,7 @@ escr_dtype_time_k: (                   {absolute time descriptor}
 
   escr_ifunc_p_t = ^procedure (        {template for compiled function routine}
     in    e_p: escr_p_t;               {points to state for this use of the ESCR system}
-    in    fstr: univ string_var_arg_t; {function source string, delimiters removed}
+    in out instr: escr_instr_t;        {function source string, name and parameters}
     in out exp: univ string_var_arg_t; {resulting function expansion, starts empty}
     out   stat: sys_err_t);            {completion status}
     val_param;
@@ -143,6 +150,9 @@ escr_sym_isubr_k: (                    {intrinsic subroutine, implemented by com
       );
 escr_sym_macro_k: (                    {macro}
       macro_line_p: escr_inline_p_t;   {points to first line of macro definition}
+      );
+escr_sym_imacro_k: (                   {intrinsic macro, implemented by compiled routine}
+      imacro_p: escr_imacro_p_t;       {pointer to routine that implements the macro}
       );
 escr_sym_func_k: (                     {function defined by user code}
       func_line_p: escr_inline_p_t;    {points to first line of function definition}
@@ -374,6 +384,13 @@ procedure escr_icmd_add (              {add intrinsic command}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {name of the command to add}
   in      routine_p: escr_icmd_p_t;    {pointer to routine that implements the command}
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifunc_add (             {add intrinsic function}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {name of the function to add}
+  in      routine_p: escr_ifunc_p_t;   {pointer to routine that implements the function}
   out     stat: sys_err_t);
   val_param; extern;
 

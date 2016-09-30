@@ -148,6 +148,17 @@ procedure escr_cmd_writeto (
   out     stat: sys_err_t);
   val_param; extern;
 {
+*   Subroutines that implement the individual preprocessor commands.  Each
+*   of these have the same interface.  See the header comments in module
+*   ESCR_IFUN for the details.
+}
+procedure escr_ifun_add (
+  in out  e: escr_t;
+  in out  instr: escr_instr_t;
+  in out  exp: univ string_var_arg_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+{
 *
 *   Other entry points.
 }
@@ -384,13 +395,9 @@ procedure escr_inline_expand_line (    {expand all inline functions of a line}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_inline_func_init (      {one-time init for processing inline funcs}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
-  val_param; extern;
-
 procedure escr_inline_func (           {perform inline function operation}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      fstr: univ string_var_arg_t; {function source string, start/end removed}
+  in out  fstr: escr_instr_t;          {function source string, start/end removed}
   in out  lot: string_var8192_t;       {string to append function expansion to}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
@@ -510,6 +517,15 @@ procedure escr_sym_new_cmd (           {create new user-defined command symbol}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
+procedure escr_sym_new_func (          {create new user-defined function symbol}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {symbol name}
+  in      line_p: escr_inline_p_t;     {pointer to first line of function definition}
+  in      global: boolean;             {create global, not local symbol}
+  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
 procedure escr_sym_new_const (         {create new symbol for a constant}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
@@ -523,7 +539,16 @@ procedure escr_sym_new_const (         {create new symbol for a constant}
 procedure escr_sym_new_icmd (          {create new intrinsic command symbol}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
-  in      routine_p: escr_icmd_p_t;    {pointer to routine to command routine}
+  in      routine_p: escr_icmd_p_t;    {pointer to command routine}
+  in      global: boolean;             {create global, not local symbol}
+  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_sym_new_ifunc (         {create new intrinsic function symbol}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {symbol name}
+  in      routine_p: escr_ifunc_p_t;   {pointer to function routine}
   in      global: boolean;             {create global, not local symbol}
   out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}
