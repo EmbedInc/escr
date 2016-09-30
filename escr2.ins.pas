@@ -154,7 +154,6 @@ procedure escr_cmd_writeto (
 }
 procedure escr_ifun_add (
   in out  e: escr_t;
-  in out  instr: escr_instr_t;
   in out  exp: univ string_var_arg_t;
   out     stat: sys_err_t);
   val_param; extern;
@@ -234,6 +233,20 @@ procedure escr_exblock_arg_get_bl (    {get value of argument to specific block}
 
 procedure escr_exblock_close (         {close curr execution block and delete temp state}
   in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param; extern;
+
+function escr_ifn_bool (               {get boolean value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     b: boolean;                  {returned boolean value}
+  out     stat: sys_err_t)
+  :boolean;                            {term was available}
+  val_param; extern;
+
+function escr_ifn_val (                {get arbitrary value of next func parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     val: escr_val_t;             {returned term value}
+  out     stat: sys_err_t)
+  :boolean;                            {term was available}
   val_param; extern;
 
 procedure escr_infile_pop (            {pop back one nested input file level}
@@ -397,7 +410,6 @@ procedure escr_inline_expand_line (    {expand all inline functions of a line}
 
 procedure escr_inline_func (           {perform inline function operation}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  fstr: escr_instr_t;          {function source string, start/end removed}
   in out  lot: string_var8192_t;       {string to append function expansion to}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;

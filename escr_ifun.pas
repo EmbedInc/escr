@@ -33,7 +33,6 @@ define escr_ifun_add;
 }
 procedure escr_ifun_add (
   in out  e: escr_t;
-  in out  instr: escr_instr_t;
   in out  exp: univ string_var_arg_t;
   out     stat: sys_err_t);
   val_param;

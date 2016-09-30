@@ -8,6 +8,7 @@ escr_err.obj
 escr_exblock.obj
 escr_format.obj
 escr_get.obj
+escr_ifn.obj
 escr_ifun.obj
 escr_infile.obj
 escr_inh.obj

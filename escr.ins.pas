@@ -115,7 +115,6 @@ escr_dtype_time_k: (                   {absolute time descriptor}
 
   escr_ifunc_p_t = ^procedure (        {template for compiled function routine}
     in    e_p: escr_p_t;               {points to state for this use of the ESCR system}
-    in out instr: escr_instr_t;        {function source string, name and parameters}
     in out exp: univ string_var_arg_t; {resulting function expansion, starts empty}
     out   stat: sys_err_t);            {completion status}
     val_param;
@@ -319,6 +318,7 @@ escr_inhty_blk_k: (                    {in execution block}
     sym_lab: escr_sytable_t;           {symbol table for input file line labels}
     files_p: escr_infile_p_t;          {points to list of input files}
     ibuf: string_var8192_t;            {current input line after function expansions}
+    funstr: escr_instr_t;              {function string with parse state}
     ip: string_index_t;                {IBUF parse index}
     lparm: string_var8192_t;           {last parameter parsed from input line}
     cmd: string_var32_t;               {name of current command}

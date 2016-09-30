@@ -30,6 +30,7 @@ call src_pas %srcdir% %libname%_err %1
 call src_pas %srcdir% %libname%_exblock %1
 call src_pas %srcdir% %libname%_format %1
 call src_pas %srcdir% %libname%_get %1
+call src_pas %srcdir% %libname%_ifn %1
 call src_pas %srcdir% %libname%_ifun %1
 call src_pas %srcdir% %libname%_infile %1
 call src_pas %srcdir% %libname%_inh %1

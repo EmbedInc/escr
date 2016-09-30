@@ -140,7 +140,6 @@ procedure inline_expand_func (         {expand rest of line starting at inline f
 
 var
   exp: string_var8192_t;               {expansion of remainder of line}
-  funstr: escr_instr_t;                {just the invocation of this function}
   p: string_index_t;                   {input line parse index}
   cleft: sys_int_machine_t;            {number of characters left on input line}
   ii: sys_int_machine_t;               {scratch integer and loop counter}
@@ -149,8 +148,7 @@ label
   nextp;
 
 begin
-  exp.max := size_char(exp.str);       {init local var strings}
-  funstr.s.max := size_char(funstr.s.str);
+  exp.max := size_char(exp.str);       {init local var string}
 
   exp.len := 0;                        {init rest of line to empty}
   inline_expand_lrest (                {expand rest of line into EXP}
@@ -163,7 +161,7 @@ begin
 *   Look for the end of this function.  The content of this function will be
 *   copied to FUNSTR with comments stripped.
 }
-  funstr.s.len := 0;                   {init extracted function content}
+  e.funstr.s.len := 0;                 {init extracted function content}
   p := 1;                              {init EXP input string parse index}
 
   while p <= exp.len do begin          {loop until input string exhausted}
@@ -173,7 +171,7 @@ begin
           exp,                         {input string}
           p,                           {input string parse index}
           e.syexcl_p,                  {pointer to exclusions to check}
-          addr(funstr.s),              {where to copy skipped characters to}
+          addr(e.funstr.s),            {where to copy skipped characters to}
           stat)
         then begin
       if sys_error(stat) then return;  {error ?}
@@ -189,7 +187,7 @@ begin
           stat)
         then begin
       if sys_error(stat) then return;  {error ?}
-      string_append1 (funstr.s, ' ');  {replace comment with single space}
+      string_append1 (e.funstr.s, ' '); {replace comment with single space}
       next;                            {back and check again after this comment}
       end;
     {
@@ -210,9 +208,9 @@ begin
     *   followed by the rest of the expaneded input line after the function end
     *   sequence.
     }
+    e.funstr.p := 1;                   {init to parse at start of function string}
     escr_inline_func (                 {expand function and append result to output string}
       e,                               {state for this use of the ESCR system}
-      funstr,                          {function string with start/end sequences removed}
       lot,                             {string to append function expansion to}
       stat);
     if sys_error(stat) then return;
@@ -225,27 +223,26 @@ begin
     return;
 
 nextp:                                 {done with this input string char, on to next}
-    string_append1 (funstr.s, exp.str[p]); {copy this input string char to output string}
+    string_append1 (e.funstr.s, exp.str[p]); {copy this input string char to output string}
     p := p + 1;                        {to next input string character}
     end;                               {back to check at this new character}
 {
 *   The function end was not found.
 }
   sys_stat_set (escr_subsys_k, escr_err_funcnend_k, stat); {end of function not found}
-  sys_stat_parm_vstr (funstr.s, stat);
+  sys_stat_parm_vstr (e.funstr.s, stat);
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESTR_INLINE_FUNC (E, FSTR, LOT, STAT)
+*   Subroutine ESTR_INLINE_FUNC (E, LOT, STAT)
 *
-*   Perform the operation indicated by the inline function in FSTR.  The
-*   resulting expansion, if any, is appended to LOT.  FSTR contains exactly the
-*   function body.  This is the part just inside the "[" and "]".
+*   Perform the operation indicated by the inline function in FUNSTR.  The
+*   resulting expansion, if any, is appended to LOT.  FUNSTR contains exactly
+*   the function body.  This is the part just inside the "[" and "]".
 }
 procedure escr_inline_func (           {perform inline function operation}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  fstr: escr_instr_t;          {function source string, start/end removed}
   in out  lot: string_var8192_t;       {string to append function expansion to}
   out     stat: sys_err_t);            {completion status}
   val_param;
@@ -261,8 +258,7 @@ begin
 {
 *   Parse the function name into NAME.
 }
-  fstr.p := 1;                         {init function invocation string parse index}
-  string_token (fstr.s, fstr.p, name, stat); {get function name into NAME}
+  string_token (e.funstr.s, e.funstr.p, name, stat); {get function name into NAME}
   if string_eos(stat) then begin       {end of string, no function name ?}
     name.len := 0;
     end;
@@ -291,7 +287,6 @@ escr_sym_ifunc_k: begin                {intrinsic function}
       sys_error_none (stat);           {init to no error encountered in function}
       sym_p^.ifunc_p^ (                {run the intrinsic function routine}
         addr(e),                       {pointer to this ESCR system use state}
-        fstr,                          {function invocation string, parse index after name}
         exp,                           {returned function expansion}
         stat);
       if sys_error(stat) then return;
