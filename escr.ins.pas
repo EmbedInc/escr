@@ -37,6 +37,9 @@ const
   escr_err_funcnend_k = 18;            {function not ended}
   escr_err_funcnfnd_k = 19;            {function not found}
   escr_err_notfunc_k = 20;             {symbol is not a function}
+  escr_err_notval_k = 21;              {symbol does not have a value}
+  escr_err_termbad_k = 22;             {string is not a valid term}
+  escr_err_missingparm_k = 23;         {required parameter is missing}
 {
 *   Derived constants.
 }

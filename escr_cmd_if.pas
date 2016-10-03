@@ -40,14 +40,17 @@ var
   pick: sys_int_machine_t;             {number of keyword picked from list}
   cond: boolean;                       {the IF condition value}
 
+label
+  err_missing;
+
 begin
   escr_inh_new (e);                    {create new execution inhibit layer}
   e.inhibit_p^.inhty := escr_inhty_if_k; {this inhibit is for IF command}
   if e.inhibit_p^.inh then return;     {already inhibited, just track IF nesting ?}
   e.inhibit_p^.if_flags := [];         {init all IF control flags to off}
 
-  if not escr_get_bool (e, cond) then begin {get the value of the conditional}
-    escr_err_parm_missing (e, '', '', nil, 0);
+  if not escr_get_bool (e, cond, stat) then begin {get the value of the conditional}
+    goto err_missing;
     end;
   if cond then begin                   {the IF condition is TRUE}
     e.inhibit_p^.if_flags := e.inhibit_p^.if_flags + [escr_ifflag_true_k]; {set flag accordingly}
@@ -63,6 +66,13 @@ begin
       e.inhibit_p^.if_flags + [escr_ifflag_nothen_k];
     end;
   escr_get_end (e);                    {error if anything else on command line}
+  return;
+{
+*   Abort due to missing required parameter.
+}
+err_missing:
+  if sys_error(stat) then return;      {return with any previous hard error}
+  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
   end;
 {
 ********************************************************************************

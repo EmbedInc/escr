@@ -58,3 +58,15 @@ msg err18
 msg err19
   lan english -def
     No such function "%p1s".
+msg err20
+  lan english -def
+    Symbol "%p1s" is not a function.
+msg err21
+  lan english -def
+    Symbol "%p1s" does not have a value (not a variable or constant).
+msg err22
+  lan english -def
+    String "%p1s" can not be interpreted as a value.
+msg err23
+  lan english -def
+    A required parameter is missing.

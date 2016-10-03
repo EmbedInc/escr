@@ -60,7 +60,7 @@ var
   hval: boolean;                       {initial value was specified}
 
 label
-  done_cmdline, make_new;
+  done_cmdline, make_new, err_missing;
 
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
@@ -89,7 +89,7 @@ otherwise
     end;
 
   if not escr_get_token (e, name)      {get the variable name into NAME}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+    then goto err_missing;
 
   dtype := escr_dtype_str_k;           {init to default data type}
   hval := false;                       {init to no initial value specified}
@@ -120,8 +120,8 @@ done_cmdline:                          {done reading command line except initial
 
   if hval then begin                   {still need to read initial value parameter ?}
     val.dtype := dtype;                {indicate data type initial value must have}
-    if not escr_get_val_dtype (e, val) {read initial value only to verify it}
-      then escr_err_parm_missing (e, '', '', nil, 0);
+    if not escr_get_val_dtype (e, val, stat) {read initial value only to verify it}
+      then goto err_missing;
     end;
   return;                              {use the existing symbol}
 {
@@ -132,9 +132,16 @@ make_new:                              {a new symbol needs to be created}
     e, name, dtype, escr_string_var_len_k, global, sym_p, stat);
   if sys_error(stat) then return;
   if hval then begin                   {set new variable to the specified initial value ?}
-    if not escr_get_val_dtype (e, sym_p^.var_val) {get value and convert to var's data type}
-      then escr_err_parm_missing (e, '', '', nil, 0);
+    if not escr_get_val_dtype (e, sym_p^.var_val, stat) {get value and convert to var's data type}
+      then goto err_missing;
     end;
+  return;
+{
+*   Abort due to missing required parameter.
+}
+err_missing:
+  if sys_error(stat) then return;      {return with any previous hard error}
+  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
   end;
 {
 ********************************************************************************
@@ -155,12 +162,15 @@ var
   msg_parm:                            {parameter references for messages}
     array[1..max_msg_parms] of sys_parm_msg_t;
 
+label
+  err_missing;
+
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   name.max := size_char(name.str);     {init local var string}
 
   if not escr_get_token (e, name)      {get the variable name into NAME}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+    then goto err_missing;
 
   escr_sym_find (e, name, e.sym_var, sym_p); {get pointer to the symbol descriptor}
   if sym_p = nil then begin            {no such symbol ?}
@@ -172,8 +182,15 @@ begin
     escr_err_atline (e, 'pic', 'sym_not_variable', msg_parm, 1);
     end;
 
-  if not escr_get_val_dtype (e, sym_p^.var_val) {get value and convert to var's dtype}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+  if not escr_get_val_dtype (e, sym_p^.var_val, stat) {get value and convert to var's dtype}
+    then goto err_missing;
+  return;
+{
+*   Abort due to missing required parameter.
+}
+err_missing:
+  if sys_error(stat) then return;      {return with any previous hard error}
+  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
   end;
 {
 ********************************************************************************
@@ -194,6 +211,9 @@ var
   name: string_var80_t;                {constant name}
   tk: string_var80_t;                  {scratch token}
 
+label
+  err_missing;
+
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   name.max := size_char(name.str);     {init local var strings}
@@ -202,24 +222,24 @@ begin
 *   Get the symbol name.
 }
   if not escr_get_token (e, name)      {get the constant name into NAME}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+    then goto err_missing;
 {
 *   Get the data type, if present, and read up to the "=".
 }
   val.dtype := escr_dtype_str_k;       {init to default data type}
   p := e.ip;                           {save parse index before this token}
   if not escr_get_token (e, tk)        {get DTYPE or "=" token}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+    then goto err_missing;
   if not string_equal (tk, string_v('=')) then begin {not "=", assume dtype ?}
     e.ip := p;                         {restore parse index to before dtype token}
     if not escr_get_dtype (e, val.dtype) {get the explicit data type}
-      then escr_err_parm_missing (e, '', '', nil, 0);
+      then goto err_missing;
     escr_get_keyword (e, '=', pick);   {parse the "=" token}
-    if pick = 0 then escr_err_parm_missing (e, '', '', nil, 0);
+    if pick = 0 then goto err_missing;
     end;
   escr_val_init (e, val.dtype, val);   {set up VAL for the indicated data type}
-  if not escr_get_val_dtype (e, val)   {get the constant's value}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+  if not escr_get_val_dtype (e, val, stat) {get the constant's value}
+    then goto err_missing;
 
   len := 0;                            {init data type length parameter to arbitrary value}
   case val.dtype of                    {check for data types that use LEN}
@@ -231,6 +251,13 @@ escr_dtype_str_k: begin                {STRING}
     e, name, val.dtype, len, true, sym_p, stat);
   if sys_error(stat) then return;
   escr_val_copy (e, val, sym_p^.const_val); {copy the value into the constant descriptor}
+  return;
+{
+*   Abort due to missing required parameter.
+}
+err_missing:
+  if sys_error(stat) then return;      {return with any previous hard error}
+  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
   end;
 {
 ********************************************************************************
@@ -245,15 +272,25 @@ procedure escr_cmd_del (
 var
   name: string_var80_t;                {symbol name}
 
+label
+  err_missing;
+
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   name.max := size_char(name.str);     {init local var string}
 
   if not escr_get_token (e, name)      {get the variable name into NAME}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+    then goto err_missing;
   escr_get_end (e);                    {no more parameters allowed}
 
   escr_sym_del_name (e, e.sym_var, name, stat); {delete the symbol}
+  return;
+{
+*   Abort due to missing required parameter.
+}
+err_missing:
+  if sys_error(stat) then return;      {return with any previous hard error}
+  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
   end;
 {
 ********************************************************************************
@@ -461,14 +498,17 @@ var
   file_p: escr_infile_p_t;             {pointer to info about new file}
   stat2: sys_err_t;
 
+label
+  err_missing;
+
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   fnam.max := size_char(fnam.str);     {init local var strings}
   olddir.max := size_char(olddir.str);
   newdir.max := size_char(newdir.str);
 
-  if not escr_get_str (e, fnam)        {get new file name into FNAM}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+  if not escr_get_str (e, fnam, stat)  {get new file name into FNAM}
+    then goto err_missing;
   escr_get_end (e);                    {no more parameters allowed}
 
   string_pathname_split (              {get source file's directory in NEWDIR}
@@ -482,6 +522,13 @@ begin
   if sys_error(stat) then return;
   sys_error_abort (stat2, '', '', nil, 0);
   escr_exblock_inline_push (e, file_p^.lines_p); {set next line to first line in new file}
+  return;
+{
+*   Abort due to missing required parameter.
+}
+err_missing:
+  if sys_error(stat) then return;      {return with any previous hard error}
+  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
   end;
 {
 ********************************************************************************
@@ -499,7 +546,8 @@ procedure escr_cmd_write (
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  escr_get_args_str (e, e.obuf);       {get all arguments concatenated as strings}
+  escr_get_args_str (e, e.obuf, stat); {get all arguments concatenated as strings}
+  if sys_error(stat) then return;
   escr_write_obuf (e, stat);
   end;
 {
@@ -517,7 +565,9 @@ procedure escr_cmd_show (
 
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
-  escr_get_args_str (e, e.obuf);       {get all arguments concatenated as strings}
+
+  escr_get_args_str (e, e.obuf, stat); {get all arguments concatenated as strings}
+  if sys_error(stat) then return;
   escr_show_obuf (e);
   end;
 {
@@ -533,15 +583,25 @@ procedure escr_cmd_writeto (
 var
   fnam: string_treename_t;             {name of new file to write to}
 
+label
+  err_missing;
+
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   fnam.max := size_char(fnam.str);     {init local var string}
 
-  if not escr_get_str (e, fnam)        {get new file name into FNAM}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+  if not escr_get_str (e, fnam, stat)  {get new file name into FNAM}
+    then goto err_missing;
   escr_get_end (e);                    {no more parameters allowed}
 
   escr_out_open (e, fnam, stat);       {save curr state, open new file}
+  return;
+{
+*   Abort due to missing required parameter.
+}
+err_missing:
+  if sys_error(stat) then return;      {return with any previous hard error}
+  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
   end;
 {
 ********************************************************************************

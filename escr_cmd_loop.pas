@@ -31,7 +31,7 @@ var
   found: boolean;                      {symbol table entry found}
 
 label
-  loop_from;
+  loop_from, err_missing;
 
 begin
   name.max := size_char(name.str);     {init local var string}
@@ -71,7 +71,7 @@ begin
   loop_p^.looptype := escr_looptype_sym_k; {looping over list of symbols}
 
   if not escr_get_token (e, name)      {get the variable name into NAME}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+    then goto err_missing;
   escr_get_end (e);                    {no more command parameters allowed}
 {
 *   Create the local list of symbol names.
@@ -127,16 +127,16 @@ begin
 }
 2: begin
   if not escr_get_token (e, name)      {get the variable name into NAME}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+    then goto err_missing;
 
   escr_get_keyword (e, 'FROM', pick);
 loop_from:                             {common code with /LOOP FROM}
-  if not escr_get_int (e, loop_p^.for_start)
-    then escr_err_parm_missing (e, '', '', nil, 0);
+  if not escr_get_int (e, loop_p^.for_start, stat)
+    then goto err_missing;
 
   escr_get_keyword (e, 'TO', pick);
-  if not escr_get_int (e, loop_p^.for_end)
-    then escr_err_parm_missing (e, '', '', nil, 0);
+  if not escr_get_int (e, loop_p^.for_end, stat)
+    then goto err_missing;
 
   if loop_p^.for_end >= loop_p^.for_start {set default increment from loop direction}
     then loop_p^.for_inc := 1
@@ -144,8 +144,8 @@ loop_from:                             {common code with /LOOP FROM}
 
   escr_get_keyword (e, 'BY', pick);
   if pick = 1 then begin               {BY clause exists ?}
-    if not escr_get_int (e, loop_p^.for_inc)
-      then  escr_err_parm_missing (e, '', '', nil, 0);
+    if not escr_get_int (e, loop_p^.for_inc, stat)
+      then goto err_missing;
     escr_get_end (e);                  {nothing more allowed on the command line}
     end;
   {
@@ -210,8 +210,8 @@ loop_from:                             {common code with /LOOP FROM}
   loop_p^.for_curr := 1;               {value for first iteration}
   loop_p^.for_inc := 1;                {increment each iteration}
 
-  if not escr_get_int (e, loop_p^.for_end) {get number of times to loop}
-    then escr_err_parm_missing (e, '', '', nil, 0);
+  if not escr_get_int (e, loop_p^.for_end, stat) {get number of times to loop}
+    then goto err_missing;
 
   if loop_p^.for_end < 1 then begin    {will do 0 iterations ?}
     e.inhibit_p^.inh := true;          {inhibit execution for this block}
@@ -224,6 +224,13 @@ loop_from:                             {common code with /LOOP FROM}
     end;                               {end of looptype cases}
 
   e.exblock_p^.loop_p := loop_p;       {add loop descriptor to this execution block}
+  return;
+{
+*   Abort due to missing required parameter.
+}
+err_missing:
+  if sys_error(stat) then return;      {return with any previous hard error}
+  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
   end;
 {
 ********************************************************************************

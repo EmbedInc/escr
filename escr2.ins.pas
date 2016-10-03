@@ -297,12 +297,14 @@ procedure escr_format_int (            {create specifically formatted integer st
 
 procedure escr_get_args_str (          {get string representation of remaining parameters}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  str: univ string_var_arg_t); {concatenation of remaining args converted to strings}
+  in out  str: univ string_var_arg_t;  {concatenation of remaining args converted to strings}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 function escr_get_bool (               {get next parameter as boolean}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     b: boolean)                  {returned boolean value}
+  out     b: boolean;                  {returned boolean value}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {TRUE if input token was available}
   val_param; extern;
 
@@ -318,19 +320,22 @@ procedure escr_get_end (               {make sure no more tokens left on input l
 
 function escr_get_fp (                 {get next parameter as floating point}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     fp: sys_fp_max_t)            {returned floating point value}
+  out     fp: sys_fp_max_t;            {returned floating point value}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {TRUE if input token was available}
   val_param; extern;
 
 function escr_get_int (                {get next parameter as an integer}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     i: sys_int_max_t)            {returned integer value}
+  out     i: sys_int_max_t;            {returned integer value}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {TRUE if input token was available}
   val_param; extern;
 
 function escr_get_time (               {get the next token as a time value}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     time: sys_clock_t)           {returned time value}
+  out     time: sys_clock_t;           {returned time value}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {TRUE if input token was available}
   val_param; extern;
 
@@ -342,7 +347,8 @@ procedure escr_get_keyword (           {get next parameter as keyword in a list}
 
 function escr_get_str (                {get string representation of next parameter}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  str: univ string_var_arg_t)  {returned string}
+  in out  str: univ string_var_arg_t;  {returned string}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {TRUE if input token was available}
   val_param; extern;
 
@@ -366,13 +372,15 @@ function escr_get_token (              {get next input stream token}
 
 function escr_get_val (                {get value of next input stream token}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     val: escr_val_t)             {returned value}
+  out     val: escr_val_t;             {returned value}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {TRUE if token available}
   val_param; extern;
 
 function escr_get_val_dtype (          {get next input value, to dtype of VAL}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  val: escr_val_t)             {returned value, DTYPE specifies data type}
+  in out  val: escr_val_t;             {returned value, DTYPE specifies data type}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {TRUE if token available}
   val_param; extern;
 
@@ -581,7 +589,8 @@ function escr_term_get (               {get value of next term in list}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fstr: univ string_var_arg_t; {source string, term will be next token}
   in out  p: string_index_t;           {source string parse index}
-  out     val: escr_val_t)             {returned value of the term}
+  out     val: escr_val_t;             {returned value of the term}
+  out     stat: sys_err_t)             {completion status, no error on func TRUE}
   :boolean;                            {TRUE if term was available}
   val_param; extern;
 
