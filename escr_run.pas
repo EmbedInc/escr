@@ -184,7 +184,7 @@ otherwise
     end;
 
   if not e.inhibit_p^.inh then begin   {don't check unused tokens if not executed}
-    escr_get_end (e);                  {error if input line not exhausted}
+    if not escr_get_end (e, stat) then return; {abort on extra parameter}
     end;
   if e.obuf.len > 0 then escr_write_obuf (e, stat); {write any line fragment left in out buffer}
   if sys_error(stat) then return;

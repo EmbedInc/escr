@@ -40,6 +40,14 @@ const
   escr_err_notval_k = 21;              {symbol does not have a value}
   escr_err_termbad_k = 22;             {string is not a valid term}
   escr_err_missingparm_k = 23;         {required parameter is missing}
+  escr_err_notbool_k = 24;             {not convertable to BOOL type}
+  escr_err_notint_k = 25;              {not convertable to INTEGER type}
+  escr_err_nottime_k = 26;             {not convertable to TIME type}
+  escr_err_notfp_k = 27;               {not convertable to REAL type}
+  escr_err_notintfp_k = 28;            {not convertable to INTEGER or REAL type}
+  escr_err_badparm_k = 29;             {bad parameter, cmd name, parm string}
+  escr_err_baddtype_k = 30;            {bad data type name, parm}
+  escr_err_extra_k = 31;               {too many parameters, first extra}
 {
 *   Derived constants.
 }

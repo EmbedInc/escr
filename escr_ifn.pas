@@ -20,9 +20,7 @@ function escr_ifn_val (                {get arbitrary value of next func paramet
   val_param;
 
 begin
-  escr_ifn_val := false;
-  sys_stat_set (sys_subsys_k, sys_stat_not_impl_name_k, stat);
-  sys_stat_parm_str ('ESCR_IFN_VAL', stat);
+  escr_ifn_val := escr_term_get (e, e.funstr.s, e.funstr.p, val, stat);
   end;
 {
 ********************************************************************************

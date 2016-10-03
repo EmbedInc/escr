@@ -47,7 +47,9 @@ begin
 
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
 
-  escr_get_keyword (e, 'SYMBOLS FOR FROM N', pick); {get looptype keyword}
+  escr_get_keyword (e, 'SYMBOLS FOR FROM N', pick, stat); {get looptype keyword}
+  if sys_error(stat) then return;
+
   util_mem_grab (                      {allocate loop descriptor}
     sizeof(loop_p^), e.exblock_p^.mem_p^, false, loop_p);
   loop_p^.looptype := escr_looptype_unc_k; {init loop descriptor to default}
@@ -60,7 +62,7 @@ begin
 *   /LOOP with no parameters.
 }
 0: begin
-  escr_get_end (e);                    {no more command parameters allowed}
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
   end;
 {
 ******************************
@@ -72,7 +74,7 @@ begin
 
   if not escr_get_token (e, name)      {get the variable name into NAME}
     then goto err_missing;
-  escr_get_end (e);                    {no more command parameters allowed}
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
 {
 *   Create the local list of symbol names.
 }
@@ -129,12 +131,14 @@ begin
   if not escr_get_token (e, name)      {get the variable name into NAME}
     then goto err_missing;
 
-  escr_get_keyword (e, 'FROM', pick);
+  escr_get_keyword (e, 'FROM', pick, stat);
+  if sys_error(stat) then return;
 loop_from:                             {common code with /LOOP FROM}
   if not escr_get_int (e, loop_p^.for_start, stat)
     then goto err_missing;
 
-  escr_get_keyword (e, 'TO', pick);
+  escr_get_keyword (e, 'TO', pick, stat);
+  if sys_error(stat) then return;
   if not escr_get_int (e, loop_p^.for_end, stat)
     then goto err_missing;
 
@@ -142,11 +146,12 @@ loop_from:                             {common code with /LOOP FROM}
     then loop_p^.for_inc := 1
     else loop_p^.for_inc := -1;
 
-  escr_get_keyword (e, 'BY', pick);
+  escr_get_keyword (e, 'BY', pick, stat);
+  if sys_error(stat) then return;
   if pick = 1 then begin               {BY clause exists ?}
     if not escr_get_int (e, loop_p^.for_inc, stat)
       then goto err_missing;
-    escr_get_end (e);                  {nothing more allowed on the command line}
+    if not escr_get_end (e, stat) then return; {abort on extra parameter}
     end;
   {
   *   The /LOOP command line has been parsed.  NAME is the name of the temporary
@@ -348,7 +353,7 @@ begin
     end;
   if e.inhibit_p^.inh then goto del_block; {execution is inhibited ?}
 
-  escr_get_end (e);                    {no command parameters allowed}
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
   if escr_loop_iter(e) then return;    {back to do next loop iteration ?}
 
 del_block:                             {delete this block}

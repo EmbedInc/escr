@@ -59,13 +59,14 @@ begin
 
   e.inhibit_p^.inh := false;           {init execution enabled following IF}
 
-  escr_get_keyword (e, 'THEN', pick);  {read THEN keyword if present}
+  escr_get_keyword (e, 'THEN', pick, stat); {read THEN keyword if present}
+  if sys_error(stat) then return;
   if pick = 1 then begin               {THEN keyword used ?}
     e.inhibit_p^.inh := not cond;      {enable execution only if condition was true}
     e.inhibit_p^.if_flags :=           {THEN and command not allowed}
       e.inhibit_p^.if_flags + [escr_ifflag_nothen_k];
     end;
-  escr_get_end (e);                    {error if anything else on command line}
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
   return;
 {
 *   Abort due to missing required parameter.
@@ -88,7 +89,7 @@ begin
   if e.inhibit_p^.inhty <> escr_inhty_if_k then begin {not in IF structure ?}
     escr_err_atline (e, 'pic', 'not_in_if', nil, 0);
     end;
-  escr_get_end (e);                    {error if anything else on command line}
+  if not escr_get_end (e, stat) then return; {abort if anything on command line}
   if e.inhibit_p^.prev_p^.inh then return; {whole IF inhibited, just tracking nesting ?}
 
   if escr_ifflag_nothen_k in e.inhibit_p^.if_flags then begin {THEN not allowed here ?}
@@ -114,7 +115,7 @@ begin
   if e.inhibit_p^.inhty <> escr_inhty_if_k then begin {not in IF structure ?}
     escr_err_atline (e, 'pic', 'not_in_if', nil, 0);
     end;
-  escr_get_end (e);                    {error if anything else on command line}
+  if not escr_get_end (e, stat) then return; {abort if anything on command line}
   if e.inhibit_p^.prev_p^.inh then return; {whole IF inhibited, just tracking nesting ?}
 
   if escr_ifflag_noelse_k in e.inhibit_p^.if_flags then begin {ELSE not allowed here ?}
@@ -150,5 +151,5 @@ begin
     end;
 
   escr_inh_end (e);                    {remove the execution inhibit for the IF structure}
-  escr_get_end (e);                    {error if anything else on command line}
+  discard( escr_get_end (e, stat) );   {error on extra parameter}
   end;

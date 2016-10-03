@@ -70,3 +70,27 @@ msg err22
 msg err23
   lan english -def
     A required parameter is missing.
+msg err24
+  lan english -def
+    The term can not be converted to BOOL type.
+msg err25
+  lan english -def
+    The term can not be converted to INTEGER type.
+msg err26
+  lan english -def
+    The term can not be converted to TIME type.
+msg err27
+  lan english -def
+    The term can not be converted to REAL type.
+msg err28
+  lan english -def
+    The term can not be converted to INTEGER or REAL type.
+msg err29
+  lan english -def
+    Parameter "%p1s" to command "%p2s" is unrecognized.
+msg err30
+  lan english -def
+    "%p1s" is not the name of data type.
+msg err31
+  lan english -def
+    Too many parameters found.  The first unexpected parameter was "%p1s".

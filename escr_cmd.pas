@@ -72,7 +72,7 @@ begin
   global := true;                      {init to create global symbol}
   escr_get_keyword (e,                 {get subcommand choice and set SCMD}
     'NEW EXIST LOCAL',
-     pick);
+     pick, stat);
   case pick of
 1:  scmd := scmd_new_k;                {NEW}
 2:  scmd := scmd_exist_k;              {EXISTS}
@@ -85,7 +85,7 @@ begin
       global := false;
       end;
 otherwise
-    escr_err_parm_last_bad (e);
+    return;
     end;
 
   if not escr_get_token (e, name)      {get the variable name into NAME}
@@ -100,7 +100,8 @@ otherwise
         (tk.str[1] <> '=')
         then begin
       e.ip := p;                       {restore parse position to before token}
-      discard( escr_get_dtype (e, dtype) ); {get the optional data type}
+      discard( escr_get_dtype (e, dtype, stat) ); {get the optional data type}
+      if sys_error(stat) then return;
       if not escr_get_token (e, tk) then goto done_cmdline; {hit end of command line ?}
       if (tk.len <> 1) or (tk.str[1] <> '=') {not "=" keyword as expected ?}
         then escr_err_parm_bad (e, tk);
@@ -232,10 +233,10 @@ begin
     then goto err_missing;
   if not string_equal (tk, string_v('=')) then begin {not "=", assume dtype ?}
     e.ip := p;                         {restore parse index to before dtype token}
-    if not escr_get_dtype (e, val.dtype) {get the explicit data type}
+    if not escr_get_dtype (e, val.dtype, stat) {get the explicit data type}
       then goto err_missing;
-    escr_get_keyword (e, '=', pick);   {parse the "=" token}
-    if pick = 0 then goto err_missing;
+    escr_get_keyword (e, '=', pick, stat); {parse the "=" token}
+    if pick <= 0 then goto err_missing;
     end;
   escr_val_init (e, val.dtype, val);   {set up VAL for the indicated data type}
   if not escr_get_val_dtype (e, val, stat) {get the constant's value}
@@ -250,7 +251,8 @@ escr_dtype_str_k: begin                {STRING}
   escr_sym_new_const (                 {create the new constant symbol}
     e, name, val.dtype, len, true, sym_p, stat);
   if sys_error(stat) then return;
-  escr_val_copy (e, val, sym_p^.const_val); {copy the value into the constant descriptor}
+  escr_val_copy (e, val, sym_p^.const_val, stat); {copy the value into the constant descriptor}
+  if sys_error(stat) then return;
   return;
 {
 *   Abort due to missing required parameter.
@@ -281,8 +283,7 @@ begin
 
   if not escr_get_token (e, name)      {get the variable name into NAME}
     then goto err_missing;
-  escr_get_end (e);                    {no more parameters allowed}
-
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
   escr_sym_del_name (e, e.sym_var, name, stat); {delete the symbol}
   return;
 {
@@ -460,7 +461,7 @@ begin
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  escr_get_end (e);                    {no command parameters allowed}
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
 
   string_appends (e.obuf, ';'(0));     {leave blank comment line before list}
   escr_write_obuf (e, stat);
@@ -509,7 +510,8 @@ begin
 
   if not escr_get_str (e, fnam, stat)  {get new file name into FNAM}
     then goto err_missing;
-  escr_get_end (e);                    {no more parameters allowed}
+
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
 
   string_pathname_split (              {get source file's directory in NEWDIR}
     e.exblock_p^.inpos_p^.last_p^.file_p^.tnam, newdir, olddir);
@@ -592,7 +594,7 @@ begin
 
   if not escr_get_str (e, fnam, stat)  {get new file name into FNAM}
     then goto err_missing;
-  escr_get_end (e);                    {no more parameters allowed}
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
 
   escr_out_open (e, fnam, stat);       {save curr state, open new file}
   return;
@@ -616,7 +618,7 @@ procedure escr_cmd_writeend (
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  escr_get_end (e);                    {no more parameters allowed}
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
 
   if e.out_p = nil then begin          {no current output file at all ?}
     sys_stat_set (escr_subsys_k, escr_err_noutcl_k, stat);
@@ -646,7 +648,7 @@ procedure escr_cmd_stop (
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  escr_get_end (e);                    {no more parameters allowed}
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
 
   while e.exblock_p^.prev_p <> nil do begin {loop until only top block left}
     escr_exblock_close (e);

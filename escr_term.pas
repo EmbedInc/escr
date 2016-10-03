@@ -116,14 +116,12 @@ begin
   case sym_p^.stype of                 {what kind of symbol is it ?}
 escr_sym_var_k: begin                  {symbol is a variable}
       escr_val_init (e, sym_p^.var_val.dtype, val); {set up VAL for this data type}
-      escr_val_copy (e, sym_p^.var_val, val); {return the variable's value}
-      sys_error_none (stat);
+      escr_val_copy (e, sym_p^.var_val, val, stat); {return the variable's value}
       return;
       end;
 escr_sym_const_k: begin                {symbol is a constant}
       escr_val_init (e, sym_p^.const_val.dtype, val); {set up VAL for this data type}
-      escr_val_copy (e, sym_p^.const_val, val); {return the constant's value}
-      sys_error_none (stat);
+      escr_val_copy (e, sym_p^.const_val, val, stat); {return the constant's value}
       return;
       end;
 otherwise                              {this symbol can't be used as a term}

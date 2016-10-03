@@ -14,52 +14,55 @@ define escr_val_init;
 define escr_val_time;
 %include 'escr2.ins.pas';
 {
-****************************************************************************
+********************************************************************************
 *
-*   Subroutine ESCR_VAL_COPY (E, IVAL, OVAL)
+*   Subroutine ESCR_VAL_COPY (E, IVAL, OVAL, STAT)
 *
-*   Copy the value in IVAL to OVAL.  OVAL must be setup and of a data type
-*   that can be unambiguously converted from IVAL.  Only the actual data value
-*   of OVAL is irrelevant on entry.
+*   Copy the value in IVAL to OVAL.  OVAL must be set up and of a data type that
+*   can be unambiguously converted from IVAL.  Only the actual data value of
+*   OVAL is irrelevant on entry.
 }
 procedure escr_val_copy (              {copy a VAL_T value}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      ival: escr_val_t;            {the input value}
-  out     oval: escr_val_t);           {the output value}
+  out     oval: escr_val_t;            {the output value}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
 begin
   case oval.dtype of                   {what data type converting to ?}
 escr_dtype_bool_k: begin               {to BOOLEAN}
-    oval.bool := escr_val_bool (e, ival);
+    oval.bool := escr_val_bool (e, ival, stat);
     end;
 escr_dtype_int_k: begin                {to INTEGER}
-    oval.int := escr_val_int (e, ival);
+    oval.int := escr_val_int (e, ival, stat);
     end;
 escr_dtype_fp_k: begin                 {to FLOATING POINT}
-    oval.fp := escr_val_fp (e, ival);
+    oval.fp := escr_val_fp (e, ival, stat);
     end;
 escr_dtype_str_k: begin                {to STRING}
-     escr_val_str (e, ival, oval.str);
+    escr_val_str (e, ival, oval.str);
     end;
 escr_dtype_time_k: begin               {to TIME}
-    oval.time := escr_val_time (e, ival);
+    oval.time := escr_val_time (e, ival, stat);
     end;
 otherwise                              {unimplemented output data type}
     escr_err_dtype_unimp (e, oval.dtype, 'VAL_COPY');
     end;                               {end of output data type cases}
   end;
 {
-****************************************************************************
+********************************************************************************
 *
-*   Function ESCR_VAL_BOOL (E, VAL)
+*   Function ESCR_VAL_BOOL (E, VAL, STAT)
 *
 *   Return the boolean value of VAL.  It is an error if VAL can't be
-*   unambiguously converted to a boolean.
+*   unambiguously converted to a boolean.  The function value is always FALSE
+*   when returning with error status.
 }
 function escr_val_bool (               {return boolean value or bomb with error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t)             {source value}
+  in      val: escr_val_t;             {source value}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {the boolean value of VAL}
   val_param;
 
@@ -70,6 +73,7 @@ var
 begin
   tk.max := size_char(tk.str);         {init local var string}
   escr_val_bool := false;              {stop compiler from complaining}
+  sys_error_none (stat);               {init to no error encountered}
 
   case val.dtype of                    {what is the input value data type ?}
 
@@ -95,61 +99,56 @@ escr_dtype_str_k: begin                {input data type is string}
       end;
     end;                               {end of VAL data type cases}
 
-  sys_message ('pic', 'term_not_bool');
-  escr_err_val (e, val);               {show source value and data type}
-  escr_err_atline (e, '', '', nil, 0);
-  return;                              {keep compiler from complaining}
+  sys_stat_set (escr_subsys_k, escr_err_notbool_k, stat);
   end;
 {
-****************************************************************************
+********************************************************************************
 *
-*   Function ESCR_VAL_INT (E, VAL)
+*   Function ESCR_VAL_INT (E, VAL, STAT)
 *
 *   Return the integer value of VAL.  It is an error if VAL can't be
-*   unambiguously converted to an integer.
+*   unambiguously converted to an integer.  The function value is always 0 when
+*   returning with error status.
 }
 function escr_val_int (                {return integer value or bomb with error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t)             {source value}
+  in      val: escr_val_t;             {source value}
+  out     stat: sys_err_t)             {completion status}
   :sys_int_max_t;                      {integer value of VAL}
   val_param;
 
 var
-  i: sys_int_max_t;
-  stat: sys_err_t;
+  ii: sys_int_max_t;
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
   escr_val_int := 0;                   {stop compiler from complaining}
+
   case val.dtype of                    {what is the input data type ?}
 escr_dtype_int_k: begin                {integer}
       escr_val_int := val.int;
       return;
       end;
 escr_dtype_str_k: begin                {string}
-      string_t_int_max (val.str, i, stat); {try converting to integer}
-      if not sys_error(stat) then begin {conversion was successful ?}
-        escr_val_int := i;
-        return;
-        end;
+      string_t_int_max (val.str, ii, stat); {try converting to integer}
+      return;
       end;
     end;                               {end of VAL data type cases}
 
-  sys_message ('pic', 'term_not_int');
-  escr_err_val (e, val);               {show source value and data type}
-  escr_err_atline (e, '', '', nil, 0);
-  return;                              {keep compiler from complaining}
+  sys_stat_set (escr_subsys_k, escr_err_notint_k, stat);
   end;
 {
-****************************************************************************
+********************************************************************************
 *
-*   Function ESCR_VAL_TIME (E, VAL)
+*   Function ESCR_VAL_TIME (E, VAL, STAT)
 *
-*   Return the time value of VAL.  The program is aborted with a appropriate
-*   error message if VAL can't be converted to a absolute time.
+*   Return the time value of VAL.  It is an error if VAL can't be unambiguously
+*   converted to a time value.
 }
 function escr_val_time (               {convert to time value or bomb with error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t)             {source value}
+  in      val: escr_val_t;             {source value}
+  out     stat: sys_err_t)             {completion status}
   :sys_clock_t;                        {time value of VAL}
   val_param;
 
@@ -157,6 +156,8 @@ var
   time: sys_clock_t;
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
+
   escr_val_time := val.time;           {init for easy case}
   case val.dtype of                    {what is the input data type ?}
 escr_dtype_time_k: begin               {time}
@@ -170,31 +171,31 @@ escr_dtype_str_k: begin                {string}
       end;
     end;                               {end of VAL data type cases}
 
-  sys_message ('pic', 'term_not_time');
-  escr_err_val (e, val);               {show source value and data type}
-  escr_err_atline (e, '', '', nil, 0);
-  return;                              {keep compiler from complaining}
+  sys_stat_set (escr_subsys_k, escr_err_nottime_k, stat);
   end;
 {
-****************************************************************************
+********************************************************************************
 *
-*   Function ESCR_VAL_FP (E, VAL)
+*   Function ESCR_VAL_FP (E, VAL, STAT)
 *
 *   Return the floating point value of VAL.  It is an error if VAL can't be
-*   unambiguously converted to floating point.
+*   unambiguously converted to floating point.  The function value is always
+*   0.0 when returning with error.
 }
 function escr_val_fp (                 {return FP value or bomb with error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t)             {source value}
+  in      val: escr_val_t;             {source value}
+  out     stat: sys_err_t)             {completion status}
   :sys_fp_max_t;                       {floating point value of VAL}
   val_param;
 
 var
   fp: sys_fp_max_t;
-  stat: sys_err_t;
 
 begin
-  escr_val_fp := 0.0;                  {stop compiler from complaining}
+  sys_error_none (stat);               {init to no error encountered}
+  escr_val_fp := 0.0;                  {init return value}
+
   case val.dtype of                    {what is the input data type ?}
 escr_dtype_int_k: begin                {integer}
       escr_val_fp := val.int;
@@ -213,37 +214,37 @@ escr_dtype_str_k: begin                {string}
       end;
     end;                               {end of VAL data type cases}
 
-  sys_message ('pic', 'term_not_fp');
-  escr_err_val (e, val);               {show source value and data type}
-  escr_err_atline (e, '', '', nil, 0);
-  return;                              {keep compiler from complaining}
+  sys_stat_set (escr_subsys_k, escr_err_notfp_k, stat);
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Function ESCR_VAL_ISINT (E, VAL, VI, VF)
 *
-*   Decides whether a numeric value is integer or floating point.  If
-*   integer then VI is set to the integer value and the function returns
-*   TRUE.  If floating point then the function returns FALSE.  VF is
-*   always set to the value.  This routine bombs the program with an
-*   appropriate error message if VAL does not represent a numeric value.
+*   Decide whether a numeric value is integer or floating point.  If integer,
+*   then VI is set to the integer value and the function returns TRUE.  If
+*   floating point then the function returns FALSE.  VF is set to the value in
+*   either case of integer or floating point.  If VAL is neither integer or
+*   floating point, then STAT is returned indicating error.  The function value
+*   is always FALSE when returning with error.
 }
 function escr_val_isint (              {determine INT or FP, error if neither}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      val: escr_val_t;             {the source value}
   out     vi: sys_int_max_t;           {returned integer value, if integer}
-  out     vf: sys_fp_max_t)            {returned floating point value}
-  :boolean;                            {TRUE if integer, FALSE if floating point}
+  out     vf: sys_fp_max_t;            {returned floating point value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {TRUE if integer, FALSE on FP or error}
   val_param;
 
 var
-  i: sys_int_max_t;
+  ii: sys_int_max_t;
   fp: sys_fp_max_t;
-  stat: sys_err_t;
 
 begin
-  escr_val_isint := false;             {init to value is not integer}
+  escr_val_isint := false;             {init to FP or error}
+  sys_error_none (stat);               {init to no error encountered}
+
   case val.dtype of                    {what is the input data type ?}
 escr_dtype_int_k: begin                {integer}
       vi := val.int;
@@ -256,10 +257,10 @@ escr_dtype_fp_k: begin                 {floating point}
       return;
       end;
 escr_dtype_str_k: begin                {string}
-      string_t_int_max (val.str, i, stat); {try converting to integer}
+      string_t_int_max (val.str, ii, stat); {try converting to integer}
       if not sys_error(stat) then begin {conversion was successful ?}
-        vi := i;
-        vf := i;
+        vi := ii;
+        vf := ii;
         escr_val_isint := true;
         return;
         end;
@@ -271,19 +272,16 @@ escr_dtype_str_k: begin                {string}
       end;
     end;                               {end of VAL data type cases}
 
-  sys_message ('pic', 'term_not_num');
-  escr_err_val (e, val);               {show source value and data type}
-  escr_err_atline (e, '', '', nil, 0);
-  return;                              {keep compiler from complaining}
+  sys_stat_set (escr_subsys_k, escr_err_notintfp_k, stat);
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Function ESCR_VAL_ISBOOL (E, VAL, B)
 *
-*   Checks whether the value in VAL has a boolean representation.  If so,
-*   the function returns TRUE and the boolean value is returned in B.  If not,
-*   the function returns FALSE and B is not altered.
+*   Checks whether the value in VAL has a boolean representation.  If so, the
+*   function returns TRUE and the boolean value is returned in B.  If not, the
+*   function returns FALSE and B is not altered.
 }
 function escr_val_isbool (             {check for VAL can be converted to boolean}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -298,12 +296,15 @@ var
 
 begin
   tk.max := size_char(tk.str);         {init local var string}
+  escr_val_isbool := true;             {init to value is boolean}
 
-  escr_val_isbool := false;            {init to VAL is not boolean}
   case val.dtype of                    {what is the input data type ?}
+
 escr_dtype_bool_k: begin               {boolean}
       b := val.bool;
+      return;
       end;
+
 escr_dtype_str_k: begin                {string}
       string_copy (val.str, tk);       {make local copy of string}
       string_upcase (tk);              {make upper case for keyword matching}
@@ -318,19 +319,18 @@ escr_dtype_str_k: begin                {string}
           return;
           end;
         end;                           {end of which keyword picked cases}
-      end;
-otherwise
-    return;                            {VAL is not boolean}
-    end;
-  escr_val_isbool := true;             {indicate VAL is boolean}
+      end;                             {end of string data type case}
+
+    end;                               {end of data type cases}
+  escr_val_isbool := false;            {indicate VAL is not boolean}
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Subroutine ESCR_VAL_STR (E, VAL, STR)
 *
-*   Convert the value in VAL to a string and return it in STR.  This routine
-*   never bombs on error because all values have a string representation.
+*   Convert the value in VAL to a string and return it in STR.  There can be no
+*   error condition because all data types have a string representation.
 }
 procedure escr_val_str (               {make string representation of value in VAL}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -364,18 +364,18 @@ escr_dtype_time_k: begin               {TIME}
       end;
 
 otherwise
-    writeln ('Internal screwup in program ESCR:  Data type ID of', ord(val.dtype));
+    writeln ('Internal error in program ESCR: Data type ID of', ord(val.dtype));
     writeln ('encountered in subroutine VAL_STR.');
     escr_err_atline (e, '', '', nil, 0);
     end;
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Subroutine ESCR_VAL_TEXT (E, VAL, STR)
 *
-*   Convert the value in VAL to its text representation in the current
-*   input language.
+*   Convert the value in VAL to its text representation in the current input
+*   language.
 }
 procedure escr_val_text (              {make output language text representation}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -433,13 +433,13 @@ escr_dtype_time_k: begin               {TIME}
       end;
 
 otherwise
-    writeln ('Internal screwup in program ESCR:  Data type ID of', ord(val.dtype));
+    writeln ('Internal error in program ESCR: Data type ID of', ord(val.dtype));
     writeln ('encountered in subroutine VAL_TEXT.');
     escr_err_atline (e, '', '', nil, 0);
     end;
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Function ESCR_VAL_SIZE (E, DTYPE, LEN)
 *
@@ -482,13 +482,13 @@ escr_dtype_time_k: begin
       end;
 
 otherwise
-    writeln ('Internal screwup in program ESCR:  Data type ID of', ord(dtype));
+    writeln ('Internal error in program ESCR: Data type ID of', ord(dtype));
     writeln ('encountered in subroutine VAL_SIZE.');
     escr_err_atline (e, '', '', nil, 0);
     end;
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Subroutine ESCR_VAL_INIT (E, DTYPE, VAL)
 *

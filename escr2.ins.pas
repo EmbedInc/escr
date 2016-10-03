@@ -310,12 +310,15 @@ function escr_get_bool (               {get next parameter as boolean}
 
 function escr_get_dtype (              {get next parameter as data type ID}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     dtype: escr_dtype_k_t)       {returned data type ID}
+  out     dtype: escr_dtype_k_t;       {returned data type ID}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {TRUE if input token was available}
   val_param; extern;
 
-procedure escr_get_end (               {make sure no more tokens left on input line}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
+function escr_get_end (                {check for no more tokens on input line}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t)             {set to error if token found}
+  :boolean;                            {no more tokens on the input line}
   val_param; extern;
 
 function escr_get_fp (                 {get next parameter as floating point}
@@ -339,10 +342,11 @@ function escr_get_time (               {get the next token as a time value}
   :boolean;                            {TRUE if input token was available}
   val_param; extern;
 
-procedure escr_get_keyword (           {get next parameter as keyword in a list}
+procedure escr_get_keyword (           {get one of list of keywords from input stream}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      klist: string;               {keywords, upper case separated by blanks}
-  out     pick: sys_int_machine_t);    {1-N keyword number, 0 = no token available}
+  out     pick: sys_int_machine_t;     {1-N keyword number, 0 = no token, -1 = no match}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 function escr_get_str (                {get string representation of next parameter}
@@ -603,18 +607,21 @@ procedure escr_uptocomm (              {find line length without comment}
 procedure escr_val_copy (              {copy and convert value to target data type}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      ival: escr_val_t;            {the input value}
-  out     oval: escr_val_t);           {output val, must be set up except actual data}
+  out     oval: escr_val_t;            {output val, must be set up except actual data}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 function escr_val_bool (               {convert to boolean value or bomb with error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t)             {source value}
+  in      val: escr_val_t;             {source value}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {the boolean value of VAL}
   val_param; extern;
 
 function escr_val_fp (                 {convert to FP value or bomb with error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t)             {source value}
+  in      val: escr_val_t;             {source value}
+  out     stat: sys_err_t)             {completion status}
   :sys_fp_max_t;                       {floating point value of VAL}
   val_param; extern;
 
@@ -626,13 +633,15 @@ procedure escr_val_init (              {initialize full VAL_T descriptor to data
 
 function escr_val_int (                {convert to integer value or bomb with error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t)             {source value}
+  in      val: escr_val_t;             {source value}
+  out     stat: sys_err_t)             {completion status}
   :sys_int_max_t;                      {integer value of VAL}
   val_param; extern;
 
 function escr_val_time (               {convert to time value or bomb with error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t)             {source value}
+  in      val: escr_val_t;             {source value}
+  out     stat: sys_err_t)             {completion status}
   :sys_clock_t;                        {time value of VAL}
   val_param; extern;
 
@@ -647,8 +656,9 @@ function escr_val_isint (              {distinguish between INT or FP, error if 
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      val: escr_val_t;             {the source value}
   out     vi: sys_int_max_t;           {returned integer value, if integer}
-  out     vf: sys_fp_max_t)            {returned floating point value}
-  :boolean;                            {TRUE if integer, FALSE if floating point}
+  out     vf: sys_fp_max_t;            {returned floating point value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {TRUE if integer, FALSE on FP or error}
   val_param; extern;
 
 function escr_val_size (               {return minimum required size of VAL_T structure}
