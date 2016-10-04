@@ -5,18 +5,18 @@
 *
 *   All the intrinsic function routines have this interface:
 *
-*      escr_ifun_<name> (E, INSTR, EXP, STAT)
+*      escr_ifun_<name> (E, STAT)
 *
-*   The function invocation is in INSTR.  This is the string starting with the
-*   function name and including the function arguments.  It does not contain
+*   The function invocation is in E.FUNARG.  This is the string starting with
+*   the function name and including the function arguments.  It does not contain
 *   whatever syntax was used to indicate the start and end of the function
-*   invocation.  The parse index in INSTR is set to next character after the
+*   invocation.  The parse index in FUNARG is set to next character after the
 *   delimiter after the function name.  In other words, it is ready to parse the
 *   first parameter.  There is no guarantee there are any parameters.  If there
 *   are no parameters, then the parse index will be past the end of the string.
 *
-*   The function routine must write the expansion of the function to EXP.  EXP
-*   is a string initalized to empty.
+*   The function routine must write the expansion of the function to E.FUNRET.
+*   This string has been initialized to empty.
 *
 *   STAT has been initialized to indicate no error.  If a error is encountered,
 *   STAT must be set accordingly.
@@ -33,12 +33,11 @@ define escr_ifun_add;
 }
 procedure escr_ifun_add (
   in out  e: escr_t;
-  in out  exp: univ string_var_arg_t;
   out     stat: sys_err_t);
   val_param;
 
 begin
-  string_appends (exp, '42'(0));
+  string_appends (e.funret, '42'(0));
   end;
 
 

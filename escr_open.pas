@@ -127,7 +127,6 @@ type
   }
   func_routine_p_t = ^procedure (
     in out e: escr_t;                  {library use state}
-    in out exp: univ string_var_arg_t; {resulting function expansion, starts empty}
     out   stat: sys_err_t);
     val_param;
 
@@ -181,9 +180,11 @@ begin
   e_p^.files_p := nil;
   e_p^.ibuf.max := size_char(e_p^.ibuf.str);
   e_p^.ibuf.len := 0;
-  e_p^.funstr.p := 1;
-  e_p^.funstr.s.max := size_char(e_p^.funstr.s.str);
-  e_p^.funstr.s.len := 0;
+  e_p^.funarg.p := 1;
+  e_p^.funarg.s.max := size_char(e_p^.funarg.s.str);
+  e_p^.funarg.s.len := 0;
+  e_p^.funret.max := size_char(e_p^.funret.str);
+  e_p^.funret.len := 0;
   e_p^.ip := 1;
   e_p^.lparm.max := size_char(e_p^.lparm.str);
   e_p^.lparm.len := 0;

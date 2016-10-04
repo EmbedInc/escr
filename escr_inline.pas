@@ -159,9 +159,9 @@ begin
 *   one expanded.
 *
 *   Look for the end of this function.  The content of this function will be
-*   copied to FUNSTR with comments stripped.
+*   copied to FUNARG with comments stripped.
 }
-  e.funstr.s.len := 0;                 {init extracted function content}
+  e.funarg.s.len := 0;                 {init extracted function string to empty}
   p := 1;                              {init EXP input string parse index}
 
   while p <= exp.len do begin          {loop until input string exhausted}
@@ -171,7 +171,7 @@ begin
           exp,                         {input string}
           p,                           {input string parse index}
           e.syexcl_p,                  {pointer to exclusions to check}
-          addr(e.funstr.s),            {where to copy skipped characters to}
+          addr(e.funarg.s),            {where to copy skipped characters to}
           stat)
         then begin
       if sys_error(stat) then return;  {error ?}
@@ -187,7 +187,7 @@ begin
           stat)
         then begin
       if sys_error(stat) then return;  {error ?}
-      string_append1 (e.funstr.s, ' '); {replace comment with single space}
+      string_append1 (e.funarg.s, ' '); {replace comment with single space}
       next;                            {back and check again after this comment}
       end;
     {
@@ -202,13 +202,13 @@ begin
     {
     *   P is the EXP index of the special end of function sequence.  The
     *   funtion body (part of function between the start and end sequences) is
-    *   in FUNSTR.
+    *   in FUNARG.
     *
     *   The function is expanded and the result appended to the output string,
     *   followed by the rest of the expaneded input line after the function end
     *   sequence.
     }
-    e.funstr.p := 1;                   {init to parse at start of function string}
+    e.funarg.p := 1;                   {init to parse at start of function string}
     escr_inline_func (                 {expand function and append result to output string}
       e,                               {state for this use of the ESCR system}
       lot,                             {string to append function expansion to}
@@ -223,22 +223,22 @@ begin
     return;
 
 nextp:                                 {done with this input string char, on to next}
-    string_append1 (e.funstr.s, exp.str[p]); {copy this input string char to output string}
+    string_append1 (e.funarg.s, exp.str[p]); {copy this input string char to output string}
     p := p + 1;                        {to next input string character}
     end;                               {back to check at this new character}
 {
 *   The function end was not found.
 }
   sys_stat_set (escr_subsys_k, escr_err_funcnend_k, stat); {end of function not found}
-  sys_stat_parm_vstr (e.funstr.s, stat);
+  sys_stat_parm_vstr (e.funarg.s, stat);
   end;
 {
 ********************************************************************************
 *
 *   Subroutine ESTR_INLINE_FUNC (E, LOT, STAT)
 *
-*   Perform the operation indicated by the inline function in FUNSTR.  The
-*   resulting expansion, if any, is appended to LOT.  FUNSTR contains exactly
+*   Perform the operation indicated by the inline function in FUNARG.  The
+*   resulting expansion, if any, is appended to LOT.  FUNARG contains exactly
 *   the function body.  This is the part just inside the "[" and "]".
 }
 procedure escr_inline_func (           {perform inline function operation}
@@ -250,15 +250,13 @@ procedure escr_inline_func (           {perform inline function operation}
 var
   name: string_var80_t;                {function name}
   sym_p: escr_sym_p_t;                 {pointer to function symbol in symbol table}
-  exp: string_var8192_t;               {function expansion}
 
 begin
   name.max := size_char(name.str);     {init local var strings}
-  exp.max := size_char(exp.str);
 {
 *   Parse the function name into NAME.
 }
-  string_token (e.funstr.s, e.funstr.p, name, stat); {get function name into NAME}
+  string_token (e.funarg.s, e.funarg.p, name, stat); {get function name into NAME}
   if string_eos(stat) then begin       {end of string, no function name ?}
     name.len := 0;
     end;
@@ -283,15 +281,14 @@ begin
 *   statically linked in.
 }
 escr_sym_ifunc_k: begin                {intrinsic function}
-      exp.len := 0;                    {init function expansion string to empty}
+      e.funret.len := 0;               {init function expansion string to empty}
       sys_error_none (stat);           {init to no error encountered in function}
       sym_p^.ifunc_p^ (                {run the intrinsic function routine}
         addr(e),                       {pointer to this ESCR system use state}
-        exp,                           {returned function expansion}
-        stat);
+        stat);                         {returned error status, initialized to no err}
       if sys_error(stat) then return;
 
-      string_append (lot, exp);        {append function expansion to output line}
+      string_append (lot, e.funret);   {append function expansion to output line}
       end;
 {
 *   User-defined function.
