@@ -183,6 +183,8 @@ begin
   e_p^.funarg.p := 1;
   e_p^.funarg.s.max := size_char(e_p^.funarg.s.str);
   e_p^.funarg.s.len := 0;
+  e_p^.funame.max := size_char(e_p^.funame.str);
+  e_p^.funame.len := 0;
   e_p^.funret.max := size_char(e_p^.funret.str);
   e_p^.funret.len := 0;
   e_p^.ip := 1;
@@ -261,7 +263,65 @@ begin
   {
   *   Add the intrinsic functions to the functions symbol table.
   }
-  addfunc ('+', addr(escr_ifun_add), stat); if sys_error(stat) then goto err;
+  addfunc ('ABS', addr(escr_ifun_abs), stat); if sys_error(stat) then goto err;
+  addfunc ('AND', addr(escr_ifun_and), stat); if sys_error(stat) then goto err;
+  addfunc ('ARG', addr(escr_ifun_arg), stat); if sys_error(stat) then goto err;
+  addfunc ('CCODE', addr(escr_ifun_ccode), stat); if sys_error(stat) then goto err;
+  addfunc ('CHAR', addr(escr_ifun_char), stat); if sys_error(stat) then goto err;
+  addfunc ('CHARS', addr(escr_ifun_chars), stat); if sys_error(stat) then goto err;
+  addfunc ('COS', addr(escr_ifun_cos), stat); if sys_error(stat) then goto err;
+  addfunc ('DATE', addr(escr_ifun_date), stat); if sys_error(stat) then goto err;
+  addfunc ('DEGR', addr(escr_ifun_degr), stat); if sys_error(stat) then goto err;
+  addfunc ('DIV', addr(escr_ifun_div), stat); if sys_error(stat) then goto err;
+  addfunc ('/', addr(escr_ifun_divide), stat); if sys_error(stat) then goto err;
+  addfunc ('E', addr(escr_ifun_e), stat); if sys_error(stat) then goto err;
+  addfunc ('ENG', addr(escr_ifun_eng), stat); if sys_error(stat) then goto err;
+  addfunc ('=', addr(escr_ifun_eq), stat); if sys_error(stat) then goto err;
+  addfunc ('EVAR', addr(escr_ifun_evar), stat); if sys_error(stat) then goto err;
+  addfunc ('EXIST', addr(escr_ifun_exist), stat); if sys_error(stat) then goto err;
+  addfunc ('EXP', addr(escr_ifun_exp), stat); if sys_error(stat) then goto err;
+  addfunc ('FP', addr(escr_ifun_fp), stat); if sys_error(stat) then goto err;
+  addfunc ('>=', addr(escr_ifun_ge), stat); if sys_error(stat) then goto err;
+  addfunc ('>', addr(escr_ifun_gt), stat); if sys_error(stat) then goto err;
+  addfunc ('IF', addr(escr_ifun_if), stat); if sys_error(stat) then goto err;
+  addfunc ('INT', addr(escr_ifun_int), stat); if sys_error(stat) then goto err;
+  addfunc ('~', addr(escr_ifun_inv), stat); if sys_error(stat) then goto err;
+  addfunc ('LAB', addr(escr_ifun_lab), stat); if sys_error(stat) then goto err;
+  addfunc ('LCASE', addr(escr_ifun_lcase), stat); if sys_error(stat) then goto err;
+  addfunc ('<=', addr(escr_ifun_le), stat); if sys_error(stat) then goto err;
+  addfunc ('LNAM', addr(escr_ifun_lnam), stat); if sys_error(stat) then goto err;
+  addfunc ('LOG', addr(escr_ifun_log), stat); if sys_error(stat) then goto err;
+  addfunc ('LOG2', addr(escr_ifun_log2), stat); if sys_error(stat) then goto err;
+  addfunc ('<', addr(escr_ifun_lt), stat); if sys_error(stat) then goto err;
+  addfunc ('MAX', addr(escr_ifun_max), stat); if sys_error(stat) then goto err;
+  addfunc ('MIN', addr(escr_ifun_min), stat); if sys_error(stat) then goto err;
+  addfunc ('-', addr(escr_ifun_minus), stat); if sys_error(stat) then goto err;
+  addfunc ('<>', addr(escr_ifun_ne), stat); if sys_error(stat) then goto err;
+  addfunc ('NOT', addr(escr_ifun_not), stat); if sys_error(stat) then goto err;
+  addfunc ('NOW', addr(escr_ifun_now), stat); if sys_error(stat) then goto err;
+  addfunc ('OR', addr(escr_ifun_or), stat); if sys_error(stat) then goto err;
+  addfunc ('PI', addr(escr_ifun_pi), stat); if sys_error(stat) then goto err;
+  addfunc ('+', addr(escr_ifun_plus), stat); if sys_error(stat) then goto err;
+  addfunc ('QSTR', addr(escr_ifun_qstr), stat); if sys_error(stat) then goto err;
+  addfunc ('RDEG', addr(escr_ifun_rdeg), stat); if sys_error(stat) then goto err;
+  addfunc ('RND', addr(escr_ifun_rnd), stat); if sys_error(stat) then goto err;
+  addfunc ('SEQ', addr(escr_ifun_seq), stat); if sys_error(stat) then goto err;
+  addfunc ('SHIFTL', addr(escr_ifun_shiftl), stat); if sys_error(stat) then goto err;
+  addfunc ('SHIFTR', addr(escr_ifun_shiftr), stat); if sys_error(stat) then goto err;
+  addfunc ('SIN', addr(escr_ifun_sin), stat); if sys_error(stat) then goto err;
+  addfunc ('SINDX', addr(escr_ifun_sindx), stat); if sys_error(stat) then goto err;
+  addfunc ('SLEN', addr(escr_ifun_slen), stat); if sys_error(stat) then goto err;
+  addfunc ('SQRT', addr(escr_ifun_sqrt), stat); if sys_error(stat) then goto err;
+  addfunc ('STR', addr(escr_ifun_str), stat); if sys_error(stat) then goto err;
+  addfunc ('SUBSTR', addr(escr_ifun_substr), stat); if sys_error(stat) then goto err;
+  addfunc ('SYM', addr(escr_ifun_sym), stat); if sys_error(stat) then goto err;
+  addfunc ('TAN', addr(escr_ifun_tan), stat); if sys_error(stat) then goto err;
+  addfunc ('*', addr(escr_ifun_times), stat); if sys_error(stat) then goto err;
+  addfunc ('TNAM', addr(escr_ifun_tnam), stat); if sys_error(stat) then goto err;
+  addfunc ('TRUNC', addr(escr_ifun_trunc), stat); if sys_error(stat) then goto err;
+  addfunc ('UCASE', addr(escr_ifun_ucase), stat); if sys_error(stat) then goto err;
+  addfunc ('V', addr(escr_ifun_v), stat); if sys_error(stat) then goto err;
+  addfunc ('XOR', addr(escr_ifun_xor), stat); if sys_error(stat) then goto err;
 
   return;
 

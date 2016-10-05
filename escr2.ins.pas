@@ -148,16 +148,306 @@ procedure escr_cmd_writeto (
   out     stat: sys_err_t);
   val_param; extern;
 {
-*   Subroutines that implement the individual preprocessor commands.  Each
+*   Subroutines that implement the individual intrinsic functions.  Each
 *   of these have the same interface.  See the header comments in module
 *   ESCR_IFUN for the details.
 }
-procedure escr_ifun_add (
+procedure escr_ifun_abs(
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
+
+procedure escr_ifun_and(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_arg(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_ccode(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_char(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_chars(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_cos(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_date(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_degr(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_div(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_divide(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_e(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_eng(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_eq(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_evar(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_exist(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_exp(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_fp(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_ge(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_gt(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_if(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_int(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_inv(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_lab(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_lcase(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_le(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_lnam(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_log(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_log2(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_lt(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_max(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_min(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_minus(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_ne(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_not(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_now(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_or(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_pi(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_plus(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_qstr(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_rdeg(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_rnd(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_seq(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_shiftl(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_shiftr(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_sin(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_sindx(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_slen(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_sqrt(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_str(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_substr(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_sym(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_tan(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_times(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_tnam(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_trunc(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_ucase(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_v(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_xor(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 {
-*
 *   Other entry points.
 }
 procedure escr_err_atline (            {show error followed by source line number}
@@ -234,6 +524,11 @@ procedure escr_exblock_close (         {close curr execution block and delete te
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
+procedure escr_ifn_stat_required (     {set STAT according to missing required argument}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
 function escr_ifn_get_bool (           {get boolean value of next function parameter}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     b: boolean;                  {returned value}
@@ -297,6 +592,15 @@ procedure escr_ifn_ret_bool (          {return boolean value}
 procedure escr_ifn_ret_fp (            {return floating point value}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fp: sys_fp_max_t);           {the floating point value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_char (          {return one-character string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      c: char);                    {the single character of the string}
+  val_param; extern;
+
+procedure escr_ifn_ret_empty (         {return the empty string}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
 procedure escr_ifn_ret_int (           {return integer value}

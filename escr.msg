@@ -69,7 +69,7 @@ msg err22
     String "%p1s" can not be interpreted as a value.
 msg err23
   lan english -def
-    A required parameter is missing.
+    A required command parameter is missing.
 msg err24
   lan english -def
     The term can not be converted to BOOL type.
@@ -93,4 +93,14 @@ msg err30
     "%p1s" is not the name of data type.
 msg err31
   lan english -def
-    Too many parameters found.  The first unexpected parameter was "%p1s".
+    Too many command parameters found.  The first unexpected parameter was "%p1s".
+msg err32
+  lan english -def
+    The string "%p1s" is not one character long.  Only a one-character
+    string is allowe here.
+msg err33
+  lan english -def
+    A required parameter to function "%p1s" is missing.
+msg err34
+  lan english -def
+    Too many parameters to function "%p2s".  The first unexpected parameter was "%p1s".

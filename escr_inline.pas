@@ -248,30 +248,32 @@ procedure escr_inline_func (           {perform inline function operation}
   val_param;
 
 var
-  name: string_var80_t;                {function name}
   sym_p: escr_sym_p_t;                 {pointer to function symbol in symbol table}
+  parm: string_var32_t;                {unexpected parameter}
 
 begin
-  name.max := size_char(name.str);     {init local var strings}
+  parm.max := size_char(parm.str);     {init local var string}
 {
-*   Parse the function name into NAME.
+*   Parse the function name into E.FUNAME.
 }
-  string_token (e.funarg.s, e.funarg.p, name, stat); {get function name into NAME}
+  string_token (e.funarg.s, e.funarg.p, e.funame, stat); {get function name}
   if string_eos(stat) then begin       {end of string, no function name ?}
-    name.len := 0;
+    e.funame.len := 0;
     end;
   if sys_error(stat) then return;
+
+  string_upcase (e.funame);            {function names stored upper case in symbol table}
 {
 *   Look up the function name in the functions symbol table.
 }
   escr_sym_find (                      {look up function name in functions table}
     e,                                 {state for this use of the ESCR system}
-    name,                              {name of symbol to look for}
+    e.funame,                          {name of symbol to look for}
     e.sym_fun,                         {symbol table to look in}
     sym_p);                            {returned pointer to symbol in the table}
   if sym_p = nil then begin            {no such function ?}
     sys_stat_set (escr_subsys_k, escr_err_funcnfnd_k, stat);
-    sys_stat_parm_vstr (name, stat);   {message parameter 1 is function name}
+    sys_stat_parm_vstr (e.funame, stat); {message parameter 1 is function name}
     return;                            {abort}
     end;
 
@@ -302,7 +304,21 @@ escr_sym_func_k: begin                 {user-defined function}
 }
 otherwise
     sys_stat_set (escr_subsys_k, escr_err_notfunc_k, stat);
-    sys_stat_parm_vstr (name, stat);   {message parameter 1 is function name}
+    sys_stat_parm_vstr (e.funame, stat); {message parameter 1 is function name}
     return;
     end;                               {end of symbol type cases}
+
+  string_token (e.funarg.s, e.funarg.p, parm, stat); {try to get another parameter}
+  if not string_eos(stat) then begin   {found unused parameter ?}
+    sys_stat_set (escr_subsys_k, escr_err_exparmfun_k, stat); {extra parameter error}
+    sys_stat_parm_vstr (parm, stat);   {the extra parameter}
+    sys_stat_parm_vstr (e.funame, stat); {the function name}
+    return;
+    end;
+
+(*
+  writeln ('Function: ', e.funarg.s.str:e.funarg.s.len,
+    ' --> ', e.funret.str:e.funret.len, ' <--');
+*)
+
   end;

@@ -42,6 +42,7 @@ escr_dtype_fp_k: begin                 {to FLOATING POINT}
     end;
 escr_dtype_str_k: begin                {to STRING}
     escr_val_str (e, ival, oval.str);
+    sys_error_none (stat);
     end;
 escr_dtype_time_k: begin               {to TIME}
     oval.time := escr_val_time (e, ival, stat);

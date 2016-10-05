@@ -13,7 +13,10 @@ define escr_ifn_ret_bool;
 define escr_ifn_ret_int;
 define escr_ifn_ret_fp;
 define escr_ifn_ret_str;
+define escr_ifn_ret_char;
+define escr_ifn_ret_empty;
 define escr_ifn_ret_time;
+define escr_ifn_stat_required;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -315,8 +318,73 @@ procedure escr_ifn_ret_str (           {return string value}
   in      str: univ string_var_arg_t); {the string value to return}
   val_param;
 
+var
+  i: sys_int_machine_t;                {string index}
+  c: char;                             {scratch character}
+  q: char;                             {" or ' quote character to use}
+
 begin
-  string_append (e.funret, str);       {append to the function return string}
+  q := '"';                            {init to default quote char}
+  for i := 1 to str.len do begin       {scan the input string}
+    c := str.str[i];                   {get this input string character}
+    if c = '''' then begin             {found apostrophy in string ?}
+      q := '"';                        {use quotes}
+      exit;                            {no point scanning further}
+      end;
+    if c = '"' then q := '''';         {use apostrophies if string contains quotes}
+    end;
+{
+*   Q is the string quoting character to use.
+}
+  string_append1 (e.funret, q);        {write leading quote}
+  for i := 1 to str.len do begin       {once for each string character}
+    c := str.str[i];                   {get this string character}
+    if c = q then begin                {this is quote character ?}
+      string_append1 (e.funret, c);    {write quote character twice}
+      end;
+    string_append1 (e.funret, c);      {write string character}
+    end;
+  string_append1 (e.funret, q);        {write closing quote}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_IFN_RET_CHAR (E, C)
+*
+*   Add the string containing the single character C to the return string.
+}
+procedure escr_ifn_ret_char (          {return one-character string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      c: char);                    {the single character of the string}
+  val_param;
+
+var
+  q: char;                             {quote character}
+
+begin
+  q := '"';                            {init to using double quotes}
+  if c = q then begin                  {the character is a double quote ?}
+    q := '''';                         {use single quote instead}
+    end;
+
+  string_append1 (e.funret, q);        {write the quoted string}
+  string_append1 (e.funret, c);
+  string_append1 (e.funret, q);
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_IFN_RET_EMPTY (E)
+*
+*   Add the empty string to the return string.
+}
+procedure escr_ifn_ret_empty (         {return the empty string}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param;
+
+begin
+  string_append1 (e.funret, '"');
+  string_append1 (e.funret, '"');
   end;
 {
 ********************************************************************************
@@ -338,4 +406,29 @@ begin
 
   escr_str_from_time (e, t, tk);       {make string representation}
   string_append (e.funret, tk);        {append it to function return string}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_IFN_STAT_REQUIRED (E, STAT)
+*
+*   Set STAT to indicate the most appropriate error due to a required parameter
+*   being missing.  This routine is intended to be called after a routine that
+*   gets a parameter, and when that routine did not return with the parameter.
+*   This could be because the parmeter did not exist, or because of a hard
+*   error.  In the latter case, STAT will indicate this error.
+*
+*   When STAT already indicates error, it is left unaltered.  When it indicates
+*   no error, it is set to indicate missing parameter.
+}
+procedure escr_ifn_stat_required (     {set STAT according to missing required argument}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+begin
+  if sys_error(stat) then return;      {STAT already indicates error ?}
+
+  sys_stat_set (escr_subsys_k, escr_err_noparmfun_k, stat);
+  sys_stat_parm_vstr (e.funame, stat);
   end;

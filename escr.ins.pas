@@ -39,7 +39,7 @@ const
   escr_err_notfunc_k = 20;             {symbol is not a function}
   escr_err_notval_k = 21;              {symbol does not have a value}
   escr_err_termbad_k = 22;             {string is not a valid term}
-  escr_err_missingparm_k = 23;         {required parameter is missing}
+  escr_err_missingparm_k = 23;         {required parameter to a command is missing}
   escr_err_notbool_k = 24;             {not convertable to BOOL type}
   escr_err_notint_k = 25;              {not convertable to INTEGER type}
   escr_err_nottime_k = 26;             {not convertable to TIME type}
@@ -48,6 +48,9 @@ const
   escr_err_badparm_k = 29;             {bad parameter, cmd name, parm string}
   escr_err_baddtype_k = 30;            {bad data type name, parm}
   escr_err_extra_k = 31;               {too many parameters, first extra}
+  escr_err_not1char_k = 32;            {string not 1 char long, <string>}
+  escr_err_noparmfun_k = 33;           {missing function parameter, <funcname>}
+  escr_err_exparmfun_k = 34;           {extra function parm, <parm> <funcname>}
 {
 *   Derived constants.
 }
@@ -329,6 +332,7 @@ escr_inhty_blk_k: (                    {in execution block}
     files_p: escr_infile_p_t;          {points to list of input files}
     ibuf: string_var8192_t;            {current input line after function expansions}
     funarg: escr_instr_t;              {function and arguments with parse state}
+    funame: string_var80_t;            {name of function currently being executed}
     funret: string_var8192_t;          {function return string}
     ip: string_index_t;                {IBUF parse index}
     lparm: string_var8192_t;           {last parameter parsed from input line}
