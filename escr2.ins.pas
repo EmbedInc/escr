@@ -524,6 +524,18 @@ procedure escr_exblock_close (         {close curr execution block and delete te
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
+procedure escr_ifn_bad_keyw (          {set STAT for bad keyword}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      keyw: univ string_var_arg_t; {the bad keyword or string}
+  out     stat: sys_err_t);            {returned error status}
+  val_param; extern;
+
+procedure escr_ifn_bad_type (          {set STAT for bad data type}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      val: escr_val_t;             {value with the wrong data type}
+  out     stat: sys_err_t);            {returned error status}
+  val_param; extern;
+
 procedure escr_ifn_stat_required (     {set STAT according to missing required argument}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     stat: sys_err_t);            {completion status}
@@ -608,6 +620,11 @@ procedure escr_ifn_ret_int (           {return integer value}
   in      ii: sys_int_max_t);          {the integer value to return}
   val_param; extern;
 
+procedure escr_ifn_ret_pstr (          {return value from Pascal string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      pstr: string);               {the string value to return}
+  val_param; extern;
+
 procedure escr_ifn_ret_str (           {return string value}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      str: univ string_var_arg_t); {the string value to return}
@@ -616,6 +633,11 @@ procedure escr_ifn_ret_str (           {return string value}
 procedure escr_ifn_ret_time (          {return time value}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      t: sys_clock_t);             {the time value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_val (           {return arbitrary value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      val: escr_val_t);            {the value to return}
   val_param; extern;
 
 procedure escr_infile_pop (            {pop back one nested input file level}
@@ -888,6 +910,12 @@ procedure escr_sym_find (              {look up symbol in symbol table}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
   in out  sytable: escr_sytable_t;     {symbol table to look up name in}
+  out     sym_p: escr_sym_p_t);        {returned pointer to symbol, NIL if not found}
+  val_param; extern;
+
+procedure escr_sym_find_any (          {look up symbol in all symbol tables}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {symbol name}
   out     sym_p: escr_sym_p_t);        {returned pointer to symbol, NIL if not found}
   val_param; extern;
 

@@ -13,10 +13,14 @@ define escr_ifn_ret_bool;
 define escr_ifn_ret_int;
 define escr_ifn_ret_fp;
 define escr_ifn_ret_str;
+define escr_ifn_ret_pstr;
 define escr_ifn_ret_char;
 define escr_ifn_ret_empty;
 define escr_ifn_ret_time;
+define escr_ifn_ret_val;
 define escr_ifn_stat_required;
+define escr_ifn_bad_type;
+define escr_ifn_bad_keyw;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -349,6 +353,27 @@ begin
 {
 ********************************************************************************
 *
+*   Subroutine ESCR_IFN_RET_PSTR (E, PSTR)
+*
+*   Add the Pascal string PSTR to the funtion return string.
+}
+procedure escr_ifn_ret_pstr (          {return value from Pascal string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      pstr: string);               {the string value to return}
+  val_param;
+
+var
+  tk: string_var80_t;
+
+begin
+  tk.max := size_char(tk.str);         {init local var string}
+
+  string_vstring (tk, pstr, 80);       {convert to var string}
+  escr_ifn_ret_str (e, tk);            {return the string}
+  end;
+{
+********************************************************************************
+*
 *   Subroutine ESCR_IFN_RET_CHAR (E, C)
 *
 *   Add the string containing the single character C to the return string.
@@ -410,6 +435,39 @@ begin
 {
 ********************************************************************************
 *
+*   Subroutine ESCR_IFN_RET_VAL (E, VAL)
+*
+*   Add the value VAL to the function return string.
+}
+procedure escr_ifn_ret_val (           {return arbitrary value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      val: escr_val_t);            {the value to return}
+  val_param;
+
+begin
+  case val.dtype of
+escr_dtype_bool_k: begin
+      escr_ifn_ret_bool (e, val.bool);
+      end;
+escr_dtype_int_k: begin
+      escr_ifn_ret_int (e, val.int);
+      end;
+escr_dtype_fp_k: begin
+      escr_ifn_ret_fp (e, val.fp);
+      end;
+escr_dtype_str_k: begin
+      escr_ifn_ret_str (e, val.str);
+      end;
+escr_dtype_time_k: begin
+      escr_ifn_ret_time (e, val.time);
+      end;
+otherwise
+    escr_err_dtype_unimp (e, val.dtype, 'ESCR_IFN_RET_VAL');
+    end;
+  end;
+{
+********************************************************************************
+*
 *   Subroutine ESCR_IFN_STAT_REQUIRED (E, STAT)
 *
 *   Set STAT to indicate the most appropriate error due to a required parameter
@@ -430,5 +488,48 @@ begin
   if sys_error(stat) then return;      {STAT already indicates error ?}
 
   sys_stat_set (escr_subsys_k, escr_err_noparmfun_k, stat);
+  sys_stat_parm_vstr (e.funame, stat);
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_IFN_BAD_TYPE (E, VAL, STAT)
+*
+*   Set STAT to indicate bad data type for the usage.  VAL is the value of the
+*   term with the bad data type.
+}
+procedure escr_ifn_bad_type (          {set STAT for bad data type}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      val: escr_val_t;             {value with the wrong data type}
+  out     stat: sys_err_t);            {returned error status}
+  val_param;
+
+var
+  tk: string_var80_t;                  {string representation of the term}
+
+begin
+  tk.max := size_char(tk.str);         {init local var string}
+
+  escr_val_str (e, val, tk);           {make string from term}
+  sys_stat_set (escr_subsys_k, escr_err_badtype_k, stat);
+  sys_stat_parm_vstr (tk, stat);       {the offending term}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_IFN_BAD_KEYW (E, KEYW, STAT)
+*
+*   Set STAT do indicate a bad keyword parameter to a function.  KEYW is the bad
+*   keyword.
+}
+procedure escr_ifn_bad_keyw (          {set STAT for bad keyword}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      keyw: univ string_var_arg_t; {the bad keyword or string}
+  out     stat: sys_err_t);            {returned error status}
+  val_param;
+
+begin
+  sys_stat_set (escr_subsys_k, escr_err_badparmfun_k, stat);
+  sys_stat_parm_vstr (keyw, stat);
   sys_stat_parm_vstr (e.funame, stat);
   end;

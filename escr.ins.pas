@@ -40,17 +40,24 @@ const
   escr_err_notval_k = 21;              {symbol does not have a value}
   escr_err_termbad_k = 22;             {string is not a valid term}
   escr_err_missingparm_k = 23;         {required parameter to a command is missing}
-  escr_err_notbool_k = 24;             {not convertable to BOOL type}
-  escr_err_notint_k = 25;              {not convertable to INTEGER type}
-  escr_err_nottime_k = 26;             {not convertable to TIME type}
-  escr_err_notfp_k = 27;               {not convertable to REAL type}
-  escr_err_notintfp_k = 28;            {not convertable to INTEGER or REAL type}
-  escr_err_badparm_k = 29;             {bad parameter, cmd name, parm string}
-  escr_err_baddtype_k = 30;            {bad data type name, parm}
-  escr_err_extra_k = 31;               {too many parameters, first extra}
+  escr_err_notbool_k = 24;             {not convertable to BOOL type, <term>}
+  escr_err_notint_k = 25;              {not convertable to INTEGER type, <term>}
+  escr_err_nottime_k = 26;             {not convertable to TIME type, <term>}
+  escr_err_notfp_k = 27;               {not convertable to REAL type, <term>}
+  escr_err_notintfp_k = 28;            {not convertable to INTEGER or REAL type, <term>}
+  escr_err_badparm_k = 29;             {bad parameter, <cmd name> <parm>}
+  escr_err_baddtype_k = 30;            {bad data type name, <parm>}
+  escr_err_extra_k = 31;               {too many parameters, <first extra>}
   escr_err_not1char_k = 32;            {string not 1 char long, <string>}
   escr_err_noparmfun_k = 33;           {missing function parameter, <funcname>}
   escr_err_exparmfun_k = 34;           {extra function parm, <parm> <funcname>}
+  escr_err_badtype_k = 35;             {term has bad data type, <term>}
+  escr_err_div0_k = 36;                {attempt to divide by 0}
+  escr_err_sqrtneg_k = 37;             {attempt to take square root of negative value}
+  escr_err_negexpnint_k = 38;          {non-integer exponent to negative value}
+  escr_err_lognpos_k = 39;             {logarithm of non-positive value}
+  escr_err_afdate_k = 40;              {date-altering arg after date set, <argname>}
+  escr_err_badparmfun_k = 41;          {bad function parameter, <parm> <funcname>}
 {
 *   Derived constants.
 }

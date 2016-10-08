@@ -69,7 +69,7 @@ function escr_val_bool (               {return boolean value or bomb with error}
 
 var
   pick: sys_int_machine_t;             {number of keyword picked from list}
-  tk: string_var32_t;                  {scratch token}
+  tk: string_var80_t;                  {scratch token}
 
 begin
   tk.max := size_char(tk.str);         {init local var string}
@@ -101,6 +101,8 @@ escr_dtype_str_k: begin                {input data type is string}
     end;                               {end of VAL data type cases}
 
   sys_stat_set (escr_subsys_k, escr_err_notbool_k, stat);
+  escr_val_str (e, val, tk);
+  sys_stat_parm_vstr (tk, stat);
   end;
 {
 ********************************************************************************
@@ -120,8 +122,10 @@ function escr_val_int (                {return integer value or bomb with error}
 
 var
   ii: sys_int_max_t;
+  tk: string_var80_t;
 
 begin
+  tk.max := size_char(tk.str);         {init local var string}
   sys_error_none (stat);               {init to no error encountered}
   escr_val_int := 0;                   {stop compiler from complaining}
 
@@ -137,6 +141,8 @@ escr_dtype_str_k: begin                {string}
     end;                               {end of VAL data type cases}
 
   sys_stat_set (escr_subsys_k, escr_err_notint_k, stat);
+  escr_val_str (e, val, tk);
+  sys_stat_parm_vstr (tk, stat);
   end;
 {
 ********************************************************************************
@@ -155,8 +161,10 @@ function escr_val_time (               {convert to time value or bomb with error
 
 var
   time: sys_clock_t;
+  tk: string_var80_t;
 
 begin
+  tk.max := size_char(tk.str);         {init local var string}
   sys_error_none (stat);               {init to no error encountered}
 
   escr_val_time := val.time;           {init for easy case}
@@ -173,6 +181,8 @@ escr_dtype_str_k: begin                {string}
     end;                               {end of VAL data type cases}
 
   sys_stat_set (escr_subsys_k, escr_err_nottime_k, stat);
+  escr_val_str (e, val, tk);
+  sys_stat_parm_vstr (tk, stat);
   end;
 {
 ********************************************************************************
@@ -192,8 +202,10 @@ function escr_val_fp (                 {return FP value or bomb with error}
 
 var
   fp: sys_fp_max_t;
+  tk: string_var80_t;
 
 begin
+  tk.max := size_char(tk.str);         {init local var string}
   sys_error_none (stat);               {init to no error encountered}
   escr_val_fp := 0.0;                  {init return value}
 
@@ -216,6 +228,8 @@ escr_dtype_str_k: begin                {string}
     end;                               {end of VAL data type cases}
 
   sys_stat_set (escr_subsys_k, escr_err_notfp_k, stat);
+  escr_val_str (e, val, tk);
+  sys_stat_parm_vstr (tk, stat);
   end;
 {
 ********************************************************************************
@@ -241,8 +255,10 @@ function escr_val_isint (              {determine INT or FP, error if neither}
 var
   ii: sys_int_max_t;
   fp: sys_fp_max_t;
+  tk: string_var80_t;
 
 begin
+  tk.max := size_char(tk.str);         {init local var string}
   escr_val_isint := false;             {init to FP or error}
   sys_error_none (stat);               {init to no error encountered}
 
@@ -274,6 +290,8 @@ escr_dtype_str_k: begin                {string}
     end;                               {end of VAL data type cases}
 
   sys_stat_set (escr_subsys_k, escr_err_notintfp_k, stat);
+  escr_val_str (e, val, tk);
+  sys_stat_parm_vstr (tk, stat);
   end;
 {
 ********************************************************************************

@@ -6,6 +6,7 @@ define escr_sym_new;
 define escr_sym_new_const;
 define escr_sym_new_var;
 define escr_sym_find;
+define escr_sym_find_any;
 define escr_sym_del;
 define escr_sym_del_name;
 %include 'escr2.ins.pas';
@@ -317,6 +318,35 @@ begin
       sym_p := sym_pp^;                {return pointer to the symbol descriptor}
       end
     ;
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_SYM_FIND_ANY (E, NAME, SYM_P)
+*
+*   Find a symbol by looking in all symbol tables as needed.  The symbol tables
+*   are searched in order: variables and constants, subroutines, macros,
+*   functions, commands, and labels.  The pointer to the first matching symbol
+*   is returned.
+}
+procedure escr_sym_find_any (          {look up symbol in all symbol tables}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {symbol name}
+  out     sym_p: escr_sym_p_t);        {returned pointer to symbol, NIL if not found}
+  val_param;
+
+begin
+  escr_sym_find (e, name, e.sym_var, sym_p); {variables and constants}
+  if sym_p <> nil then return;
+  escr_sym_find (e, name, e.sym_sub, sym_p); {subroutines}
+  if sym_p <> nil then return;
+  escr_sym_find (e, name, e.sym_mac, sym_p); {macros}
+  if sym_p <> nil then return;
+  escr_sym_find (e, name, e.sym_fun, sym_p); {functions}
+  if sym_p <> nil then return;
+  escr_sym_find (e, name, e.sym_cmd, sym_p); {commands}
+  if sym_p <> nil then return;
+  escr_sym_find (e, name, e.sym_lab, sym_p); {labels}
   end;
 {
 ********************************************************************************

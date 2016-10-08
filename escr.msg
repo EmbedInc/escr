@@ -72,19 +72,19 @@ msg err23
     A required command parameter is missing.
 msg err24
   lan english -def
-    The term can not be converted to BOOL type.
+    The term "%p1s" can not be converted to BOOL type.
 msg err25
   lan english -def
-    The term can not be converted to INTEGER type.
+    The term "%p1s" can not be converted to INTEGER type.
 msg err26
   lan english -def
-    The term can not be converted to TIME type.
+    The term "%p1s" can not be converted to TIME type.
 msg err27
   lan english -def
-    The term can not be converted to REAL type.
+    The term  "%p1s"can not be converted to REAL type.
 msg err28
   lan english -def
-    The term can not be converted to INTEGER or REAL type.
+    The term "%p1s" can not be converted to INTEGER or REAL type.
 msg err29
   lan english -def
     Parameter "%p1s" to command "%p2s" is unrecognized.
@@ -104,3 +104,24 @@ msg err33
 msg err34
   lan english -def
     Too many parameters to function "%p2s".  The first unexpected parameter was "%p1s".
+msg err35
+  lan english -def
+    The data type of term "%p1s" is incompatible with its usage here.
+msg err36
+  lan english -def
+    Attempt to divide by zero.
+msg err37
+  lan english -def
+    Attempt to take the square root of a negative value.
+msg err38
+  lan english -def
+    Non-integer exponent to negative value.
+msg err39
+  lan english -def
+    Attempt to get logarithm of a non-positive value.
+msg err40
+  lan english -def
+    Date-modifying parameter %p1s to DATE function after date computed.
+msg err41
+  lan english -def
+    Parameter "%p1s" to function "%p2s" is unrecognized.
