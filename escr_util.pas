@@ -1,5 +1,5 @@
-{   Collection of small utility routines that don't nicely fit into
-*   any of the other modules.
+{   Collection of small utility routines that don't nicely fit into any of the
+*   other modules.
 }
 module escr_util;
 define escr_show_obuf;
@@ -7,6 +7,7 @@ define escr_str_to_time;
 define escr_str_from_time;
 define escr_str_from_fp;
 define escr_uptocomm;
+define escr_set_preproc;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -296,4 +297,31 @@ found_comm:
     p := p - 1;
     end;
   nclen := p;                          {pass back length without the comment}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_SET_PREPROC (E, ON)
+*
+*   Set the system to preprocessor mode when ON is TRUE, and script mode when
+*   ON is FALSE.
+*
+*   In preprocessor mode, the input source contains arbitrary lines that are to
+*   copied to a output file.  In script mode, all lines must be valid script
+*   code, and there is no inherent output file.
+}
+procedure escr_set_preproc (           {set preprocessor mode on/off}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      on: boolean);                {enables preprocessor mode, default off}
+  val_param;
+
+begin
+  if on
+    then begin                         {preprocessor mode}
+      e.flags := e.flags + [escr_flag_preproc_k];
+      end
+    else begin
+      e.flags := e.flags - [escr_flag_preproc_k];
+      end
+    ;
   end;

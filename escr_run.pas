@@ -3,7 +3,7 @@
 module escr_run;
 define escr_run_atline;
 define escr_run_atlabel;
-define escr_run;
+define escr_run_conn;
 define escr_run_file;
 define escr_run_stop;
 %include 'escr2.ins.pas';
@@ -29,6 +29,7 @@ var
   ii: sys_int_machine_t;               {scratch integer and loop counter}
   sym_p: escr_sym_p_t;                 {pointer to symbol in symbol table}
   buf: string_var8192_t;               {temp processed input line buffer}
+  inh: boolean;                        {saved inhibit at start of command}
 
 label
   loop_line, no_cmd;
@@ -112,6 +113,11 @@ loop_line:
     end;                               {back to process next source string character}
 
   string_unpad (buf);                  {strip trailing spaces from input line}
+
+(*
+  writeln (e.exblock_p^.inpos_p^.last_p^.lnum:3, ': "', buf.str:buf.len, '"');
+*)
+
   if buf.len <= 0 then begin           {result is now a blank line ?}
     goto loop_line;                    {ignore this line}
     end;
@@ -131,28 +137,95 @@ loop_line:
       if sys_error(stat) then return;
       end
     ;
+  e.ip := 1;                           {init IBUF parse index}
 {
 *   Check for the line starts with a command.  If not, jump to NO_CMD.  If so,
 *   the upper case command name will be left in E.CMD.
 }
-  e.ip := 1;                           {init IBUF parse index}
-  string_token (e.ibuf, e.ip, e.cmd, stat); {get first input line token into CMD}
-  if sys_error(stat) then goto no_cmd; {definitely no preproc command on this line ?}
+  if escr_flag_preproc_k in e.flags
+    then begin
+      {
+      *   In preprocessor mode.  To identify a possible command, and data file
+      *   comments must first be stripped from the input line.  A copy of the
+      *   input line with data file comments stripped is made in BUF, from which
+      *   the candidate command is extracted.  If a command is found, then BUF
+      *   is copied to IBUF, and command processing proceeds without data file
+      *   comments.  If no command is found, then IBUF is not altered and
+      *   execution goes to NO_CMD.
+      }
+      buf.len := 0;                    {init result line to empty}
+      while e.ip <= e.ibuf.len do begin {loop until source line exhausted}
+        if                             {syntax exclusion here ?}
+            escr_excl_check (          {skip over syntax exclusion, if present}
+              e,                       {state for this use of the ESCR system}
+              e.ibuf,                  {input string}
+              e.ip,                    {input string parse index}
+              e.syexcl_p,              {points to list of syntax exclusions}
+              addr(buf),               {pointer to string to append exclusion to}
+              stat)                    {completion status, always OK on function false}
+            then begin
+          if sys_error(stat) then return;
+          next;                        {back to check after this exclusion}
+          end;
+        if                             {data file comment here ?}
+            escr_excl_check (          {skip over any script comment here}
+              e,                       {state for this use of the ESCR system}
+              e.ibuf,                  {input string}
+              e.ip,                    {input string parse index}
+              e.commdat_p,             {points to list of comments start/end}
+              nil,                     {discard the comment characters}
+              stat)                    {completion status, always OK on function false}
+            then begin
+          if sys_error(stat) then return;
+          next;                        {back to check after this comment}
+          end;
+        string_append1 (buf, e.ibuf.str[e.ip]); {copy this source character to output string}
+        e.ip := e.ip + 1;              {advance to next source character}
+        end;                           {back to process next source string character}
 
-  if e.cmdst.len > 0 then begin        {command start with special string ?}
-    if e.cmd.len < (e.cmdst.len + 1)   {not long enough to be a command ?}
-      then goto no_cmd;
-    for ii := 1 to e.cmdst.len do begin {check for command start string}
-      if e.ibuf.str[ii] <> e.cmdst.str[ii] {mismatch ?}
-        then goto no_cmd;
-      end;
-    for ii := 1 to e.cmd.len - e.cmdst.len do begin {shift to delete command start string}
-      e.cmd.str[ii] := e.cmd.str[ii + e.cmdst.len];
-      end;
-    e.cmd.len := e.cmd.len - e.cmdst.len; {update length to command start removed}
-    end;
+      e.ip := 1;                       {init parse index to start of string}
+      string_token (buf, e.ip, e.cmd, stat); {get first input line token into CMD}
+      if sys_error(stat) then goto no_cmd; {definitely no preproc command on this line ?}
 
-  string_upcase (e.cmd);               {make upper case for keyword matching}
+      if e.cmdst.len > 0 then begin    {commands start with special string ?}
+        if e.cmd.len < (e.cmdst.len + 1) {not long enough to be a command ?}
+          then goto no_cmd;
+        for ii := 1 to e.cmdst.len do begin {check for command start string}
+          if e.cmd.str[ii] <> e.cmdst.str[ii] {mismatch ?}
+            then goto no_cmd;
+          end;
+        for ii := 1 to e.cmd.len - e.cmdst.len do begin {shift to delete command start string}
+          e.cmd.str[ii] := e.cmd.str[ii + e.cmdst.len];
+          end;
+        e.cmd.len := e.cmd.len - e.cmdst.len; {update length to command start removed}
+        end;
+
+      string_upcase (e.cmd);           {make upper case for keyword matching}
+      string_copy (buf, e.ibuf);       {process line with data file comments stripped}
+      end
+    else begin
+      {
+      *   In script mode.  Data file comments don't exist in script mode.
+      }
+      string_token (e.ibuf, e.ip, e.cmd, stat); {get first input line token into CMD}
+      if sys_error(stat) then goto no_cmd; {definitely no preproc command on this line ?}
+
+      if e.cmdst.len > 0 then begin    {command start with special string ?}
+        if e.cmd.len < (e.cmdst.len + 1) {not long enough to be a command ?}
+          then goto no_cmd;
+        for ii := 1 to e.cmdst.len do begin {check for command start string}
+          if e.ibuf.str[ii] <> e.cmdst.str[ii] {mismatch ?}
+            then goto no_cmd;
+          end;
+        for ii := 1 to e.cmd.len - e.cmdst.len do begin {shift to delete command start string}
+          e.cmd.str[ii] := e.cmd.str[ii + e.cmdst.len];
+          end;
+        e.cmd.len := e.cmd.len - e.cmdst.len; {update length to command start removed}
+        end;
+
+      string_upcase (e.cmd);           {make upper case for keyword matching}
+      end
+    ;
 {
 *   Handle the specific preprocessor command in CMD.
 }
@@ -166,6 +239,7 @@ loop_line:
     sys_stat_parm_vstr (e.cmd, stat);
     return;
     end;
+  inh := e.inhibit_p^.inh;             {save inhibit state at start of command}
 
   case sym_p^.stype of                 {what kind of symbol is this ?}
 escr_sym_icmd_k: begin                 {intrinsic command, implemented by compiled routine}
@@ -183,7 +257,7 @@ otherwise
     return;
     end;
 
-  if not e.inhibit_p^.inh then begin   {don't check unused tokens if not executed}
+  if not inh then begin                {check for extra parms if command was run}
     if not escr_get_end (e, stat) then return; {abort on extra parameter}
     end;
   if e.obuf.len > 0 then escr_write_obuf (e, stat); {write any line fragment left in out buffer}
@@ -249,24 +323,28 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_RUN (E, STAT)
+*   Subroutine ESCR_RUN_CONN (E, CONN, STAT)
 *
-*   Execute script code starting at the first line of the first input file.
+*   Execute script code starting at the current position of a open file.  CONN
+*   is the existing connection to the file.
 }
-procedure escr_run (                   {run starting at first line of first input file}
+procedure escr_run_conn (              {run at current line of open file}
   in out  e: escr_t;                   {state for this use of the ESCR system}
+  var     conn: file_conn_t;           {pointer to I/O connection state}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
+var
+  infile_p: escr_infile_p_t;           {pointer to input file descriptor}
+
 begin
-  sys_error_none (stat);               {init to no error encountered}
+  escr_infile_new (e, conn.tnam, infile_p); {create new input file descriptor}
+  escr_infile_add_lines (e, infile_p^, conn, stat); {save file contents in memory}
+  if sys_error(stat) then return;
 
-  if e.files_p = nil                   {nothing to run ?}
-    then return;
-
-  escr_run_atline (                    {run the user code}
+  escr_run_atline (                    {run the code in this file}
     e,                                 {state for this use of the ESCR system}
-    e.files_p^.lines_p,                {poiner to line to start running at}
+    infile_p^.lfirst_p,                {pointer to line to start running at}
     stat);
   end;
 {
@@ -296,12 +374,9 @@ begin
     stat);
   if sys_error(stat) then return;
 
-  if infile_p = nil                    {nothing to run (shouldn't happen) ?}
-    then return;
-
-  escr_run_atline (                    {run the user code}
+  escr_run_atline (                    {run the code in this file}
     e,                                 {state for this use of the ESCR system}
-    infile_p^.lines_p,                 {pointer to line to start running at}
+    infile_p^.lfirst_p,                {pointer to line to start running at}
     stat);
   end;
 {

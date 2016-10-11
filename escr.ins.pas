@@ -100,6 +100,29 @@ escr_dtype_time_k: (                   {absolute time descriptor}
       );
     end;
 
+  escr_infile_p_t = ^escr_infile_t;
+  escr_infile_t = record               {information about one input file or snippet thereof}
+    next_p: escr_infile_p_t;           {points to next input file in the list}
+    tnam: string_treename_t;           {full treename of the input file}
+    lfirst_p: escr_inline_p_t;         {pointer to first line of snippet}
+    llast_p: escr_inline_p_t;          {pointer to last line of snippet}
+    end;
+
+  escr_inline_t = record               {info about one input file line}
+    next_p: escr_inline_p_t;           {pointer to next input line this file, NIL = last}
+    file_p: escr_infile_p_t;           {pointer to file this line is from}
+    lnum: sys_int_machine_t;           {1-N line number of this line}
+    str_p: string_var_p_t;             {pointer to string for this line}
+    end;
+
+  escr_inpos_p_t = ^escr_inpos_t;
+  escr_inpos_t = record                {one level in current input files position}
+    prev_p: escr_inpos_p_t;            {points to previous level, back there on EOF}
+    level: sys_int_machine_t;          {nesting level within block, top = 0}
+    line_p: escr_inline_p_t;           {points to next input line}
+    last_p: escr_inline_p_t;           {points to last input line read}
+    end;
+
   escr_sytable_p_t = ^escr_sytable_t;
   escr_sytable_t = record              {symbol table}
     mem_p: util_mem_context_p_t;       {top mem context, used for symbol data directly}
@@ -117,7 +140,8 @@ escr_dtype_time_k: (                   {absolute time descriptor}
     escr_sym_ifunc_k,                  {intrinsic function, compiled routine}
     escr_sym_macro_k,                  {macro, defined by user code}
     escr_sym_imacro_k,                 {intrinsic macro, compiled routine}
-    escr_sym_label_k);                 {label for a specific input files line}
+    escr_sym_label_k,                  {label for a specific input files line}
+    escr_sym_src_k);                   {label for a source code snippet}
 
   escr_instr_t = record                {input string to be parsed}
     p: string_index_t;                 {1-N string string parse index}
@@ -188,29 +212,9 @@ escr_sym_icmd_k: (                     {intrisic command, implemented by compile
 escr_sym_label_k: (                    {label for specific line in input files}
       label_line_p: escr_inline_p_t;   {points to first line of command definition}
       );
-    end;
-
-  escr_infile_p_t = ^escr_infile_t;
-  escr_infile_t = record               {information about one input file}
-    next_p: escr_infile_p_t;           {points to next input file in the list}
-    tnam: string_treename_t;           {full treename of the input file}
-    suffn: sys_int_machine_t;          {file name suffix number actually used}
-    lines_p: escr_inline_p_t;          {pointer to first line of file}
-    end;
-
-  escr_inline_t = record               {info about one input file line}
-    next_p: escr_inline_p_t;           {pointer to next input line this file, NIL = last}
-    file_p: escr_infile_p_t;           {pointer to file this line is from}
-    lnum: sys_int_machine_t;           {1-N line number of this line}
-    str_p: string_var_p_t;             {pointer to string for this line}
-    end;
-
-  escr_inpos_p_t = ^escr_inpos_t;
-  escr_inpos_t = record                {one level in current input files position}
-    prev_p: escr_inpos_p_t;            {points to previous level, back there on EOF}
-    level: sys_int_machine_t;          {nesting level within block, top = 0}
-    line_p: escr_inline_p_t;           {points to next input line}
-    last_p: escr_inline_p_t;           {points to last input line read}
+escr_sym_src_k: (                      {label for a source code snippet}
+      src_p: escr_infile_p_t;          {pointer to source code snippet}
+      );
     end;
 
   escr_sylist_p_t = ^escr_sylist_t;
@@ -239,7 +243,7 @@ escr_sym_label_k: (                    {label for specific line in input files}
     case escr_looptype_k_t of          {unique data for each type of loop}
 escr_looptype_unc_k: (                 {unconditional loop}
       );
-escr_looptype_sym_k: (                 {loop over all preprocessor symbols}
+escr_looptype_sym_k: (                 {loop over all script processor symbols}
       sym_list_p: string_list_p_t;     {points to list of symbol name strings}
       );
 escr_looptype_for_k: (                 {loop over integer values with fixed increment}
@@ -336,6 +340,7 @@ escr_inhty_blk_k: (                    {in execution block}
     sym_fun: escr_sytable_t;           {symbol table for functions}
     sym_cmd: escr_sytable_t;           {symbol table for commands}
     sym_lab: escr_sytable_t;           {symbol table for input file line labels}
+    sym_src: escr_sytable_t;           {symbol table for input file source snippets}
     files_p: escr_infile_p_t;          {points to list of input files}
     ibuf: string_var8192_t;            {current input line after function expansions}
     funarg: escr_instr_t;              {function and arguments with parse state}
@@ -424,6 +429,12 @@ procedure escr_out_close_all (         {close all output files}
 procedure escr_out_open (              {open new output file, save previous state}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {name of file to switch writing to}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_run_conn (              {run at current line of open file}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  var     conn: file_conn_t;           {pointer to I/O connection state}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 

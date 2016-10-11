@@ -125,3 +125,12 @@ msg err40
 msg err41
   lan english -def
     Parameter "%p1s" to function "%p2s" is unrecognized.
+/*
+/*   Messages without error status codes.
+/*
+msg open
+  lan english -def
+    Error occurred on attempt to open a new ESCR script system use state.
+msg var_new
+  lan english -def
+    Error occurred on attempt to create the new variable "%p1s".

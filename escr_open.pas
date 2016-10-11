@@ -174,6 +174,8 @@ begin
   if sys_error(stat) then goto err;
   escr_sytable_init (e_p^, e_p^.sym_lab, stat); {init labels symbol table}
   if sys_error(stat) then goto err;
+  escr_sytable_init (e_p^, e_p^.sym_src, stat); {init source code snippets symbol table}
+  if sys_error(stat) then goto err;
   {
   *   Do basic initialization, pointer to NIL, strings to empty, etc.
   }

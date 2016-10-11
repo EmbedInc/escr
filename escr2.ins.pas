@@ -524,126 +524,6 @@ procedure escr_exblock_close (         {close curr execution block and delete te
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
-procedure escr_ifn_bad_keyw (          {set STAT for bad keyword}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      keyw: univ string_var_arg_t; {the bad keyword or string}
-  out     stat: sys_err_t);            {returned error status}
-  val_param; extern;
-
-procedure escr_ifn_bad_type (          {set STAT for bad data type}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t;             {value with the wrong data type}
-  out     stat: sys_err_t);            {returned error status}
-  val_param; extern;
-
-procedure escr_ifn_stat_required (     {set STAT according to missing required argument}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
-function escr_ifn_get_bool (           {get boolean value of next function parameter}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     b: boolean;                  {returned value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {returning with boolean value}
-  val_param; extern;
-
-function escr_ifn_get_fp (             {get floating point value of next function parameter}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     fp: sys_fp_max_t;            {returned value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {returning with floating point value}
-  val_param; extern;
-
-function escr_ifn_get_int (            {get integer value of next function parameter}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     ii: sys_int_max_t;           {returned value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {returning with integer value}
-  val_param; extern;
-
-function escr_ifn_get_keyw (           {get next parameter as upper case keyword}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  keyw: univ string_var_arg_t; {returned keyword, upper case}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {returning with a keyword}
-  val_param; extern;
-
-function escr_ifn_get_str (            {get string value of next function parameter}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  str: univ string_var_arg_t;  {returned value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {returning with string value}
-  val_param; extern;
-
-procedure escr_ifn_get_strs (          {get string of all remaining parameters}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  str: univ string_var_arg_t;  {returned string}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
-function escr_ifn_get_time (           {get time value of next function parameter}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     t: sys_clock_t;              {returned value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {returning with time value}
-  val_param; extern;
-
-function escr_ifn_get_val (            {get arbitrary value of next func parameter}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     val: escr_val_t;             {returned term value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {term was available}
-  val_param; extern;
-
-procedure escr_ifn_ret_bool (          {return boolean value}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      b: boolean);                 {the boolean value to return}
-  val_param; extern;
-
-procedure escr_ifn_ret_fp (            {return floating point value}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      fp: sys_fp_max_t);           {the floating point value to return}
-  val_param; extern;
-
-procedure escr_ifn_ret_char (          {return one-character string}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      c: char);                    {the single character of the string}
-  val_param; extern;
-
-procedure escr_ifn_ret_empty (         {return the empty string}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
-  val_param; extern;
-
-procedure escr_ifn_ret_int (           {return integer value}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      ii: sys_int_max_t);          {the integer value to return}
-  val_param; extern;
-
-procedure escr_ifn_ret_pstr (          {return value from Pascal string}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      pstr: string);               {the string value to return}
-  val_param; extern;
-
-procedure escr_ifn_ret_str (           {return string value}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      str: univ string_var_arg_t); {the string value to return}
-  val_param; extern;
-
-procedure escr_ifn_ret_time (          {return time value}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      t: sys_clock_t);             {the time value to return}
-  val_param; extern;
-
-procedure escr_ifn_ret_val (           {return arbitrary value}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t);            {the value to return}
-  val_param; extern;
-
-procedure escr_infile_pop (            {pop back one nested input file level}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
-  val_param; extern;
-
 procedure escr_exblock_inline_push (   {push new source line location for exec block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      line_p: escr_inline_p_t);    {pointer to next input line to use}
@@ -779,9 +659,151 @@ function escr_get_val_dtype (          {get next input value, to dtype of VAL}
   :boolean;                            {TRUE if token available}
   val_param; extern;
 
+procedure escr_ifn_bad_keyw (          {set STAT for bad keyword}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      keyw: univ string_var_arg_t; {the bad keyword or string}
+  out     stat: sys_err_t);            {returned error status}
+  val_param; extern;
+
+procedure escr_ifn_bad_type (          {set STAT for bad data type}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      val: escr_val_t;             {value with the wrong data type}
+  out     stat: sys_err_t);            {returned error status}
+  val_param; extern;
+
+procedure escr_ifn_stat_required (     {set STAT according to missing required argument}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+function escr_ifn_get_bool (           {get boolean value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     b: boolean;                  {returned value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with boolean value}
+  val_param; extern;
+
+function escr_ifn_get_fp (             {get floating point value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     fp: sys_fp_max_t;            {returned value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with floating point value}
+  val_param; extern;
+
+function escr_ifn_get_int (            {get integer value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     ii: sys_int_max_t;           {returned value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with integer value}
+  val_param; extern;
+
+function escr_ifn_get_keyw (           {get next parameter as upper case keyword}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  keyw: univ string_var_arg_t; {returned keyword, upper case}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with a keyword}
+  val_param; extern;
+
+function escr_ifn_get_str (            {get string value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  str: univ string_var_arg_t;  {returned value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with string value}
+  val_param; extern;
+
+procedure escr_ifn_get_strs (          {get string of all remaining parameters}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  str: univ string_var_arg_t;  {returned string}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+function escr_ifn_get_time (           {get time value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     t: sys_clock_t;              {returned value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with time value}
+  val_param; extern;
+
+function escr_ifn_get_val (            {get arbitrary value of next func parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     val: escr_val_t;             {returned term value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {term was available}
+  val_param; extern;
+
+procedure escr_ifn_ret_bool (          {return boolean value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      b: boolean);                 {the boolean value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_fp (            {return floating point value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fp: sys_fp_max_t);           {the floating point value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_char (          {return one-character string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      c: char);                    {the single character of the string}
+  val_param; extern;
+
+procedure escr_ifn_ret_empty (         {return the empty string}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param; extern;
+
+procedure escr_ifn_ret_int (           {return integer value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      ii: sys_int_max_t);          {the integer value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_pstr (          {return value from Pascal string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      pstr: string);               {the string value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_str (           {return string value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      str: univ string_var_arg_t); {the string value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_time (          {return time value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      t: sys_clock_t);             {the time value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_val (           {return arbitrary value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      val: escr_val_t);            {the value to return}
+  val_param; extern;
+
+procedure escr_infile_find (           {find existing input file descriptor}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      tnam: univ string_var_arg_t; {full unique treename of the file}
+  out     infile_p: escr_infile_p_t);  {points to snippet, or NIL for not found}
+  val_param; extern;
+
 procedure escr_infile_getline (        {get next input stream source line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     str_p: string_var_p_t);      {returned pointer to source line or NIL}
+  val_param; extern;
+
+procedure escr_infile_add_line (       {add line to source file snippet}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  var     infile: escr_infile_t;       {snippet to add the line to}
+  in      line: univ string_var_arg_t; {the source line}
+  in      lnum: sys_int_machine_t);    {source line number within its file}
+  val_param; extern;
+
+procedure escr_infile_add_lines (      {add lines to source file snippet}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  var     infile: escr_infile_t;       {snippet to add the lines to}
+  var     conn: file_conn_t;           {existing connection to text file}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_infile_new (            {create new input file snippet descriptor}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      tnam: univ string_var_arg_t; {full unique treename of the file}
+  out     infile_p: escr_infile_p_t);  {returned pointer to input file descriptor}
   val_param; extern;
 
 procedure escr_infile_open (           {find file data or read it into memory}
@@ -790,6 +812,10 @@ procedure escr_infile_open (           {find file data or read it into memory}
   in      suff: string;                {allowed file name suffixes, blank separated}
   out     infile_p: escr_infile_p_t;   {returned pointer to input file descriptor}
   out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_infile_pop (            {pop back one nested input file level}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
 procedure escr_infile_skipline (       {skip next input file line}
@@ -847,11 +873,6 @@ function escr_excl_check (             {check for syntax exclusion at char}
 procedure escr_out_close (             {close the current output file, pop previous}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      del: boolean);               {delete the file}
-  val_param; extern;
-
-procedure escr_run (                   {run starting at first line of first input file}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_run_atlabel (           {run starting at label}

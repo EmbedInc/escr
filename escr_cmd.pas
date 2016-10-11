@@ -523,7 +523,7 @@ begin
   file_currdir_set (olddir, stat2);
   if sys_error(stat) then return;
   sys_error_abort (stat2, '', '', nil, 0);
-  escr_exblock_inline_push (e, file_p^.lines_p); {set next line to first line in new file}
+  escr_exblock_inline_push (e, file_p^.lfirst_p); {set next line to first line in new file}
   return;
 {
 *   Abort due to missing required parameter.
