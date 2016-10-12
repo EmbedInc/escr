@@ -13,13 +13,15 @@ define escr_ifn_ret_bool;
 define escr_ifn_ret_int;
 define escr_ifn_ret_fp;
 define escr_ifn_ret_str;
-define escr_ifn_ret_pstr;
+define escr_ifn_ret_strp;
+define escr_ifn_ret_chars;
+define escr_ifn_ret_charsp;
 define escr_ifn_ret_char;
 define escr_ifn_ret_empty;
 define escr_ifn_ret_time;
 define escr_ifn_ret_val;
 define escr_ifn_stat_required;
-define escr_ifn_bad_type;
+define escr_ifn_bad_dtype;
 define escr_ifn_bad_keyw;
 %include 'escr2.ins.pas';
 {
@@ -353,13 +355,13 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_IFN_RET_PSTR (E, PSTR)
+*   Subroutine ESCR_IFN_RET_STRP (E, STRP)
 *
-*   Add the Pascal string PSTR to the funtion return string.
+*   Add the Pascal string STRP to the funtion return string.
 }
-procedure escr_ifn_ret_pstr (          {return value from Pascal string}
+procedure escr_ifn_ret_strp (          {return value from Pascal string}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      pstr: string);               {the string value to return}
+  in      strp: string);               {the string value to return}
   val_param;
 
 var
@@ -368,8 +370,40 @@ var
 begin
   tk.max := size_char(tk.str);         {init local var string}
 
-  string_vstring (tk, pstr, 80);       {convert to var string}
+  string_vstring (tk, strp, 80);       {convert to var string}
   escr_ifn_ret_str (e, tk);            {return the string}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_IFN_RET_CHARS (E, STR)
+*
+*   Add the raw characters of STR to the return string.  These will not be
+*   returned as a string.
+}
+procedure escr_ifn_ret_chars (         {return raw characters}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      str: univ string_var_arg_t); {the characters to return}
+  val_param;
+
+begin
+  string_append (e.funret, str);
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_IFN_RET_CHARSP (E, STRP)
+*
+*   Add the raw characters of STRP to the return string.  These will not be
+*   returned as a string.  STRP is a Pascal string, not a var string.
+}
+procedure escr_ifn_ret_charsp (        {return raw characters from Pascal string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      strp: string);               {the characters to return}
+  val_param;
+
+begin
+  string_appends (e.funret, strp);
   end;
 {
 ********************************************************************************
@@ -493,12 +527,12 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_IFN_BAD_TYPE (E, VAL, STAT)
+*   Subroutine ESCR_IFN_BAD_DTYPE (E, VAL, STAT)
 *
 *   Set STAT to indicate bad data type for the usage.  VAL is the value of the
 *   term with the bad data type.
 }
-procedure escr_ifn_bad_type (          {set STAT for bad data type}
+procedure escr_ifn_bad_dtype (         {set STAT for bad data type}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      val: escr_val_t;             {value with the wrong data type}
   out     stat: sys_err_t);            {returned error status}

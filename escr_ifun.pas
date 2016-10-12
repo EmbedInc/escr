@@ -135,7 +135,8 @@ begin
 
   escr_ifn_get_strs (e, tk, stat);     {get the concatenated string}
   if sys_error(stat) then return;
-  string_append (e.funret, tk);        {return the raw characters}
+
+  escr_ifn_ret_chars (e, tk);          {return the raw characters}
   end;
 {
 ********************************************************************************
@@ -661,40 +662,34 @@ var
   b: boolean;                          {boolean value}
   ii: sys_int_max_t;                   {integer value}
 
-label
-  dtint, dtbool;
-
 begin
   if not escr_ifn_get_val (e, val, stat) then begin
     escr_ifn_stat_required (e, stat);  {the first parameter is required}
     return;
     end;
+  case val.dtype of                    {what is data type of first parameter ?}
 
-  if val.dtype = escr_dtype_bool_k then goto dtbool;
-  if val.dtype = escr_dtype_int_k then goto dtint;
-  escr_ifn_bad_type (e, val, stat);    {bad data type}
-  return;
-{
-*   Boolean.
-}
-dtbool:
+escr_dtype_bool_k: begin               {BOOL}
   while true do begin                  {loop over the remaining terms}
     if not escr_ifn_get_bool (e, b, stat) then exit;
     val.bool := val.bool and b;
     end;
   if sys_error(stat) then return;
   escr_ifn_ret_bool (e, val.bool);     {return the final value}
-  return;
-{
-*   Integer.
-}
-dtint:
+  end;
+
+escr_dtype_int_k: begin                {INTEGER}
   while true do begin                  {loop over the remaining terms}
     if not escr_ifn_get_int (e, ii, stat) then exit;
     val.int := val.int & ii;
     end;
   if sys_error(stat) then return;
   escr_ifn_ret_int (e, val.int);       {return the final value}
+  end;
+
+otherwise                              {bad data type}
+    escr_ifn_bad_dtype (e, val, stat);
+    end;
   end;
 {
 ********************************************************************************
@@ -714,40 +709,34 @@ var
   b: boolean;                          {boolean value}
   ii: sys_int_max_t;                   {integer value}
 
-label
-  dtint, dtbool;
-
 begin
   if not escr_ifn_get_val (e, val, stat) then begin
     escr_ifn_stat_required (e, stat);  {the first parameter is required}
     return;
     end;
+  case val.dtype of                    {what is data type of first parameter ?}
 
-  if val.dtype = escr_dtype_bool_k then goto dtbool;
-  if val.dtype = escr_dtype_int_k then goto dtint;
-  escr_ifn_bad_type (e, val, stat);    {bad data type}
-  return;
-{
-*   Boolean.
-}
-dtbool:
+escr_dtype_bool_k: begin               {BOOL}
   while true do begin                  {loop over the remaining terms}
     if not escr_ifn_get_bool (e, b, stat) then exit;
     val.bool := val.bool or b;
     end;
   if sys_error(stat) then return;
   escr_ifn_ret_bool (e, val.bool);     {return the final value}
-  return;
-{
-*   Integer.
-}
-dtint:
+  end;
+
+escr_dtype_int_k: begin                {INTEGER}
   while true do begin                  {loop over the remaining terms}
     if not escr_ifn_get_int (e, ii, stat) then exit;
     val.int := val.int ! ii;
     end;
   if sys_error(stat) then return;
   escr_ifn_ret_int (e, val.int);       {return the final value}
+  end;
+
+otherwise                              {bad data type}
+    escr_ifn_bad_dtype (e, val, stat);
+    end;
   end;
 {
 ********************************************************************************
@@ -767,40 +756,34 @@ var
   b: boolean;                          {boolean value}
   ii: sys_int_max_t;                   {integer value}
 
-label
-  dtint, dtbool;
-
 begin
   if not escr_ifn_get_val (e, val, stat) then begin
     escr_ifn_stat_required (e, stat);  {the first parameter is required}
     return;
     end;
+  case val.dtype of                    {what is data type of first parameter ?}
 
-  if val.dtype = escr_dtype_bool_k then goto dtbool;
-  if val.dtype = escr_dtype_int_k then goto dtint;
-  escr_ifn_bad_type (e, val, stat);    {bad data type}
-  return;
-{
-*   Boolean.
-}
-dtbool:
+escr_dtype_bool_k: begin               {BOOL}
   while true do begin                  {loop over the remaining terms}
     if not escr_ifn_get_bool (e, b, stat) then exit;
     val.bool := (val.bool and (not b)) or ((not val.bool) and b);
     end;
   if sys_error(stat) then return;
   escr_ifn_ret_bool (e, val.bool);     {return the final value}
-  return;
-{
-*   Integer.
-}
-dtint:
+  end;
+
+escr_dtype_int_k: begin                {INTEGER}
   while true do begin                  {loop over the remaining terms}
     if not escr_ifn_get_int (e, ii, stat) then exit;
     val.int := xor(val.int, ii);
     end;
   if sys_error(stat) then return;
   escr_ifn_ret_int (e, val.int);       {return the final value}
+  end;
+
+otherwise                              {bad data type}
+    escr_ifn_bad_dtype (e, val, stat);
+    end;
   end;
 {
 ********************************************************************************
@@ -913,7 +896,7 @@ escr_dtype_time_k: begin               {TIME}
 *   The data type of the current term is invalid.
 }
 dtype_bad:
-  escr_ifn_bad_type (e, val, stat);    {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val, stat);   {set STAT to bad data type error}
   end;
 {
 ********************************************************************************
@@ -1039,7 +1022,7 @@ escr_dtype_time_k: begin               {TIME}
 *   The data type of the current term is invalid.
 }
 dtype_bad:
-  escr_ifn_bad_type (e, val, stat);    {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val, stat);   {set STAT to bad data type error}
   end;
 {
 ********************************************************************************
@@ -1124,7 +1107,7 @@ escr_dtype_fp_k: begin                 {FP}
 *   The data type of the current term is invalid.
 }
 dtype_bad:
-  escr_ifn_bad_type (e, val, stat);    {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val, stat);   {set STAT to bad data type error}
   end;
 {
 ********************************************************************************
@@ -1191,7 +1174,7 @@ otherwise
 *   Error exits.
 }
 dtype_bad:                             {data type of term is invalid}
-  escr_ifn_bad_type (e, val, stat);    {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val, stat);   {set STAT to bad data type error}
   return;
 
 div0:                                  {attempt to divide by 0}
@@ -1255,7 +1238,7 @@ otherwise
 *   Error exits.
 }
 dtype_bad:                             {data type of term is invalid}
-  escr_ifn_bad_type (e, val, stat);    {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val, stat);   {set STAT to bad data type error}
   return;
 
 div0:                                  {attempt to divide by 0}
@@ -1290,7 +1273,7 @@ escr_dtype_fp_k: begin                 {FP}
       escr_ifn_ret_int (e, trunc(val.fp));
       end;
 otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
+    escr_ifn_bad_dtype (e, val, stat);
     end;
   end;
 {
@@ -1322,7 +1305,7 @@ escr_dtype_fp_k: begin                 {FP}
       escr_ifn_ret_int (e, round(val.fp));
       end;
 otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
+    escr_ifn_bad_dtype (e, val, stat);
     end;
   end;
 {
@@ -1421,7 +1404,7 @@ escr_dtype_fp_k: begin                 {FP}
 *   The data type of the current term is invalid.
 }
 dtype_bad:
-  escr_ifn_bad_type (e, val, stat);    {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val, stat);   {set STAT to bad data type error}
   end;
 {
 ********************************************************************************
@@ -1519,7 +1502,7 @@ escr_dtype_fp_k: begin                 {FP}
 *   The data type of the current term is invalid.
 }
 dtype_bad:
-  escr_ifn_bad_type (e, val, stat);    {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val, stat);   {set STAT to bad data type error}
   end;
 {
 ********************************************************************************
@@ -1550,7 +1533,7 @@ escr_dtype_fp_k: begin                 {FP}
       escr_ifn_ret_fp (e, abs(val.fp));
       end;
 otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
+    escr_ifn_bad_dtype (e, val, stat);
     end;
   end;
 {
@@ -1566,33 +1549,20 @@ procedure escr_ifun_sqrt (
   val_param;
 
 var
-  resf: sys_fp_max_t;                  {floating point result}
-  val: escr_val_t;                     {current function parameter}
+  fp: sys_fp_max_t;
 
 begin
-  if not escr_ifn_get_val (e, val, stat) then begin {get the argument}
+  if not escr_ifn_get_fp (e, fp, stat) then begin {get the argument}
     escr_ifn_stat_required (e, stat);
     return;
     end;
 
-  case val.dtype of
-escr_dtype_int_k: begin                {INT}
-      resf := val.int;
-      end;
-escr_dtype_fp_k: begin                 {FP}
-      resf := val.fp;
-      end;
-otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
-    end;
-
-  if resf < 0.0 then begin             {negative ?}
+  if fp < 0.0 then begin               {negative ?}
     sys_stat_set (escr_subsys_k, escr_err_sqrtneg_k, stat);
     return;
     end;
 
-  resf := sqrt(resf);                  {perform the operation}
-  escr_ifn_ret_fp (e, resf);           {return the result}
+  escr_ifn_ret_fp (e, sqrt(fp));       {return the result}
   end;
 {
 ********************************************************************************
@@ -1608,23 +1578,11 @@ procedure escr_ifun_sin (
 
 var
   resf: sys_fp_max_t;                  {floating point result}
-  val: escr_val_t;                     {current function parameter}
 
 begin
-  if not escr_ifn_get_val (e, val, stat) then begin {get the argument}
+  if not escr_ifn_get_fp (e, resf, stat) then begin {get the argument}
     escr_ifn_stat_required (e, stat);
     return;
-    end;
-
-  case val.dtype of
-escr_dtype_int_k: begin                {INT}
-      resf := val.int;
-      end;
-escr_dtype_fp_k: begin                 {FP}
-      resf := val.fp;
-      end;
-otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
     end;
 
   resf := sin(resf);                   {perform the operation}
@@ -1644,23 +1602,11 @@ procedure escr_ifun_cos (
 
 var
   resf: sys_fp_max_t;                  {floating point result}
-  val: escr_val_t;                     {current function parameter}
 
 begin
-  if not escr_ifn_get_val (e, val, stat) then begin {get the argument}
+  if not escr_ifn_get_fp (e, resf, stat) then begin {get the argument}
     escr_ifn_stat_required (e, stat);
     return;
-    end;
-
-  case val.dtype of
-escr_dtype_int_k: begin                {INT}
-      resf := val.int;
-      end;
-escr_dtype_fp_k: begin                 {FP}
-      resf := val.fp;
-      end;
-otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
     end;
 
   resf := cos(resf);                   {perform the operation}
@@ -1680,23 +1626,11 @@ procedure escr_ifun_tan (
 
 var
   resf: sys_fp_max_t;                  {floating point result}
-  val: escr_val_t;                     {current function parameter}
 
 begin
-  if not escr_ifn_get_val (e, val, stat) then begin {get the argument}
+  if not escr_ifn_get_fp (e, resf, stat) then begin {get the argument}
     escr_ifn_stat_required (e, stat);
     return;
-    end;
-
-  case val.dtype of
-escr_dtype_int_k: begin                {INT}
-      resf := val.int;
-      end;
-escr_dtype_fp_k: begin                 {FP}
-      resf := val.fp;
-      end;
-otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
     end;
 
   resf := sin(resf) / cos(resf);       {perform the operation}
@@ -1731,24 +1665,12 @@ procedure escr_ifun_e (
 
 var
   resf: sys_fp_max_t;                  {floating point result}
-  val: escr_val_t;                     {current function parameter}
 
 begin
-  if not escr_ifn_get_val (e, val, stat) then begin {get the argument}
+  if not escr_ifn_get_fp (e, resf, stat) then begin {get the argument}
     if sys_error(stat) then return;    {hard error ?}
     escr_ifn_ret_fp (e, ek);           {return just e}
     return;
-    end;
-
-  case val.dtype of
-escr_dtype_int_k: begin                {INT}
-      resf := val.int;
-      end;
-escr_dtype_fp_k: begin                 {FP}
-      resf := val.fp;
-      end;
-otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
     end;
 
   resf := exp(resf);                   {perform the operation}
@@ -1855,7 +1777,7 @@ escr_dtype_fp_k: begin                 {FP}
 *   Error exits.
 }
 dtype_bad:                             {VAL has bad data type}
-  escr_ifn_bad_type (e, val, stat);    {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val, stat);   {set STAT to bad data type error}
   return;
   end;
 {
@@ -1872,23 +1794,11 @@ procedure escr_ifun_log (
 
 var
   resf: sys_fp_max_t;                  {floating point result}
-  val: escr_val_t;                     {current function parameter}
 
 begin
-  if not escr_ifn_get_val (e, val, stat) then begin {get the argument}
+  if not escr_ifn_get_fp (e, resf, stat) then begin {get the argument}
     escr_ifn_stat_required (e, stat);
     return;
-    end;
-
-  case val.dtype of
-escr_dtype_int_k: begin                {INT}
-      resf := val.int;
-      end;
-escr_dtype_fp_k: begin                 {FP}
-      resf := val.fp;
-      end;
-otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
     end;
 
   if resf <= 0.0 then begin
@@ -1913,23 +1823,11 @@ procedure escr_ifun_log2 (
 
 var
   resf: sys_fp_max_t;                  {floating point result}
-  val: escr_val_t;                     {current function parameter}
 
 begin
-  if not escr_ifn_get_val (e, val, stat) then begin {get the argument}
+  if not escr_ifn_get_fp (e, resf, stat) then begin {get the argument}
     escr_ifn_stat_required (e, stat);
     return;
-    end;
-
-  case val.dtype of
-escr_dtype_int_k: begin                {INT}
-      resf := val.int;
-      end;
-escr_dtype_fp_k: begin                 {FP}
-      resf := val.fp;
-      end;
-otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
     end;
 
   if resf <= 0.0 then begin
@@ -1957,23 +1855,11 @@ const
 
 var
   resf: sys_fp_max_t;                  {floating point result}
-  val: escr_val_t;                     {current function parameter}
 
 begin
-  if not escr_ifn_get_val (e, val, stat) then begin {get the argument}
+  if not escr_ifn_get_fp (e, resf, stat) then begin {get the argument}
     escr_ifn_stat_required (e, stat);
     return;
-    end;
-
-  case val.dtype of
-escr_dtype_int_k: begin                {INT}
-      resf := val.int;
-      end;
-escr_dtype_fp_k: begin                 {FP}
-      resf := val.fp;
-      end;
-otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
     end;
 
   resf := resf * conv;                 {perform the operation}
@@ -1996,23 +1882,11 @@ const
 
 var
   resf: sys_fp_max_t;                  {floating point result}
-  val: escr_val_t;                     {current function parameter}
 
 begin
-  if not escr_ifn_get_val (e, val, stat) then begin {get the argument}
+  if not escr_ifn_get_fp (e, resf, stat) then begin {get the argument}
     escr_ifn_stat_required (e, stat);
     return;
-    end;
-
-  case val.dtype of
-escr_dtype_int_k: begin                {INT}
-      resf := val.int;
-      end;
-escr_dtype_fp_k: begin                 {FP}
-      resf := val.fp;
-      end;
-otherwise                              {bad data type}
-    escr_ifn_bad_type (e, val, stat);
     end;
 
   resf := resf * conv;                 {perform the operation}
@@ -2096,7 +1970,7 @@ otherwise
       end;
 
 otherwise
-    escr_ifn_bad_type (e, val1, stat); {set STAT to bad data type error}
+    escr_ifn_bad_dtype (e, val1, stat); {set STAT to bad data type error}
     return;
     end;
 
@@ -2106,7 +1980,7 @@ otherwise
 *   Error exits.
 }
 dtype_bad:                             {VAL2 has bad data type}
-  escr_ifn_bad_type (e, val2, stat);   {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val2, stat);  {set STAT to bad data type error}
   return;
   end;
 {
@@ -2187,7 +2061,7 @@ otherwise
       end;
 
 otherwise
-    escr_ifn_bad_type (e, val1, stat); {set STAT to bad data type error}
+    escr_ifn_bad_dtype (e, val1, stat); {set STAT to bad data type error}
     return;
     end;
 
@@ -2197,7 +2071,7 @@ otherwise
 *   Error exits.
 }
 dtype_bad:                             {VAL2 has bad data type}
-  escr_ifn_bad_type (e, val2, stat);   {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val2, stat);  {set STAT to bad data type error}
   return;
   end;
 {
@@ -2288,7 +2162,7 @@ otherwise
       end;
 
 otherwise
-    escr_ifn_bad_type (e, val1, stat); {set STAT to bad data type error}
+    escr_ifn_bad_dtype (e, val1, stat); {set STAT to bad data type error}
     return;
     end;
 
@@ -2298,7 +2172,7 @@ otherwise
 *   Error exits.
 }
 dtype_bad:                             {VAL2 has bad data type}
-  escr_ifn_bad_type (e, val2, stat);   {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val2, stat);  {set STAT to bad data type error}
   return;
   end;
 {
@@ -2389,7 +2263,7 @@ otherwise
       end;
 
 otherwise
-    escr_ifn_bad_type (e, val1, stat); {set STAT to bad data type error}
+    escr_ifn_bad_dtype (e, val1, stat); {set STAT to bad data type error}
     return;
     end;
 
@@ -2399,7 +2273,7 @@ otherwise
 *   Error exits.
 }
 dtype_bad:                             {VAL2 has bad data type}
-  escr_ifn_bad_type (e, val2, stat);   {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val2, stat);  {set STAT to bad data type error}
   return;
   end;
 {
@@ -2480,7 +2354,7 @@ otherwise
       end;
 
 otherwise
-    escr_ifn_bad_type (e, val1, stat); {set STAT to bad data type error}
+    escr_ifn_bad_dtype (e, val1, stat); {set STAT to bad data type error}
     return;
     end;
 
@@ -2490,7 +2364,7 @@ otherwise
 *   Error exits.
 }
 dtype_bad:                             {VAL2 has bad data type}
-  escr_ifn_bad_type (e, val2, stat);   {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val2, stat);  {set STAT to bad data type error}
   return;
   end;
 {
@@ -2571,7 +2445,7 @@ otherwise
       end;
 
 otherwise
-    escr_ifn_bad_type (e, val1, stat); {set STAT to bad data type error}
+    escr_ifn_bad_dtype (e, val1, stat); {set STAT to bad data type error}
     return;
     end;
 
@@ -2581,7 +2455,7 @@ otherwise
 *   Error exits.
 }
 dtype_bad:                             {VAL2 has bad data type}
-  escr_ifn_bad_type (e, val2, stat);   {set STAT to bad data type error}
+  escr_ifn_bad_dtype (e, val2, stat);  {set STAT to bad data type error}
   return;
   end;
 {
@@ -2879,7 +2753,7 @@ begin
 
   escr_exblock_arg_get (e, argn, str_p); {get pointer to the indexed argument}
   if str_p <> nil then begin           {argument string exists}
-    string_append (e.funret, str_p^);  {return just the raw argument chars}
+    escr_ifn_ret_chars (e, str_p^);    {return just the raw argument characters}
     end;
   end;
 {
@@ -2935,13 +2809,13 @@ havesym:                               {SYM_P is pointing to the symbol}
 
 1:  begin                              {TYPE}
       case sym_p^.stype of             {what type of symbol is this ?}
-escr_sym_var_k: escr_ifn_ret_pstr (e, 'VAR'(0));
-escr_sym_const_k: escr_ifn_ret_pstr (e, 'CONST'(0));
-escr_sym_subr_k, escr_sym_isubr_k: escr_ifn_ret_pstr (e, 'SUBR'(0));
-escr_sym_macro_k, escr_sym_imacro_k: escr_ifn_ret_pstr (e, 'MACRO'(0));
-escr_sym_func_k, escr_sym_ifunc_k: escr_ifn_ret_pstr (e, 'FUNC'(0));
-escr_sym_cmd_k, escr_sym_icmd_k: escr_ifn_ret_pstr (e, 'CMD'(0));
-escr_sym_label_k: escr_ifn_ret_pstr (e, 'LABEL'(0));
+escr_sym_var_k: escr_ifn_ret_strp (e, 'VAR'(0));
+escr_sym_const_k: escr_ifn_ret_strp (e, 'CONST'(0));
+escr_sym_subr_k, escr_sym_isubr_k: escr_ifn_ret_strp (e, 'SUBR'(0));
+escr_sym_macro_k, escr_sym_imacro_k: escr_ifn_ret_strp (e, 'MACRO'(0));
+escr_sym_func_k, escr_sym_ifunc_k: escr_ifn_ret_strp (e, 'FUNC'(0));
+escr_sym_cmd_k, escr_sym_icmd_k: escr_ifn_ret_strp (e, 'CMD'(0));
+escr_sym_label_k: escr_ifn_ret_strp (e, 'LABEL'(0));
         end;
       end;
 
@@ -2953,11 +2827,11 @@ otherwise                              {symbol doesn't have data type}
         goto ret_empty;
         end;
       case dtype of                    {which data type ?}
-escr_dtype_bool_k: escr_ifn_ret_pstr (e, 'BOOL'(0));
-escr_dtype_int_k: escr_ifn_ret_pstr (e, 'INTEGER'(0));
-escr_dtype_fp_k: escr_ifn_ret_pstr (e, 'REAL'(0));
-escr_dtype_str_k: escr_ifn_ret_pstr (e, 'STRING'(0));
-escr_dtype_time_k: escr_ifn_ret_pstr (e, 'TIME'(0));
+escr_dtype_bool_k: escr_ifn_ret_strp (e, 'BOOL'(0));
+escr_dtype_int_k: escr_ifn_ret_strp (e, 'INTEGER'(0));
+escr_dtype_fp_k: escr_ifn_ret_strp (e, 'REAL'(0));
+escr_dtype_str_k: escr_ifn_ret_strp (e, 'STRING'(0));
+escr_dtype_time_k: escr_ifn_ret_strp (e, 'TIME'(0));
 otherwise                              {unsupported data type}
         escr_err_dtype_unimp (e, dtype, 'ESCR_IFUN_SYM');
         end;

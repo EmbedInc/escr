@@ -401,6 +401,132 @@ procedure escr_err_atline_abort (      {bomb with msg and source line on error}
   in      n_parms: sys_int_machine_t); {number of parameters in PARMS}
   val_param; extern;
 
+procedure escr_ifn_bad_keyw (          {set STAT for bad keyword}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      keyw: univ string_var_arg_t; {the bad keyword or string}
+  out     stat: sys_err_t);            {returned error status}
+  val_param; extern;
+
+procedure escr_ifn_bad_dtype (         {set STAT for bad data type}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      val: escr_val_t;             {value with the wrong data type}
+  out     stat: sys_err_t);            {returned error status}
+  val_param; extern;
+
+procedure escr_ifn_stat_required (     {set STAT according to missing required argument}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+function escr_ifn_get_bool (           {get boolean value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     b: boolean;                  {returned value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with boolean value}
+  val_param; extern;
+
+function escr_ifn_get_fp (             {get floating point value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     fp: sys_fp_max_t;            {returned value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with floating point value}
+  val_param; extern;
+
+function escr_ifn_get_int (            {get integer value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     ii: sys_int_max_t;           {returned value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with integer value}
+  val_param; extern;
+
+function escr_ifn_get_keyw (           {get next parameter as upper case keyword}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  keyw: univ string_var_arg_t; {returned keyword, upper case}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with a keyword}
+  val_param; extern;
+
+function escr_ifn_get_str (            {get string value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  str: univ string_var_arg_t;  {returned value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with string value}
+  val_param; extern;
+
+procedure escr_ifn_get_strs (          {get string of all remaining parameters}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  str: univ string_var_arg_t;  {returned string}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+function escr_ifn_get_time (           {get time value of next function parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     t: sys_clock_t;              {returned value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with time value}
+  val_param; extern;
+
+function escr_ifn_get_val (            {get arbitrary value of next func parameter}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     val: escr_val_t;             {returned term value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {term was available}
+  val_param; extern;
+
+procedure escr_ifn_ret_bool (          {return boolean value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      b: boolean);                 {the boolean value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_char (          {return one-character string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      c: char);                    {the single character of the string}
+  val_param; extern;
+
+procedure escr_ifn_ret_chars (         {return raw characters}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      str: univ string_var_arg_t); {the characters to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_charsp (        {return raw characters from Pascal string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      strp: string);               {the characters to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_fp (            {return floating point value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fp: sys_fp_max_t);           {the floating point value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_empty (         {return the empty string}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param; extern;
+
+procedure escr_ifn_ret_int (           {return integer value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      ii: sys_int_max_t);          {the integer value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_str (           {return string value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      str: univ string_var_arg_t); {the string value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_strp (          {return value from Pascal string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      strp: string);               {the string value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_time (          {return time value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      t: sys_clock_t);             {the time value to return}
+  val_param; extern;
+
+procedure escr_ifn_ret_val (           {return arbitrary value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      val: escr_val_t);            {the value to return}
+  val_param; extern;
+
 procedure escr_open (                  {start a new use of the ESCR system}
   in out  mem: util_mem_context_t;     {parent memory context, will make sub context}
   out     e_p: escr_p_t;               {will point to new initialized ESCR use state}
