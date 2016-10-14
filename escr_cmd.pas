@@ -153,14 +153,9 @@ procedure escr_cmd_set (
   out     stat: sys_err_t);
   val_param;
 
-const
-  max_msg_parms = 2;                   {max parameters we can pass to a message}
-
 var
   sym_p: escr_sym_p_t;                 {pointer to symbol descriptor}
   name: string_var80_t;                {symbol name}
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
 
 label
   err_missing;
@@ -174,12 +169,13 @@ begin
 
   escr_sym_find (e, name, e.sym_var, sym_p); {get pointer to the symbol descriptor}
   if sym_p = nil then begin            {no such symbol ?}
-    sys_msg_parm_vstr (msg_parm[1], name);
-    escr_err_atline (e, 'pic', 'sym_not_found', msg_parm, 1);
+    escr_stat_sym_nfound (name, stat);
+    return;
     end;
   if sym_p^.stype <> escr_sym_var_k then begin {symbol is not a variable}
-    sys_msg_parm_vstr (msg_parm[1], name);
-    escr_err_atline (e, 'pic', 'sym_not_variable', msg_parm, 1);
+    sys_stat_set (escr_subsys_k, escr_err_sym_nvar_k, stat);
+    sys_stat_parm_vstr (name, stat);
+    return;
     end;
 
   if not escr_get_val_dtype (e, sym_p^.var_val, stat) {get value and convert to var's dtype}

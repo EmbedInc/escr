@@ -48,7 +48,7 @@ begin
   line_p := inpos_p^.last_p;           {get pointer to current input line info}
   sys_msg_parm_vstr (msg_parm[1], line_p^.file_p^.tnam); {input file name}
   sys_msg_parm_int (msg_parm[2], line_p^.lnum); {input file line number}
-  sys_message_parms ('pic', 'err_fnam_lnum', msg_parm, 2);
+  sys_message_parms ('escr', 'err_fnam_lnum', msg_parm, 2);
 
   inpos_p := inpos_p^.prev_p;          {back to next nested input file this execution block}
   while block_p <> nil do begin        {back thru the nested execution blocks}
@@ -56,13 +56,13 @@ begin
       line_p := inpos_p^.last_p;       {get pointer to last read line}
       sys_msg_parm_vstr (msg_parm[1], line_p^.file_p^.tnam); {file name}
       sys_msg_parm_int (msg_parm[2], line_p^.lnum); {line number}
-      sys_message_parms ('pic', 'included_from', msg_parm, 2);
+      sys_message_parms ('escr', 'included_from', msg_parm, 2);
       inpos_p := inpos_p^.prev_p;      {back to file included from}
       end;
     if block_p^.prev_p <> nil then begin {in a nested execution block ?}
       sys_msg_parm_int (msg_parm[1], block_p^.start_p^.lnum); {block start line number}
       sys_msg_parm_vstr (msg_parm[2], block_p^.start_p^.file_p^.tnam); {block start fname}
-      sys_message_parms ('pic', 'in_block', msg_parm, 2);
+      sys_message_parms ('escr', 'in_block', msg_parm, 2);
       end;
     block_p := block_p^.prev_p;        {one level up to parent execution block}
     end;

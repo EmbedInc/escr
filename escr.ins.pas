@@ -20,7 +20,7 @@ const
   escr_err_nomcontext_k = 1;           {unable to allocate dynamic memory context}
   escr_err_nomem_k = 2;                {unable to allocate dynamic memory}
   escr_err_sytoomany_k = 3;            {max versions of symbol already exist}
-  escr_err_nfsym_k = 4;                {symbol not found}
+  escr_err_nfsym_k = 4;                {symbol not found, <name>}
   escr_err_inend_k = 5;                {end of input before end of block}
   escr_err_cmdbad_k = 6;               {unrecognized command}
   escr_err_notcmd_k = 7;               {symbol is not a command}
@@ -58,6 +58,10 @@ const
   escr_err_lognpos_k = 39;             {logarithm of non-positive value}
   escr_err_afdate_k = 40;              {date-altering arg after date set, <argname>}
   escr_err_badparmfun_k = 41;          {bad function parameter, <parm> <funcname>}
+  escr_err_sym_nvar_k = 42;            {symbol is not a variable, <name>}
+  escr_err_endblock_root_k = 43;       {trying to end root block, <cmd>}
+  escr_err_endblock_type_k = 44;       {wrong block type, <cmd>}
+  escr_err_endblock_include_k = 45;    {trying to end block in include file, <cmd>}
 {
 *   Derived constants.
 }
@@ -463,7 +467,7 @@ function escr_get_val_dtype (          {get next input value, to dtype of VAL}
   val_param; extern;
 
 procedure escr_stat_cmd_noarg (        {missing command argument}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      e: escr_t;                   {state for this use of the ESCR system}
   in out  stat: sys_err_t);            {set, not altered if already err}
   val_param; extern;
 
@@ -729,6 +733,11 @@ procedure escr_set_func_detect (       {set routine for detecting function start
 procedure escr_set_preproc (           {set preprocessor mode on/off}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      on: boolean);                {enables preprocessor mode, default off}
+  val_param; extern;
+
+procedure escr_stat_sym_nfound (       {symbol not found}
+  in      name: univ string_var_arg_t; {symbol name}
+  in out  stat: sys_err_t);            {set, not altered if already err}
   val_param; extern;
 
 procedure escr_syexcl_add (            {add syntax exclusion}

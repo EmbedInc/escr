@@ -125,9 +125,33 @@ msg err40
 msg err41
   lan english -def
     Parameter "%p1s" to function "%p2s" is unrecognized.
+msg err42
+  lan english -def
+    Symbol "%p1s" is not a variable.  Only a variable is allowed here.
+msg err43
+  lan english -def
+    Bad command %p1s.  In root execution block.
+msg err44
+  lan english -def
+    Bad command %p1s.  In root execution block.
+msg err45
+  lan english -def
+    Bad command %p1s.  Not in BLOCK..ENBLOCK block.
+msg err46
+  lan english -def
+    Bad command %p1s.  Attempt to end block in include file.
 /*
 /*   Messages without error status codes.
 /*
+msg err_fnam_lnum
+  lan english -def
+    Error on line %p2i of file "%p1s".
+msg in_block
+  lan english -def
+    In block starting on line %p1i of "%p2s".
+msg included_from
+  lan english -def
+    Included from "%p1s" at line %p2i.
 msg open
   lan english -def
     Error occurred on attempt to open a new ESCR script system use state.
