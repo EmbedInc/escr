@@ -8,6 +8,7 @@ define escr_str_from_time;
 define escr_str_from_fp;
 define escr_uptocomm;
 define escr_set_preproc;
+define escr_set_func_detect;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -324,4 +325,24 @@ begin
       e.flags := e.flags - [escr_flag_preproc_k];
       end
     ;
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_SET_FUNC_DETECT (E, P)
+*
+*   Install the routine pointed to by P for detecting the start of functions.
+*   P can be NIL to de-install any such routine.
+*
+*   When a routine to detect function starts is installed, then the function
+*   start sequence in E.SYFUNC.ST is unused and become irrelevant.  When no
+*   routine is installed, E.SYFUNC.ST will be used and must be set correctly.
+}
+procedure escr_set_func_detect (       {set routine for detecting function start}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      p: escr_syfunc_st_p_t);      {routine to detect function, NIL for none}
+  val_param;
+
+begin
+  e.syfunc_st_p := p;                  {save the pointer}
   end;

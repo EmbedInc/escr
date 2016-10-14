@@ -96,6 +96,18 @@ loop_line:
       if sys_error(stat) then return;
       next;                            {back to check after this exclusion}
       end;
+    if                                 {data file comment here ?}
+        escr_excl_check (              {copy data file comments}
+          e,                           {state for this use of the ESCR system}
+          str_p^,                      {input string}
+          e.ip,                        {input string parse index}
+          e.commdat_p,                 {points to list of syntax exclusions}
+          addr(buf),                   {pointer to string to append exclusion to}
+          stat)                        {completion status, always OK on function false}
+        then begin
+      if sys_error(stat) then return;
+      next;                            {back to check after this exclusion}
+      end;
     if                                 {script comment here ?}
         escr_excl_check (              {skip over any script comment here}
           e,                           {state for this use of the ESCR system}
@@ -108,15 +120,12 @@ loop_line:
       if sys_error(stat) then return;
       next;                            {back to check after this comment}
       end;
+
     string_append1 (buf, str_p^.str[e.ip]); {copy this source character to output string}
     e.ip := e.ip + 1;                  {advance to next source character}
     end;                               {back to process next source string character}
 
   string_unpad (buf);                  {strip trailing spaces from input line}
-
-(*
-  writeln (e.exblock_p^.inpos_p^.last_p^.lnum:3, ': "', buf.str:buf.len, '"');
-*)
 
   if buf.len <= 0 then begin           {result is now a blank line ?}
     goto loop_line;                    {ignore this line}
@@ -145,7 +154,7 @@ loop_line:
   if escr_flag_preproc_k in e.flags
     then begin
       {
-      *   In preprocessor mode.  To identify a possible command, and data file
+      *   In preprocessor mode.  To identify a possible command, data file
       *   comments must first be stripped from the input line.  A copy of the
       *   input line with data file comments stripped is made in BUF, from which
       *   the candidate command is extracted.  If a command is found, then BUF

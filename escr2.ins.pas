@@ -446,39 +446,9 @@ procedure escr_ifun_xor(
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
-
 {
 *   Other entry points.
 }
-procedure escr_err_atline (            {show error followed by source line number}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      subsys: string;              {name of subsystem, used to find message file}
-  in      msg: string;                 {message name within subsystem file}
-  in      parms: univ sys_parm_msg_ar_t; {array of parameter descriptors}
-  in      n_parms: sys_int_machine_t); {number of parameters in PARMS}
-  options (val_param, noreturn, extern);
-
-procedure escr_err_check_symname (     {abort with error on invalid symbol name}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t); {symbol name to check}
-  val_param; extern;
-
-procedure escr_err_dtype_unimp (       {unimplemented data type internal error}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      dtype: escr_dtype_k_t;       {unimplemented data type}
-  in      routine: string);            {name of the routine where data type unimplemented}
-  options (val_param, noreturn, extern);
-
-procedure escr_err_sym_not_found (     {symbol not found}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t); {symbol name that was not found}
-  options (val_param, noreturn, extern);
-
-procedure escr_err_parm_bad (          {bomb with bad parameter to command error}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      parm: univ string_var_arg_t); {the offending parameter}
-  options (val_param, noreturn, extern);
-
 procedure escr_err_parm_last_bad (     {last parameter parsed was bad}
   in out  e: escr_t);                  {state for this use of the ESCR system}
   options (val_param, noreturn, extern);
@@ -490,11 +460,6 @@ procedure escr_err_parm_missing (      {a required command parameter not found}
   in      parms: univ sys_parm_msg_ar_t; {array of parameter descriptors}
   in      n_parms: sys_int_machine_t); {number of parameters in PARMS}
   options (val_param, noreturn, extern);
-
-procedure escr_err_val (               {show value and data type of offending value}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      val: escr_val_t);            {the value}
-  val_param; extern;
 
 procedure escr_exblock_arg_add (       {add argument to current block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -566,97 +531,10 @@ procedure escr_format_int (            {create specifically formatted integer st
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_get_args_str (          {get string representation of remaining parameters}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  str: univ string_var_arg_t;  {concatenation of remaining args converted to strings}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
-function escr_get_bool (               {get next parameter as boolean}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     b: boolean;                  {returned boolean value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {TRUE if input token was available}
-  val_param; extern;
-
-function escr_get_dtype (              {get next parameter as data type ID}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     dtype: escr_dtype_k_t;       {returned data type ID}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {TRUE if input token was available}
-  val_param; extern;
-
-function escr_get_end (                {check for no more tokens on input line}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     stat: sys_err_t)             {set to error if token found}
-  :boolean;                            {no more tokens on the input line}
-  val_param; extern;
-
-function escr_get_fp (                 {get next parameter as floating point}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     fp: sys_fp_max_t;            {returned floating point value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {TRUE if input token was available}
-  val_param; extern;
-
-function escr_get_int (                {get next parameter as an integer}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     i: sys_int_max_t;            {returned integer value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {TRUE if input token was available}
-  val_param; extern;
-
-function escr_get_time (               {get the next token as a time value}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     time: sys_clock_t;           {returned time value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {TRUE if input token was available}
-  val_param; extern;
-
-procedure escr_get_keyword (           {get one of list of keywords from input stream}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      klist: string;               {keywords, upper case separated by blanks}
-  out     pick: sys_int_machine_t;     {1-N keyword number, 0 = no token, -1 = no match}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
-function escr_get_str (                {get string representation of next parameter}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  str: univ string_var_arg_t;  {returned string}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {TRUE if input token was available}
-  val_param; extern;
-
-function escr_get_tkraw (              {get next raw input stream token}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     tk: univ string_var_arg_t)   {the returned token}
-  :boolean;                            {TRUE if token was available}
-  val_param; extern;
-
 function escr_get_tkrawc (             {get next raw token, comma delimited}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     tk: univ string_var_arg_t)   {the returned token}
   :boolean;                            {TRUE if token was available}
-  val_param; extern;
-
-function escr_get_token (              {get next input stream token}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     tk: univ string_var_arg_t)   {the returned token}
-  :boolean;                            {TRUE if token was available}
-  val_param; extern;
-
-function escr_get_val (                {get value of next input stream token}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     val: escr_val_t;             {returned value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {TRUE if token available}
-  val_param; extern;
-
-function escr_get_val_dtype (          {get next input value, to dtype of VAL}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  val: escr_val_t;             {returned value, DTYPE specifies data type}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {TRUE if token available}
   val_param; extern;
 
 procedure escr_infile_find (           {find existing input file descriptor}
@@ -799,23 +677,11 @@ function escr_str_to_time (            {make absolute time descriptor from strin
   :boolean;                            {TRUE on success}
   val_param; extern;
 
-procedure escr_sym_del (               {delete specific symbol version}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  sym_p: escr_sym_p_t);        {pointer to symbol to delete, returned NIL}
-  val_param; extern;
-
 procedure escr_sym_del_name (          {delete symbol by name}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  sytable: escr_sytable_t;     {symbol table to delete symbol from}
   in      name: univ string_var_arg_t; {symbol name}
   out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
-procedure escr_sym_find (              {look up symbol in symbol table}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t; {symbol name}
-  in out  sytable: escr_sytable_t;     {symbol table to look up name in}
-  out     sym_p: escr_sym_p_t);        {returned pointer to symbol, NIL if not found}
   val_param; extern;
 
 procedure escr_sym_find_any (          {look up symbol in all symbol tables}
@@ -847,16 +713,6 @@ procedure escr_sym_new_func (          {create new user-defined function symbol}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
   in      line_p: escr_inline_p_t;     {pointer to first line of function definition}
-  in      global: boolean;             {create global, not local symbol}
-  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
-procedure escr_sym_new_const (         {create new symbol for a constant}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t; {symbol name}
-  in      dtype: escr_dtype_k_t;       {data type of the constant}
-  in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
   out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}
@@ -980,15 +836,4 @@ procedure escr_val_text (              {make output language text representation
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      val: escr_val_t;             {the source value}
   in out  str: univ string_var_arg_t); {returned string}
-  val_param; extern;
-
-procedure escr_write_obuf (            {write line to output file from OBUF}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
-procedure escr_write_vstr (            {write var string to current output file}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      s: univ string_var_arg_t;    {the string to write}
-  out     stat: sys_err_t);            {completion status}
   val_param; extern;

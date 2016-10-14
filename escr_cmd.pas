@@ -141,8 +141,7 @@ make_new:                              {a new symbol needs to be created}
 *   Abort due to missing required parameter.
 }
 err_missing:
-  if sys_error(stat) then return;      {return with any previous hard error}
-  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
+  escr_stat_cmd_noarg (e, stat);
   end;
 {
 ********************************************************************************
@@ -190,8 +189,7 @@ begin
 *   Abort due to missing required parameter.
 }
 err_missing:
-  if sys_error(stat) then return;      {return with any previous hard error}
-  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
+  escr_stat_cmd_noarg (e, stat);
   end;
 {
 ********************************************************************************
@@ -258,8 +256,7 @@ escr_dtype_str_k: begin                {STRING}
 *   Abort due to missing required parameter.
 }
 err_missing:
-  if sys_error(stat) then return;      {return with any previous hard error}
-  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
+  escr_stat_cmd_noarg (e, stat);
   end;
 {
 ********************************************************************************
@@ -290,8 +287,7 @@ begin
 *   Abort due to missing required parameter.
 }
 err_missing:
-  if sys_error(stat) then return;      {return with any previous hard error}
-  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
+  escr_stat_cmd_noarg (e, stat);
   end;
 {
 ********************************************************************************
@@ -529,8 +525,7 @@ begin
 *   Abort due to missing required parameter.
 }
 err_missing:
-  if sys_error(stat) then return;      {return with any previous hard error}
-  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
+  escr_stat_cmd_noarg (e, stat);
   end;
 {
 ********************************************************************************
@@ -602,8 +597,7 @@ begin
 *   Abort due to missing required parameter.
 }
 err_missing:
-  if sys_error(stat) then return;      {return with any previous hard error}
-  sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
+  escr_stat_cmd_noarg (e, stat);
   end;
 {
 ********************************************************************************

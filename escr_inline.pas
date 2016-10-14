@@ -101,16 +101,35 @@ begin
     {
     *   Check for function start sequence here.
     }
-    cleft := lin.len - p + 1;          {number of input characters left}
-    if e.syfunc.st.len > cleft then exit; {no room for function start here ?}
-    for ii := 1 to e.syfunc.st.len do begin {compare input string to function start}
-      if lin.str[p + ii - 1] <> e.syfunc.st.str[ii] {mismatch ?}
-        then goto nextp;
-      end;
+    if e.syfunc_st_p = nil
+      then begin                       {no app function, use syntax start string}
+        cleft := lin.len - p + 1;      {number of input characters left}
+        if e.syfunc.st.len > cleft then exit; {no room for function start here ?}
+        for ii := 1 to e.syfunc.st.len do begin {compare input string to function start}
+          if lin.str[p + ii - 1] <> e.syfunc.st.str[ii] {mismatch ?}
+            then goto nextp;
+          end;
+        p := p + e.syfunc.st.len;      {skip over function start syntax}
+        end
+      else begin                       {use app routine to identify function start}
+        if not e.syfunc_st_p^ (
+            addr(e),                   {pointer to script system state}
+            lin,                       {source line}
+            p,                         {index to check for func start at, updated if found}
+            stat) then begin
+          if sys_error(stat) then return;
+          goto nextp;                  {no function here, advance to next character}
+          end;
+        end
+      ;
+    {
+    *   A function start was found.  P has been advanced to immediately after
+    *   the function start syntax.
+    }
     inline_expand_func (               {expand inline function and rest of line}
       e,                               {state for this use of ESCR system}
       lin,                             {input string}
-      p + e.syfunc.st.len,             {start of function to interpret}
+      p,                               {start of function to interpret}
       lot,                             {string to append expansion to}
       stat);
     return;                            {all done}

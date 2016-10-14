@@ -176,9 +176,9 @@ begin
   if sys_error(stat) then goto err;
   escr_sytable_init (e_p^, e_p^.sym_src, stat); {init source code snippets symbol table}
   if sys_error(stat) then goto err;
-  {
-  *   Do basic initialization, pointer to NIL, strings to empty, etc.
-  }
+{
+*   Do basic initialization.
+}
   e_p^.files_p := nil;
   e_p^.ibuf.max := size_char(e_p^.ibuf.str);
   e_p^.ibuf.len := 0;
@@ -213,6 +213,7 @@ begin
   string_vstring (e_p^.syfunc.st, '[', 1);
   e_p^.syfunc.en.max := size_char(e_p^.syfunc.en.str);
   string_vstring (e_p^.syfunc.en, ']', 1);
+  e_p^.syfunc_st_p := nil;
   e_p^.flags := [];
 {
 *   Do higher level initialization now that all fields have at least legal
@@ -225,10 +226,17 @@ begin
     stat);
   if sys_error(stat) then goto err;
 
-  escr_syexcl_add (                    {add exclusion for ESCR strings}
+  escr_syexcl_add (                    {add exclusion for double quoted strings}
     e_p^,                              {state for this use of the ESCR system}
     string_v('"'),                     {quoted string start}
     string_v('"'),                     {quoted string end}
+    stat);
+  if sys_error(stat) then goto err;
+
+  escr_syexcl_add (                    {add exclusion for single quoted strings}
+    e_p^,                              {state for this use of the ESCR system}
+    string_v(''''),                    {quoted string start}
+    string_v(''''),                    {quoted string end}
     stat);
   if sys_error(stat) then goto err;
   {

@@ -3079,7 +3079,7 @@ begin
     end;
 
   escr_ulab_get (e, name, ress);       {get the label}
-  escr_ifn_ret_str (e, ress);          {return the result}
+  escr_ifn_ret_chars (e, ress);        {return the result}
   end;
 {
 ********************************************************************************

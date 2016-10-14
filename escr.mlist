@@ -16,6 +16,7 @@ escr_inline.obj
 escr_open.obj
 escr_out.obj
 escr_run.obj
+escr_stat.obj
 escr_sym.obj
 escr_sym_cmd.obj
 escr_sym_func.obj
