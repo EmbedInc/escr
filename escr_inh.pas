@@ -48,18 +48,16 @@ begin
 *   Delete the current execution inhibit and pop back to the previous one.
 }
 procedure escr_inh_end (               {end the current execution inhibit}
-  in out e: escr_t);                   {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
   val_param;
-
-const
-  max_msg_parms = 1;                   {max parameters we can pass to a message}
 
 var
   inh_p: escr_inh_p_t;                 {pointer to execution inhibit to delete}
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
+
   if e.inhibit_p = nil then begin
     writeln ('INTERNAL ERROR: Attempting to delete root inhibit.');
     escr_err_atline (e, '', '', nil, 0);
@@ -68,12 +66,13 @@ begin
   if e.inhibit_p^.prev_p = e.exblock_p^.previnh_p then begin {going too far for this block ?}
     case e.inhibit_p^.inhty of         {what type of inhibit is it ?}
 escr_inhty_if_k: begin                 {IF construct}
-        escr_err_atline (e, 'pic', 'err_nest_ih_if', nil, 0);
+        sys_stat_set (escr_subsys_k, escr_err_if_nend_k, stat);
         end;
 otherwise
-      sys_msg_parm_int (msg_parm[1], ord(e.inhibit_p^.inhty));
-      escr_err_atline (e, 'pic', 'err_nest_inh', msg_parm, 1);
+      sys_stat_set (escr_subsys_k, escr_err_inh_nest_k, stat);
+      sys_stat_parm_int (ord(e.inhibit_p^.inhty), stat);
       end;
+    return;                            {return with error}
     end;
 
   inh_p := e.inhibit_p;                {save pointer to inhibit to delete}

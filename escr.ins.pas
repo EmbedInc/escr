@@ -62,6 +62,23 @@ const
   escr_err_endblock_root_k = 43;       {trying to end root block, <cmd>}
   escr_err_endblock_type_k = 44;       {wrong block type, <cmd>}
   escr_err_endblock_include_k = 45;    {trying to end block in include file, <cmd>}
+  escr_err_notinif_k = 46;             {not in IF block}
+  escr_err_then2_k = 47;               {second THEN command}
+  escr_err_else2_k = 48;               {second ELSE command}
+  escr_err_nothenelse_k = 49;          {no THEN or ELSE in IF block}
+  escr_err_loopinc0_k = 50;            {loop iteration increment = 0}
+  escr_err_notloop_k = 51;             {not in LOOP block}
+  escr_err_notmacro_k = 52;            {not in MACRO block}
+  escr_err_notsubdef_k = 53;           {not in subroutine definition}
+  escr_err_sym_nsub_k = 54;            {symbol is not a subroutine, <name>}
+  escr_err_notsub_k = 55;              {not in a subroutine}
+  escr_err_bltoomany_k = 56;           {block nesting too deep, <level>}
+  escr_err_inftoomany_k = 57;          {input file nesting too deep, <level>}
+  escr_err_fmtint_k = 58;              {bad integer format string keyword, <name>}
+  escr_err_fmtfp_k = 59;               {bad FP format string keyword, <name>}
+  escr_err_inh_nest_k = 60;            {inhibit nesting error}
+  escr_err_if_nend_k = 61;             {IF not ended before end of execution block}
+  escr_err_badsym_k = 62;              {not a valid symbol name, <name>}
 {
 *   Derived constants.
 }
@@ -650,11 +667,6 @@ procedure escr_err_atline_abort (      {bomb with msg and source line on error}
   in      n_parms: sys_int_machine_t); {number of parameters in PARMS}
   val_param; extern;
 
-procedure escr_err_check_symname (     {abort with error on invalid symbol name}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t); {symbol name to check}
-  val_param; extern;
-
 procedure escr_err_dtype_unimp (       {unimplemented data type internal error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      dtype: escr_dtype_k_t;       {unimplemented data type}
@@ -664,11 +676,6 @@ procedure escr_err_dtype_unimp (       {unimplemented data type internal error}
 procedure escr_err_parm_bad (          {bomb with bad parameter to command error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      parm: univ string_var_arg_t); {the offending parameter}
-  options (val_param, noreturn, extern);
-
-procedure escr_err_sym_not_found (     {symbol not found}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t); {symbol name that was not found}
   options (val_param, noreturn, extern);
 
 procedure escr_err_val (               {show value and data type of offending value}

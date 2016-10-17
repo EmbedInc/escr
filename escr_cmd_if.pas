@@ -86,13 +86,15 @@ procedure escr_cmd_then (
 
 begin
   if e.inhibit_p^.inhty <> escr_inhty_if_k then begin {not in IF structure ?}
-    escr_err_atline (e, 'pic', 'not_in_if', nil, 0);
+    sys_stat_set (escr_subsys_k, escr_err_notinif_k, stat);
+    return;
     end;
   if not escr_get_end (e, stat) then return; {abort if anything on command line}
   if e.inhibit_p^.prev_p^.inh then return; {whole IF inhibited, just tracking nesting ?}
 
   if escr_ifflag_nothen_k in e.inhibit_p^.if_flags then begin {THEN not allowed here ?}
-    escr_err_atline (e, 'pic', 'ill_then', nil, 0);
+    sys_stat_set (escr_subsys_k, escr_err_then2_k, stat);
+    return;
     end;
   e.inhibit_p^.if_flags :=             {no subsequent THEN command allowed this IF}
     e.inhibit_p^.if_flags + [escr_ifflag_nothen_k];
@@ -112,13 +114,15 @@ procedure escr_cmd_else (
 
 begin
   if e.inhibit_p^.inhty <> escr_inhty_if_k then begin {not in IF structure ?}
-    escr_err_atline (e, 'pic', 'not_in_if', nil, 0);
+    sys_stat_set (escr_subsys_k, escr_err_notinif_k, stat);
+    return;
     end;
   if not escr_get_end (e, stat) then return; {abort if anything on command line}
   if e.inhibit_p^.prev_p^.inh then return; {whole IF inhibited, just tracking nesting ?}
 
   if escr_ifflag_noelse_k in e.inhibit_p^.if_flags then begin {ELSE not allowed here ?}
-    escr_err_atline (e, 'pic', 'ill_else', nil, 0);
+    sys_stat_set (escr_subsys_k, escr_err_else2_k, stat);
+    return;
     end;
   e.inhibit_p^.if_flags :=             {no subsequent THEN or ELSE command allowed this IF}
     e.inhibit_p^.if_flags + [escr_ifflag_nothen_k, escr_ifflag_noelse_k];
@@ -138,17 +142,20 @@ procedure escr_cmd_endif (
 
 begin
   if e.inhibit_p^.inhty <> escr_inhty_if_k then begin {not in IF structure ?}
-    escr_err_atline (e, 'pic', 'not_in_if', nil, 0);
+    sys_stat_set (escr_subsys_k, escr_err_notinif_k, stat);
+    return;
     end;
+
+  if not escr_get_end (e, stat) then return; {error on extra parameter}
 
   if                                   {neither THEN nor ELSE encountered ?}
       (not e.inhibit_p^.prev_p^.inh) and {whole IF command not inhibited ?}
       (not (escr_ifflag_nothen_k in e.inhibit_p^.if_flags)) and {no THEN ?}
       (not (escr_ifflag_noelse_k in e.inhibit_p^.if_flags)) {no ELSE ?}
       then begin
-    escr_err_atline (e, 'pic', 'err_if_nothenelse', nil, 0);
+    sys_stat_set (escr_subsys_k, escr_err_nothenelse_k, stat);
+    return;
     end;
 
-  escr_inh_end (e);                    {remove the execution inhibit for the IF structure}
-  discard( escr_get_end (e, stat) );   {error on extra parameter}
+  escr_inh_end (e, stat);              {remove the execution inhibit for the IF structure}
   end;

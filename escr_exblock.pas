@@ -19,27 +19,25 @@ define escr_exblock_quit;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_NEW (E)
+*   Subroutine ESCR_EXBLOCK_NEW (E, STAT)
 *
 *   Create a new execution block, initialize it, and set it as current.  The
 *   block type will be initialized to TOP, which must be changed for all except
 *   the top block.
 }
 procedure escr_exblock_new (           {create and install new execution block}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
   val_param;
-
-const
-  max_msg_parms = 1;                   {max parameters we can pass to a message}
 
 var
   mem_p: util_mem_context_p_t;         {mem context for block, deleted when block closed}
   bl_p: escr_exblock_p_t;              {points to new execution block created}
   nlev: sys_int_machine_t;             {new block nesting level, top = 0}
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
+
   if e.exblock_p = nil
     then begin                         {creating top level block}
       util_mem_context_get (e.mem_p^, mem_p); {create mem context for top block}
@@ -49,8 +47,9 @@ begin
       util_mem_context_get (e.exblock_p^.mem_p^, mem_p); {create new mem context for block}
       nlev := e.exblock_p^.level + 1;  {nesting level one more than parent block}
       if nlev > escr_max_blklev_k then begin {new block would be nested too deep ?}
-        sys_msg_parm_int (msg_parm[1], escr_max_blklev_k);
-        escr_err_atline (e, 'pic', 'err_maxnest_block', msg_parm, 1);
+        sys_stat_set (escr_subsys_k, escr_err_bltoomany_k, stat);
+        sys_stat_parm_int (escr_max_blklev_k, stat);
+        return;
         end;
       end
     ;
@@ -133,7 +132,7 @@ procedure escr_exblock_ulab_init (     {create unique labels list in this block}
 
 begin
   if e.exblock_p^.ulab <> nil then begin {unique labels list already exists ?}
-    escr_err_atline (e, 'pic', 'err_loclab_exist', nil, 0);
+    escr_err_atline (e, 'escr', 'err_loclab_exist', nil, 0);
     end;
 
   string_hash_create (                 {create the unique labels hash table}
@@ -147,7 +146,7 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_INLINE_SET (E, LINE_P)
+*   Subroutine ESCR_EXBLOCK_INLINE_SET (E, LINE_P, STAT)
 *
 *   Set a new source input stream position for the current block.  The previous
 *   position will be lost.  This is more like a GOTO, whereas
@@ -155,13 +154,17 @@ begin
 }
 procedure escr_exblock_inline_set (    {go to new input source position in curr block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t);    {pointer to next input line to use}
+  in      line_p: escr_inline_p_t;     {pointer to next input line to use}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
+
   if e.exblock_p^.inpos_p = nil
     then begin                         {no position set yet at all for this block}
-      escr_exblock_inline_push (e, line_p); {create new position descriptor and set it}
+      escr_exblock_inline_push (e, line_p, stat); {create new position descriptor and set it}
+      if sys_error(stat) then return;
       end
     else begin                         {position descriptor already exists}
       e.exblock_p^.inpos_p^.line_p := line_p; {jump to the new source stream position}
@@ -175,7 +178,7 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_INLINE_PUSH (E, LINE_P)
+*   Subroutine ESCR_EXBLOCK_INLINE_PUSH (E, LINE_P, STAT)
 *
 *   Set the next input line that will be processed by the current execution
 *   block.  The new position will be nested under the previous position.  The
@@ -183,25 +186,24 @@ begin
 }
 procedure escr_exblock_inline_push (   {push new source line location for exec block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t);    {pointer to next input line to use}
+  in      line_p: escr_inline_p_t;     {pointer to next input line to use}
+  out     stat: sys_err_t);            {completion status}
   val_param;
-
-const
-  max_msg_parms = 1;                   {max parameters we can pass to a message}
 
 var
   pos_p: escr_inpos_p_t;               {pointer to new nested input position state}
   level: sys_int_machine_t;            {new input file nesting level, top = 0}
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
+
   level := 0;                          {init to this is top input file this block}
   if e.exblock_p^.inpos_p <> nil then begin {there is a previous input file this block ?}
     level := e.exblock_p^.inpos_p^.level + 1; {make nesting level of new input file}
     if level > escr_max_inclev_k then begin {would exceed input file nesting level ?}
-      sys_msg_parm_int (msg_parm[1], escr_max_inclev_k);
-      escr_err_atline (e, 'pic', 'err_maxnext_file', msg_parm, 1);
+      sys_stat_set (escr_subsys_k, escr_err_inftoomany_k, stat);
+      sys_stat_parm_int (escr_max_inclev_k, stat);
+      return;
       end;
     end;
 
@@ -338,20 +340,25 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_REPEAT (E)
+*   Subroutine ESCR_EXBLOCK_REPEAT (E, STAT)
 *
 *   Unconditionally loop back to the start of the current execution block.
 }
 procedure escr_exblock_repeat (        {loop back to start of block}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
+
   while e.inhibit_p^.prev_p <> e.exblock_p^.previnh_p do begin {back to base block inhibit}
-    escr_inh_end (e);                  {delete this inhibit}
+    escr_inh_end (e, stat);            {delete this inhibit}
+    if sys_error(stat) then return;
     end;
 
-  escr_exblock_inline_set (e, e.exblock_p^.start_p); {jump back to block start command}
+  escr_exblock_inline_set (e, e.exblock_p^.start_p, stat); {jump back to block start command}
+  if sys_error(stat) then return;
   escr_infile_skipline (e);            {skip block definition, to first executable line}
   e.exblock_p^.iter1 := false;         {not in first iteration anymore}
   end;

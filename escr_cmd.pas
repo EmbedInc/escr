@@ -103,8 +103,12 @@ otherwise
       discard( escr_get_dtype (e, dtype, stat) ); {get the optional data type}
       if sys_error(stat) then return;
       if not escr_get_token (e, tk) then goto done_cmdline; {hit end of command line ?}
-      if (tk.len <> 1) or (tk.str[1] <> '=') {not "=" keyword as expected ?}
-        then escr_err_parm_bad (e, tk);
+      if (tk.len <> 1) or (tk.str[1] <> '=') then begin {not "=" keyword as expected ?}
+        sys_stat_set (escr_subsys_k, escr_err_badparm_k, stat);
+        sys_stat_parm_vstr (e.cmd, stat);
+        sys_stat_parm_vstr (tk, stat);
+        return;
+        end;
       end;
     hval := true;                      {indicate initial value parameter still left}
     end;
@@ -515,7 +519,8 @@ begin
   file_currdir_set (olddir, stat2);
   if sys_error(stat) then return;
   sys_error_abort (stat2, '', '', nil, 0);
-  escr_exblock_inline_push (e, file_p^.lfirst_p); {set next line to first line in new file}
+  escr_exblock_inline_push (           {set next line to first line in new file}
+    e, file_p^.lfirst_p, stat);
   return;
 {
 *   Abort due to missing required parameter.

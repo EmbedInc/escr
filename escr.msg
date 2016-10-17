@@ -69,7 +69,7 @@ msg err22
     String "%p1s" can not be interpreted as a value.
 msg err23
   lan english -def
-    A required command parameter is missing.
+    A required parameter to command %p1s is missing.
 msg err24
   lan english -def
     The term "%p1s" can not be converted to BOOL type.
@@ -133,19 +133,77 @@ msg err43
     Bad command %p1s.  In root execution block.
 msg err44
   lan english -def
-    Bad command %p1s.  In root execution block.
+    Bad command %p1s.  In wrong type of block.
 msg err45
   lan english -def
-    Bad command %p1s.  Not in BLOCK..ENBLOCK block.
+    Bad command %p1s.  Attempt to end block in include file.
 msg err46
   lan english -def
-    Bad command %p1s.  Attempt to end block in include file.
+    Not in IF block.  THEN, ELSE, and ENDIF commands are not allowed here.
+msg err47
+  lan english -def
+    THEN command is not allowed due to previous THEN or ELSE.
+msg err48
+  lan english -def
+    ELSE command is not allowed due to previous ELSE.
+msg err49
+  lan english -def
+    No THEN or ELSE found in IF block.
+msg err50
+  lan english -def
+    Loop iteration increment is 0.
+msg err51
+  lan english -def
+    Not in a LOOP block.
+msg err52
+  lan english -def
+    Not in a MACRO block.
+msg err53
+  lan english -def
+    Not in a SUBROUTINE definition block.
+msg err54
+  lan english -def
+    Symbol %p1s is not a subroutine.
+msg err55
+  lan english -def
+    Not in a subroutine.
+msg err56
+  lan english -def
+    Attempt to exceed maximum execution block nesting level of %p1i.
+msg err57
+  lan english -def
+    Attempt to exceed the maximimum input file nesting level of %p1i.  This may be due
+    circular references in include files.
+msg err58
+  lan english -def
+    The integer format specifier "%p1s" is unrecognized.
+msg err59
+  lan english -def
+    The floating point format specifier "%p1s" is unrecognized.
+msg err60
+  lan english -def
+    Unexpected execution block and execution inhibit nesting error.  This is possibly a
+    internal error.  Attempt to delete the execution inhibit to restore to after the end
+    of the current execution block.  The execution inhibit type ID is %p1i.
+msg err61
+  lan english -def
+    IF construct not ended before end of execution block.
+msg err62
+  lan english -def
+    "%p1s" is not a valid symbol name.
 /*
 /*   Messages without error status codes.
 /*
+msg err_dtype_unimp
+  lan english -def
+    INTERNAL ERRROR: Data type with ID %p1i is not implemented in routine %p2s.
 msg err_fnam_lnum
   lan english -def
     Error on line %p2i of file "%p1s".
+msg err_loclab_exist
+  lan english -def
+    INTERNAL ERRROR:  Subroutine ESCR_EXBLOCK_ULAB_INIT called with unique
+    labels list already existing.
 msg in_block
   lan english -def
     In block starting on line %p1i of "%p2s".
@@ -155,6 +213,24 @@ msg included_from
 msg open
   lan english -def
     Error occurred on attempt to open a new ESCR script system use state.
+msg parm_bad_cmd
+  lan english -def
+    Parameter "%p1s" to command "%p2s" is unrecognized.
+msg term_val_int
+  lan english -def
+    The term has an integer value of %p1i.
+msg term_val_fp
+  lan english -def
+    The term has a floating point value of %p1f15.3.
+msg term_val_bool
+  lan english -def
+    The term has a boolean value of %p1s.
+msg term_val_str
+  lan english -def
+    The term has a string value of "%p1s".
+msg term_val_unk
+  lan english -def
+    The data type of the term is unrecognized.  The data type ID is %p1i.
 msg var_new
   lan english -def
     Error occurred on attempt to create the new variable "%p1s".

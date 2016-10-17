@@ -44,10 +44,12 @@ begin
 {
 *   Create and initialize the execution block state.
 }
-  escr_exblock_new (e);                {create top level execution block}
+  escr_exblock_new (e, stat);          {create top level execution block}
+  if sys_error(stat) then return;
   escr_exblock_ulab_init (e);          {top level block has unique labels context}
 
-  escr_exblock_inline_set (e, line_p); {set next source line to execute}
+  escr_exblock_inline_set (e, line_p, stat); {set next source line to execute}
+  if sys_error(stat) then return;
 {
 *   Main loop.  Back here each new source code line.
 }

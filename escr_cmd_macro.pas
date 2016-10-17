@@ -26,6 +26,7 @@ var
   name: string_var80_t;                {macro name}
   sz: sys_int_adr_t;                   {size of new descriptor}
   sym_p: escr_sym_p_t;                 {pointer to new name symbol}
+  stat2: sys_err_t;                    {to avoid corrupting STAT}
 
 begin
   name.max := size_char(name.str);     {init local var string}
@@ -36,9 +37,15 @@ begin
   if e.inhibit_p^.inh then return;     {previously inhibited, don't define macro}
   e.inhibit_p^.inh := true;            {inhibit execution during macro definition}
 
-  if not escr_get_token (e, name)      {get macro name}
-    then escr_err_parm_missing (e, '', '', nil, 0);
-  escr_err_check_symname (e, name);    {check for valid symbol name}
+  if not escr_get_token (e, name) then begin {get macro name}
+    escr_stat_cmd_noarg (e, stat);
+    return;
+    end;
+  if not escr_sym_name (e, name) then begin {not a valid symbol name ?}
+    sys_stat_set (escr_subsys_k, escr_err_badsym_k, stat);
+    sys_stat_parm_vstr (name, stat);
+    return;
+    end;
 
   sz :=                                {make size of whole macro symbol}
     offset(escr_sym_t.macro_line_p) + size_min(escr_sym_t.macro_line_p);
@@ -51,7 +58,7 @@ begin
     sym_p,                             {pointer to new symbol}
     stat);
   if sys_error(stat) then begin        {error ?}
-    escr_inh_end (e);                  {delete the execution inhibit}
+    escr_inh_end (e, stat2);           {delete the execution inhibit}
     return;                            {return with error}
     end;
 
@@ -83,10 +90,11 @@ begin
       (e.inhibit_p^.inhty <> escr_inhty_blkdef_k) or {not in a block definition ?}
       (e.inhibit_p^.blkdef_type <> escr_exblock_mac_k) {block is not a macro ?}
       then begin
-    escr_err_atline (e, 'pic', 'not_in_macdef', nil, 0);
+    sys_stat_set (escr_subsys_k, escr_err_notmacro_k, stat);
+    return;
     end;
 
-  escr_inh_end (e);                    {end excution inhibit due to macro def}
+  escr_inh_end (e, stat);              {end excution inhibit due to macro def}
   end;
 {
 ********************************************************************************
@@ -107,7 +115,8 @@ begin
 
   while e.exblock_p^.bltype <> escr_exblock_mac_k do begin {up thru blocks until first macro}
     if e.exblock_p^.prev_p = nil then begin {at top execution block ?}
-      escr_err_atline (e, 'pic', 'not_in_macro', nil, 0); {complain not in a macro}
+      sys_stat_set (escr_subsys_k, escr_err_notmacro_k, stat);
+      return;
       end;
     escr_exblock_close (e);            {end this execution block, make previous current}
     end;                               {back to check this new execution block}
@@ -169,7 +178,8 @@ begin
 *   symbol, LABEL contains the name of any label on this line, and NAME is the
 *   macro name as it appeared on the invocation line.
 }
-  escr_exblock_new (e);                {create new execution block}
+  escr_exblock_new (e, stat);          {create new execution block}
+  if sys_error(stat) then return;
   e.exblock_p^.sym_p := sym_p;         {set pointer to symbol for this block}
   e.exblock_p^.bltype := escr_exblock_mac_k; {new block is a macro}
   e.exblock_p^.args := true;           {this block can take arguments}
@@ -184,7 +194,9 @@ begin
     if not escr_get_tkrawc (e, tk) then exit; {get next argument}
     escr_exblock_arg_add (e, tk);      {add as next argument to new execution block}
     end;
-  escr_exblock_inline_set (e, sym_p^.macro_line_p); {go to macro definition line}
+  escr_exblock_inline_set (            {go to macro definition line}
+    e, sym_p^.macro_line_p, stat);
+  if sys_error(stat) then return;
   escr_infile_skipline (e);            {skip over macro definition line}
   escr_macro_run := true;              {indicate macro invocation processed}
   return;

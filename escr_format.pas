@@ -40,9 +40,6 @@ procedure escr_format_int (            {create specifically formatted integer st
   out     stat: sys_err_t);            {completion status}
   val_param;
 
-const
-  max_msg_parms = 1;                   {max parameters we can pass to a message}
-
 var
   p: string_index_t;                   {format string parse index}
   tk: string_var32_t;                  {token parsed from format string}
@@ -51,8 +48,6 @@ var
   flags: string_fi_t;                  {string conversion flags}
   pick: sys_int_machine_t;             {number of keyword picked from list}
   ii: sys_int_machine_t;               {scratch integer}
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
 
 begin
   tk.max := size_char(tk.str);         {init local var string}
@@ -125,8 +120,8 @@ begin
 *   Unexpected format command.
 }
 otherwise
-      sys_msg_parm_vstr (msg_parm[1], tk);
-      escr_err_atline (e, 'pic', 'err_fmt_int', msg_parm, 1);
+      sys_stat_set (escr_subsys_k, escr_err_fmtint_k, stat);
+      sys_stat_parm_vstr (tk, stat);
       end;
     if sys_error(stat) then return;
     end;                               {back to get next format command}
@@ -215,9 +210,6 @@ procedure escr_format_fp (             {create specifically formatted floating p
   out     stat: sys_err_t);            {completion status}
   val_param;
 
-const
-  max_msg_parms = 1;                   {max parameters we can pass to a message}
-
 var
   p: string_index_t;                   {format string parse index}
   tk: string_var32_t;                  {token parsed from format string}
@@ -236,9 +228,6 @@ var
   set_mxl: boolean;                    {TRUE if MAX_LEFT set from format string}
   set_mxr: boolean;                    {TRUE if MAX_RIGHT set from format string}
   set_mnr: boolean;                    {TRUE if MIN_RIGHT set from format string}
-
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
 {
 ******************************
 *
@@ -488,8 +477,8 @@ begin
 *   Unexpected format command.
 }
 otherwise
-      sys_msg_parm_vstr (msg_parm[1], tk);
-      escr_err_atline (e, 'pic', 'err_fmt_fp', msg_parm, 1);
+      sys_stat_set (escr_subsys_k, escr_err_fmtint_k, stat);
+      sys_stat_parm_vstr (tk, stat);
       end;
     if sys_error(stat) then return;
     end;                               {back to get next format command}

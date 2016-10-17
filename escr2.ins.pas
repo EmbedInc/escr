@@ -491,12 +491,14 @@ procedure escr_exblock_close (         {close curr execution block and delete te
 
 procedure escr_exblock_inline_push (   {push new source line location for exec block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t);    {pointer to next input line to use}
+  in      line_p: escr_inline_p_t;     {pointer to next input line to use}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_exblock_inline_set (    {go to new input source position in curr block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t);    {pointer to next input line to use}
+  in      line_p: escr_inline_p_t;     {pointer to next input line to use}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_exblock_ulab_init (     {create unique labels list in this block}
@@ -504,7 +506,8 @@ procedure escr_exblock_ulab_init (     {create unique labels list in this block}
   val_param; extern;
 
 procedure escr_exblock_new (           {create and install new execution block}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_exblock_quit (          {stop executing in the current block}
@@ -512,7 +515,8 @@ procedure escr_exblock_quit (          {stop executing in the current block}
   val_param; extern;
 
 procedure escr_exblock_repeat (        {loop back to start of block}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_format_fp (             {create specifically formatted floating point string}
@@ -585,11 +589,12 @@ procedure escr_infile_skipline (       {skip next input file line}
   val_param; extern;
 
 procedure escr_inh_new (               {create new execution inhibit}
-  in out e: escr_t);                   {state for this use of the ESCR system}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
 procedure escr_inh_end (               {end the current execution inhibit}
-  in out e: escr_t);                   {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_inline_expand_line (    {expand all inline functions of a line}
@@ -612,7 +617,8 @@ procedure escr_ulab_get (              {get expansion of generic unique label na
   val_param; extern;
 
 function escr_loop_iter (              {advance to next loop iteration}
-  in out  e: escr_t)                   {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {looped back, not terminated}
   val_param; extern;
 

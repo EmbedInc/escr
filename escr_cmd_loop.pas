@@ -38,12 +38,14 @@ begin
   tk.max := size_char(tk.str);
   sys_error_none (stat);               {init to no error occurred}
 
-  escr_exblock_new (e);                {create new execution block state}
+  escr_exblock_new (e, stat);          {create new execution block state}
+  if sys_error(stat) then return;
   e.exblock_p^.start_p :=              {save pointer to starting line of this block}
     e.exblock_p^.prev_p^.inpos_p^.last_p;
   e.exblock_p^.bltype := escr_exblock_loop_k; {indicate LOOP ... ENDLOOP type}
   escr_exblock_inline_set (            {set next source line to execute}
-    e, e.exblock_p^.prev_p^.inpos_p^.line_p);
+    e, e.exblock_p^.prev_p^.inpos_p^.line_p, stat);
+  if sys_error(stat) then return;
 
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
 
@@ -156,13 +158,14 @@ loop_from:                             {common code with /LOOP FROM}
   {
   *   The /LOOP command line has been parsed.  NAME is the name of the temporary
   *   variable to create as the loop counter, or it is the empty string to
-  *   incidate no variabe is to be created.
+  *   incidate no variable is to be created.
   *
   *   The loop descriptor fields FOR_START, FOR_END, and FOR_INC have been
   *   filled in.
   }
   if loop_p^.for_inc = 0 then begin    {invalid iteration increment ?}
-    escr_err_atline (e, 'pic', 'err_loopinc0', nil, 0);
+    sys_stat_set (escr_subsys_k, escr_err_loopinc0_k, stat);
+    return;
     end;
   loop_p^.looptype := escr_looptype_for_k; {FOR loop}
   loop_p^.for_curr := loop_p^.for_start; {init value for first iteration}
@@ -247,7 +250,8 @@ err_missing:
 *   is set to the first line within the current execution block.
 }
 function escr_loop_iter (              {advance to next loop iteration}
-  in out  e: escr_t)                   {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t)             {completion status}
   :boolean;                            {looped back, not terminated}
   val_param;
 
@@ -325,7 +329,8 @@ otherwise                              {unimplemented loop type}
     end;                               {end of loop type cases}
 
 loop:                                  {loop execution back to start of block}
-  escr_exblock_repeat (e);             {jump back to start of block}
+  escr_exblock_repeat (e, stat);       {jump back to start of block}
+  if sys_error(stat) then return;
   escr_loop_iter := true;              {indicate execution was looped back}
   end;
 {
@@ -345,15 +350,19 @@ begin
   sys_error_none (stat);               {init to no error occurred}
 
   if e.exblock_p^.bltype <> escr_exblock_loop_k then begin {not in LOOP block type ?}
-    escr_err_atline (e, 'pic', 'err_endblock_type', nil, 0);
+    sys_stat_set (escr_subsys_k, escr_err_notloop_k, stat);
+    return;
     end;
   if e.exblock_p^.inpos_p^.prev_p <> nil then begin {block ended in include file ?}
-    escr_err_atline (e, 'pic', 'err_endblock_include', nil, 0);
+    sys_stat_set (escr_subsys_k, escr_err_endblock_include_k, stat);
+    sys_stat_parm_vstr (e.cmd, stat);
+    return;
     end;
   if e.inhibit_p^.inh then goto del_block; {execution is inhibited ?}
 
   if not escr_get_end (e, stat) then return; {abort on extra parameter}
-  if escr_loop_iter(e) then return;    {back to do next loop iteration ?}
+  if escr_loop_iter(e, stat) then return; {back to do next loop iteration ?}
+  if sys_error(stat) then return;
 
 del_block:                             {delete this block}
   e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}

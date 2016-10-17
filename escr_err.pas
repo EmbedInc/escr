@@ -6,9 +6,7 @@ define escr_err_atline_abort;
 define escr_err_val;
 define escr_err_parm_bad;
 define escr_err_parm_last_bad;
-define escr_err_parm_missing;
 define escr_err_dtype_unimp;
-define escr_err_check_symname;
 define escr_err_sym_not_found;
 %include 'escr2.ins.pas';
 {
@@ -118,23 +116,23 @@ escr_dtype_bool_k: begin               {boolean}
       if val.bool
         then sys_msg_parm_str (msg_parm[1], 'TRUE')
         else sys_msg_parm_str (msg_parm[1], 'FALSE');
-      sys_message_parms ('pic', 'term_val_bool', msg_parm, 1);
+      sys_message_parms ('escr', 'term_val_bool', msg_parm, 1);
       end;
 escr_dtype_int_k: begin                {integer}
       sys_msg_parm_int (msg_parm[1], val.int);
-      sys_message_parms ('pic', 'term_val_int', msg_parm, 1);
+      sys_message_parms ('escr', 'term_val_int', msg_parm, 1);
       end;
 escr_dtype_fp_k: begin                 {floating point}
       sys_msg_parm_fp2 (msg_parm[1], val.fp);
-      sys_message_parms ('pic', 'term_val_fp', msg_parm, 1);
+      sys_message_parms ('escr', 'term_val_fp', msg_parm, 1);
       end;
 escr_dtype_str_k: begin                {string}
       sys_msg_parm_vstr (msg_parm[1], val.str);
-      sys_message_parms ('pic', 'term_val_str', msg_parm, 1);
+      sys_message_parms ('escr', 'term_val_str', msg_parm, 1);
       end;
 otherwise
     sys_msg_parm_int (msg_parm[1], ord(val.dtype));
-    sys_message_parms ('pic', 'term_val_unk', msg_parm, 1);
+    sys_message_parms ('escr', 'term_val_unk', msg_parm, 1);
     end;
   end;
 {
@@ -160,7 +158,7 @@ var
 begin
   sys_msg_parm_vstr (msg_parm[1], parm);
   sys_msg_parm_vstr (msg_parm[2], e.cmd);
-  escr_err_atline (e, 'pic', 'parm_bad_cmd', msg_parm, 2);
+  escr_err_atline (e, 'escr', 'parm_bad_cmd', msg_parm, 2);
   end;
 {
 ****************************************************************************
@@ -176,31 +174,6 @@ procedure escr_err_parm_last_bad (     {last parameter parsed was bad}
 
 begin
   escr_err_parm_bad (e, e.lparm);
-  end;
-{
-****************************************************************************
-*
-*   Subroutine ESCR_ERR_PARM_MISSING (E, SUBSYS, MSG, PARMS, N_PARMS)
-}
-procedure escr_err_parm_missing (      {a required command parameter not found}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      subsys: string;              {name of subsystem, used to find message file}
-  in      msg: string;                 {message name withing subsystem file}
-  in      parms: univ sys_parm_msg_ar_t; {array of parameter descriptors}
-  in      n_parms: sys_int_machine_t); {number of parameters in PARMS}
-  options (val_param, noreturn);
-
-const
-  max_msg_parms = 1;                   {max parameters we can pass to a message}
-
-var
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
-
-begin
-  sys_msg_parm_vstr (msg_parm[1], e.cmd);
-  sys_message_parms ('pic', 'parm_missing', msg_parm, 1);
-  escr_err_atline (e, subsys, msg, parms, n_parms);
   end;
 {
 ****************************************************************************
@@ -226,54 +199,5 @@ var
 begin
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], routine);
-  escr_err_atline (e, 'pic', 'err_dtype_unimp', msg_parm, 2);
-  end;
-{
-****************************************************************************
-*
-*   Subroutine ESCR_ERR_CHECK_SYMNAME (E, NAME)
-*
-*   Check NAME for containing a valid symbol name.  The subroutine returns
-*   normally if it is, and aborts the program with error status if it is not.
-}
-procedure escr_err_check_symname (     {abort with error on invalid symbol name}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t); {symbol name to check}
-  val_param;
-
-const
-  max_msg_parms = 1;                   {max parameters we can pass to a message}
-
-var
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
-
-begin
-  if escr_sym_name (e, name) then return; {symbol name is valid ?}
-
-  sys_msg_parm_vstr (msg_parm[1], name);
-  escr_err_atline (e, 'pic', 'sym_name_bad', msg_parm, 1);
-  end;
-{
-********************************************************************************
-*
-*   Subroutine ESCR_ERR_SYM_NOT_FOUND (E, NAME)
-*
-*   No symbol of the indicated name was found.
-}
-procedure escr_err_sym_not_found (     {symbol not found}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t); {symbol name that was not found}
-  options (val_param, noreturn);
-
-const
-  max_msg_parms = 1;                   {max parameters we can pass to a message}
-
-var
-  msg_parm:                            {parameter references for messages}
-    array[1..max_msg_parms] of sys_parm_msg_t;
-
-begin
-  sys_msg_parm_vstr (msg_parm[1], name);
-  escr_err_atline (e, 'pic', 'sym_not_found', msg_parm, 1);
+  escr_err_atline (e, 'escr', 'err_dtype_unimp', msg_parm, 2);
   end;
