@@ -23,10 +23,10 @@ Introduction
   is not copied to the output.
 
   Script source code contains commands and functions.  Commands are on
-  lines   by themselves, and start with a command keyword, which is
-  possibly followed by parameters.  Functions are sequences of characters
+  lines by themselves, and start with a command keyword, which is possibly
+  followed by parameters.  Functions are sequences of characters
   identified by a special syntax.  Executing a function results in a
-  expansion string. The function is replaced by its expansion string
+  expansion string.  The function is replaced by its expansion string
   before most other processing is performed on that input stream line.
   Functions can be used to supply parameters to commands, and can appear
   within data in pre-processor mode.
@@ -35,7 +35,7 @@ Introduction
   its own commands, functions, and other symbols.
 
   The ESCR program is a thin layer above this library, and is a
-  stand-alone   script interpreter.  It runs a source file in script mode,
+  stand-alone script interpreter.  It runs a source file in script mode,
   using the default ESCR syntax rules, commands, functions, etc.
 
 

@@ -1,0 +1,161 @@
+<html><head><title>ESCR Scripting System</title></head>
+
+<body background=backg.jpg>
+<center><h1>ESCR Program and Callable System</h1>
+</center>
+
+<ul>
+  <li><a href="cmds.htm">Next page</a>
+  <li><a href="index.htm">Previous page</a>
+  <li><a href="index.htm">Master index</a>
+  </ul>
+
+<!-- *********************************************************************** -->
+<br><p><center><h2>Data Types</h2></center>
+
+<ul>
+  <li><a href="#bool">Bool</a>
+  <li><a href="#integer">integer</a>
+  <li><a href="#real">real</a>
+  <li><a href="#string">string</a>
+  <li><a href="#time">time</a>
+  </ul>
+
+<dl>
+
+<p> Each explicit constant, symbolic constant, variable, and function
+value has a data type.  These data types are referred to by name, and
+are listed below together with their descriptions.  The data type
+names are keywords, and are therefore case-insensitive.  The data
+types are:
+
+<p><dt><h3 id="bool">BOOL</h3></dt><dd>
+
+  <p>A value of this type is always either <b>TRUE</b> or
+  <b>FALSE</b>.  <b>TRUE</b> and <b>FALSE</b> are built in keywords,
+  and are case-insensitive.
+
+  <p>The default value for this data type is <b>FALSE</b>.
+
+<p><dt><h3 id="integer">INTEGER</h3></dt><dd>
+
+  <p>An integer value.  Its string representation is:
+
+  <p>&nbsp;&nbsp;[<tt>-</tt>][<i>radix</i><tt>#</tt>]<i>number</i>
+
+  <p>Where <i>radix</i> is the radix represented in decimal.  <i>Radix</i>
+  must be from 2 to 36, with the default being 10 (ten).  <i>Number</i> is
+  the integer number in the specified radix.  The letters A-Z or a-z are
+  used for digit values from 10-35.  Each digit value must be less than
+  the radix.
+
+  <p>For example, each of the following has the value of 143 in decimal:<tt>
+
+
+  <p>&nbsp;&nbsp;143
+
+  <br>&nbsp;&nbsp;10#143
+
+  <br>&nbsp;&nbsp;16#8F
+
+  <br>&nbsp;&nbsp;8#217
+
+  <br>&nbsp;&nbsp;2#10001111</tt>
+
+  <p>Integer values are written in decimal by the ESCR system unless
+  this is overridden by specific formatting.
+
+  <p>The default value for this data type is 0.
+
+<p><dt><h3 id="real">REAL</h3></dt><dd>
+
+  <p>This data type is also sometimes called floating point in
+  descriptive text.  The string representation is a consecutive string
+  of decimal digits containing exactly one decimal point before,
+  within, or after it.  This string may be optionally followed by "E"
+  and an exponent value.  This is all interpreted as you would expect
+  if you've used a computer since the late 1950s.
+
+  <p>Floating point values are written with 7 significant digits by
+  ESCR unless this is overridden by specific formatting.
+
+  <p>The default value for this data type is 0.0.
+
+<p><dt><h3 id="string">STRING</h3></dt><dd>
+
+  <p>A string constant is a sequence of characters enclosed in quotes
+  ("..") or apostrophies ('..').  The value is the characters between but
+  not including the quotes.  To include the enclosing quote character
+  literally in a string, it must be written twice consecutively.  This
+  only applies to the quoting character used for the specific string.
+  For example, both these string have the same value:<tt>
+
+  <p>&nbsp;&nbsp;"Don't"
+
+  <br>&nbsp;&nbsp;'Dont''t'</tt>
+
+  <p>The dictionary collating sequence is used for string comparisons
+  of letters and decimal digits.  A string is less than another
+  string if it would be listed earlier in a dictionary according to
+  these rules. Upper case letters are immediately less than their
+  lower case counterparts.  The digits 0-9 are less than all letters.
+  If two strings of different length are compared that are equal up to
+  the length of the shorter string, then the shorter string is less
+  than the longer string.  The space character is less than all other
+  printable characters.
+
+  <p>The collating sequence is not defined for characters other than
+  space, the digits 0-9, and the upper and lower case letters A-Z.
+  The results for the remaining characters will be consistent on any
+  one implementation, but are not guaranteed to be consistent accross
+  implementations.
+
+  <p>As a example, the following strings are listed in less than to
+  greater than order:<tt>
+
+  <p>"aB" "ab" "cd" "cde" "cde f" "cdef" "def22" "defaa"</tt>
+
+  <p>The default value for this data type is the empty string.
+
+<p><dt><h3 id="time">TIME</h3></dt><dd>
+
+  <p>Values of this data type specify an absolute time.  The time is
+  stored internally in 60.30 bit fixed point universal coordinated
+  time seconds with zero at the start of year 2000.  This data type
+  therefore has a resolution of about 931 picoseconds, and a range of
+  about +-15 billion years.
+
+  <p>The text representation of this data type is:
+
+  <p>&nbsp;&nbsp;<tt><i>YYYY</i>/<i>MM</i>/<i>DD</i>.<i>hh</i>:<i>mm</i>:<i>ss</i>.<i>ssssss</i></tt>
+
+  <p>This is the text representation produced by the ESCR system when
+  a time value is implicitly converted to text.  Hours are always
+  written in 24 hour format, so there is no AM/PM indicator.  When
+  converting to a TIME data type from the text representation,
+  trailing fields may be omitted after the first slash.  Omitted
+  fields will be assumed to have the value 0. For example, all the
+  following text time representations indicate 2:00pm on Monday 23
+  October 2006:<tt>
+
+  <p>&nbsp;&nbsp;2006/10/23.14
+  <br>&nbsp;&nbsp;2006/10/23.14:00
+  <br>&nbsp;&nbsp;2006/10/23.14:00:00</tt>
+
+  <p>When TIME values are compared, eariler times are considered less
+  than later times.
+
+  <p>The default value for this data type is the start of year 2000.
+
+</dl>
+
+
+<p><!-- ******************************************************************** -->
+<br><p><hr>
+<ul>
+  <li><a href="cmds.htm">Next page</a>
+  <li><a href="index.htm">Master index</a>
+  </ul>
+
+</body>
+</html>

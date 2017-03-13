@@ -167,8 +167,8 @@ otherwise
 *     ENG  -  Use engineering format when exponential notation is used.  Causes
 *       the exponent to be a multiple of 3.  Default.
 *
-*     SCI  -  Use engineering format when exponential notation is used.
-*       exponent not restricted to a particular multiple.
+*     SCI  -  Use scientific format when exponential notation is used.
+*       The exponent is not restricted to a particular multiple.
 *
 *     PNT  -  Force decimal point to always be written, even if no digits to
 *       its right.

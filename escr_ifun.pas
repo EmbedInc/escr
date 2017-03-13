@@ -1717,8 +1717,10 @@ otherwise
   dtype := val.dtype;
 
   if not escr_ifn_get_val (e, val, stat) then begin {get second term}
-    if sys_error(stat) then return;
+    escr_ifn_stat_required (e, stat);
+    return;
     end;
+
   case dtype of                        {what is the current data type ?}
 {
 *   Current result data type is INTEGER.
@@ -2647,7 +2649,7 @@ begin
   wstr := true;
   end;
 
-14: begin                              {DAY}
+14: begin                              {D}
   make_date;                           {make sure DATE is filled in}
   sys_date_string (date, sys_dstr_day_k, string_fw_freeform_k, tk, stat);
   string_append (str, tk);

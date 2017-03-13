@@ -1,0 +1,544 @@
+<html><head><title>ESCR Scripting System</title></head>
+
+<body background=backg.jpg>
+<center><h1>ESCR Program and Callable System</h1>
+</center>
+
+<ul>
+  <li><a href="func.htm">Next page</a>
+  <li><a href="dtype.htm">Previous page</a>
+  <li><a href="index.htm">Master index</a>
+  </ul>
+
+<!-- *********************************************************************** -->
+<br><p><center><h2>Commands</h2></center>
+
+<ul>
+  <li><a href="#include">include</a>
+  <li><a href="#var-new">var new</a>
+  <li><a href="#var-exist">var exist</a>
+  <li><a href="#var-local">var local</a>
+  <li><a href="#set">set</a>
+  <li><a href="#const">const</a>
+  <li><a href="#del">del</a>
+  <li><a href="#sylist">sylist</a>
+  <li><a href="#write">write</a>
+  <li><a href="#show">show</a>
+  <li><a href="#if">if then else endif</a>
+  <li><a href="#subroutine">subroutine</a>
+  <li><a href="#return">return</a>
+  <li><a href="#endsub">endsub</a>
+  <li><a href="#call">call</a>
+  <li><a href="#macro">macro</a>
+  <li><a href="#quitmac">quitmac</a>
+  <li><a href="#endmac">endmac</a>
+  <li><a href="#block">block</a>
+  <li><a href="#endblock">endblock</a>
+  <li><a href="#loop">loop</a><br>
+    <a href="#loop-none"><i>none</i></a>,
+    <a href="#loop-symbols">symbols</a>,
+    <a href="#loop-for">for</a>,
+    <a href="#loop-from">from</a>,
+    <a href="#loop-n">n</a>
+  <li><a href="#endloop">endloop</a>
+  <li><a href="#quit">quit</a>
+  <li><a href="#writeto">writeto</a>
+  <li><a href="#writeend">writeend</a>
+  <li><a href="#stop">stop</a>
+  </ul>
+
+<dl>
+
+<p>Commands are whole source lines that cause specific actions to be
+taken by the scripting system.  Commands start with a keyword, which
+is possibly followed by parameters.  The command name and parameters
+are separated from each other by one or more spaces. Command names are
+not case sensitive.  Command parameters are also case-insensitive to
+the extent possible.
+
+<p>Depending on the implementation, a special sequence of characters
+may be required to identify commands.  This is generally required in
+pre-processor mode to distinguish commands from ordinary data.
+
+<p>The ESCR program uses no special syntax to identify commands.  The
+first non-blank character on a line is the start of a command name
+keyword.
+
+<p>The ESCR system commands are:
+
+<p><dt><tt id="include"><b>INCLUDE</b> <i>pathname</i></tt></dt><dd>
+
+  <p>Switch the input file to the indicated file.  When the end of
+  that file is encountered, reading of the original file is resumed on
+  the line following the <b>include</b> command.
+
+  <p><i>Pathname</i> is a string.  It must therefore be enclosed
+  in quotes or apostrophies if it is a constant.  See the <b>string</b> data
+  type description for details.  The pathname is relative to the
+  directory containing the current source file.
+
+<p><dt><tt id="var-new"><b>VAR NEW</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
+
+  <p>Create a new variable of name <i>name</i>.  The symbol <i>name</i>
+  will now refer to the new variable regardless of a previously existing
+  variable or constant of the same name.  <i>Name</i> will revert to its
+  previous meaning when this symbol is deleted.
+
+  <p><i>Dtype</i> specifies the data type of the variable.  The default
+  data type is <b>string</b>.
+
+  <p>The variable will be set to the <i>value</i>, if supplied.  Otherwsie
+  the variable's value will be the default for its data type.
+
+<p><dt><tt id="var-exist"><b>VAR EXIST</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
+
+  <p>Like <b>var new</b>, except that no new variable is created if
+  <i>name</i> is already a variable or constant of the indicated type.
+
+  <p>If a new variable is created, then it will be initialized to
+  <i>value</i>, if supplied, else it will be initialized to the default
+  for its data type.  If the variable previously existed, then its
+  existing value is preserved, whether <i>value</i> is supplied or not.
+
+<p><dt><tt id="var-local"><b>VAR LOCAL</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
+
+  <p>Like <b>var new</b> except for the following:<ul>
+
+    <p><li>The new variable will be automatically deleted at the end of
+    the current execution block.  Examples of execution blocks are
+    subroutines and explicit blocks defined with the <b>block</b> command.
+
+    <p><li>The action is only performed on the first iteration thru the
+    execution block.  This allows the command to be put inside a
+    <b>loop</b> ... <b>repeat</b> block, for example, but the variable
+    only created on the first pass.  Even if a local variable is not
+    created on the first pass due to conditional logic, it will not be
+    created on subsequent passes if the <b>var local</b> command for that
+    variable is run then.  It is recommended that <b>var local</b>
+    commands therefore be placed at the start of the block and before any
+    conditional logic.
+
+    <p>"First iteration" means the first pass thru the block after each
+    time it is entered, not the first time globally.
+
+    </ul>
+
+<p><dt><b><tt id="set">SET</b> <i>name value</i></tt></dt><dd>
+
+  <p>Set the variable <i>name</i> to the value <i>value</i>.  It is an
+  error if <i>value</i> can not be converted to the data type of
+  <i>name</i>, or if there is no such variable.
+
+<p><dt><tt id="const"><b>CONST</b> <i>name [dtype]</i> <b>=</b> <i>value</i></tt></dt><dd>
+
+  <p>Create a new constant of name <i>name</i>.  The symbol <i>name</i>
+  will now refer to the new constant regardless of whether a constant or
+  variable of that name previously existed.  <i>Name</i> will revert to
+  its previous meaning when this symbol is deleted.
+
+  <p>The optional <i>dtype</i> parameter specifies the data type of the
+  constant.  The default data type is <b>string</b>.
+
+<p><dt><tt id="del"><b>DEL</b> <i>name</i></tt></dt><dd>
+
+  <p>Delete the current version of the preprocessor symbol <i>name</i>. If
+  no previous version exists, then <i>name</i> becomes unused and
+  references to it are errors.
+
+<p><dt><tt id="sylist"><b>SYLIST</b></tt></dt><dd>
+
+  <p>Write the list of all currently defined preprocessor symbols and
+  their values to the output file as data file comments.  It is an
+  error if there is no current output file.
+
+<p><dt><tt id="write"><b>WRITE</b> <i>arg ... arg</i></tt></dt><dd>
+
+  <p>Write the concatenation of the string representation of all arguments
+  as one line to the current output file.  If no arguments are supplied,
+  then a blank line is written.
+
+  <p>It is an error if there is not current output file.
+
+<p><dt><tt id="show"><b>SHOW</b> <i>arg ... arg</i></tt></dt><dd>
+
+  <p>Write the concatenation of the string representation of all arguments
+  as one line to standard output.  If no arguments are supplied, then a
+  blank line is written.
+
+<p><dt><tt id="if"><b>IF</b> <i>condition [</i><b>then</b><i>]</i><br>
+<b>THEN</b><br>
+<b>ELSE</b><br>
+<b>ENDIF</b>
+</tt></dt><dd>
+
+  <p>These commands are used to conditionally execute sections of code.
+
+  <p><i>Condition</i> is an expression of data type <b>bool</b>.  There are
+  two forms of the <b>if</b> construct, depending on whether the optional
+  <b>then</b> keyword is given on the <b>if</b> command line.
+
+  <dl>
+
+    <p><dt>The general form without the <b>then</b> keyword on the
+    <b>if</b> command line is:</dt><dd>
+
+      <p><tt><b>if</b> <i>condition</i><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<i>code that is always executed</i><br>
+        &nbsp;&nbsp;<b>then</b><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is true</i><br>
+        &nbsp;&nbsp;<b>else</b><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
+        &nbsp;&nbsp;<b>endif</b><br></tt>
+
+      <p>The <b>then</b> and <b>else</b> commands are optional.
+
+    <p><dt>The general form with the <b>then</b> keyword on the <b>if</b>
+    command line is:</dt><dd>
+
+      <p><tt><b>if</b> <i>condition</i> <b>then</b><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is true</i><br>
+        &nbsp;&nbsp;<b>else</b><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
+        &nbsp;&nbsp;<b>endif</b><br></tt>
+
+      <p>The <b>else</b> command is optional.
+
+    </dl>
+
+<p><dt><tt id="subroutine"><b>SUBROUTINE</b> <i>name</i></tt></dt><dd>
+
+  <p>Define the entry point of a subroutine and define the symbol
+  <i>name</i> to refer to that subroutine.  The preprocessor symbol
+  <i>name</i> will now refer to the new subroutine regardless of its
+  previous meaning, if any.  <i>Name</i> will revert to its previous
+  meaning when this symbol is deleted.
+
+  <p>Following code is considered part of the subroutine until an
+  <b>endsub</b> command is encountered.  The code from <b>subroutine</b>
+  thru <b>endsub</b> will not be executed when the subroutine is being
+  defined.  Subroutines are executed by using a <b>call</b> command,
+  described below.
+
+  <p>The code from <b>subroutine</b> thru <b>endsub</b> is an execution
+  block.  This type of execution block can take arguments, which can be
+  set with the <b>call</b> command.  Argument 0 is always the subroutine
+  name as it appeared in the <b>call</b> command.  The arguments passed
+  from the <b>call</b> command are numbered sequentially starting at 1.
+
+<p><dt><tt id="return"><b>RETURN</b></tt></dt><dd>
+
+  <p>Ends the execution of the current subroutine (latest subroutine
+  called).  Execution resumes after the last <b>call</b> command.
+
+<p><dt><tt id="endsub"><b>ENDSUB</b></tt></dt><dd>
+
+  <p>Ends a subroutine definition started with the last <b>subroutine</b>
+  command.  Code following this command is no longer considered part of
+  the subroutine, and will be executed if code execution was enabled when
+  the <b>subroutine</b> command was encountered.  If <b>endsub</b> is
+  encountered while executing a subroutine, it functions just like
+  <b>return</b>.
+
+<p><dt><tt id="call"><b>CALL</b> <i>name [arg ... arg]</i></tt></dt><dd>
+
+  <p>Executes the most recently defined subroutine of name <i>name</i>.
+  Execution returns to after the <i>call</i> command when the subroutine
+  completes.
+
+  <p>There may be zero or more <i>arg</i> parameters separated by spaces. These
+  become the execution block arguments inside the subroutine.  They
+  are available to the subroutine via the <b>arg</b> inline function.
+  Arguments are numbered sequentially starting at 1.  The special
+  argument 0 is always <i>name</i>.
+
+  <p>The arguments are interpreted as raw collection of characters.  One
+  or more blanks separate arguments.  Characters enclosed in quotes
+  ("...") or apostrophies ('...') are treated as one entity and are
+  not broken into individual arguments even if they contain blanks.
+  However, the whole string, including the enclosing quote
+  characters, becomes the argument value.
+
+  <p>Note that, as with all commands, any inline functions are first
+  evaluated before the command is interpreted.
+
+  <p>Some examples of calls to subroutine XYZ and the resulting value of
+  the arguments inside the subroutine are:<dl>
+
+    <p><dt><tt><b>call</b> xyz</tt></dt><dd>
+        Arg 0: <tt>xyz</tt><br>
+
+    <p><dt><tt><b>call</b> xyz a b "a b" "don't"</tt></dt><dd>
+        Arg 0: <tt>xyz</tt><br>
+        Arg 1: <tt>a</tt><br>
+        Arg 2: <tt>b</tt><br>
+        Arg 3: <tt>"a b"</tt><br>
+        Arg 4: <tt>"don't"</tt><br>
+
+    <p><dt><tt><b>call</b> xyz 1 2 [<b>+</b> 3 4]</tt></dt><dd>
+        Arg 0: <tt>xyz</tt><br>
+        Arg 1: <tt>1</tt><br>
+        Arg 2: <tt>2</tt><br>
+        Arg 3: <tt>7</tt><br>
+
+    </dl>
+
+<p><dt><tt id="macro"><b>MACRO</b> <i>name</i></tt></dt><dd>
+
+  <p>Defines a preprocessor macro.  These are defined just like
+  preprocessor subroutines except that the definition starts with
+  <b>macro</b> and ends with <b>endmac</b>.
+
+  <p>Macros differ from subroutines in how they are called.  A
+  preprocessor macro is called just like a native assembler macro.  If the
+  macro name appears syntactically as an opcode, then the macro is run and
+  its output replaces the macro invocation line.
+
+  <p>Arguments can be passed to the macro by placing them following the
+  macro name on the macro invocation line.  Argument handling inside the
+  macro is identical to that of preprocessor subroutine arguments.  See
+  the <b>call</b> command description for more details on arguments.  Note
+  that the call argument syntax in the macro invocation differs from the
+  <b>call</b> command.  Macro arguments are separated by commas with any
+  number of spaces before and after each comma.
+
+  <p>If a label preceeds the macro invocation on the same line, then the
+  special argument -1 is created that will be the label name.  The special
+  argument 0 is the macro name as given by <i>name</i>.
+
+  <p>The macro invocation syntax is deliberately compatible with the MPASM
+  macro invocation and instruction syntax.  This allows, for example,
+  existing MPASM directives or instructions to be "hooked" to execute
+  preprocessor code.
+
+  <p>Following code is considered part of the macro until an <b>endmac</b>
+  command is encountered.  The code from <b>macro</b> thru <b>endmac</b>
+  will not be executed when the macro is being defined.
+
+  <p>A <b>macro</b> ... <b>endmac</b> is an execution block that can take
+  arguments.
+
+<p><dt><tt id="quitmac"><b>QUITMAC</b></tt></dt><dd>
+
+  <p>Stops execution of a macro.  Preprocessor execution is returned to
+  the line following the macro invocation.
+
+<p><dt><tt id="endmac"><b>ENDMAC</b></tt></dt><dd>
+
+  <p>Ends a macro definition started with the last <b>macro</b> command.
+  Code following this command is no longer part of the macro, and will be
+  executed if code execution was enabled when the <b>macro</b> command was
+  encountered.  If <b>endmac</b> is encountered while executing a macro,
+  then execution returns to immediately after the macro invocation (just
+  like <b>quitmac</b> in this case).
+
+<p><dt><tt id="block"><b>BLOCK</b></tt></dt><dd>
+
+  <p>Starts a new executable block.  The block is ended with the
+  <b>endblock</b> command.  This type of execution block can not take
+  arguments.  Inside the block, the <b>arg</b> inline function will
+  resolve arguments for the next innermost block that can take arguments,
+  such as a <b>subroutine</b> ... <b>endsub</b> block, for example.
+
+<p><dt><tt id="endblock"><b>ENDBLOCK</b></tt></dt><dd>
+
+  <p>Ends the current execution block, which must have been started with a
+  <b>block</b> command.  Any internal resources associated with the block
+  are released, and local symbols defined in the block are deleted.
+
+<p><dt><tt id="loop"><b>LOOP</b> <i>[looptype [arg ... arg]]</i></tt></dt><dd>
+
+  <p>Starts an execution block intended for looping.  <i>Looptype</i> is
+  an optional keyword that selects the type of loop.  Depending on
+  <i>looptype</i>, additional arguments may follow.  The choices for
+  <i>looptype</i> are:<dl>
+
+    <p><dt><i id="loop-none">none</i></dt><dd>
+
+      <p>When <i>looptype</i> is left off (the command is only
+      <b>loop</b>), then no special looping logic is used and no
+      terminating condition specified.  This means <b>repeat</b> and
+      <b>endloop</b> will cause execution to jump to immediately after
+      this command.  <b>Quit</b> will terminate the loop.
+
+    <p><dt><tt id="loop-symbols"><b>symbols</b> <i>varname</i></tt></dt><dd>
+
+      <p>Loops once for each preprocessor symbol that was defined when
+      <b>loop</b> was first executed.  <b>Varname</b> is the name of a
+      local variable of type <b>string</b> that is automatically created.
+      It will contain the name of a different preprocessor symbol each
+      iteration.  This variable will be deleted when the loop is ended.
+      <b>Varname</b> is the name of the variable to create directly. It is
+      not a string.
+
+      <p>A list of the current symbols in alphabetical order is saved when
+      the <b>loop symbols</b> is first executed.  The variable will be set
+      to the name of successive list entries each iteration.  Variables
+      newly created inside the block are therefore not on the list.  If a
+      variable in the list is deleted before its iteration, then that list
+      entry will be skipped.
+
+      <p>The loop variable only takes on the name of each symbol.  While
+      that symbol is guaranteed to exist at the start of its iteration,
+      there is no guarantee that the name will refer to the same symbol it
+      did when the list was made.  For example, the name will refer to any
+      newly created symbol of the same name, including local symbols.
+
+    <p><dt><tt id="loop-for"><b>for</b> <i>var</i> <b>from</b> <i>n</i> <b>to</b> <i>m
+    [</i><b>by</b> <i>k]</i></tt></dt><dd>
+
+      <p>This is a integer counted loop.  <i>Var</i> is the name of an
+      integer local variable that will be created, and which will hold the
+      loop value each iteration.  Since <i>var</i> will be a local
+      variable to the loop block, it will not exist after the loop
+      terminates.
+
+      <p><i>n</i>, <i>m</i>, and the optional <i>k</i> must be integer
+      values.  For example, they can be explicit constants, names of
+      integer variables, or functions that return an integer value.  These
+      expressions are only evaluated once at the start of the loop.
+
+      <p>The loop value will start at <i>n</i> and will be incremented by
+      <i>k</i> each iteration.  The loop terminates when this value would
+      be past <i>m</i>. The default value for <i>k</i> is 1 when <i>m</i>
+      is greater then <i>n</i>, and -1 when <i>m</i> is less than
+      <i>n</i>.  When <i>n</i> is equal to <i>m</i>, the loop is executed
+      exactly once and the increment is irrelevant.  A increment (<i>k</i>
+      value) of 0 is not allowed.  <i>N</i>, <i>m</i>, and <i>k</i> must
+      be integer.
+
+      <p>The sign of <i>k</i> is used to determine whether the next
+      iteration would be "past" <i>m</i> or not.  When <i>k</i> > 0, then
+      the loop value must be less than or equal to <i>m</i> to continue.
+      When <i>k</i> < 0, then it must be greater than or equal to
+      <i>m</i>.
+
+      <p>The loop is not executed at all if <i>n</i> is past <i>m</i>.
+
+      <p>Examples:<dl>
+
+        <p><dt><tt><b>loop for</b> ii <b>from</b> 3 <b>to</b>
+        7</tt></dt><dd>
+
+          <p>Loop values: 3, 4, 5, 6, 7
+
+        <p><dt><tt><b>loop for</b> ii <b>from</b> 2 <b>to</b>
+        -1</tt></dt><dd>
+
+          <p>Loop values: 2, 1, 0, -1
+
+        <p><dt><tt><b>loop for</b> ii <b>from</b> 2 <b>to</b> 7 <b>by</b>
+        2</tt></dt><dd>
+
+          <p>Loop values: 2, 4, 6</dd>
+
+        <p>In each of these cases, <tt>ii</tt> will be set to the loop
+        value at the start of each iteration.  It is not recommened to
+        alter this loop variable in the loop, but altering it has no
+        effect on the operation of the loop or its value in subsequent
+        iterations. Put another way, altering the loop variable only
+        "corrupts" it for the remainder of that iteration.
+
+        </dl>
+
+    <p><dt><tt id="loop-from"><b>from</b> <i>n</i> <b>to</b> <i>m [</i><b>by</b>
+    <i>k]</i></tt></dt><dd>
+
+      <p>Same as the "<tt><b>for</b> <i>var</i> <b>from</b> <i>n</i>
+      <b>to</b> <i>m [</i><b>by</b> <i>k]</i></tt>" loop (above), except
+      that no variable is created to hold the loop value.  The loop value
+      is still computed internally the same way, but it is not accessible
+      to the code.
+
+    <p><dt><tt id="loop-n"><b>n</b> <i>m</i></tt></dt><dd>
+
+      <p>Loops <i>m</i> times.  <i>M</i> must be a integer value and is
+      only evaluated once at the start of the loop.  Values less than 1
+      cause the loop to not be executed at all.
+
+      <p>The loop value is not accessible to the code.
+
+    </dl>
+
+  <p>Execution will return to immediately after the <b>loop</b> command
+  with the loop state set to the next iteration when <b>repeat</b> or
+  <b>endloop</b> is executed, and the terminating condition is not met by
+  the new iteration state.
+
+  <p>The loop is ended when any of the following conditions are met:<ul>
+
+    <p><li><b>repeat</b> is excecuted and the new iteration state meets
+    the terminating condition.
+
+    <p><li><b>endloop</b> is excecuted and the new interation state meets
+    the terminating condition.
+
+    <p><li><b>quit</b> is executed.
+
+    </ul>
+
+  <p>Ending the loop means that execution continues after the
+  <b>endloop</b> command, and that any resources allocated when
+  <b>loop</b> was first executed are released.  This includes deleting all
+  local variables created inside the loop.
+
+  <p><b>Loop</b> and <b>endloop</b> form an execution block.  This type of
+  execution block does not take arguments.  The <b>arg</b> inline function
+  will resolve arguments of the next enclosing execution block that does
+  take arguments.
+
+<p><dt><tt id="endloop"><b>ENDLOOP</b></tt></dt><dd>
+
+  <p>Ends a <b>loop</b> execution block.  If this command is encountered
+  when the loop is being executed, then it functions like <b>repeat</b>.
+
+<p><dt><tt id="repeat"><b>REPEAT</b></tt></dt><dd>
+
+  <p>Go back to immediately after the command that started the current
+  execution block.
+
+  <p>If the execution block is a loop (started with <b>loop</b>), then the
+  loop state is advanced to the next iteration and execution only returns
+  to the start of the block if the new iteration state does not meet the
+  terminating condition.  If the new iteration state does meet the
+  terminating condition, then the loop is ended and execution resumes
+  immediately after the end of the block (functions like <b>quit</b>).
+
+<p><dt><tt id="quit"><b>QUIT</b></tt></dt><dd>
+
+  <p>Exits the current execution block.  Execution resumes with parameters
+  in effect before the block was entered.  Resources used internally in
+  the preprocessor to manage the block are deallocated and local variables
+  defined in the block are deleted.
+
+<p><dt><tt id="writeto"><b>WRITETO</b> <i>name</i></tt></dt><dd>
+
+  <p>Any output that would normally go to the preprocessed output file
+  will now go to the file indicated by <i>name</i>.  <i>Name</i> is a
+  string. The file is created if it does not previously exist, and is
+  overwritten if it does.
+
+<p><dt><tt id="writeend"><b>WRITEEND</b></tt></dt><dd>
+
+  <p>Ends writing to the file started with the most recently executed
+  WRITETO command.  The output file is restored to what it was when
+  WRITETO was executed.  In preprocessor mode, it is not possible to stop
+  writing to the original output file.
+
+<p><dt><tt id="stop"><b>STOP</b></tt></dt><dd>
+
+  <p>Completely ends this run of the preprocessor.  No more input file
+  is read, and no more output file written.  Any open output files
+  are closed, and the program exits.
+
+</dl>
+
+
+<p><!-- ******************************************************************** -->
+<br><p><hr>
+<ul>
+  <li><a href="func.htm">Next page</a>
+  <li><a href="index.htm">Master index</a>
+  </ul>
+
+</body>
+</html>
