@@ -332,15 +332,19 @@ start and end sequences have been removed.
   <p>Returns the raw characters of argument <i>n</i> to the innermost
   block that takes arguments.
 
+  <p>This function returns the raw characters of the argument, not a
+  string or any particular data type.  When the argument doesn't exist,
+  nothing is returned.
+
 <p><dt><tt id="ccode"><b>CCODE</b> <i>char</i></tt></dt><dd>
 
   <p>Returns the integer character code of the character <i>char</i>.
   <i>Char</i> must be a string that is exactly one character long.
 
-<p><dt><tt id="char"><b>CHAR</b> <i>ccode</i></tt></dt><dd>
+<p><dt><tt id="char"><b>CHAR</b> <i>[ccode ... ccode]</i></tt></dt><dd>
 
-  <p>Returns the the single-character string containing the character of
-  character code <i>ccode</i>.  <i>Ccode</i> must be integer.
+  <p>Returns the string consisting of the characters of the indicated
+  character codes.  All arguments must be integer.
 
 <p><dt><tt id="chars"><b>CHARS</b> <i>[arg1 ... argN]</i></tt></dt><dd>
 
@@ -868,9 +872,11 @@ start and end sequences have been removed.
   <p>The arguments data types must be either all <b>bool</b> or all
   <b>integer</b>. <i>Arg1</i> is required.
 
-<p><dt><tt id="pi"><b>PI</b></tt></dt><dd>
+<p><dt><tt id="pi"><b>PI</b> <i>[val]</i></tt></dt><dd>
 
-  <p>Returns the value of Pi, 3.141592...
+  <p>When <i>val</i> is not present, returns the value of Pi
+  (3.141592...). When <i>val</i> is present, returns the value of Pi times
+  <i>val</i>.  <i>Val</i> must be numeric.
 
 <p><dt><tt id="qstr"><b>QSTR</b> <i>characters</i></tt></dt><dd>
 
@@ -991,7 +997,7 @@ start and end sequences have been removed.
   end of the substring is clipped to be within the input string.  The
   empty string is returned if STR is empty.
 
-  <p>Example:
+  <p>For example:
 
   <p><tt>&nbsp;
   [<b>substr</b> 2 5 "This is a test"] --> "his i"
@@ -1005,7 +1011,7 @@ start and end sequences have been removed.
   <p><i>Qual</i> is a optional keyword specifying the type of information
   to return about the symbol.  The choices for <i>qual</i> are:<dl>
 
-    <dt><tt><b>TYPE</b></tt></dt><dd>
+    <p><dt><tt><b>TYPE</b></tt></dt><dd>
 
       <p>Symbol type.  This is the default if <i>qual</i> is not supplied.
       The function value will be one of these upper case strings, indicating
@@ -1023,7 +1029,7 @@ start and end sequences have been removed.
       <p>The empty string is returned if NAME does not match the name of
       any preprocessor symbol.
 
-    <dt><tt><b>DTYPE</b></tt></dt><dd>
+    <p><dt><tt><b>DTYPE</b></tt></dt><dd>
 
       <p>Symbol data type.  The function value will be a upper case string
       containing the data type keyword.  These are:
@@ -1035,8 +1041,8 @@ start and end sequences have been removed.
       STRING<br>
       TIME<br>
 
-      <p>See the "Data Types" section earlier in this document for details
-      of these data types.
+      <p>See the <a href="dtype.htm"><i>Data Types</i></a> section for
+      details of data types.
 
       <p>The empty string is returned if <i>name</i> does not match the
       name of a preprocessor symbol that has a data type.  For example,
@@ -1049,7 +1055,7 @@ start and end sequences have been removed.
   <p>Returns the tangent of the angle <i>ang</i>.  <i>Ang</i> must be
   numeric, and is in radians.
 
-<p><dt><tt id="tnam"><b>filename</b> <i>arg</i></tt></dt><dd>
+<p><dt><tt id="tnam"><b>TNAM</b> <i>filename</i></tt></dt><dd>
 
   <p>Returns the full absolute treename of the file indicated by the
   string <i>filename</i>.  Embed Inc portable pathname rules are used to

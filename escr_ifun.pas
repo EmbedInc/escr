@@ -172,10 +172,9 @@ begin
 {
 ********************************************************************************
 *
-*   CHAR ccode
+*   CHAR [ccode ... ccode]
 *
-*   Returns the single-character string containing the character of character
-*   code CCODE.
+*   Returns the string of the characters with the indicated character codes.
 }
 procedure escr_ifun_char (
   in out  e: escr_t;
@@ -184,14 +183,22 @@ procedure escr_ifun_char (
 
 var
   ccode: sys_int_max_t;                {character code}
+  str: string_var8192_t;
 
 begin
-  if not escr_ifn_get_int (e, ccode, stat) then begin {get character code into CCODE}
-    escr_ifn_stat_required (e, stat);
-    return;
+  str.max := size_char(str.str);       {init local var strings}
+
+  str.len := 0;                        {init the returned string to empty}
+
+  while true do begin
+    if not escr_ifn_get_int (e, ccode, stat) then begin {get character code into CCODE}
+      if sys_error(stat) then return;
+      exit;
+      end;
+    string_append1 (str, chr(ccode));  {append this char to end of return string}
     end;
 
-  escr_ifn_ret_char (e, chr(ccode));   {return string containing only this character}
+  escr_ifn_ret_str (e, str);           {return the result}
   end;
 {
 ********************************************************************************
@@ -618,8 +625,8 @@ begin
     escr_ifn_stat_required (e, stat);
     return;
     end;
-
-  escr_ifn_ret_bool (e, not b);        {return the result}
+  b := not b;                          {apply the function logic}
+  escr_ifn_ret_bool (e, b);            {return the result}
   end;
 {
 ********************************************************************************
@@ -1639,17 +1646,30 @@ begin
 {
 ********************************************************************************
 *
-*   PI
+*   PI [val]
 *
-*   Returns Pi.
+*   Returns Pi or Pi*val.
 }
 procedure escr_ifun_pi (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
+var
+  fp: sys_fp_max_t;                    {function return value}
+
 begin
-  escr_ifn_ret_fp (e, pi);             {return Pi}
+  if escr_ifn_get_fp (e, fp, stat)
+    then begin                         {got VAL in FP}
+      fp := fp * pi;                   {make the result}
+      end
+    else begin                         {didn't get VAL}
+      if sys_error(stat) then return;
+      fp := pi;                        {return just Pi}
+      end
+    ;
+
+  escr_ifn_ret_fp (e, fp);             {return the result}
   end;
 {
 ********************************************************************************

@@ -4,39 +4,23 @@ Source code for the Embed Inc scripting system and the ESCR program.
 Introduction
 
   The Embed scripting system is a set of routines that can be used by
-  applications to execute scripts as a interpreter.  These routines are
+  applications to execute scripts as an interpreter.  These routines are
   available to applications in the escr.lib linkable library.  The
   interface to these routines is defined in the escr.ins.pas Pascal
   include file, or the escr.h C include file, which is automatically
   derived from the Pascal version.
 
-  Any one use of the scripting system runs in one of two high level modes:
-  script and pre-processor.
+  This software includes the ESCR program.  It is a stand-alone program
+  that uses the ESCR scripting system to execute a script file.  This
+  makes it an interpreter that runs script code according to the default
+  ESCR syntax.  The ESCR program source code (escr.pas) also serves as a
+  example of how to use the ESCR script processing system.
 
-  In script mode, the system is purely a interpreter.  It "runs" a source
-  stream given to it.  All content of the input stream is the interpreted
-  language source code.
 
-  In pre-processor mode, the purpose is assumed to be processing the input
-  stream to produce a (possibly) modified output.  The input stream
-  contains data that is copied to the output, and script source code that
-  is not copied to the output.
+Documentation
 
-  Script source code contains commands and functions.  Commands are on
-  lines by themselves, and start with a command keyword, which is possibly
-  followed by parameters.  Functions are sequences of characters
-  identified by a special syntax.  Executing a function results in a
-  expansion string.  The function is replaced by its expansion string
-  before most other processing is performed on that input stream line.
-  Functions can be used to supply parameters to commands, and can appear
-  within data in pre-processor mode.
-
-  The application can customize some aspects of the script syntax, and add
-  its own commands, functions, and other symbols.
-
-  The ESCR program is a thin layer above this library, and is a
-  stand-alone script interpreter.  It runs a source file in script mode,
-  using the default ESCR syntax rules, commands, functions, etc.
+  For details, see the documentation in the DOC directory.  This is a
+  series of linked HTML files.  Start with "index.htm".
 
 
 Examples

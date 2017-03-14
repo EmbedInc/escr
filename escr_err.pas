@@ -42,6 +42,7 @@ begin
   sys_message_parms (subsys, msg, parms, n_parms); {write caller's message}
 
   block_p := e.exblock_p;              {get pointer to current execution block}
+  if block_p = nil then return;        {not in a execution block, nothing to report ?}
   inpos_p := block_p^.inpos_p;         {get pointer to nested input file state}
   line_p := inpos_p^.last_p;           {get pointer to current input line info}
   sys_msg_parm_vstr (msg_parm[1], line_p^.file_p^.tnam); {input file name}
