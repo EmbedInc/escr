@@ -79,6 +79,8 @@ const
   escr_err_inh_nest_k = 60;            {inhibit nesting error}
   escr_err_if_nend_k = 61;             {IF not ended before end of execution block}
   escr_err_badsym_k = 62;              {not a valid symbol name, <name>}
+  escr_err_loop_keyw_k = 63;           {LOOP keyword incompatible with previous keyword <keyw>}
+  escr_err_loop_n_k = 64;              {LOOP overconstrained by N keyword}
 {
 *   Derived constants.
 }
@@ -255,23 +257,25 @@ escr_sym_src_k: (                      {label for a source code snippet}
   escr_looptype_k_t = (                {type of explicit loop}
     escr_looptype_unc_k,               {unconditional, no terminating condition}
     escr_looptype_sym_k,               {looping over list of symbols}
-    escr_looptype_for_k);              {integer variable fixed increment count}
+    escr_looptype_cnt_k);              {counted loop}
 
   escr_loop_p_t = ^escr_loop_t;
   escr_loop_t = record                 {info about a loop}
     looptype: escr_looptype_k_t;       {type of loop}
-    var_p: escr_sym_p_t;               {points to the loop variable, if any}
     case escr_looptype_k_t of          {unique data for each type of loop}
 escr_looptype_unc_k: (                 {unconditional loop}
       );
 escr_looptype_sym_k: (                 {loop over all script processor symbols}
+      sym_const_p: escr_sym_p_t;       {points to loop iteration value constant}
       sym_list_p: string_list_p_t;     {points to list of symbol name strings}
       );
-escr_looptype_for_k: (                 {loop over integer values with fixed increment}
-      for_start: sys_int_max_t;        {starting value}
-      for_curr: sys_int_max_t;         {current value}
-      for_end: sys_int_max_t;          {ending value}
-      for_inc: sys_int_max_t;          {increment per iteration}
+escr_looptype_cnt_k: (                 {loop over integer values with fixed increment}
+      cnt_const_p: escr_sym_p_t;       {points to loop iteration value constant}
+      cnt_start: sys_int_max_t;        {starting value}
+      cnt_curr: sys_int_max_t;         {current value}
+      cnt_end: sys_int_max_t;          {ending value}
+      cnt_inc: sys_int_max_t;          {increment per iteration}
+      cnt_inf: boolean;                {infinite loop}
       );
     end;
 

@@ -10,17 +10,32 @@ define escr_cmd_endloop;
 *
 *   Subroutine  ESCR_CMD_LOOP (E, STAT)
 *
-*   /LOOP
-*   /LOOP SYMBOLS varname
+*   LOOP
+*
+*   LOOP SYMBOLS var
+*
+*   LOOP [WITH var] [FROM n] [TO n] [BY n] [N n]
 }
 procedure escr_cmd_loop (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
+type
+  keyw_k_t = (                         {ID for each keyword}
+    keyw_symbols_k,
+    keyw_with_k,
+    keyw_from_k,
+    keyw_to_k,
+    keyw_by_k,
+    keyw_n_k);
+  keyw_t = set of keyw_k_t;            {set of all possible keywords}
+
 var
+  keyw: keyw_t;                        {keywords seen so far}
   loop_p: escr_loop_p_t;               {pointer to loop descriptor}
   pick: sys_int_machine_t;             {number of keyword picked from list}
+  n_n: sys_int_machine_t;              {value with N keyword}
   name: string_var80_t;                {variable name}
   tk: string_var32_t;                  {scratch token}
   name_p: string_var_p_t;              {scratch string pointer}
@@ -31,7 +46,7 @@ var
   found: boolean;                      {symbol table entry found}
 
 label
-  loop_from, err_missing;
+  err_missing, err_keyw, err_abort;
 
 begin
   name.max := size_char(name.str);     {init local var string}
@@ -49,34 +64,37 @@ begin
 
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
 
-  escr_get_keyword (e, 'SYMBOLS FOR FROM N', pick, stat); {get looptype keyword}
-  if sys_error(stat) then return;
-
   util_mem_grab (                      {allocate loop descriptor}
     sizeof(loop_p^), e.exblock_p^.mem_p^, false, loop_p);
   loop_p^.looptype := escr_looptype_unc_k; {init loop descriptor to default}
-  loop_p^.var_p := nil;                {init to no loop variable}
+  e.exblock_p^.loop_p := loop_p;       {add loop descriptor to this execution block}
 
-  case pick of
+  keyw := [];                          {init to no keywords found}
+
+  while true do begin                  {back here until command line exhausted}
+    if not escr_get_token (e, tk)      {get next command line token into TK}
+      then exit;                       {exhausted the command line ?}
+    string_upcase (tk);                {make upper case for keyword matching}
+    string_tkpick80 (tk,               {pick the keyword from list}
+      'SYMBOLS WITH FROM TO BY N',
+      pick);
+    case pick of                       {which keyword is it ?}
 {
 ******************************
 *
-*   /LOOP with no parameters.
-}
-0: begin
-  if not escr_get_end (e, stat) then return; {abort on extra parameter}
-  end;
-{
-******************************
-*
-*   /LOOP SYMBOLS
+*   SYMBOLS const
 }
 1: begin
+  if loop_p^.looptype <> escr_looptype_unc_k {incompatible with previous keyword ?}
+    then goto err_keyw;
+  if keyw_symbols_k in keyw
+    then goto err_keyw;
+  keyw := keyw + [keyw_symbols_k];     {record that this keyword used}
+
   loop_p^.looptype := escr_looptype_sym_k; {looping over list of symbols}
 
   if not escr_get_token (e, name)      {get the variable name into NAME}
     then goto err_missing;
-  if not escr_get_end (e, stat) then return; {abort on extra parameter}
 {
 *   Create the local list of symbol names.
 }
@@ -103,7 +121,7 @@ begin
 {
 *   Initialze the loop state to the first names list entry.
 }
-  escr_sym_new_var (                   {create the loop variable}
+  escr_sym_new_const (                 {create the iteration value constant}
     e,                                 {state for this use of the ESCR system}
     name,                              {name of variable to create}
     escr_dtype_str_k,                  {variable's data type}
@@ -111,8 +129,8 @@ begin
     false,                             {local, not global}
     sym_p,                             {returned pointer to the new variable}
     stat);
-  escr_err_atline_abort (e, stat, '', '', nil, 0);
-  loop_p^.var_p := sym_p;              {save pointer to the loop variable}
+  if sys_error(stat) then goto err_abort;
+  loop_p^.sym_const_p := sym_p;        {save pointer to iteration value constant}
 
   string_list_pos_abs (slist_p^, 1);   {go to first list entry}
 
@@ -122,122 +140,233 @@ begin
     end;
 
   string_copy (                        {init loop value to first symbol name}
-    slist_p^.str_p^, loop_p^.var_p^.var_val.str);
-  end;
+    slist_p^.str_p^, loop_p^.sym_const_p^.const_val.str);
+  end;                                 {end of SYMBOL keyword case}
 {
 ******************************
 *
-*   /LOOP FOR var FROM n TO m [BY k]
+*   WITH const
 }
 2: begin
-  if not escr_get_token (e, name)      {get the variable name into NAME}
+  if loop_p^.looptype = escr_looptype_unc_k then begin {loop type not set yet ?}
+    loop_p^.looptype := escr_looptype_cnt_k; {is now a counted loop}
+    loop_p^.cnt_inf := true;
+    end;
+  if loop_p^.looptype <> escr_looptype_cnt_k {wrong loop type for this keyword ?}
+    then goto err_keyw;
+  if keyw_with_k in keyw               {this keyword already used before ?}
+    then goto err_keyw;
+  keyw := keyw + [keyw_with_k];        {record that this keyword used}
+
+  if not escr_get_token (e, name)      {get the constant name into NAME}
     then goto err_missing;
 
-  escr_get_keyword (e, 'FROM', pick, stat);
-  if sys_error(stat) then return;
-loop_from:                             {common code with /LOOP FROM}
-  if not escr_get_int (e, loop_p^.for_start, stat)
-    then goto err_missing;
-
-  escr_get_keyword (e, 'TO', pick, stat);
-  if sys_error(stat) then return;
-  if not escr_get_int (e, loop_p^.for_end, stat)
-    then goto err_missing;
-
-  if loop_p^.for_end >= loop_p^.for_start {set default increment from loop direction}
-    then loop_p^.for_inc := 1
-    else loop_p^.for_inc := -1;
-
-  escr_get_keyword (e, 'BY', pick, stat);
-  if sys_error(stat) then return;
-  if pick = 1 then begin               {BY clause exists ?}
-    if not escr_get_int (e, loop_p^.for_inc, stat)
-      then goto err_missing;
-    if not escr_get_end (e, stat) then return; {abort on extra parameter}
-    end;
-  {
-  *   The /LOOP command line has been parsed.  NAME is the name of the temporary
-  *   variable to create as the loop counter, or it is the empty string to
-  *   incidate no variable is to be created.
-  *
-  *   The loop descriptor fields FOR_START, FOR_END, and FOR_INC have been
-  *   filled in.
-  }
-  if loop_p^.for_inc = 0 then begin    {invalid iteration increment ?}
-    sys_stat_set (escr_subsys_k, escr_err_loopinc0_k, stat);
-    return;
-    end;
-  loop_p^.looptype := escr_looptype_for_k; {FOR loop}
-  loop_p^.for_curr := loop_p^.for_start; {init value for first iteration}
-
-  if
-      (loop_p^.for_inc >= 0) and       {counting up ?}
-      (loop_p^.for_curr > loop_p^.for_end) {already past the end ?}
-      then begin
-    e.inhibit_p^.inh := true;          {inhibit execution for this block}
-    end;
-  if
-      (loop_p^.for_inc < 0) and        {counting down ?}
-      (loop_p^.for_curr < loop_p^.for_end) {already past the end ?}
-      then begin
-    e.inhibit_p^.inh := true;          {inhibit execution for this block}
-    end;
-  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
-
-  if name.len > 0 then begin           {need to create loop variable ?}
-    escr_sym_new_var (                 {create the loop variable}
-      e,                               {state for this use of the ESCR system}
-      name,                            {name of the variable to create}
-      escr_dtype_int_k,                {data type will be integer}
-      0,                               {additional length parameter, unused}
-      false,                           {variable will be local, not global}
-      sym_p,                           {returned pointer to the new variable symbol}
-      stat);
-    escr_err_atline_abort (e, stat, '', '', nil, 0);
-    loop_p^.var_p := sym_p;            {save pointer to the loop variable}
-    sym_p^.var_val.int := loop_p^.for_curr; {init to value for first iteration}
-    end;
+  escr_sym_new_const (                 {create the iteration value constant}
+    e,                                 {state for this use of the ESCR system}
+    name,                              {name of the variable to create}
+    escr_dtype_int_k,                  {data type will be integer}
+    0,                                 {additional length parameter, unused}
+    false,                             {will be local, not global}
+    sym_p,                             {returned pointer to the new symbol}
+    stat);
+  if sys_error(stat) then goto err_abort;
+  loop_p^.cnt_const_p := sym_p;        {save pointer to the iteration value constant}
   end;
 {
 ******************************
 *
-*   /LOOP FROM n TO m [BY k]
+*   FROM n
 }
 3: begin
-  name.len := 0;                       {indicate to not create a loop variable}
-  goto loop_from;                      {to common code with /LOOP FOR}
+  if loop_p^.looptype = escr_looptype_unc_k then begin {loop type not set yet ?}
+    loop_p^.looptype := escr_looptype_cnt_k; {is now a counted loop}
+    loop_p^.cnt_const_p := nil;
+    loop_p^.cnt_inf := true;
+    end;
+  if loop_p^.looptype <> escr_looptype_cnt_k {wrong loop type for this keyword ?}
+    then goto err_keyw;
+  if keyw_from_k in keyw               {this keyword already used before ?}
+    then goto err_keyw;
+  keyw := keyw + [keyw_from_k];        {record that this keyword used}
+
+  if not escr_get_int (e, loop_p^.cnt_start, stat) {get N}
+    then goto err_missing;
+  if sys_error(stat) then goto err_abort;
   end;
 {
 ******************************
 *
-*   /LOOP N n
+*   TO n
 }
 4: begin
-  loop_p^.looptype := escr_looptype_for_k; {this will be FOR loop with no variable}
-  loop_p^.for_start := 1;              {starting value}
-  loop_p^.for_curr := 1;               {value for first iteration}
-  loop_p^.for_inc := 1;                {increment each iteration}
+  if loop_p^.looptype = escr_looptype_unc_k then begin {loop type not set yet ?}
+    loop_p^.looptype := escr_looptype_cnt_k; {is now a counted loop}
+    loop_p^.cnt_const_p := nil;
+    end;
+  if loop_p^.looptype <> escr_looptype_cnt_k {wrong loop type for this keyword ?}
+    then goto err_keyw;
+  if keyw_to_k in keyw                 {this keyword already used before ?}
+    then goto err_keyw;
+  keyw := keyw + [keyw_to_k];          {record that this keyword used}
 
-  if not escr_get_int (e, loop_p^.for_end, stat) {get number of times to loop}
+  if not escr_get_int (e, loop_p^.cnt_end, stat) {get N}
     then goto err_missing;
+  if sys_error(stat) then goto err_abort;
+  loop_p^.cnt_inf := false;            {this loop has definite end}
+  end;
+{
+******************************
+*
+*   BY n
+}
+5: begin
+  if loop_p^.looptype = escr_looptype_unc_k then begin {loop type not set yet ?}
+    loop_p^.looptype := escr_looptype_cnt_k; {is now a counted loop}
+    loop_p^.cnt_const_p := nil;
+    end;
+  if loop_p^.looptype <> escr_looptype_cnt_k {wrong loop type for this keyword ?}
+    then goto err_keyw;
+  if keyw_by_k in keyw                 {this keyword already used before ?}
+    then goto err_keyw;
+  keyw := keyw + [keyw_by_k];          {record that this keyword used}
 
-  if loop_p^.for_end < 1 then begin    {will do 0 iterations ?}
-    e.inhibit_p^.inh := true;          {inhibit execution for this block}
-    return;
+  if not escr_get_int (e, loop_p^.cnt_inc, stat) {get N}
+    then goto err_missing;
+  if sys_error(stat) then goto err_abort;
+  if loop_p^.cnt_inc = 0 then begin    {invalid iteration increment ?}
+    sys_stat_set (escr_subsys_k, escr_err_loopinc0_k, stat);
+    goto err_abort;
     end;
   end;
 {
 ******************************
+*
+*   N n
 }
-    end;                               {end of looptype cases}
+6: begin
+  if loop_p^.looptype = escr_looptype_unc_k then begin {loop type not set yet ?}
+    loop_p^.looptype := escr_looptype_cnt_k; {is now a counted loop}
+    loop_p^.cnt_const_p := nil;
+    end;
+  if loop_p^.looptype <> escr_looptype_cnt_k {wrong loop type for this keyword ?}
+    then goto err_keyw;
+  if keyw_n_k in keyw                  {this keyword already used before ?}
+    then goto err_keyw;
+  keyw := keyw + [keyw_n_k];           {record that this keyword used}
 
-  e.exblock_p^.loop_p := loop_p;       {add loop descriptor to this execution block}
+  if not escr_get_int (e, n_n, stat)   {get N}
+    then goto err_missing;
+  if sys_error(stat) then goto err_abort;
+  loop_p^.cnt_inf := false;            {this loop has definite end}
+  end;
+{
+******************************
+*
+*   Unrecognized keyword.  The upper case keyword is in TK.
+}
+otherwise
+      sys_stat_set (escr_subsys_k, escr_err_badparm_k, stat);
+      sys_stat_parm_vstr (tk, stat);
+      sys_stat_parm_vstr (e.cmd, stat);
+      goto err_abort;
+      end;                             {end of keyword cases}
+    end;                               {back to get next keyword}
+
+  case loop_p^.looptype of             {what type of loop is this ?}
+{
+*   Post-keyword processing for unconditional loop.
+}
+escr_looptype_unc_k: begin
+  end;
+{
+*   Post-keyword processing for symbols loop.
+}
+escr_looptype_sym_k: begin
+  end;
+{
+*   Post-keyword processing for counted loop.
+}
+escr_looptype_cnt_k: begin
+  writeln ('Post processing counted loop');
+  if not (keyw_from_k in keyw) then begin
+    loop_p^.cnt_start := 1;            {default starting value}
+    end;
+
+  if not (keyw_by_k in keyw) then begin {increment not explicitly set ?}
+    if
+        (keyw_from_k in keyw) and      {have explicit start value ?}
+        (keyw_to_k in keyw) and        {have explicit end value ?}
+        (loop_p^.cnt_end < loop_p^.cnt_start) {going down ?}
+      then loop_p^.cnt_inc := -1
+      else loop_p^.cnt_inc := 1;
+    end;
+
+  if keyw_n_k in keyw then begin       {number of iterations explicitly set ?}
+    if
+        (keyw_from_k in keyw) and      {start explicitly set ?}
+        (keyw_to_k in keyw)            {end explicitly set ?}
+        then begin
+      sys_stat_set (escr_subsys_k, escr_err_loop_n_k, stat);
+      goto err_abort;
+      end;
+    if n_n <= 0 then begin             {zero iterations, don't run the loop ?}
+      e.inhibit_p^.inh := true;        {inhibit execution for this block}
+      return;
+      end;
+    if not (keyw_to_k in keyw)
+      then begin                       {make end from start and number}
+        loop_p^.cnt_end :=
+          loop_p^.cnt_start + (n_n - 1) * loop_p^.cnt_inc;
+        end
+      else begin                       {make start from end and number}
+        loop_p^.cnt_start :=
+          loop_p^.cnt_end - (n_n - 1) * loop_p^.cnt_inc;
+        end
+      ;
+    end;
+
+  writeln ('Setting initial value');
+  loop_p^.cnt_curr := loop_p^.cnt_start; {init value for first iteration}
+
+  if not loop_p^.cnt_inf then begin    {not infinite loop ?}
+    writeln ('Not infinite loop');
+    if
+        (loop_p^.cnt_inc > 0) and      {counting up ?}
+        (loop_p^.cnt_curr > loop_p^.cnt_end) {already past the end ?}
+        then begin
+      e.inhibit_p^.inh := true;        {inhibit execution for this block}
+      end;
+    if
+        (loop_p^.cnt_inc < 0) and      {counting down ?}
+        (loop_p^.cnt_curr < loop_p^.cnt_end) {already past the end ?}
+        then begin
+      e.inhibit_p^.inh := true;        {inhibit execution for this block}
+      end;
+    if e.inhibit_p^.inh then return;   {execution is inhibited ?}
+    end;
+
+  if loop_p^.cnt_const_p <> nil then begin {there is a iteration constant ?}
+    loop_p^.cnt_const_p^.const_val.int := loop_p^.cnt_curr; {init to value for first iteration}
+    end;
+  writeln ('Done post processing counted loop');
+  end;                                 {end of counted loop case}
+
+    end;                               {end of looptype cases for post-keyword processing}
+  writeln ('Done LOOP command');
   return;
 {
-*   Abort due to missing required parameter.
+*   Error return points.
 }
-err_missing:
+err_missing:                           {missing required parameter}
   escr_stat_cmd_noarg (e, stat);
+  goto err_abort;
+
+err_keyw:                              {keyword in TK incompatible with previous keyw}
+  sys_stat_set (escr_subsys_k, escr_err_loop_keyw_k, stat);
+  sys_stat_parm_vstr (tk, stat);
+
+err_abort:                             {abort with exblock created, STAT all set}
+  escr_exblock_close (e);              {remove the loop execution block created above}
   end;
 {
 ********************************************************************************
@@ -293,32 +422,32 @@ escr_looptype_sym_k: begin             {looping thru list of symbols}
     if sym_p = nil then next;          {this symbol got deleted, skip it}
 
     string_copy (                      {copy new name into loop variable}
-      loop_p^.sym_list_p^.str_p^, loop_p^.var_p^.var_val.str);
+      loop_p^.sym_list_p^.str_p^, loop_p^.sym_const_p^.const_val.str);
     exit;                              {successfully found next symbol name}
     end;
   end;
 {
 ******************************
 *
-*   Integer counted loop.
+*   Counted loop.
 }
-escr_looptype_for_k: begin
-  loop_p^.for_curr :=                  {advance loop value to next iteration}
-    loop_p^.for_curr + loop_p^.for_inc;
+escr_looptype_cnt_k: begin
+  loop_p^.cnt_curr :=                  {advance loop value to next iteration}
+    loop_p^.cnt_curr + loop_p^.cnt_inc;
+  if loop_p^.cnt_const_p <> nil then begin {there is a iteration value constant ?}
+    loop_p^.cnt_const_p^.const_val.int := loop_p^.cnt_curr; {update variable for this iteration}
+    end;
+
+  if loop_p^.cnt_inf then goto loop;   {infinite loop, no terminating condition ?}
 
   if                                   {done counting up ?}
-      (loop_p^.for_end >= loop_p^.for_start) and {counting up ?}
-      (loop_p^.for_curr > loop_p^.for_end) {this iteration would be past end ?}
+      (loop_p^.cnt_end >= loop_p^.cnt_start) and {counting up ?}
+      (loop_p^.cnt_curr > loop_p^.cnt_end) {this iteration would be past end ?}
     then return;                       {terminate the loop}
   if                                   {done counting down ?}
-      (loop_p^.for_end < loop_p^.for_start) and {counting up ?}
-      (loop_p^.for_curr < loop_p^.for_end) {this iteration would be past end ?}
+      (loop_p^.cnt_end < loop_p^.cnt_start) and {counting up ?}
+      (loop_p^.cnt_curr < loop_p^.cnt_end) {this iteration would be past end ?}
     then return;                       {terminate the loop}
-
-  sym_p := loop_p^.var_p;              {get pointer to loop variable, if any}
-  if sym_p <> nil then begin           {there is a loop variable ?}
-    sym_p^.var_val.int := loop_p^.for_curr; {update variable for this iteration}
-    end;
   end;
 {
 ******************************

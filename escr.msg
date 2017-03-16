@@ -191,8 +191,16 @@ msg err61
 msg err62
   lan english -def
     "%p1s" is not a valid symbol name.
+msg err63
+  lan english -def
+    They LOOP command keyword %p1s is incompatible with a previous keyword.
+msg err64
+  lan english -def
+    FROM, TO, and N options used in same LOOP command, at most two of the
+    three are allowed.
 /*
-/*   Messages without error status codes.
+/*   Messages without error status codes.  These messages are used directly by
+/*   ESCR system code.
 /*
 msg err_dtype_unimp
   lan english -def
@@ -231,6 +239,10 @@ msg term_val_str
 msg term_val_unk
   lan english -def
     The data type of the term is unrecognized.  The data type ID is %p1i.
+/*
+/*   Messages for possible use by applications using the ESCR library.  These
+/*   messages are not used by ESCR code directly.
+/*
 msg var_new
   lan english -def
     Error occurred on attempt to create the new variable "%p1s".

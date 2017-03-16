@@ -110,7 +110,7 @@ keyword.
 
     <p><li>The action is only performed on the first iteration thru the
     execution block.  This allows the command to be put inside a
-    <b>loop</b> ... <b>repeat</b> block, for example, but the variable
+    <b>loop</b> ... <b>endloop</b> block, for example, but the variable
     only created on the first pass.  Even if a local variable is not
     created on the first pass due to conditional logic, it will not be
     created on subsequent passes if the <b>var local</b> command for that
@@ -190,7 +190,8 @@ keyword.
           &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
         &nbsp;&nbsp;<b>endif</b><br></tt>
 
-      <p>The <b>then</b> and <b>else</b> commands are optional.
+      <p>At least one of the <b>then</b> and <b>else</b> commands are
+      required.
 
     <p><dt>The general form with the <b>then</b> keyword on the <b>if</b>
     command line is:</dt><dd>
@@ -345,119 +346,175 @@ keyword.
   <b>block</b> command.  Any internal resources associated with the block
   are released, and local symbols defined in the block are deleted.
 
-<p><dt><tt id="loop"><b>LOOP</b> <i>[looptype [arg ... arg]]</i></tt></dt><dd>
+<p><dt><tt id="loop"><b>LOOP</b> <i>[opt [arg]] ... [opt [arg]]</i></tt></dt><dd>
 
-  <p>Starts an execution block intended for looping.  <i>Looptype</i> is
-  an optional keyword that selects the type of loop.  Depending on
-  <i>looptype</i>, additional arguments may follow.  The choices for
-  <i>looptype</i> are:<dl>
+  <p>Starts an execution block intended for looping.  The command name can
+  be followed by a sequence of options, each of which may take arguments.
+  Each <i>opt</i> parameter is a keyword, and is therefore
+  case-insensitive.
 
-    <p><dt><i id="loop-none">none</i></dt><dd>
+  <p>There are several distinct loop types that can be created with this
+  command.  The options used determine the loop type and its specific
+  parameters.  The loop types are:<dl>
 
-      <p>When <i>looptype</i> is left off (the command is only
-      <b>loop</b>), then no special looping logic is used and no
-      terminating condition specified.  This means <b>repeat</b> and
-      <b>endloop</b> will cause execution to jump to immediately after
-      this command.  <b>Quit</b> will terminate the loop.
+  <p><dt id="loop-unconditional">Unconditional</dt><dd>
 
-    <p><dt><tt id="loop-symbols"><b>symbols</b> <i>varname</i></tt></dt><dd>
+    <p>This type of loop has no special looping logic or terminating
+    condition.  <b>Repeat</b> and <b>endloop</b> will cause execution to
+    jump to immediately after the <b>loop</b> command.  Only <b>Quit</b>
+    will terminate the loop.
 
-      <p>Loops once for each preprocessor symbol that was defined when
-      <b>loop</b> was first executed.  <b>Varname</b> is the name of a
-      local variable of type <b>string</b> that is automatically created.
-      It will contain the name of a different preprocessor symbol each
-      iteration.  This variable will be deleted when the loop is ended.
-      <b>Varname</b> is the name of the variable to create directly. It is
-      not a string.
+    <p>This loop type is a result of not specifying any loop options.
 
-      <p>A list of the current symbols in alphabetical order is saved when
-      the <b>loop symbols</b> is first executed.  The variable will be set
-      to the name of successive list entries each iteration.  Variables
-      newly created inside the block are therefore not on the list.  If a
-      variable in the list is deleted before its iteration, then that list
-      entry will be skipped.
+  <p><dt id="loop-counted">Counted</dt><dd>
 
-      <p>The loop variable only takes on the name of each symbol.  While
-      that symbol is guaranteed to exist at the start of its iteration,
-      there is no guarantee that the name will refer to the same symbol it
-      did when the list was made.  For example, the name will refer to any
-      newly created symbol of the same name, including local symbols.
+    <p>The loop iterates over a sequence of integer values.  There is a
+    fixed non-zero increment of the loop value from one iteration to the
+    next.  This increment can be positive or negative (the loop can count
+    either up or down).
 
-    <p><dt><tt id="loop-for"><b>for</b> <i>var</i> <b>from</b> <i>n</i> <b>to</b> <i>m
-    [</i><b>by</b> <i>k]</i></tt></dt><dd>
+    <p>During loop execution, <b>repeat</b> and <b>endloop</b> update the
+    loop value to the next iteration.  If the new value satisfies the
+    terminating condition (if any), then the loop is terminated and
+    execution proceeds after <b>endloop</b>.  If the new value does not
+    satisfy the terminating condition or there is no terminating
+    condition, execution jumps back to immediately after the <b>loop</b>
+    command with the new iteration value in effect.
 
-      <p>This is a integer counted loop.  <i>Var</i> is the name of an
-      integer local variable that will be created, and which will hold the
-      loop value each iteration.  Since <i>var</i> will be a local
-      variable to the loop block, it will not exist after the loop
-      terminates.
+    <p>The loop parameters are determined and saved when the <b>loop</b>
+    command is executed before the first iteration.  These parameters can
+    not be changed by loop code.
 
-      <p><i>n</i>, <i>m</i>, and the optional <i>k</i> must be integer
-      values.  For example, they can be explicit constants, names of
-      integer variables, or functions that return an integer value.  These
-      expressions are only evaluated once at the start of the loop.
+    <p>The loop is not run at all if the initial loop value satisfies the
+    terminating condition.
 
-      <p>The loop value will start at <i>n</i> and will be incremented by
-      <i>k</i> each iteration.  The loop terminates when this value would
-      be past <i>m</i>. The default value for <i>k</i> is 1 when <i>m</i>
-      is greater then <i>n</i>, and -1 when <i>m</i> is less than
-      <i>n</i>.  When <i>n</i> is equal to <i>m</i>, the loop is executed
-      exactly once and the increment is irrelevant.  A increment (<i>k</i>
-      value) of 0 is not allowed.  <i>N</i>, <i>m</i>, and <i>k</i> must
-      be integer.
+    <p>The <b>loop</b> command options for counted loops are:<dl>
 
-      <p>The sign of <i>k</i> is used to determine whether the next
-      iteration would be "past" <i>m</i> or not.  When <i>k</i> > 0, then
-      the loop value must be less than or equal to <i>m</i> to continue.
-      When <i>k</i> < 0, then it must be greater than or equal to
-      <i>m</i>.
+      <p><dt><tt id="loop-with"><b>with</b> <i>const</i></tt></dt><dd>
 
-      <p>The loop is not executed at all if <i>n</i> is past <i>m</i>.
+        <p><i>Const</i> is the name of an integer constant that will be
+        created before the loop is first run.  This constant will be set
+        to the loop value before each iteration.  <i>Const</i> will be
+        local to the loop block, so it will not exist after the loop
+        terminates.
 
-      <p>Examples:<dl>
+        <p>The default is that no constant is created.  In that case the
+        loop code can not access the loop value.
 
-        <p><dt><tt><b>loop for</b> ii <b>from</b> 3 <b>to</b>
+      <p><dt><tt id="loop-from"><b>from</b> <i>n</i></tt></dt><dd>
+
+        <p><i>N</i> is the loop value for the first iteration.  The
+        default is 1.
+
+        <p>The loop starting value is implied when both the <b>to</b> and
+        <b>n</b> options are used.  All three of the <b>from</b>,
+        <b>to</b>, and <b>n</b> options can not be used together.
+
+      <p><dt><tt id="loop-to"><b>to</b> <i>n</i></tt></dt><dd>
+
+        <p>Specifies the last valid loop value.  The loop terminates when
+        the loop value would be past this ending value.  The meaning of
+        "past" depends on the sign of the increment.  When the increment
+        is positive, the loop terminates when the loop value would be &gt;
+        <i>n</i>.   When the increment is negative, the loop terminates
+        when the loop value would be &lt; <i>n</i>.  Note that the loop
+        increment can not be 0.
+
+        <p>When no ending value is specified, then there is no terminating
+        condition and the loop repeats indefinitely.  In that case, the
+        loop can only be ended with the <b>quit</b> command.
+
+        <p>The loop ending value is implied when both the <b>to</b> and
+        <b>n</b> options are used.  All three of the <b>from</b>,
+        <b>to</b>, and <b>n</b> options can not be used together.
+
+      <p><dt><tt id="loop-n"><b>n</b> <i>n</i></tt></dt><dd>
+
+        <p>Specifies the number of loop iterations.
+
+        <p>When no number of iterations is specified, there is no
+        terminating condition and the loop repeats indefinitely.  In that
+        case, the loop can only be ended with the <b>quit</b> command.
+
+        <p>The number of iterations is implied when both the <b>from</b>
+        and <b>to</b> options are used.  All three of the <b>from</b>,
+        <b>to</b>, and <b>n</b> options can not be used together.
+
+      <p><dt><tt id="loop-by"><b>by</b> <i>n</i></tt></dt><dd>
+
+        <p>Specifies the amount to add to the loop value each iteration.
+        The default is 1 unless both <b>from</b> and <b>to</b> are
+        specified.  In that case the default is 1 when <i>to</i> &ge;
+        <i>from</i>, and -1 when <i>to</i> &lt; <i>from</i>.
+
+      </dl><!-- End of counted loop options -->
+
+    <p>For example:<dl>
+
+        <p><dt><tt><b>loop with</b> ii <b>from</b> 3 <b>to</b>
         7</tt></dt><dd>
 
           <p>Loop values: 3, 4, 5, 6, 7
 
-        <p><dt><tt><b>loop for</b> ii <b>from</b> 2 <b>to</b>
+        <p><dt><tt><b>loop with</b> ii <b>from</b> 2 <b>to</b>
         -1</tt></dt><dd>
 
           <p>Loop values: 2, 1, 0, -1
 
-        <p><dt><tt><b>loop for</b> ii <b>from</b> 2 <b>to</b> 7 <b>by</b>
+        <p><dt><tt><b>loop with</b> ii <b>from</b> 2 <b>to</b> 7 <b>by</b>
         2</tt></dt><dd>
 
           <p>Loop values: 2, 4, 6</dd>
 
-        <p>In each of these cases, <tt>ii</tt> will be set to the loop
-        value at the start of each iteration.  It is not recommened to
-        alter this loop variable in the loop, but altering it has no
-        effect on the operation of the loop or its value in subsequent
-        iterations. Put another way, altering the loop variable only
-        "corrupts" it for the remainder of that iteration.
+        <p><dt><tt><b>loop with</b> ii <b>n</b> 4 <b>from</b> 2 <b>by</b>
+        3</tt></dt><dd>
 
-        </dl>
+          <p>Loop values: 2, 5, 8, 11</dd>
 
-    <p><dt><tt id="loop-from"><b>from</b> <i>n</i> <b>to</b> <i>m [</i><b>by</b>
-    <i>k]</i></tt></dt><dd>
+        <p><dt><tt><b>loop with</b> ii <b>n</b> 5 <b>by</b> -5 <b>to</b>
+        100</tt></dt><dd>
 
-      <p>Same as the "<tt><b>for</b> <i>var</i> <b>from</b> <i>n</i>
-      <b>to</b> <i>m [</i><b>by</b> <i>k]</i></tt>" loop (above), except
-      that no variable is created to hold the loop value.  The loop value
-      is still computed internally the same way, but it is not accessible
-      to the code.
+          <p>Loop values: 120, 115, 110, 105, 100</dd>
 
-    <p><dt><tt id="loop-n"><b>n</b> <i>m</i></tt></dt><dd>
+        <p><dt><tt><b>loop n</b> 5</tt></dt><dd>
 
-      <p>Loops <i>m</i> times.  <i>M</i> must be a integer value and is
-      only evaluated once at the start of the loop.  Values less than 1
-      cause the loop to not be executed at all.
+          <p>Loop values: 1, 2, 3, 4, 5.  The loop value is not accessible
+          to the loop code.</dd>
 
-      <p>The loop value is not accessible to the code.
+        </dl><!-- end of counted loop examples -->
 
-    </dl>
+  <p><dt id="loop-symbols">Symbols</dt><dd>
+
+    <p>Loops once for each symbol that was defined when <b>loop</b> was
+    first executed.  If a symbol is deleted by loop code before its
+    iteration, then that iteration is skipped.
+
+    <p>The <b>loop</b> command options for symbol loops are:<dl>
+
+      <p><dt><tt id="loop-sym"><b>symbols</b> <i>const</i></tt></dt><dd>
+
+        <p><i>Const</i> is the name of a constant of type <b>string</b>
+        that will created.  It will be local to the loop block, so will
+        not exist after the loop is ended.  This variable will contain the
+        name of a different preprocessor symbol each iteration.
+        <i>Const</i> is the name of the constant to create directly.  It
+        is not a string.
+
+        <p>The constant will be set to the name of successive symbols in
+        the list of symbols that was saved when the <b>loop</b> command
+        was first executed.  Symbols newly created inside the block are
+        therefore not on the list.
+
+        <p><i>Const</i> only takes on the name of each symbol.  While that
+        symbol is guaranteed to exist at the start of its iteration, there
+        is no guarantee that the name will refer to the same symbol it did
+        when the symbols list was made.  For example, the name will refer
+        to any newly created symbol of the same name, including local
+        symbols.
+
+      </dl><!-- End of symbol loop options -->
+
+    </dl><!-- End of loop types -->
 
   <p>Execution will return to immediately after the <b>loop</b> command
   with the loop state set to the next iteration when <b>repeat</b> or
