@@ -287,7 +287,6 @@ escr_looptype_sym_k: begin
 *   Post-keyword processing for counted loop.
 }
 escr_looptype_cnt_k: begin
-  writeln ('Post processing counted loop');
   if not (keyw_from_k in keyw) then begin
     loop_p^.cnt_start := 1;            {default starting value}
     end;
@@ -325,11 +324,9 @@ escr_looptype_cnt_k: begin
       ;
     end;
 
-  writeln ('Setting initial value');
   loop_p^.cnt_curr := loop_p^.cnt_start; {init value for first iteration}
 
   if not loop_p^.cnt_inf then begin    {not infinite loop ?}
-    writeln ('Not infinite loop');
     if
         (loop_p^.cnt_inc > 0) and      {counting up ?}
         (loop_p^.cnt_curr > loop_p^.cnt_end) {already past the end ?}
@@ -348,11 +345,9 @@ escr_looptype_cnt_k: begin
   if loop_p^.cnt_const_p <> nil then begin {there is a iteration constant ?}
     loop_p^.cnt_const_p^.const_val.int := loop_p^.cnt_curr; {init to value for first iteration}
     end;
-  writeln ('Done post processing counted loop');
   end;                                 {end of counted loop case}
 
     end;                               {end of looptype cases for post-keyword processing}
-  writeln ('Done LOOP command');
   return;
 {
 *   Error return points.
