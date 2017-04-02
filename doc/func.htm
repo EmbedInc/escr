@@ -1006,7 +1006,12 @@ start and end sequences have been removed.
 <p><dt><tt id="sym"><b>SYM</b> <i>name [qual]</i></tt></dt><dd>
 
   <p>Returns information about a preprocessor symbol.  <i>Name</i> is a
-  string that is the name of the symbol inquiring about.
+  string that is the name of the symbol inquiring about.  <i>Name</i> may
+  be a fully qualified symbol name (containing specific symbol type and/or
+  version).
+
+  <p>In all cases, if the symbol specified by <i>name</i> does not exist,
+  the function returns the empty string.
 
   <p><i>Qual</i> is a optional keyword specifying the type of information
   to return about the symbol.  The choices for <i>qual</i> are:<dl>
@@ -1026,9 +1031,6 @@ start and end sequences have been removed.
       CMD<br>
       LABEL<br>
 
-      <p>The empty string is returned if NAME does not match the name of
-      any preprocessor symbol.
-
     <p><dt><tt><b>DTYPE</b></tt></dt><dd>
 
       <p>Symbol data type.  The function value will be a upper case string
@@ -1047,6 +1049,16 @@ start and end sequences have been removed.
       <p>The empty string is returned if <i>name</i> does not match the
       name of a preprocessor symbol that has a data type.  For example,
       constants have data types, but subroutines do not.
+
+    <p><dt><tt><b>VER</b></tt></dt><dd>
+
+      <p>Returns the integer absolute version number of the symbol.
+      Absolute versions are always &ge; 1.
+
+    <p><dt><tt><b>QUAL</b></tt></dt><dd>
+
+      <p>Returns the string containing the fully qualified name of the
+      symbol (name:type:ver). The version is always absolute.
 
     </dl>
 

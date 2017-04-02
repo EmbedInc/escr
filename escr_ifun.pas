@@ -2788,6 +2788,12 @@ begin
 *     TYPE (default)  -  Returns symbol type, like VAR, CONST, etc.
 *
 *     DTYPE  -  Returns symbol data type name.
+*
+*     VER  -  Returns the absolute version number of the symbol.
+*
+*     QUAL  -  Returns fully qualified symbol name.
+*
+*   The empty string is returned if the symbol does not exist.
 }
 procedure escr_ifun_sym (
   in out  e: escr_t;
@@ -2795,14 +2801,14 @@ procedure escr_ifun_sym (
   val_param;
 
 var
-  name: string_var80_t;                {symbol name}
+  name: string_var132_t;               {symbol name}
   sym_p: escr_sym_p_t;                 {pointer to symbol}
   dtype: escr_dtype_k_t;               {data type of symbol}
   pick: sys_int_machine_t;             {number of keyword picked from list}
-  tk: string_var32_t;
+  tk: string_var132_t;
 
 label
-  havesym, ret_empty;
+  ret_empty;
 
 begin
   name.max := size_char(name.str);     {init local var strings}
@@ -2815,7 +2821,13 @@ begin
 
   if escr_ifn_get_keyw (e, tk, stat)   {get QUAL keyword}
     then begin                         {got it}
-      string_tkpick80 (tk, 'TYPE DTYPE', pick); {pick keyword from the list}
+      string_tkpick80 (tk,             {pick keyword from the list}
+        'TYPE DTYPE VER QUAL',
+        pick);
+      if pick <= 0 then begin
+        escr_ifn_bad_keyw (e, tk, stat);
+        return;
+        end;
       end
     else begin                         {no keyword or error}
       if sys_error(stat) then return;  {hard error}
@@ -2823,14 +2835,17 @@ begin
       end
     ;
 
-  escr_sym_find_any (e, name, sym_p);  {find the symbol if it exists}
+  escr_sym_find (e, name, sym_p);      {find the symbol if it exists}
   if sym_p = nil then goto ret_empty;  {no such symbol, return empty string}
 
-havesym:                               {SYM_P is pointing to the symbol}
   case pick of                         {what about symbol to return ?}
-
+{
+********************
+*
+*   SYM name TYPE
+}
 1:  begin                              {TYPE}
-      case sym_p^.stype of             {what type of symbol is this ?}
+  case sym_p^.stype of                 {what type of symbol is this ?}
 escr_sym_var_k: escr_ifn_ret_strp (e, 'VAR'(0));
 escr_sym_const_k: escr_ifn_ret_strp (e, 'CONST'(0));
 escr_sym_subr_k, escr_sym_isubr_k: escr_ifn_ret_strp (e, 'SUBR'(0));
@@ -2838,29 +2853,67 @@ escr_sym_macro_k, escr_sym_imacro_k: escr_ifn_ret_strp (e, 'MACRO'(0));
 escr_sym_func_k, escr_sym_ifunc_k: escr_ifn_ret_strp (e, 'FUNC'(0));
 escr_sym_cmd_k, escr_sym_icmd_k: escr_ifn_ret_strp (e, 'CMD'(0));
 escr_sym_label_k: escr_ifn_ret_strp (e, 'LABEL'(0));
-        end;
-      end;
-
+    end;
+  end;
+{
+********************
+*
+*   SYM name DTYPE
+}
 2:  begin                              {DTYPE}
-      case sym_p^.stype of             {what type of symbol is this ?}
+  case sym_p^.stype of                 {what type of symbol is this ?}
 escr_sym_var_k: dtype := sym_p^.var_val.dtype;
 escr_sym_const_k: dtype := sym_p^.const_val.dtype;
 otherwise                              {symbol doesn't have data type}
-        goto ret_empty;
-        end;
-      case dtype of                    {which data type ?}
+    goto ret_empty;
+    end;
+  case dtype of                        {which data type ?}
 escr_dtype_bool_k: escr_ifn_ret_strp (e, 'BOOL'(0));
 escr_dtype_int_k: escr_ifn_ret_strp (e, 'INTEGER'(0));
 escr_dtype_fp_k: escr_ifn_ret_strp (e, 'REAL'(0));
 escr_dtype_str_k: escr_ifn_ret_strp (e, 'STRING'(0));
 escr_dtype_time_k: escr_ifn_ret_strp (e, 'TIME'(0));
 otherwise                              {unsupported data type}
-        escr_err_dtype_unimp (e, dtype, 'ESCR_IFUN_SYM');
-        end;
-      end;
-
+    escr_err_dtype_unimp (e, dtype, 'ESCR_IFUN_SYM');
+    end;
+  end;
+{
+********************
+*
+*   SYM name VER
+}
+3:  begin                              {VER}
+  escr_ifn_ret_int (e, sym_p^.vern);
+  end;
+{
+********************
+*
+*   SYM name QUAL
+}
+4:  begin
+  string_copy (sym_p^.name_p^, tk);    {bare symbol name}
+  string_append1 (tk, ':');
+  case sym_p^.stype of
+escr_sym_var_k: string_appends (tk, 'VAR'(0));
+escr_sym_const_k: string_appends (tk, 'CONST'(0));
+escr_sym_subr_k, escr_sym_isubr_k: string_appends (tk, 'SUBR'(0));
+escr_sym_cmd_k, escr_sym_icmd_k: string_appends (tk, 'CMD'(0));
+escr_sym_func_k, escr_sym_ifunc_k: string_appends (tk, 'FUNC'(0));
+escr_sym_macro_k, escr_sym_imacro_k: string_appends (tk, 'MACRO'(0));
+escr_sym_label_k, escr_sym_src_k: string_appends (tk, 'LABEL'(0));
+    end;
+  string_append1 (tk, ':');
+  string_append_intu (tk, sym_p^.vern, 0);
+  escr_ifn_ret_str (e, tk);
+  end;
+{
+********************
+*
+*   Unrecognized qualifier.
+}
 otherwise                              {unrecognized QUAL keyword}
-    escr_ifn_bad_keyw (e, tk, stat);
+    writeln ('INTERNAL ERROR: Unexpected PICK value of ', pick, ' in IFUN_SYM.');
+    escr_err_atline (e, '', '', nil, 0);
     end;                               {end of QUAL cases}
   return;
 
@@ -2892,6 +2945,7 @@ procedure escr_ifun_exist (
 var
   name: string_var8192_t;              {NAME}
   sym_p: escr_sym_p_t;                 {pointer to symbol}
+  hpos: string_hash_pos_t;             {position of name in symbol table}
   pick: sys_int_machine_t;             {number of keyword picked from list}
   tk: string_var8192_t;
   str_p: string_var_p_t;               {scratch pointer to string}
@@ -2922,7 +2976,9 @@ begin
   case pick of                         {which NAMETYPE ?}
 
 1:  begin                              {PSYM}
-      escr_sym_find_any (e, name, sym_p); {point SYM_P to the symbol}
+      escr_sym_lookup_qual (           {look up the symbol}
+        e, name, hpos, sym_p, stat);
+      if sys_error(stat) then return;
       resb := sym_p <> nil;
       end;
 

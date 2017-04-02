@@ -35,10 +35,10 @@ if [and [<= start 2] [>= end 2]] then //handle the special case of 2 in the rang
 
 set ii [max start 3]         //make first candidate to check
 set ii [or [and ii [~ 1]] 1] //bump up to next odd number if even
-loop for p from ii to end by 2 //once for each odd number in the range
+loop with p from ii to end by 2 //once for each odd number in the range
   var local tk string        //scratch string
 
-  loop for f from 3 to p by 2 //scan over possible factors
+  loop with f from 3 to p by 2 //scan over possible factors
     if [> [* f f] p] then    //exhausted all possible factors, P is prime ?
       //
       //   P is prime.  Add it to the end of LINE.

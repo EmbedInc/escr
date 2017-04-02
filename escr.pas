@@ -80,7 +80,6 @@ next_opt:
 2: begin
   string_cmline_token (parm, stat);    {get the variable name}
   if sys_error(stat) then goto err_parm;
-  if not escr_sym_name (e_p^, parm) then goto parm_bad; {check for illegal symbol name}
   escr_sym_new_var (                   {create the new variable}
     e_p^, parm, escr_dtype_bool_k, 0, true, sym_p, stat);
   sys_error_abort (stat, '', '', nil, 0);
@@ -92,7 +91,6 @@ next_opt:
 3: begin
   string_cmline_token (parm, stat);    {get the variable name}
   if sys_error(stat) then goto err_parm;
-  if not escr_sym_name (e_p^, parm) then goto parm_bad; {check for illegal symbol name}
   string_copy (parm, tk);              {save name of new variable}
 
   string_cmline_token (parm, stat);    {get value string}
@@ -111,7 +109,6 @@ next_opt:
 4: begin
   string_cmline_token (parm, stat);    {get the variable name}
   if sys_error(stat) then goto err_parm;
-  if not escr_sym_name (e_p^, parm) then goto parm_bad; {check for illegal symbol name}
   string_copy (parm, tk);              {save name of new variable}
 
   string_cmline_token (parm, stat);    {get value string}
@@ -130,7 +127,6 @@ next_opt:
 5: begin
   string_cmline_token (parm, stat);    {get the variable name}
   if sys_error(stat) then goto err_parm;
-  if not escr_sym_name (e_p^, parm) then goto parm_bad; {check for illegal symbol name}
   string_copy (parm, tk);              {save name of new variable}
 
   string_cmline_token (parm, stat);    {get value string}
@@ -147,7 +143,6 @@ next_opt:
 6: begin
   string_cmline_token (parm, stat);    {get the variable name}
   if sys_error(stat) then goto err_parm;
-  if not escr_sym_name (e_p^, parm) then goto parm_bad; {check for illegal symbol name}
 
   escr_sym_new_var (                   {create the new variable}
     e_p^, parm, escr_dtype_bool_k, 0, true, sym_p, stat);

@@ -27,6 +27,9 @@ var
   sym_p: escr_sym_p_t;                 {pointer to new subroutine name symbol}
   stat2: sys_err_t;                    {to avoid corrupting STAT}
 
+label
+  error;
+
 begin
   name.max := size_char(name.str);     {init local var string}
 
@@ -38,25 +41,22 @@ begin
 
   if not escr_get_token (e, name) then begin {get subroutine name}
     escr_stat_cmd_noarg (e, stat);
-    return;
-    end;
-  if not escr_sym_name (e, name) then begin {not a valid symbol name ?}
-    sys_stat_set (escr_subsys_k, escr_err_badsym_k, stat);
-    sys_stat_parm_vstr (name, stat);
-    return;
+    goto error;
     end;
 
   sz :=                                {make size of whole subroutine symbol}
     offset(escr_sym_t.subr_line_p) + size_min(escr_sym_t.subr_line_p);
   escr_sym_new (                       {create new symbol for subroutine name}
     e, name, sz, false, e.sym_sub, sym_p, stat);
-  if sys_error(stat) then begin        {error ?}
-    escr_inh_end (e, stat2);           {delete the inhibit created earlier}
-    return;                            {return with error}
-    end;
+  if sys_error(stat) then goto error;
+
   sym_p^.stype := escr_sym_subr_k;     {this symbol is a subroutine name}
   sym_p^.subr_line_p :=                {save pointer to subroutine definition line}
     e.exblock_p^.inpos_p^.last_p;
+  return;
+
+error:                                 {error after inhibit created, STAT set}
+  escr_inh_end (e, stat2);             {delete the execution inhibit}
   end;
 {
 ********************************************************************************
@@ -91,7 +91,7 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine  ESCR_CMD_CALL (E, STAT)
+*   Subroutine ESCR_CMD_CALL (E, STAT)
 *
 *   /CALL name [arg ... arg]
 *
@@ -118,14 +118,11 @@ begin
     return;
     end;
 
-  escr_sym_find (e, name, e.sym_sub, sym_p); {get symbol from subroutine name}
+  escr_sym_find_type (                 {get symbol from subroutine name}
+    e, name, escr_sytype_subr_k, sym_p, stat);
+  if sys_error(stat) then return;
   if sym_p = nil then begin            {not found ?}
     escr_stat_sym_nfound (name, stat);
-    return;
-    end;
-  if sym_p^.stype <> escr_sym_subr_k then begin {symbol not a subroutine ?}
-    sys_stat_set (escr_subsys_k, escr_err_sym_nsub_k, stat);
-    sys_stat_parm_vstr (name, stat);
     return;
     end;
 

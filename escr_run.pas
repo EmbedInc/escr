@@ -240,11 +240,13 @@ loop_line:
 {
 *   Handle the specific preprocessor command in CMD.
 }
-  escr_sym_find (                      {look up command name}
+  escr_sym_find_type (                 {look up command name}
     e,                                 {state for this use of the ESCR system}
     e.cmd,                             {name to look up}
-    e.sym_cmd,                         {symbol table to look up name in}
-    sym_p);                            {returned pointer to symbol data}
+    escr_sytype_cmd_k,                 {must be command}
+    sym_p,                             {returned pointer to symbol data}
+    stat);
+  if sys_error(stat) then return;
   if sym_p = nil then begin            {no such command ?}
     sys_stat_set (escr_subsys_k, escr_err_cmdbad_k, stat);
     sys_stat_parm_vstr (e.cmd, stat);
@@ -310,11 +312,13 @@ var
   sym_p: escr_sym_p_t;                 {label symbol}
 
 begin
-  escr_sym_find (                      {look up name in symbol table}
+  escr_sym_find_type (                 {look up name in symbol table}
     e,                                 {state for this use of ESCR system}
     name,                              {name to look up}
-    e.sym_lab,                         {symbol table to look up in}
-    sym_p);                            {returned pointer to the symbol}
+    escr_sytype_label_k,               {must be a label}
+    sym_p,                             {returned pointer to the symbol}
+    stat);
+  if sys_error(stat) then return;
   if sym_p = nil then begin            {named label doesn't exist ?}
     sys_stat_set (escr_subsys_k, escr_err_nflab_k, stat);
     sys_stat_parm_vstr (name, stat);

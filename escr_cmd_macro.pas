@@ -28,6 +28,9 @@ var
   sym_p: escr_sym_p_t;                 {pointer to new name symbol}
   stat2: sys_err_t;                    {to avoid corrupting STAT}
 
+label
+  error;
+
 begin
   name.max := size_char(name.str);     {init local var string}
 
@@ -39,12 +42,7 @@ begin
 
   if not escr_get_token (e, name) then begin {get macro name}
     escr_stat_cmd_noarg (e, stat);
-    return;
-    end;
-  if not escr_sym_name (e, name) then begin {not a valid symbol name ?}
-    sys_stat_set (escr_subsys_k, escr_err_badsym_k, stat);
-    sys_stat_parm_vstr (name, stat);
-    return;
+    goto error;
     end;
 
   sz :=                                {make size of whole macro symbol}
@@ -57,14 +55,15 @@ begin
     e.sym_mac,                         {symbol table to add symbol to}
     sym_p,                             {pointer to new symbol}
     stat);
-  if sys_error(stat) then begin        {error ?}
-    escr_inh_end (e, stat2);           {delete the execution inhibit}
-    return;                            {return with error}
-    end;
+  if sys_error(stat) then goto error;
 
   sym_p^.stype := escr_sym_macro_k;    {this symbol is a macro name}
   sym_p^.macro_line_p :=               {save pointer to macro definition line}
     e.exblock_p^.inpos_p^.last_p;
+  return;
+
+error:                                 {error after inhibit created, STAT set}
+  escr_inh_end (e, stat2);             {delete the execution inhibit}
   end;
 {
 ********************************************************************************
@@ -170,9 +169,13 @@ begin
     if not escr_get_token (e, label) then goto nomac; {get the label name into LABEL}
     end;
   if not escr_get_token (e, name) then goto nomac; {get the opcode name into NAME}
-  escr_sym_find (e, name, e.sym_mac, sym_p); {get symbol from macro name}
+  escr_sym_find_type (                 {get macro symbol from name}
+    e, name, escr_sytype_macro_k, sym_p, stat);
+  if sys_error(stat) then begin        {invalid macro symbol name ?}
+    sys_error_none (stat);
+    goto nomac;                        {no macro here}
+    end;
   if sym_p = nil then goto nomac;      {no such symbol ?}
-  if sym_p^.stype <> escr_sym_macro_k then goto nomac; {not a macro ?}
 {
 *   This line is a macro invocation.  SYM_P is pointing to the macro definition
 *   symbol, LABEL contains the name of any label on this line, and NAME is the

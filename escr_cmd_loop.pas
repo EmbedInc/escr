@@ -413,7 +413,7 @@ escr_looptype_sym_k: begin             {looping thru list of symbols}
       then return;
 
     escr_sym_find (                    {try to find the symbol}
-      e, loop_p^.sym_list_p^.str_p^, e.sym_var, sym_p);
+      e, loop_p^.sym_list_p^.str_p^, sym_p);
     if sym_p = nil then next;          {this symbol got deleted, skip it}
 
     string_copy (                      {copy new name into loop variable}

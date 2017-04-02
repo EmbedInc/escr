@@ -285,11 +285,13 @@ begin
 {
 *   Look up the function name in the functions symbol table.
 }
-  escr_sym_find (                      {look up function name in functions table}
+  escr_sym_find_type (                 {find the function name symbol}
     e,                                 {state for this use of the ESCR system}
     e.funame,                          {name of symbol to look for}
-    e.sym_fun,                         {symbol table to look in}
-    sym_p);                            {returned pointer to symbol in the table}
+    escr_sytype_func_k,                {the symbol must be a function}
+    sym_p,                             {returned pointer to symbol in the table}
+    stat);
+  if sys_error(stat) then return;
   if sym_p = nil then begin            {no such function ?}
     sys_stat_set (escr_subsys_k, escr_err_funcnfnd_k, stat);
     sys_stat_parm_vstr (e.funame, stat); {message parameter 1 is function name}

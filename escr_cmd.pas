@@ -118,9 +118,9 @@ done_cmdline:                          {done reading command line except initial
 *   proper parameters already exists.
 }
   if not (scmd = scmd_exist_k) then goto make_new; {not asked to re-use existing ?}
-  escr_sym_find (e, name, e.sym_var, sym_p); {look for existing symbol of this name}
-  if sym_p = nil then goto make_new;   {no such symbol ?}
-  if sym_p^.stype <> escr_sym_var_k then goto make_new; {symbol isn't a variable ?}
+  escr_sym_find_curr (                 {look for existing variable of this name}
+    e, name, escr_sytype_var_k, sym_p);
+  if sym_p = nil then goto make_new;   {no such variable ?}
   if sym_p^.var_val.dtype <> dtype then goto make_new; {symbol isn't right dtype ?}
 
   if hval then begin                   {still need to read initial value parameter ?}
@@ -171,7 +171,7 @@ begin
   if not escr_get_token (e, name)      {get the variable name into NAME}
     then goto err_missing;
 
-  escr_sym_find (e, name, e.sym_var, sym_p); {get pointer to the symbol descriptor}
+  escr_sym_find_curr (e, name, escr_sytype_vcon_k, sym_p);
   if sym_p = nil then begin            {no such symbol ?}
     escr_stat_sym_nfound (name, stat);
     return;
@@ -262,6 +262,9 @@ err_missing:
 ********************************************************************************
 *
 *   /DEL name
+*
+*   Delete a version of the symbol NAME.  NAME may be a fully qualified symbol
+*   name, indicating a particular symbol type and version.
 }
 procedure escr_cmd_del (
   in out  e: escr_t;
@@ -281,7 +284,7 @@ begin
   if not escr_get_token (e, name)      {get the variable name into NAME}
     then goto err_missing;
   if not escr_get_end (e, stat) then return; {abort on extra parameter}
-  escr_sym_del_name (e, e.sym_var, name, stat); {delete the symbol}
+  escr_sym_del_name (e, name, stat);   {delete the symbol version}
   return;
 {
 *   Abort due to missing required parameter.
@@ -294,7 +297,7 @@ err_missing:
 *
 *   /SYLIST
 *
-*   List all symbols as comments to the output file.
+*   List all user-defined symbols as comments to the output file.
 }
 procedure escr_cmd_sylist (
   in out  e: escr_t;
@@ -472,6 +475,8 @@ begin
   do_sytable (e.sym_fun, stat);
   if sys_error(stat) then return;
   do_sytable (e.sym_cmd, stat);
+  if sys_error(stat) then return;
+  do_sytable (e.sym_lab, stat);
   end;
 {
 ********************************************************************************

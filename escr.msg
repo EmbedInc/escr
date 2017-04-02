@@ -198,6 +198,9 @@ msg err64
   lan english -def
     FROM, TO, and N options used in same LOOP command, at most two of the
     three are allowed.
+msg err65
+  lan english -def
+    Invalid symbol type of %p2s specified, type of %p1s required.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.
