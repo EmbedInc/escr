@@ -81,7 +81,7 @@ const
   escr_err_badsym_k = 62;              {not a valid symbol name, <name>}
   escr_err_loop_keyw_k = 63;           {LOOP keyword incompatible with previous keyword <keyw>}
   escr_err_loop_n_k = 64;              {LOOP overconstrained by N keyword}
-  escr_err_sytype_k = 65;              {invalid specific symbol type}
+  escr_err_sytype_k = 65;              {invalid specific symbol type <required> <actual>}
 {
 *   Derived constants.
 }
@@ -163,6 +163,7 @@ escr_dtype_time_k: (                   {absolute time descriptor}
     escr_sytype_func_k,                {function}
     escr_sytype_cmd_k,                 {command}
     escr_sytype_label_k);              {label}
+  escr_sytype_t = set of escr_sytype_k_t;
 
   escr_syver_t = record                {user-specified symbol version info}
     ver: sys_int_machine_t;            {abs or relative version number}
@@ -183,6 +184,7 @@ escr_dtype_time_k: (                   {absolute time descriptor}
     escr_sym_imacro_k,                 {intrinsic macro, compiled routine}
     escr_sym_label_k,                  {label for a specific input files line}
     escr_sym_src_k);                   {label for a source code snippet}
+  escr_symty_t = set of escr_sym_k_t;
 
   escr_instr_t = record                {input string to be parsed}
     p: string_index_t;                 {1-N string string parse index}
@@ -471,7 +473,7 @@ procedure escr_get_keyword (           {get one of list of keywords from input s
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      klist: string;               {keywords, upper case separated by blanks}
   out     pick: sys_int_machine_t;     {1-N keyword number, 0 = no token, -1 = no match}
-  out     stat: sys_err_t);            {completion status}
+  out     stat: sys_err_t);            {completion status, only err, no EOS}
   val_param; extern;
 
 function escr_get_str (                {get string representation of next parameter}
@@ -1021,6 +1023,11 @@ procedure escr_sym_lookup_ver (        {get specific version of a symbol}
   in      syver: escr_syver_t;         {version specifier}
   out     hpos: string_hash_pos_t;     {returned position of name in symbol table}
   out     sym_p: escr_sym_p_t);        {returned pointer to version, NIL if not found}
+  val_param; extern;
+
+procedure escr_sym_name (              {make fully qualified name of a symbol}
+  in      sym: escr_sym_t;             {symbol version to make full name of}
+  in out  name: univ string_var_arg_t); {returned fully qualified name}
   val_param; extern;
 
 function escr_sym_name_bare (          {check for valid symbol bare name}

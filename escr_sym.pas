@@ -2,6 +2,7 @@
 }
 module escr_sym;
 define escr_sym_sytype_name;
+define escr_sym_name;
 define escr_sym_name_bare;
 define escr_sym_name_bare_check;
 define escr_sym_name_parse;
@@ -48,6 +49,35 @@ otherwise
       ord(sytype), ' in SYM_SYTYPE_NAME');
     sys_bomb;
     end;
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_SYM_NAME (SYM, NAME)
+*
+*   Returns the fully qualified name of the symbol version SYM.
+}
+procedure escr_sym_name (              {make fully qualified name of a symbol}
+  in      sym: escr_sym_t;             {symbol version to make full name of}
+  in out  name: univ string_var_arg_t); {returned fully qualified name}
+  val_param;
+
+begin
+  string_copy (sym.name_p^, name);     {bare symbol name}
+
+  string_append1 (name, ':');
+  case sym.stype of
+escr_sym_var_k: string_appends (name, 'VAR'(0));
+escr_sym_const_k: string_appends (name, 'CONST'(0));
+escr_sym_subr_k, escr_sym_isubr_k: string_appends (name, 'SUBR'(0));
+escr_sym_cmd_k, escr_sym_icmd_k: string_appends (name, 'CMD'(0));
+escr_sym_func_k, escr_sym_ifunc_k: string_appends (name, 'FUNC'(0));
+escr_sym_macro_k, escr_sym_imacro_k: string_appends (name, 'MACRO'(0));
+escr_sym_label_k, escr_sym_src_k: string_appends (name, 'LABEL'(0));
+    end;
+
+  string_append1 (name, ':');
+  string_append_intu (name, sym.vern, 0);
   end;
 {
 ********************************************************************************

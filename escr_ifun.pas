@@ -2822,7 +2822,7 @@ begin
   if escr_ifn_get_keyw (e, tk, stat)   {get QUAL keyword}
     then begin                         {got it}
       string_tkpick80 (tk,             {pick keyword from the list}
-        'TYPE DTYPE VER QUAL',
+        'TYPE DTYPE VER QUAL NAME',
         pick);
       if pick <= 0 then begin
         escr_ifn_bad_keyw (e, tk, stat);
@@ -2844,7 +2844,7 @@ begin
 *
 *   SYM name TYPE
 }
-1:  begin                              {TYPE}
+1:  begin
   case sym_p^.stype of                 {what type of symbol is this ?}
 escr_sym_var_k: escr_ifn_ret_strp (e, 'VAR'(0));
 escr_sym_const_k: escr_ifn_ret_strp (e, 'CONST'(0));
@@ -2860,7 +2860,7 @@ escr_sym_label_k: escr_ifn_ret_strp (e, 'LABEL'(0));
 *
 *   SYM name DTYPE
 }
-2:  begin                              {DTYPE}
+2:  begin
   case sym_p^.stype of                 {what type of symbol is this ?}
 escr_sym_var_k: dtype := sym_p^.var_val.dtype;
 escr_sym_const_k: dtype := sym_p^.const_val.dtype;
@@ -2882,7 +2882,7 @@ otherwise                              {unsupported data type}
 *
 *   SYM name VER
 }
-3:  begin                              {VER}
+3:  begin
   escr_ifn_ret_int (e, sym_p^.vern);
   end;
 {
@@ -2891,20 +2891,16 @@ otherwise                              {unsupported data type}
 *   SYM name QUAL
 }
 4:  begin
-  string_copy (sym_p^.name_p^, tk);    {bare symbol name}
-  string_append1 (tk, ':');
-  case sym_p^.stype of
-escr_sym_var_k: string_appends (tk, 'VAR'(0));
-escr_sym_const_k: string_appends (tk, 'CONST'(0));
-escr_sym_subr_k, escr_sym_isubr_k: string_appends (tk, 'SUBR'(0));
-escr_sym_cmd_k, escr_sym_icmd_k: string_appends (tk, 'CMD'(0));
-escr_sym_func_k, escr_sym_ifunc_k: string_appends (tk, 'FUNC'(0));
-escr_sym_macro_k, escr_sym_imacro_k: string_appends (tk, 'MACRO'(0));
-escr_sym_label_k, escr_sym_src_k: string_appends (tk, 'LABEL'(0));
-    end;
-  string_append1 (tk, ':');
-  string_append_intu (tk, sym_p^.vern, 0);
-  escr_ifn_ret_str (e, tk);
+  escr_sym_name (sym_p^, tk);          {make the fully qualified name}
+  escr_ifn_ret_str (e, tk);            {return it}
+  end;
+{
+********************
+*
+*   SYM name NAME
+}
+5:  begin
+  escr_ifn_ret_str (e, sym_p^.name_p^);
   end;
 {
 ********************

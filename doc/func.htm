@@ -1003,7 +1003,7 @@ start and end sequences have been removed.
   [<b>substr</b> 2 5 "This is a test"] --> "his i"
   </tt>
 
-<p><dt><tt id="sym"><b>SYM</b> <i>name [qual]</i></tt></dt><dd>
+<p><dt><tt id="sym"><b>SYM</b> <i>name [opt]</i></tt></dt><dd>
 
   <p>Returns information about a preprocessor symbol.  <i>Name</i> is a
   string that is the name of the symbol inquiring about.  <i>Name</i> may
@@ -1013,12 +1013,12 @@ start and end sequences have been removed.
   <p>In all cases, if the symbol specified by <i>name</i> does not exist,
   the function returns the empty string.
 
-  <p><i>Qual</i> is a optional keyword specifying the type of information
-  to return about the symbol.  The choices for <i>qual</i> are:<dl>
+  <p><i>Opt</i> is a optional keyword specifying the type of information
+  to return about the symbol.  The choices for <i>opt</i> are:<dl>
 
     <p><dt><tt><b>TYPE</b></tt></dt><dd>
 
-      <p>Symbol type.  This is the default if <i>qual</i> is not supplied.
+      <p>Symbol type.  This is the default if <i>opt</i> is not supplied.
       The function value will be one of these upper case strings, indicating
       the type of symbol:
 
@@ -1055,10 +1055,16 @@ start and end sequences have been removed.
       <p>Returns the integer absolute version number of the symbol.
       Absolute versions are always &ge; 1.
 
+    <p><dt><tt><b>NAME</b></tt></dt><dd>
+
+      <p>Returns a string that is just the bare name of the symbol without
+      any qualifiers.
+
     <p><dt><tt><b>QUAL</b></tt></dt><dd>
 
       <p>Returns the string containing the fully qualified name of the
-      symbol (name:type:ver). The version is always absolute.
+      symbol (<i>name</i>:<i>type</i>:<i>ver</i>). The version is always
+      absolute.
 
     </dl>
 

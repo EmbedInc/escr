@@ -360,7 +360,7 @@ keyword.
   case-insensitive.
 
   <p>There are several distinct loop types that can be created with this
-  command.  The options used determine the loop type and its specific
+  command.  The options are used determine the loop type and its specific
   parameters.  The loop types are:<dl>
 
   <p><dt id="loop-unconditional">Unconditional</dt><dd>
@@ -430,7 +430,7 @@ keyword.
         condition and the loop repeats indefinitely.  In that case, the
         loop can only be ended with the <b>quit</b> command.
 
-        <p>The loop ending value is implied when both the <b>to</b> and
+        <p>The loop ending value is implied when both the <b>from</b> and
         <b>n</b> options are used.  All three of the <b>from</b>,
         <b>to</b>, and <b>n</b> options can not be used together.
 
@@ -449,9 +449,10 @@ keyword.
       <p><dt><tt id="loop-by"><b>by</b> <i>n</i></tt></dt><dd>
 
         <p>Specifies the amount to add to the loop value each iteration.
-        The default is 1 unless both <b>from</b> and <b>to</b> are
-        specified.  In that case the default is 1 when <i>to</i> &ge;
-        <i>from</i>, and -1 when <i>to</i> &lt; <i>from</i>.
+        This value must be non-zero.  The default is 1 unless both
+        <b>from</b> and <b>to</b> are specified.  In that case the default
+        is 1 when <i>to</i> &ge; <i>from</i>, and -1 when <i>to</i> &lt;
+        <i>from</i>.
 
       </dl><!-- End of counted loop options -->
 
@@ -497,26 +498,63 @@ keyword.
 
     <p>The <b>loop</b> command options for symbol loops are:<dl>
 
-      <p><dt><tt id="loop-sym"><b>symbols</b> <i>const</i></tt></dt><dd>
+      <p><dt><tt id="loop-sym"><b>symbols</b> <i>const [</i><b>VAR CONST
+      VCON SUBR MACRO FUNC CMD LABEL</b><i>]</i></tt></dt><dd>
 
         <p><i>Const</i> is the name of a constant of type <b>string</b>
         that will created.  It will be local to the loop block, so will
-        not exist after the loop is ended.  This variable will contain the
+        not exist after the loop is ended.  This constant will contain the
         name of a different preprocessor symbol each iteration.
         <i>Const</i> is the name of the constant to create directly.  It
         is not a string.
 
-        <p>The constant will be set to the name of successive symbols in
-        the list of symbols that was saved when the <b>loop</b> command
-        was first executed.  Symbols newly created inside the block are
-        therefore not on the list.
+        <p>The constant will be set to the fully qualified name of
+        successive symbols in the list of symbols that was saved when the
+        <b>loop</b> command was first executed.  Symbols newly created
+        inside the block are therefore not on the list.
 
-        <p><i>Const</i> only takes on the name of each symbol.  While that
-        symbol is guaranteed to exist at the start of its iteration, there
-        is no guarantee that the name will refer to the same symbol it did
-        when the symbols list was made.  For example, the name will refer
-        to any newly created symbol of the same name, including local
-        symbols.
+        <p>The optional keywords following <i>const</i> limit the types of
+        symbols the loop will iterate over.  These keywords can appear
+        multiple times and in any order.  The default without any keywords
+        is to loop over all symbols.  When one or more keywords are
+        listed, then only symbols of those types will be in the list.
+
+        <p>The meanings of the keywords are:<dl>
+
+          <p><dt><tt><b>VAR</b></tt></dt><dd>
+
+            <p>Variables.
+
+          <p><dt><tt><b>CONST</b></tt></dt><dd>
+
+            <p>Contants.
+
+          <p><dt><tt><b>VCON</b></tt></dt><dd>
+
+            <p>Variables or constants.  This is equivalent to specifying
+            <b>VAR</b> and <b>CONST</b>.
+
+          <p><dt><tt><b>SUBR</b></tt></dt><dd>
+
+            <p>Subroutines.
+
+          <p><dt><tt><b>MACRO</b></tt></dt><dd>
+
+            <p>Macros.
+
+          <p><dt><tt><b>FUNC</b></tt></dt><dd>
+
+            <p>Functions.
+
+          <p><dt><tt><b>CMD</b></tt></dt><dd>
+
+            <p>Commands.
+
+          <p><dt><tt><b>LABEL</b></tt></dt><dd>
+
+            <p>Labels.
+
+          </dl>
 
       </dl><!-- End of symbol loop options -->
 
