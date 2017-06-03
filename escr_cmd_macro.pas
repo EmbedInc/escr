@@ -112,15 +112,26 @@ procedure escr_cmd_quitmac (
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  while e.exblock_p^.bltype <> escr_exblock_mac_k do begin {up thru blocks until first macro}
-    if e.exblock_p^.prev_p = nil then begin {at top execution block ?}
+  while e.exblock_p <> nil do begin    {up thru the nested blocks}
+    case e.exblock_p^.bltype of        {what kind of block is this ?}
+escr_exblock_top_k: begin              {at top block}
+        sys_stat_set (escr_subsys_k, escr_err_notmacro_k, stat);
+        return;
+        end;
+escr_exblock_mac_k: begin              {the block to close}
+        escr_exblock_close (e, stat);  {end this macro}
+        return;
+        end;
+escr_exblock_blk_k,                    {BLOCK ... ENDBLOCK}
+escr_exblock_loop_k: begin             {LOOP ... ENDLOOP}
+        escr_exblock_close (e, stat);  {close this block}
+        if sys_error(stat) then return;
+        end;
+otherwise                              {invalid block type for QUITMAC}
       sys_stat_set (escr_subsys_k, escr_err_notmacro_k, stat);
       return;
       end;
-    escr_exblock_close (e);            {end this execution block, make previous current}
-    end;                               {back to check this new execution block}
-
-  escr_exblock_close (e);              {end the macro execution block}
+    end;                               {back to close new current block}
   end;
 {
 ********************************************************************************
@@ -181,9 +192,9 @@ begin
 *   symbol, LABEL contains the name of any label on this line, and NAME is the
 *   macro name as it appeared on the invocation line.
 }
-  escr_exblock_new (e, stat);          {create new execution block}
+  escr_exblock_new (e, stat);          {create new execution block, make it current}
   if sys_error(stat) then return;
-  e.exblock_p^.sym_p := sym_p;         {set pointer to symbol for this block}
+  escr_exblock_refsym (e, sym_p^);     {indicate referencing symbol for this macro}
   e.exblock_p^.bltype := escr_exblock_mac_k; {new block is a macro}
   e.exblock_p^.args := true;           {this block can take arguments}
   escr_exblock_ulab_init (e);          {create table for local labels}

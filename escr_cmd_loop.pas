@@ -21,27 +21,27 @@ procedure addlist (                    {add to symbols list}
   val_param; internal;
 
 var
-  pos: string_hash_pos_t;              {symbol table position handle}
-  name_p: string_var_p_t;              {scratch string pointer}
-  sym_pp: escr_sym_pp_t;               {pointer to data in symbol table entry}
-  sym_p: escr_sym_p_t;                 {pointer to symbol name}
+  scan: escr_sytable_scan_t;           {state for scanning symbol table}
+  name_p: string_var_p_t;              {pointer to symbol name in table}
+  ent_p: escr_sytable_data_p_t;        {pointer to symbol data in table}
+  sym_p: escr_sym_p_t;                 {pointer to current symbol}
   name: string_var132_t;               {variable name}
-  found: boolean;                      {symbol table entry found}
 
 begin
   name.max := size_char(name.str);     {init local var string}
 
-  string_hash_pos_first (table.hash, pos, found); {go to first entry in table}
-  while found do begin                 {once for each symbol in the symbol table}
-    string_hash_ent_atpos (pos, name_p, sym_pp); {get info from this table entry}
-    sym_p := sym_pp^;                  {get pointer to this symbol}
+  escr_sytable_scan_start (table, scan); {init symbol table scanning state}
+  while true do begin                  {once for each symbol in the symbol table}
+    escr_sytable_scan (scan, name_p, ent_p); {get this next symbol table entry}
+    if ent_p = nil then exit;          {hit end of table ?}
+    sym_p := ent_p^.curr_p;            {get pointe to current version of symbol}
+    if sym_p = nil then next;          {no curr version, default doesn't exist ?}
     if sym_p^.stype in stypes then begin {include this symbol in list ?}
       escr_sym_name (sym_p^, name);    {make fully qualified symbol name}
       list.size := name.len;           {set size of this new string}
       string_list_line_add (list);     {create the new names list entry}
       string_copy (name, list.str_p^); {fill in this list entry}
       end;
-    string_hash_pos_next (pos, found); {advance to next symbol table entry}
     end;
   end;
 {
@@ -81,6 +81,7 @@ var
   slist_p: string_list_p_t;            {points to strings list}
   sytypes: escr_sytype_t;              {set of user-visible symbol types}
   symty: escr_symty_t;                 {set of internal symbol types}
+  stat2: sys_err_t;                    {to avoid corrupting STAT}
 
 label
   err_missing, err_keyw, err_abort;
@@ -454,7 +455,7 @@ err_keyw:                              {keyword in TK incompatible with previous
   sys_stat_parm_vstr (tk, stat);
 
 err_abort:                             {abort with exblock created, STAT all set}
-  escr_exblock_close (e);              {remove the loop execution block created above}
+  escr_exblock_close (e, stat2);       {remove the loop execution block created above}
   end;
 {
 ********************************************************************************
@@ -584,5 +585,5 @@ begin
 del_block:                             {delete this block}
   e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}
     e.exblock_p^.inpos_p^.line_p;
-  escr_exblock_close (e);              {end this execution block}
+  escr_exblock_close (e, stat);        {end this execution block}
   end;

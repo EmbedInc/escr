@@ -15,7 +15,7 @@
 //
 //   For example, the addition function would be called:
 //
-//     call dofunc "+" plus "arithmetic"
+//     call dofunc "+" plus arithmetic
 //
 subroutine dofunc
   var local name string = [arg 1] //function name

@@ -12,36 +12,6 @@ define escr_set_incsuff;
 {
 ********************************************************************************
 *
-*   Local subroutine ESCR_SYTABLE_INIT (E, SYTABLE, STAT)
-*
-*   Initialize the symbol table SYTABLE.
-}
-procedure escr_sytable_init (          {initialize a symbol table}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     sytable: escr_sytable_t;     {the symbol table to initialize}
-  out     stat: sys_err_t);            {completion status}
-  val_param;
-
-begin
-  sys_error_none (stat);               {init to no error encountered}
-
-  util_mem_context_get (e.mem_p^, sytable.mem_p); {create mem context for sym table}
-  if sytable.mem_p = nil then begin    {didn't get new memory context ?}
-    sys_stat_set (escr_subsys_k, escr_err_nomcontext_k, stat);
-    return;
-    end;
-
-  string_hash_create (                 {create the symbol names hash table}
-    sytable.hash,                      {handle to the hash table}
-    escr_sym_nbuck_k,                  {number of hash buckets}
-    escr_max_namelen_k,                {max characters for hash table entry name}
-    sizeof(escr_sym_pp_t),             {size of data to store each hash table entry}
-    [],                                {make mem context, allow deleting entries}
-    sytable.mem_p^);                   {parent memory context}
-  end;
-{
-********************************************************************************
-*
 *   Subroutine ESCR_OPEN (MEM, E_P, STAT)
 *
 *   Create a new ESCR system use state.  This must be the first routine called
@@ -162,19 +132,19 @@ begin
     end;
   e_p^.mem_p := mem_p;                 {save pointer to our top mem context}
 
-  escr_sytable_init (e_p^, e_p^.sym_var, stat); {init variables/constants symbol table}
+  escr_sytable_init (e_p^.mem_p^, e_p^.sym_var, stat); {init variables/constants symbol table}
   if sys_error(stat) then goto err;
-  escr_sytable_init (e_p^, e_p^.sym_sub, stat); {init subroutines symbol table}
+  escr_sytable_init (e_p^.mem_p^, e_p^.sym_sub, stat); {init subroutines symbol table}
   if sys_error(stat) then goto err;
-  escr_sytable_init (e_p^, e_p^.sym_mac, stat); {init macros symbol table}
+  escr_sytable_init (e_p^.mem_p^, e_p^.sym_mac, stat); {init macros symbol table}
   if sys_error(stat) then goto err;
-  escr_sytable_init (e_p^, e_p^.sym_fun, stat); {init functions symbol table}
+  escr_sytable_init (e_p^.mem_p^, e_p^.sym_fun, stat); {init functions symbol table}
   if sys_error(stat) then goto err;
-  escr_sytable_init (e_p^, e_p^.sym_cmd, stat); {init commands symbol table}
+  escr_sytable_init (e_p^.mem_p^, e_p^.sym_cmd, stat); {init commands symbol table}
   if sys_error(stat) then goto err;
-  escr_sytable_init (e_p^, e_p^.sym_lab, stat); {init labels symbol table}
+  escr_sytable_init (e_p^.mem_p^, e_p^.sym_lab, stat); {init labels symbol table}
   if sys_error(stat) then goto err;
-  escr_sytable_init (e_p^, e_p^.sym_src, stat); {init source code snippets symbol table}
+  escr_sytable_init (e_p^.mem_p^, e_p^.sym_src, stat); {init source code snippets symbol table}
   if sys_error(stat) then goto err;
 {
 *   Do basic initialization.

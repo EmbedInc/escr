@@ -85,5 +85,5 @@ begin
 
   e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}
     e.exblock_p^.inpos_p^.line_p;
-  escr_exblock_close (e);              {end this BLOCK ... ENDBLOCK execution block}
+  escr_exblock_close (e, stat);        {end this BLOCK ... ENDBLOCK execution block}
   end;

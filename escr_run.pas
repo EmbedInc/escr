@@ -410,6 +410,7 @@ begin
   sys_error_none (stat);               {init to no error encountered}
 
   while e.exblock_p <> nil do begin    {in a execution block ?}
-    escr_exblock_close (e);            {not anymore}
+    escr_exblock_close (e, stat);      {not anymore}
+    if sys_error(stat) then return;
     end;                               {back to close parent block, if any}
   end;

@@ -82,6 +82,7 @@ const
   escr_err_loop_keyw_k = 63;           {LOOP keyword incompatible with previous keyword <keyw>}
   escr_err_loop_n_k = 64;              {LOOP overconstrained by N keyword}
   escr_err_sytype_k = 65;              {invalid specific symbol type <required> <actual>}
+  escr_err_delsymblk_k = 66;           {attempt to delete name of execution block <name>}
 {
 *   Derived constants.
 }
@@ -93,6 +94,7 @@ const
 type
   escr_inline_p_t = ^escr_inline_t;    {pointer to line within input file}
   escr_inline_pp_t = ^escr_inline_p_t;
+  escr_sym_p_t = ^escr_sym_t;          {pointer to a symbol instance}
   escr_exblock_p_t = ^escr_exblock_t;  {pointer to info about one nested executable block}
   escr_inh_p_t = ^escr_inh_t;          {pointer to state for one execution inhibit layer}
   escr_p_t = ^escr_t;                  {pointer to ESCR system use state}
@@ -153,6 +155,18 @@ escr_dtype_time_k: (                   {absolute time descriptor}
     hash: string_hash_handle_t;        {handle to symbol names hash table}
     end;
 
+  escr_sytable_data_p_t = ^escr_sytable_data_t;
+  escr_sytable_data_t = record         {data stored in each symbol table entry}
+    first_p: escr_sym_p_t;             {points to first (oldest) version of symbol}
+    curr_p: escr_sym_p_t;              {points to current version of symbol}
+    last_p: escr_sym_p_t;              {points to last (newest) version of symbol}
+    end;
+
+  escr_sytable_scan_t = record         {saved data for scanning a symbol table}
+    pos: string_hash_pos_t;            {hash table position state}
+    valid: boolean;                    {POS is valid}
+    end;
+
   escr_sytype_k_t = (                  {user-visible symbol type ID}
     escr_sytype_unsp_k,                {unspecified}
     escr_sytype_var_k,                 {variable}
@@ -211,10 +225,9 @@ escr_dtype_time_k: (                   {absolute time descriptor}
     out   stat: sys_err_t);            {completion status}
     val_param;
 
-  escr_sym_p_t = ^escr_sym_t;
-  escr_sym_pp_t = ^escr_sym_p_t;
   escr_sym_t = record                  {all the info about one symbol}
     table_p: escr_sytable_p_t;         {points to symbol table this symbol is in}
+    ent_p: escr_sytable_data_p_t;      {points to symbol table data for this symbol}
     prev_p: escr_sym_p_t;              {points to previous (older) symbol of this name}
     next_p: escr_sym_p_t;              {points to next (newer) symbol of this name}
     name_p: string_var_p_t;            {pointer to symbol name in symbol table}
@@ -313,6 +326,7 @@ escr_looptype_cnt_k: (                 {loop over integer values with fixed incr
     level: sys_int_machine_t;          {nesting level, 0 at top}
     start_p: escr_inline_p_t;          {pointer to first line of block definition}
     sym_p: escr_sym_p_t;               {points to sym for name of this block, if any}
+    sym_curr_p: escr_sym_p_t;          {symbol to restore to curr version on exit, if any}
     mem_p: util_mem_context_p_t;       {mem context for block, deleted when block closed}
     arg_p: escr_arg_p_t;               {points to list of arguments for this block}
     arg_last_p: escr_arg_p_t;          {points to last argument in list}
@@ -738,7 +752,8 @@ procedure escr_exblock_arg_get_bl (    {get value of argument to specific block}
   val_param; extern;
 
 procedure escr_exblock_close (         {close curr execution block and delete temp state}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_exblock_inline_push (   {push new source line location for exec block}
@@ -751,6 +766,11 @@ procedure escr_exblock_inline_set (    {go to new input source position in curr 
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      line_p: escr_inline_p_t;     {pointer to next input line to use}
   out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_exblock_refsym (        {set referencing symbol of current block}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  sym: escr_sym_t);            {version of symbol referencing this block}
   val_param; extern;
 
 procedure escr_exblock_ulab_init (     {create unique labels list in this block}
@@ -957,15 +977,25 @@ procedure escr_syexcl_clear (          {clear all syntax exclusions}
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
+procedure escr_sym_curr_prev (         {make previous version of symbol current}
+  in out  sym: escr_sym_t);            {make previous of this version current}
+  val_param; extern;
+
+procedure escr_sym_curr_sym (          {set current version of symbol}
+  in out  sym: escr_sym_t);            {the version to make current}
+  val_param; extern;
+
 procedure escr_sym_del (               {delete specific symbol version}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  sym_p: escr_sym_p_t);        {pointer to version to delete, returned NIL}
+  in out  sym_p: escr_sym_p_t;         {pointer to version to delete, returned NIL}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_sym_del_pos (           {delete specific symbol version}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  sym_p: escr_sym_p_t;         {pointer to version to delete, returned NIL}
-  in out  hpos: string_hash_pos_t);    {table pos for this symbol, invalid if deleted}
+  in out  hpos: string_hash_pos_t;     {table pos for this symbol, invalid if deleted}
+  out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_sym_del_name (          {delete symbol version by name}
@@ -995,11 +1025,11 @@ procedure escr_sym_find_type (         {find symbol of specific type}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_sym_lookup_curr (       {get current version of symbol in specific table}
+procedure escr_sym_lookup (            {look up bare name in specific symbol table}
   in      name: univ string_var_arg_t; {bare symbol name}
   in      sytable: escr_sytable_t;     {symbol table to look up name in}
   out     hpos: string_hash_pos_t;     {returned position of name in symbol table}
-  out     sym_p: escr_sym_p_t);        {returned pointer curr version, NIL if not found}
+  out     ent_p: escr_sytable_data_p_t); {pointer to data in symbol table, NIL not found}
   val_param; extern;
 
 procedure escr_sym_lookup_qual (       {get symbol version from qualified name}
@@ -1112,6 +1142,23 @@ procedure escr_sym_new_var (           {create new symbol for a variable}
   in      global: boolean;             {create global, not local symbol}
   out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_sytable_init (          {initialize a symbol table}
+  in out  mem: util_mem_context_t;     {parent memory context}
+  out     sytable: escr_sytable_t;     {the symbol table to initialize}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_sytable_scan_start (    {start scanning all entries in a symbol table}
+  in      table: escr_sytable_t;       {the symbol table to scan}
+  out     scan: escr_sytable_scan_t);  {returned initialized scanning state}
+  val_param; extern;
+
+procedure escr_sytable_scan (          {get next symbol table entry}
+  in out  scan: escr_sytable_scan_t;   {symbol table scanning state}
+  out     name_p: string_var_p_t;      {returned pointer to symbol name in table}
+  out     ent_p: escr_sytable_data_p_t); {returned pointer to next entry, NIL at end}
   val_param; extern;
 
 procedure escr_sym_sytype_name (       {get name of user-visible symbol type}

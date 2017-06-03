@@ -201,20 +201,28 @@ msg err64
 msg err65
   lan english -def
     Invalid symbol type of %p2s specified, type of %p1s required.
+msg err66
+  lan english -def
+    Attempt to delete symbol "%p1s", which is the name of a current
+    execution block.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.
 /*
 msg err_dtype_unimp
   lan english -def
-    INTERNAL ERRROR: Data type with ID %p1i is not implemented in routine %p2s.
+    INTERNAL ERROR: Data type with ID %p1i is not implemented in routine %p2s.
 msg err_fnam_lnum
   lan english -def
     Error on line %p2i of file "%p1s".
 msg err_loclab_exist
   lan english -def
-    INTERNAL ERRROR:  Subroutine ESCR_EXBLOCK_ULAB_INIT called with unique
+    INTERNAL ERROR: Subroutine ESCR_EXBLOCK_ULAB_INIT called with unique
     labels list already existing.
+msg err_lookupver_nover
+  lan english -def
+    INTERNAL ERROR: SYM_P nil in ESCR_SYM_LOOKUP_VER on attempt to find
+    version %p1i of symbol %p2s.
 msg in_block
   lan english -def
     In block starting on line %p1i of "%p2s".

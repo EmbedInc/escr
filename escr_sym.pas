@@ -1,6 +1,9 @@
 {   Symbol handling routines.
 }
 module escr_sym;
+define escr_sytable_init;
+define escr_sytable_scan_start;
+define escr_sytable_scan;
 define escr_sym_sytype_name;
 define escr_sym_name;
 define escr_sym_name_bare;
@@ -19,7 +22,94 @@ define escr_sym_find_type;
 define escr_sym_del_pos;
 define escr_sym_del;
 define escr_sym_del_name;
+define escr_sym_curr_sym;
+define escr_sym_curr_sym;
 %include 'escr2.ins.pas';
+{
+********************************************************************************
+*
+*   Local subroutine ESCR_SYTABLE_INIT (E, SYTABLE, STAT)
+*
+*   Initialize the symbol table SYTABLE.
+}
+procedure escr_sytable_init (          {initialize a symbol table}
+  in out  mem: util_mem_context_t;     {parent memory context}
+  out     sytable: escr_sytable_t;     {the symbol table to initialize}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+begin
+  sys_error_none (stat);               {init to no error encountered}
+
+  util_mem_context_get (mem, sytable.mem_p); {create mem context for sym table}
+  if sytable.mem_p = nil then begin    {didn't get new memory context ?}
+    sys_stat_set (escr_subsys_k, escr_err_nomcontext_k, stat);
+    return;
+    end;
+
+  string_hash_create (                 {create the symbol names hash table}
+    sytable.hash,                      {handle to the hash table}
+    escr_sym_nbuck_k,                  {number of hash buckets}
+    escr_max_namelen_k,                {max characters for hash table entry name}
+    sizeof(escr_sytable_data_t),       {size of data to store each hash table entry}
+    [string_hashcre_memdir_k],         {use mem context directly, allow deleting entries}
+    sytable.mem_p^);                   {memory context to use for table data}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_SYTABLE_SCAN_START (TABLE, SCAN)
+*
+*   Set up for scanning all entries in a symbol table.  TABLE is the table to
+*   scan.  SCAN is the private state for this scan.  The next call to
+*   ESCR_SYTABLE_SCAN with this SCAN will return the first entry in the table.
+}
+procedure escr_sytable_scan_start (    {start scanning all entries in a symbol table}
+  in      table: escr_sytable_t;       {the symbol table to scan}
+  out     scan: escr_sytable_scan_t);  {returned initialized scanning state}
+  val_param;
+
+begin
+  string_hash_pos_first (              {get position of first entry}
+    table.hash,                        {the hash table}
+    scan.pos,                          {returned position of first entry}
+    scan.valid);                       {TRUE if first entry exists}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_SYTABLE_SCAN (SCAN, NAME_P, ENT_P)
+*
+*   Gets the next symbol table entry in a scan of a symbol table.
+*
+*   NAME_P is returned pointing to the symbol name string, and ENT_P is returned
+*   pointing to the data for that symbol stored in the symbol table.  Both
+*   NAME_P and ENT_P are returned NIL if the end of the table is encountered.
+*
+*   SCAN is the symbol table scanning state.  It must have been originally
+*   initialized with ESCR_SYTABLE_SCAN_START.
+}
+procedure escr_sytable_scan (          {get next symbol table entry}
+  in out  scan: escr_sytable_scan_t;   {symbol table scanning state}
+  out     name_p: string_var_p_t;      {returned pointer to symbol name in table}
+  out     ent_p: escr_sytable_data_p_t); {returned pointer to next entry, NIL at end}
+  val_param;
+
+begin
+  ent_p := nil;                        {init to not returning with new entry}
+  name_p := nil;
+  if not scan.valid then return;       {previously hit end of table ?}
+
+  string_hash_pos_next (               {advance to the next hash table entry}
+    scan.pos,                          {current position in hash table}
+    scan.valid);                       {TRUE if new position exists}
+  if not scan.valid then return;       {hit end of table ?}
+
+  string_hash_ent_atpos (              {get the table info at this position}
+    scan.pos,                          {position of entry to get info of}
+    name_p,                            {returned pointing to entry name}
+    ent_p);                            {returned pointing to entry data}
+  end;
 {
 ********************************************************************************
 *
@@ -63,9 +153,9 @@ procedure escr_sym_name (              {make fully qualified name of a symbol}
   val_param;
 
 begin
-  string_copy (sym.name_p^, name);     {bare symbol name}
+  string_copy (sym.name_p^, name);     {init qualified name with bare symbol name}
 
-  string_append1 (name, ':');
+  string_append1 (name, ':');          {add symbol type}
   case sym.stype of
 escr_sym_var_k: string_appends (name, 'VAR'(0));
 escr_sym_const_k: string_appends (name, 'CONST'(0));
@@ -76,7 +166,7 @@ escr_sym_macro_k, escr_sym_imacro_k: string_appends (name, 'MACRO'(0));
 escr_sym_label_k, escr_sym_src_k: string_appends (name, 'LABEL'(0));
     end;
 
-  string_append1 (name, ':');
+  string_append1 (name, ':');          {add absolute version number}
   string_append_intu (name, sym.vern, 0);
   end;
 {
@@ -312,8 +402,8 @@ error:                                 {error parsing symbol, not a valid symbol
 *   execution block ends.  All symbols in the top block are created global
 *   regardless of the value of GLOBAL.
 *
-*   SYTABLE is the symbol table to create the new symbol in.  For example, E.SYM
-*   is the symbol table for variables and constants.
+*   SYTABLE is the symbol table to create the new symbol in.  For example,
+*   E.SYM_VAR is the symbol table for variables and constants.
 *
 *   SYM_P is returned pointing to the new symbol descriptor.  It will be filled
 *   in except for the symbol type and fields that depend on the symbol type.
@@ -336,8 +426,7 @@ procedure escr_sym_new (               {create new symbol}
 
 var
   name_p: string_var_p_t;              {pointer to name in symbol table}
-  sym_pp: escr_sym_pp_t;               {pointer to symbol pointer in table entry}
-  prev_p: escr_sym_p_t;                {pointer to previous version of symbol}
+  ent_p: escr_sytable_data_p_t;        {pointer to data in symbol table}
   vern: sys_int_machine_t;             {1-N version number of the new symbol}
   sy_p: escr_sym_p_t;                  {scratch pointer to symbol descriptor}
   ii: sys_int_machine_t;               {scratch integer}
@@ -364,43 +453,52 @@ begin
     found);                            {TRUE if name found in table}
   if found
     then begin                         {a previous version of this symbol exists}
-      string_hash_ent_atpos (pos, name_p, sym_pp); {look up existing symbol info}
-      prev_p := sym_pp^;               {get pointer to curr symbol of this name}
-      vern := prev_p^.vern + 1;        {make version number of this new symbol}
-      ii := vern;                      {init last version number after new symbol}
-      sy_p := prev_p^.next_p;
-      while sy_p <> nil do begin       {find new last version number}
-        ii := ii + 1;                  {make new number of this version}
-        sy_p := sy_p^.next_p;          {advance to next version}
-        end;
-      if ii > escr_max_symvers_k then begin {would be too many versions ?}
+      string_hash_ent_atpos (pos, name_p, ent_p); {look up existing symbol info}
+
+      if ent_p^.last_p^.vern >= escr_max_symvers_k then begin {would be too many versions ?}
         sys_stat_set (escr_subsys_k, escr_err_sytoomany_k, stat);
         sys_stat_parm_vstr (name, stat);
         return;
         end;
-      ii := vern;                      {init next version number after new entry}
-      sy_p := prev_p^.next_p;          {init to next version after new entry}
-      while sy_p <> nil do begin       {update all later version numbers}
-        sy_p^.vern := ii;              {update number of this existing version}
+
+      if ent_p^.curr_p = nil
+        then begin                     {new symbol will be added to start of chain}
+          vern := 1;                   {absolute version of new symbol}
+          sy_p := ent_p^.first_p;      {point to first symbol to renumber}
+          end
+        else begin                     {curr vers exists, new symbol will be added after}
+          vern := ent_p^.curr_p^.vern + 1; {new version is one after current}
+          sy_p := ent_p^.curr_p^.next_p; {point to first symbol to renumber, if any}
+          end
+        ;
+
+      ii := vern + 1;                  {init number to assign to next version}
+      while sy_p <> nil do begin       {loop over versions to renumber}
+        sy_p^.vern := ii;              {update number of this version}
+        ii := ii + 1;                  {update number to assign to next version}
         sy_p := sy_p^.next_p;          {advance to next version}
         end;
       end
     else begin                         {no symbol if this name currently exists}
-      string_hash_ent_add (pos, name_p, sym_pp); {create new symbol table entry}
-      prev_p := nil;                   {indicate no previous version exists}
+      string_hash_ent_add (pos, name_p, ent_p); {create new symbol table entry}
+      ent_p^.first_p := nil;           {init table entry data}
+      ent_p^.curr_p := nil;
+      ent_p^.last_p := nil;
       vern := 1;                       {this will be version 1 of this symbol name}
       end
     ;
 {
-*   The symbol table entry for this name exists, SYM_PP points to the pointer
-*   in the symbol table that points to the last version of the symbol, NAME_P
-*   points to the symbol name string in the symbol table, and PREV_P points
-*   to the current last version of the symbol.  PREV_P is NIL if there is no
-*   current version.  VERN is the 1-N version number of the new version of this
-*   symbol name that is being created.
+*   The symbol table entry for this name exists.  NAME_P is pointing to the name
+*   string in the symbol table and ENT_P to the data.
 *
-*   Now create the new symbol descriptor and install it.
+*   Now create the new version of the symbol, link it into the chain of existing
+*   versions immediately after the current version, and make it the current
+*   version.  VERN is the number of the new version.  Other versions have
+*   already been renumbered as necessary.
 }
+    {
+    *   Create the new symbol version descriptor.
+    }
     util_mem_grab (                    {allocate memory for new symbol descriptor}
       sz, sytable.mem_p^, true, sym_p);
     if sym_p = nil then begin
@@ -409,21 +507,37 @@ begin
       return;
       end;
     sys_error_none (stat);             {will return with new symbol}
-
+    {
+    *   Fill in the new descriptor.
+    }
     sym_p^.table_p := addr(sytable);   {point to symbol table this symbol is in}
-    sym_p^.prev_p := prev_p;           {point back to previous version of this symbol}
-    if prev_p = nil
-      then begin                       {this is first version of this symbol}
-        sym_p^.next_p := nil;
+    sym_p^.ent_p := ent_p;             {point to symbol table data for this symbol}
+    sym_p^.name_p := name_p;           {point to name in symbol table}
+    sym_p^.vern := vern;               {set the 1-N version number}
+    sym_p^.scope_p := nil;             {init to global scope}
+    {
+    *   Link this symbol into the chain after PREV_P^.
+    }
+    sym_p^.prev_p := ent_p^.curr_p;    {point back to previous version of this symbol}
+    if sym_p^.prev_p = nil
+      then begin                       {install at start of chain}
+        sym_p^.next_p := ent_p^.first_p;
+        ent_p^.first_p := sym_p;
         end
-      else begin                       {inserting new version into existing chain}
-        sym_p^.next_p := prev_p^.next_p;
+      else begin                       {install after current version}
+        sym_p^.next_p := sym_p^.prev_p^.next_p;
+        sym_p^.prev_p^.next_p := sym_p;
         end
       ;
-    sym_p^.name_p := name_p;           {point to name string in symbol table}
-    sym_p^.vern := vern;               {set 1-N version number}
-    sym_p^.scope_p := nil;             {init to global symbol}
-    sym_pp^ := sym_p;                  {point symbol table to this new version}
+    if sym_p^.next_p = nil
+      then begin                       {installing at end of chain}
+        ent_p^.last_p := sym_p;
+        end
+      else begin                       {not at end of chain}
+        sym_p^.next_p^.prev_p := sym_p;
+        end
+      ;
+    ent_p^.curr_p := sym_p;            {this new version is now the current}
 
     if e.exblock_p = nil then return;  {no block, can't be local to block ?}
     if not global then goto local;     {create as local symbol ?}
@@ -557,27 +671,27 @@ otherwise
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_LOOKUP_CURR (NAME, SYTABLE, HPOS, SYM_P)
+*   Subroutine ESCR_SYM_LOOKUP (NAME, SYTABLE, HPOS, ENT_P)
 *
 *   Look up a bare name in the symbol table SYTABLE.  If a symbol table entry
 *   with that name exists, then HPOS is set to the symbol table position for
-*   this symbol, and SYM_P is returned pointing to current version.  If the name
-*   does not exist in the table, then HPOS is invalid and SYM_P is returned NIL.
+*   this symbol, and ENT_P is returned pointing to the data for that symbol.  If
+*   the name does not exist in the table, then HPOS is invalid and ENT_P is
+*   returned NIL.
 }
-procedure escr_sym_lookup_curr (       {get current version of symbol in specific table}
+procedure escr_sym_lookup (            {look up bare name in specific symbol table}
   in      name: univ string_var_arg_t; {bare symbol name}
   in      sytable: escr_sytable_t;     {symbol table to look up name in}
   out     hpos: string_hash_pos_t;     {returned position of name in symbol table}
-  out     sym_p: escr_sym_p_t);        {returned pointer curr version, NIL if not found}
+  out     ent_p: escr_sytable_data_p_t); {pointer to data in symbol table, NIL not found}
   val_param;
 
 var
   found: boolean;                      {name was found in symbol table}
   name_p: string_var_p_t;              {pointer to name in symbol table}
-  sym_pp: escr_sym_pp_t;               {pointer to symbol pointer in table entry}
 
 begin
-  sym_p := nil;                        {init to symbol not found}
+  ent_p := nil;                        {init to symbol not found}
 
   string_hash_pos_lookup (             {find name in symbol table}
     sytable.hash,                      {handle to table to look up in}
@@ -589,8 +703,7 @@ begin
   string_hash_ent_atpos (              {get the data from the symbol table}
     hpos,                              {handle to position in the table}
     name_p,                            {pointer to name string stored in table}
-    sym_pp);                           {pointer to data stored for this symbol}
-  sym_p := sym_pp^;                    {get pointer to current version of symbol}
+    ent_p);                            {pointer to data stored for this symbol}
   end;
 {
 ********************************************************************************
@@ -614,53 +727,61 @@ procedure escr_sym_lookup_ver (        {get specific version of a symbol}
   out     sym_p: escr_sym_p_t);        {returned pointer to version, NIL if not found}
   val_param;
 
+const
+  max_msg_args = 2;                    {max arguments we can pass to a message}
+
 var
+  ent_p: escr_sytable_data_p_t;        {pointer to symbol data in table}
   absver: sys_int_machine_t;           {absolute version number looking for}
+  msg_parm:                            {references arguments passed to a message}
+    array[1..max_msg_args] of sys_parm_msg_t;
 
 label
-  found, haver;
+  found, haver, err_nover;
 
 begin
+  sym_p := nil;                        {init to symbol version not found}
+
   case sytype of                       {what user-visible symbol type is it ?}
 
 escr_sytype_unsp_k: begin              {type not specified, search in default order}
-    escr_sym_lookup_curr (name, e.sym_var, hpos, sym_p); {variables and constants}
-    if sym_p <> nil then goto found;
-    escr_sym_lookup_curr (name, e.sym_sub, hpos, sym_p); {subroutines}
-    if sym_p <> nil then goto found;
-    escr_sym_lookup_curr (name, e.sym_mac, hpos, sym_p); {macros}
-    if sym_p <> nil then goto found;
-    escr_sym_lookup_curr (name, e.sym_fun, hpos, sym_p); {functions}
-    if sym_p <> nil then goto found;
-    escr_sym_lookup_curr (name, e.sym_cmd, hpos, sym_p); {commands}
-    if sym_p <> nil then goto found;
-    escr_sym_lookup_curr (name, e.sym_lab, hpos, sym_p); {labels}
+    escr_sym_lookup (name, e.sym_var, hpos, ent_p); {variables and constants}
+    if ent_p <> nil then goto found;
+    escr_sym_lookup (name, e.sym_sub, hpos, ent_p); {subroutines}
+    if ent_p <> nil then goto found;
+    escr_sym_lookup (name, e.sym_mac, hpos, ent_p); {macros}
+    if ent_p <> nil then goto found;
+    escr_sym_lookup (name, e.sym_fun, hpos, ent_p); {functions}
+    if ent_p <> nil then goto found;
+    escr_sym_lookup (name, e.sym_cmd, hpos, ent_p); {commands}
+    if ent_p <> nil then goto found;
+    escr_sym_lookup (name, e.sym_lab, hpos, ent_p); {labels}
     end;
 
 escr_sytype_var_k,                     {variable}
 escr_sytype_const_k,                   {constant}
 escr_sytype_vcon_k: begin              {variable or constant}
-    escr_sym_lookup_curr (name, e.sym_var, hpos, sym_p); {variables and constants}
+    escr_sym_lookup (name, e.sym_var, hpos, ent_p); {variables and constants}
     end;
 
 escr_sytype_subr_k: begin              {subroutine}
-    escr_sym_lookup_curr (name, e.sym_sub, hpos, sym_p);
+    escr_sym_lookup (name, e.sym_sub, hpos, ent_p);
     end;
 
 escr_sytype_macro_k: begin             {macro}
-    escr_sym_lookup_curr (name, e.sym_mac, hpos, sym_p);
+    escr_sym_lookup (name, e.sym_mac, hpos, ent_p);
     end;
 
 escr_sytype_func_k: begin              {function}
-    escr_sym_lookup_curr (name, e.sym_fun, hpos, sym_p);
+    escr_sym_lookup (name, e.sym_fun, hpos, ent_p);
     end;
 
 escr_sytype_cmd_k: begin               {command}
-    escr_sym_lookup_curr (name, e.sym_cmd, hpos, sym_p);
+    escr_sym_lookup (name, e.sym_cmd, hpos, ent_p);
     end;
 
 escr_sytype_label_k: begin             {label}
-    escr_sym_lookup_curr (name, e.sym_lab, hpos, sym_p);
+    escr_sym_lookup (name, e.sym_lab, hpos, ent_p);
     end;
 
 otherwise
@@ -669,46 +790,46 @@ otherwise
     escr_err_atline (e, '', '', nil, 0);
     end;
 
-  if sym_p = nil then return;          {named symbol does not exist}
+  if ent_p = nil then return;          {named symbol does not exist}
 
 found:                                 {symbol with matching type and name was found}
 {
-*   SYM_P is pointing to the current version of the symbol.
+*   ENT_P is pointing to the symbol table data for the symbol.
 *
 *   Now find the right version of the symbol.
 }
-  if not syver.set then goto haver;    {no version specified, return current ?}
-
-  if syver.abs
-    then begin                         {absolute version specified}
-      absver := syver.ver;             {set version to look for}
+  if
+      syver.abs or                     {absolute version specified directly ?}
+     (ent_p^.curr_p = nil)             {current version is virtual version 0 ?}
+    then begin
+      absver := syver.ver;             {set absolute version to look for}
       end
-    else begin                         {relative version specified}
-      absver := sym_p^.vern + syver.ver; {make absolute version}
+    else begin
+      absver := ent_p^.curr_p^.vern + syver.ver; {make absolute version from current}
       end
     ;
 
-  if sym_p^.vern = absver then goto haver; {already at the specified version ?}
+  if absver < 1 then return;           {definitely invalid absolute version ?}
+  if absver > ent_p^.last_p^.vern then return;
 
-  if absver < 1 then begin             {definitely invalid absolute version ?}
-    sym_p := nil;                      {return symbol not found}
-    return;
-    end;
+  if ent_p^.curr_p = nil
+    then sym_p := ent_p^.first_p       {start searching at first when no current}
+    else sym_p := ent_p^.curr_p;       {start searching at current version}
 
+  if sym_p^.vern = absver              {already at the desired version ?}
+    then goto haver;
   if absver > sym_p^.vern
     then begin                         {look for later version}
-      sym_p := sym_p^.next_p;          {to first newer version}
-      while sym_p <> nil do begin
-        if sym_p^.vern = absver then exit; {found the right version ?}
+      repeat
         sym_p := sym_p^.next_p;        {to next newer version}
-        end;
+        if sym_p = nil then goto err_nover;
+        until sym_p^.vern = absver;
       end
     else begin                         {look for earlier version}
-      sym_p := sym_p^.prev_p;          {to first older version}
-      while sym_p <> nil do begin
-        if sym_p^.vern = absver then exit; {found the right version ?}
+      repeat
         sym_p := sym_p^.prev_p;        {to next older version}
-        end;
+        if sym_p = nil then goto err_nover;
+        until sym_p^.vern = absver;
       end
     ;
 
@@ -728,6 +849,12 @@ escr_sytype_const_k: begin             {constant}
         then sym_p := nil;
       end;
     end;                               {end of special handling symbol types}
+  return;
+
+err_nover:
+  sys_msg_parm_int (msg_parm[1], absver);
+  sys_msg_parm_vstr (msg_parm[2], name);
+  escr_err_atline (e, 'escr', 'err_lookupver_nover', msg_parm, 2);
   end;
 {
 ********************************************************************************
@@ -982,108 +1109,112 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_DEL_POS (E, SYM_P, HPOS)
+*   Subroutine ESCR_SYM_DEL_POS (E, SYM_P, HPOS, STAT)
 *
 *   Delete the symbol version pointed to by SYM_P.  SYM_P is returned NIL.  HPOS
 *   is the hash table position entry for the symbol.
 *
-*   All local versions with higher numbers are also deleted.  Global versions
-*   with higher numbers are re-numbered to keep the version numbers sequential.
+*   Versions with higher numbers are re-numbered to keep all versions
+*   sequentially numbered starting at 1.
 }
 procedure escr_sym_del_pos (           {delete specific symbol version}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  sym_p: escr_sym_p_t;         {pointer to version to delete, returned NIL}
-  in out  hpos: string_hash_pos_t);    {table pos for this symbol, invalid if deleted}
+  in out  hpos: string_hash_pos_t;     {table pos for this symbol, invalid if deleted}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
-  sym_pp: escr_sym_pp_t;               {pointer to data pointer in symbol table entry}
+  exb_p: escr_exblock_p_t;             {pointer to execution block in hierarchy}
   name_p: string_var_p_t;              {pointer to name in symbol table}
-  prev_p: escr_sym_p_t;                {pointer to previous remaining version}
-  next_p: escr_sym_p_t;                {pointer to next remaining version}
+  ent_p: escr_sytable_data_p_t;        {pointer to data in symbol table}
+  ii: sys_int_machine_t;               {scratch integer and loop counter}
+  sy_p: escr_sym_p_t;                  {scratch pointer to a symbol version}
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
+{
+*   Check for attempting to delete the name symbol of a execution block, or the
+*   version of a symbol to restore to being the current version when a block is
+*   closed.  Allowing these to be deleted would result in dangling pointers.
+*   Instead of trying to fix up the pointers, we simply make it illegal to
+*   delete these versions of the symbols.
+}
+  exb_p := e.exblock_p;                {init to lowest level execution block}
+  while exb_p <> nil do begin          {scan up the hierarchy of execution blocks}
+    if
+        (sym_p = exb_p^.sym_p) or      {name symbol of this block ?}
+        (sym_p = exb_p^.sym_curr_p)    {version to restore to current after this block ?}
+        then begin
+      sys_stat_set (escr_subsys_k, escr_err_delsymblk_k, stat);
+      sys_stat_parm_vstr (sym_p^.name_p^, stat);
+      return;
+      end;
+    exb_p := exb_p^.prev_p;            {up to previous block in the hierarchy}
+    end;
+{
+*   Get the information about this symbol from the symbol table.
+}
   string_hash_ent_atpos (              {get table data for this symbol}
     hpos,                              {position in symbol table to get data on}
     name_p,                            {returned pointer to symbol name string}
-    sym_pp);                           {returned pointer to current version pointer}
+    ent_p);                            {returned pointer to symbol data in table}
 {
-*   Delete this version of the symbol and remove it from the chain.  PREV_P and
-*   NEXT_P will be left pointing to the previous and next versions of the
-*   symbol, if any.
+*   Renumber all subsequent versions of this symbol.
 }
-  prev_p := sym_p^.prev_p;             {save pointer to next older version}
-  next_p := sym_p^.next_p;             {save pointer to next newer version}
-  symver_dealloc (sym_p);              {deallocate the version being specifically deleted}
+  ii := sym_p^.vern;                   {init number to assign to next version}
+  sy_p := sym_p^.next_p;               {init to first version to renumber}
+  while sy_p <> nil do begin           {scan the remaining versions}
+    sy_p^.vern := ii;                  {assign new number to this version}
+    ii := ii + 1;                      {make next number to assign}
+    sy_p := sy_p^.next_p;              {advance to next newer version}
+    end;
+{
+*   Unlink this version from the chain of versions.
+}
+  if sym_p = ent_p^.curr_p then begin  {deleting the current version ?}
+    ent_p^.curr_p := sym_p^.prev_p;    {make the next previous version current, if any}
+    end;
 
-  sym_pp^ := prev_p;                   {init current version to next version back}
-  if prev_p = nil
-    then begin                         {there is no previous version}
-      sym_pp^ := next_p;               {next version is now the current}
+  if sym_p^.prev_p = nil
+    then begin                         {at start of chain}
+      ent_p^.first_p := sym_p^.next_p;
       end
-    else begin                         {there is a previous version}
-      sym_pp^ := prev_p;               {previous version is now the current}
-      prev_p^.next_p := next_p;        {update forward pointer to next version}
+    else begin                         {there is a older version}
+      sym_p^.prev_p^.next_p := sym_p^.next_p;
+      end
+    ;
+
+  if sym_p^.next_p = nil
+    then begin                         {at end of chain}
+      ent_p^.last_p := sym_p^.prev_p;
+      end
+    else begin                         {there is a newer version}
+      sym_p^.next_p^.prev_p := sym_p^.prev_p;
       end
     ;
 {
-*   Loop thru all the versions following the deleted one.  Local symbols are
-*   deleted.  Otherwise, the version numbers are updated.
-*
-*   PREV_P and NEXT_P are pointing to the previous and next versions from the
-*   deleted version, if any.
+*   Deallocate the unliked version.  Delete the whole symbol if this was the
+*   only version.
 }
-  while true do begin                  {scan all the following versions}
-    sym_p := next_p;                   {get pointer to version to work on this time}
-    if sym_p = nil then exit;          {hit end of list ?}
-    next_p := sym_p^.next_p;           {save pointer to next symbol to process}
-    if sym_p^.scope_p = nil
+  symver_dealloc (sym_p);              {deallocate version, delete from local sym list}
 
-      then begin                       {global version, keep it}
-        if prev_p = nil
-          then begin                   {this is first version of the symbol}
-            sym_p^.vern := 1;          {set fixed version number}
-            end
-          else begin                   {there is a previous version}
-            sym_p^.vern := prev_p^.vern + 1; {update number of this version}
-            end
-          ;
-        sym_p^.prev_p := prev_p;       {point back to the previous version, if any}
-        prev_p := sym_p;               {this is now the previous version for next time}
-        end
-
-      else begin                       {local version, delete it}
-        symver_dealloc (sym_p);        {deallocate memory for this version}
-        if prev_p = nil
-          then begin                   {there is no previous symbol}
-            sym_pp^ := next_p;         {update the current version to the next}
-            end
-          else begin                   {a previous version exists}
-            prev_p^.next_p := next_p;  {link forward to the next version}
-            end
-          ;
-        end
-
-      ;
-    end;                               {back to process next version}
-{
-*   Delete the whole symbol if there are no versions left anymore.
-}
-  if sym_pp^ = nil then begin          {no more versions left ?}
+  if ent_p^.first_p = nil then begin   {no versions of this symbol are left ?}
     string_hash_ent_del (hpos);        {delete the symbol table entry for this name}
     end;
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_DEL (E, SYM_P)
+*   Subroutine ESCR_SYM_DEL (E, SYM_P, STAT)
 *
 *   Delete the version of the symbol pointed to by SYM_P.  SYM_P is returend
 *   NIL.
 }
 procedure escr_sym_del (               {delete specific symbol version}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in out  sym_p: escr_sym_p_t);        {pointer to version to delete, returned NIL}
+  in out  sym_p: escr_sym_p_t;         {pointer to version to delete, returned NIL}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
@@ -1091,7 +1222,7 @@ var
 
 begin
   escr_sym_lookup_sym (e, sym_p^, hpos); {get position of name in symbol table}
-  escr_sym_del_pos (e, sym_p, hpos);   {delete this version of the symbol}
+  escr_sym_del_pos (e, sym_p, hpos, stat); {delete this version of the symbol}
   end;
 {
 ********************************************************************************
@@ -1125,5 +1256,35 @@ begin
     return;
     end;
 
-  escr_sym_del_pos (e, sym_p, hpos);   {delete the symbol version}
+  escr_sym_del_pos (e, sym_p, hpos, stat); {delete the symbol version}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_SYM_CURR_SYM (SYM)
+*
+*   Make the version of the symbol SYM the current version.
+}
+procedure escr_sym_curr_sym (          {set current version of symbol}
+  in out  sym: escr_sym_t);            {the version to make current}
+  val_param;
+
+begin
+  sym.ent_p^.curr_p := addr(sym);
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_SYM_CURR_PREV (SYM)
+*
+*   Make the previous version of a symbol current.  SYM is the version that will
+*   be one newer than the new previous.  Put another way, after this call, the
+*   current version will be the previous version to SYM.
+}
+procedure escr_sym_curr_prev (         {make previous version of symbol current}
+  in out  sym: escr_sym_t);            {make previous of this version current}
+  val_param;
+
+begin
+  sym.ent_p^.curr_p := sym.prev_p;
   end;

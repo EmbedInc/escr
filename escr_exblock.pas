@@ -6,6 +6,7 @@
 module escr_exblock;
 define escr_exblock_new;
 define escr_exblock_close;
+define escr_exblock_refsym;
 define escr_exblock_ulab_init;
 define escr_exblock_inline_set;
 define escr_exblock_inline_push;
@@ -60,6 +61,7 @@ begin
   bl_p^.level := nlev;                 {set 0-N nesting level of this block}
   bl_p^.start_p := nil;                {indicate definition start line not set yet}
   bl_p^.sym_p := nil;                  {init to no symbol exists to represent this block}
+  bl_p^.sym_curr_p := nil;             {init version of symbol to restore to current on exit}
   bl_p^.mem_p := mem_p;                {save memory context to delete when block closed}
   bl_p^.arg_p := nil;                  {init arguments list to empty}
   bl_p^.arg_last_p := nil;
@@ -79,13 +81,14 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_CLOSE (E)
+*   Subroutine ESCR_EXBLOCK_CLOSE (E, STAT)
 *
 *   Close the current execution block, deallocate any associated resources, and
 *   make the previous execution block current.
 }
 procedure escr_exblock_close (         {close curr execution block and delete temp state}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
@@ -93,6 +96,7 @@ var
   sym_p: escr_sym_p_t;                 {pointer to symbol to delete}
 
 begin
+  sys_error_none (stat);               {init to no error encountered}
   if e.exblock_p = nil then return;    {nothing to close ?}
 {
 *   Delete the local symbols.  SYM_DEL will delete a symbol and all later
@@ -101,7 +105,13 @@ begin
 }
   while e.exblock_p^.locsym_p <> nil do begin {loop until local symbols list gone}
     sym_p := e.exblock_p^.locsym_p^.sym_p; {get pointer to this symbol}
-    escr_sym_del (e, sym_p);           {delete it and the local symbols list entry}
+    escr_sym_del (e, sym_p, stat);     {delete it and the local symbols list entry}
+    if sys_error(stat) then return;
+    end;
+
+  if e.exblock_p^.sym_p <> nil then begin {block envoked by symbol reference ?}
+    e.exblock_p^.sym_p^.ent_p^.curr_p := {restore previous current version}
+      e.exblock_p^.sym_curr_p;
     end;
 
   e.inhibit_p := e.exblock_p^.previnh_p; {restore to inhibit before this block}
@@ -109,6 +119,32 @@ begin
   mem_p := e.exblock_p^.mem_p;         {save memory context for this block}
   e.exblock_p := e.exblock_p^.prev_p;  {make parent execution block current}
   util_mem_context_del (mem_p);        {deallocate all dynamic memory of the block}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_EXBLOCK_REFSYM (E, SYM)
+*
+*   Set the referencing symbol of the current execution block.  SYM is the
+*   version of the symbol that references this block.
+*
+*   Inside a named block, the current version of the name symbol is always the
+*   previous from the version that references the block.  This means, for
+*   example, that calling the subroutine currently in with its unqualified
+*   name results in chaining to the next older version, not recursion.
+*
+*   The current version of the name symbol is restored to its current value when
+*   this block is deleted.
+}
+procedure escr_exblock_refsym (        {set referencing symbol of current block}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  sym: escr_sym_t);            {version of symbol referencing this block}
+  val_param;
+
+begin
+  e.exblock_p^.sym_p := addr(sym);     {save pointer to referencing symbol version}
+  e.exblock_p^.sym_curr_p := sym.ent_p^.curr_p; {save pointer to current version}
+  sym.ent_p^.curr_p := sym.prev_p;     {make previous version, if any, current}
   end;
 {
 ********************************************************************************

@@ -371,7 +371,7 @@ otherwise
 *   Write the information for symbol SYM.
 }
 procedure write_symbol (               {write info about all versions of a symbol}
-  in      sym: escr_sym_t;             {the current version of the symbol}
+  in      sym: escr_sym_t;             {the last version of the symbol}
   out     stat: sys_err_t);            {completion status}
   val_param; internal;
 
@@ -382,7 +382,7 @@ var
 begin
   tk.max := size_char(tk.str);         {init local var string}
 
-  sym_p := addr(sym);                  {init pointer to current version of symbol}
+  sym_p := addr(sym);                  {init pointer to last version of symbol}
   while sym_p <> nil do begin          {once for each version of this symbol name}
     string_appends (e.obuf, '; '(0));
     string_append (e.obuf, sym_p^.name_p^); {symbol name}
@@ -435,21 +435,18 @@ procedure do_sytable (                 {show symbols in specific symbol table}
   val_param;
 
 var
-  pos: string_hash_pos_t;              {symbol table position handle}
-  found: boolean;                      {symbol table entry found}
+  scan: escr_sytable_scan_t;           {state for scanning symbol table}
   name_p: string_var_p_t;              {pointer to symbol name string}
-  sym_pp: escr_sym_pp_t;               {pointer to data in symbol table entry}
-  sym_p: escr_sym_p_t;                 {pointer to individual symbol descriptor}
+  ent_p: escr_sytable_data_p_t;        {pointer to data about current symbol}
 
 begin
-  string_hash_pos_first (tbl.hash, pos, found);
+  escr_sytable_scan_start (tbl, scan); {init for scanning symbol table}
 
-  while found do begin                 {once for each symbol in the symbol table}
-    string_hash_ent_atpos (pos, name_p, sym_pp); {get info from this table entry}
-    sym_p := sym_pp^;                  {get pointer to current symbol}
-    write_symbol (sym_p^, stat);       {write information about this symbol}
+  while true do begin                  {loop over the symbol table entries}
+    escr_sytable_scan (scan, name_p, ent_p); {get this next symbol table entry}
+    if ent_p = nil then exit;          {hit end of symbol table ?}
+    write_symbol (ent_p^.last_p^, stat); {write info about current version}
     if sys_error(stat) then return;
-    string_hash_pos_next (pos, found); {advance to next symbol table entry}
     end;                               {back to process this new symbol table entry}
   end;
 {
@@ -651,7 +648,8 @@ begin
   if not escr_get_end (e, stat) then return; {abort on extra parameter}
 
   while e.exblock_p^.prev_p <> nil do begin {loop until only top block left}
-    escr_exblock_close (e);
+    escr_exblock_close (e, stat);
+    if sys_error(stat) then return;
     end;
 
   while e.exblock_p^.inpos_p^.prev_p <> nil do begin {back to top file}
