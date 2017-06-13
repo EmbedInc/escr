@@ -5,7 +5,7 @@ define escr_run_atline;
 define escr_run_atlabel;
 define escr_run_conn;
 define escr_run_file;
-define escr_run_stop;
+define escr_run_clean;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -14,9 +14,13 @@ define escr_run_stop;
 *
 *   Execute script code starting at the indicated input file line.
 *
-*   Previous execution state, if any, is completely aborted before the new
-*   execution is started.  This means, among other things, that all existing
-*   local symbols will be deleted before the execution starts.
+*   If the current execution block is the top level block, then the new code is
+*   run within it.  If no block exists, then a top level block is created, and
+*   the new code run within it.  It is a error if other then the top execution
+*   block exists.
+*
+*   To guarantee the new code is run in a new clean context (no local variables,
+*   arguments, etc), call ESCR_RUN_CLEAN before this routine.
 }
 procedure escr_run_atline (            {run starting at specific input files line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -37,16 +41,25 @@ label
 begin
   buf.max := size_char(buf.str);       {init local var string}
 
-  escr_run_stop (e, stat);             {delete any current execution state}
-  if sys_error(stat) then return;
+  if                                   {in nested execution context ?}
+      (e.exblock_p <> nil) and then    {current execution block exists ?}
+      ( (e.exblock_p^.prev_p <> nil) or {not top block ?}
+        (e.exblock_p^.bltype <> escr_exblock_top_k) {not top block type ?}
+        )
+      then begin
+    sys_stat_set (escr_subsys_k, escr_err_run_nested_k, stat);
+    return;
+    end;
 
   if line_p = nil then return;         {nothing to do ?}
 {
-*   Create and initialize the execution block state.
+*   Create the top execution block if it does not already exist.
 }
-  escr_exblock_new (e, stat);          {create top level execution block}
-  if sys_error(stat) then return;
-  escr_exblock_ulab_init (e);          {top level block has unique labels context}
+  if e.exblock_p = nil then begin      {no current execution block ?}
+    escr_exblock_new (e, stat);        {create top level execution block}
+    if sys_error(stat) then return;
+    escr_exblock_ulab_init (e);        {top level block has unique labels context}
+    end;
 
   escr_exblock_inline_set (e, line_p, stat); {set next source line to execute}
   if sys_error(stat) then return;
@@ -389,6 +402,16 @@ begin
     stat);
   if sys_error(stat) then return;
 
+  if
+      (e.exblock_p <> nil) and then    {a current execution block exists ?}
+      (e.exblock_p^.bltype = escr_exblock_top_k) {it is the top block ?}
+      then begin
+    escr_exblock_arg_addn (            {add full script pathname as block argument -1}
+      e,                               {state for this use of the ESCR system}
+      infile_p^.tnam,                  {argument string}
+      -1);                             {argument number}
+    end;
+
   escr_run_atline (                    {run the code in this file}
     e,                                 {state for this use of the ESCR system}
     infile_p^.lfirst_p,                {pointer to line to start running at}
@@ -397,9 +420,10 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_RUN_STOP (E, STAT)
+*   Subroutine ESCR_RUN_CLEAN (E, STAT)
 *
-*   Stop any execution in progress and delete the current execution state.
+*   Clean out any existing execution state.  This stops any execution in
+*   progress.  There will be no execution context when this routine returns.
 }
 procedure escr_run_stop (              {unconditionally stop execution}
   in out  e: escr_t;                   {state for this use of the ESCR system}

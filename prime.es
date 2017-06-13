@@ -1,12 +1,22 @@
 //   Demonstation of ESCR's prgramming and computational abilities.
 //
-//   This program writes out all the prime numbers within a range.  The range is
-//   defined by the constants START_K and END_K, below, or can be set by
-//   defining the integer variables START and/or END with the -I command line
-//   option.  For example, the following command line will show all prime
-//   numbers from 1000 to 2000:
+//   This program writes out all the prime numbers within a range.  The default
+//   range is set by the constants START_K and END_K.
 //
-//     escr prime -i start 1000 -i end 2000
+//   The command line options are:
+//
+//     -START start
+//
+//       Sets the start of the range.
+//
+//     -END end
+//
+//       Set the end of the range.
+//
+//   For example, the following command line will show all prime numbers from
+//   1000 to 2000:
+//
+//     escr prime -start 1000 -end 2000
 //
 const   start_k integer = 0  //default start of prime number search range
 const   end_k integer = 1000 //default end of prime number search range
@@ -18,14 +28,32 @@ var new ii integer           //scratch integer
 var new line string          //output line
 var new n integer            //number of primes found
 var new range integer        //number of numbers to check for prime
+var new start integer = start_k
+var new end integer = end_k
 
-if [not [exist "start"]] then //use default start of range ?
-  var new start integer = start_k
-  endif
-set start [max start 2]
-if [not [exist "end"]] then  //use default end of range ?
-  var new end integer = end_k
-  endif
+//   Process the command line options.
+//
+loop
+  var local arg integer = 1
+  if [not [exist arg arg]] then //no more command line arguments ?
+    quit
+    endif
+  if [= [ucase [qstr [arg arg]]] "-START"] then
+    set arg [+ arg 1]
+    set start [arg arg]
+    set arg [+ arg 1]
+    repeat
+    endif
+  if [= [ucase [qstr [arg arg]]] "-END"] then
+    set arg [+ arg 1]
+    set end [arg arg]
+    set arg [+ arg 1]
+    repeat
+    endif
+  show "Command line parameter " [qstr [arg arg]] " is unrecognized."
+  stop
+  endloop
+
 set end [max end start]
 set range [+ [- end start] 1] //size of range to check
 

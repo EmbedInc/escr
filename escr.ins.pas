@@ -83,6 +83,7 @@ const
   escr_err_loop_n_k = 64;              {LOOP overconstrained by N keyword}
   escr_err_sytype_k = 65;              {invalid specific symbol type <required> <actual>}
   escr_err_delsymblk_k = 66;           {attempt to delete name of execution block <name>}
+  escr_err_run_nested_k = 67;          {trying to run new code in nested execution context}
 {
 *   Derived constants.
 }
@@ -924,6 +925,11 @@ procedure escr_run_atline (            {run starting at specific input files lin
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
+procedure escr_run_clean (             {clean out any existing execution state}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
 procedure escr_run_conn (              {run at current line of open file}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   var     conn: file_conn_t;           {pointer to I/O connection state}
@@ -934,11 +940,6 @@ procedure escr_run_file (              {run starting at first line file}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {name of file to run script code from}
   in      suff: string;                {allowed file name suffixes, blank separated}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
-procedure escr_run_stop (              {unconditionally stop execution}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 

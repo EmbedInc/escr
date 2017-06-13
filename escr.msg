@@ -205,6 +205,9 @@ msg err66
   lan english -def
     Attempt to delete symbol "%p1s", which is the name of a current
     execution block.
+msg err67
+  lan english -def
+    Attempt to run new code in existing nested execution context.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.
