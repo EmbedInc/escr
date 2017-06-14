@@ -81,6 +81,10 @@ if b then
 //
 writeto "/temp/x.txt"
 
+call dofunc "+1" preinc arithmetic
+call dofunc "1+" postinc arithmetic
+call dofunc "-1" predec arithmetic
+call dofunc "1-" postdec arithmetic
 call dofunc "+" plus arithmetic
 call dofunc "-" minus arithmetic
 call dofunc "*" times arithmetic

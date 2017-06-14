@@ -84,6 +84,8 @@ const
   escr_err_sytype_k = 65;              {invalid specific symbol type <required> <actual>}
   escr_err_delsymblk_k = 66;           {attempt to delete name of execution block <name>}
   escr_err_run_nested_k = 67;          {trying to run new code in nested execution context}
+  escr_err_var_not_int_k = 68;         {variable is not integer <name>}
+  escr_err_var_nfound_k = 69;          {variable not found <name>}
 {
 *   Derived constants.
 }
@@ -584,6 +586,13 @@ function escr_ifn_get_keyw (           {get next parameter as upper case keyword
   :boolean;                            {returning with a keyword}
   val_param; extern;
 
+function escr_ifn_get_name (           {get next parameter as symbol name}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  name: univ string_var_arg_t; {returned name}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with name}
+  val_param; extern;
+
 function escr_ifn_get_str (            {get string value of next function parameter}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  str: univ string_var_arg_t;  {returned value}
@@ -607,6 +616,13 @@ function escr_ifn_get_time (           {get time value of next function paramete
 function escr_ifn_get_val (            {get arbitrary value of next func parameter}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     val: escr_val_t;             {returned term value}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {term was available}
+  val_param; extern;
+
+function escr_ifn_get_var_int (        {get next funct parameter as integer variable}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     sym_p: escr_sym_p_t;         {pointer to integer variable symbol descriptor}
   out     stat: sys_err_t)             {completion status}
   :boolean;                            {term was available}
   val_param; extern;
@@ -1181,10 +1197,20 @@ procedure escr_syrlist_clear (         {clear syntax ranges list}
 function escr_term_get (               {get value of next term in list}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fstr: univ string_var_arg_t; {source string, term will be next token}
-  in out  p: string_index_t;           {source string parse index}
+  in out  p: string_index_t;           {source string parse index, updated}
   out     val: escr_val_t;             {returned value of the term}
   out     stat: sys_err_t)             {completion status, no error on func TRUE}
   :boolean;                            {TRUE if term was available}
+  val_param; extern;
+
+function escr_term_raw (               {get next term raw characters}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fstr: univ string_var_arg_t; {source string, term will be next token}
+  in out  p: string_index_t;           {source string parse index, updated}
+  in out  term: univ string_var_arg_t; {returned raw term characters, unquoted}
+  out     quoted: boolean;             {the characters were quoted}
+  out     stat: sys_err_t)             {completion status, no error on func TRUE}
+  :boolean;                            {TRUE if term was available and no error}
   val_param; extern;
 
 procedure escr_uptocomm (              {find line length without comment}

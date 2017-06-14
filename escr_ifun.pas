@@ -44,6 +44,10 @@ define escr_ifun_or;
 define escr_ifun_xor;
 define escr_ifun_plus;
 define escr_ifun_minus;
+define escr_ifun_postdec;
+define escr_ifun_postinc;
+define escr_ifun_predec;
+define escr_ifun_preinc;
 define escr_ifun_times;
 define escr_ifun_divide;
 define escr_ifun_div;
@@ -81,6 +85,10 @@ define escr_ifun_evar;
 define escr_ifun_lab;
 define escr_ifun_v;
 define escr_ifun_seq;
+define escr_ifun_preinc;
+define escr_ifun_postinc;
+define escr_ifun_predec;
+define escr_ifun_postdec;
 %include 'escr2.ins.pas';
 
 const
@@ -1030,6 +1038,104 @@ escr_dtype_time_k: begin               {TIME}
 }
 dtype_bad:
   escr_ifn_bad_dtype (e, val, stat);   {set STAT to bad data type error}
+  end;
+{
+********************************************************************************
+*
+*   1+ var
+*
+*   Return the value of the integer variable VAR, then increment the variable by
+*   1.
+}
+procedure escr_ifun_postinc(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  sym_p: escr_sym_p_t;                 {pointer to the variable}
+
+begin
+  if not escr_ifn_get_var_int (e, sym_p, stat) then begin
+    escr_ifn_stat_required (e, stat);
+    return;
+    end;
+
+  escr_ifn_ret_int (e, sym_p^.var_val.int); {pass back variable value}
+  sym_p^.var_val.int := sym_p^.var_val.int + 1; {increment the variable}
+  end;
+{
+********************************************************************************
+*
+*   +1 var
+*
+*   Increment the integer variable VAR by 1, then return its value.
+}
+procedure escr_ifun_preinc(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  sym_p: escr_sym_p_t;                 {pointer to the variable}
+
+begin
+  if not escr_ifn_get_var_int (e, sym_p, stat) then begin
+    escr_ifn_stat_required (e, stat);
+    return;
+    end;
+
+  sym_p^.var_val.int := sym_p^.var_val.int + 1; {increment the variable}
+  escr_ifn_ret_int (e, sym_p^.var_val.int); {pass back variable value}
+  end;
+{
+********************************************************************************
+*
+*   1- var
+*
+*   Return the value of the integer variable VAR, then decrement the variable by
+*   1.
+}
+procedure escr_ifun_postdec(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  sym_p: escr_sym_p_t;                 {pointer to the variable}
+
+begin
+  if not escr_ifn_get_var_int (e, sym_p, stat) then begin
+    escr_ifn_stat_required (e, stat);
+    return;
+    end;
+
+  escr_ifn_ret_int (e, sym_p^.var_val.int); {pass back variable value}
+  sym_p^.var_val.int := sym_p^.var_val.int - 1; {decrement the variable}
+  end;
+{
+********************************************************************************
+*
+*   -1 var
+*
+*   Decrement the integer variable VAR by 1, then return its value.
+}
+procedure escr_ifun_predec(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  sym_p: escr_sym_p_t;                 {pointer to the variable}
+
+begin
+  if not escr_ifn_get_var_int (e, sym_p, stat) then begin
+    escr_ifn_stat_required (e, stat);
+    return;
+    end;
+
+  sym_p^.var_val.int := sym_p^.var_val.int - 1; {decrement the variable}
+  escr_ifn_ret_int (e, sym_p^.var_val.int); {pass back variable value}
   end;
 {
 ********************************************************************************

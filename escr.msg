@@ -208,6 +208,12 @@ msg err66
 msg err67
   lan english -def
     Attempt to run new code in existing nested execution context.
+msg err68
+  lan english -def
+    The variable "%p1s" is not integer.
+msg err69
+  lan english -def
+    The variable "%p1s" does not exist.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.

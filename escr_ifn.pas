@@ -9,6 +9,8 @@ define escr_ifn_get_fp;
 define escr_ifn_get_str;
 define escr_ifn_get_strs;
 define escr_ifn_get_keyw;
+define escr_ifn_get_name;
+define escr_ifn_get_var_int;
 define escr_ifn_ret_bool;
 define escr_ifn_ret_int;
 define escr_ifn_ret_fp;
@@ -241,17 +243,113 @@ function escr_ifn_get_keyw (           {get next parameter as upper case keyword
   :boolean;                            {returning with a keyword}
   val_param;
 
+var
+  quoted: boolean;                     {term was quoted string}
+
 begin
   escr_ifn_get_keyw := false;          {init to not returning with a keyword}
 
-  string_token (e.funarg.s, e.funarg.p, keyw, stat); {get the next parameter}
-  if string_eos(stat) then begin       {there was no parameter ?}
-    return;
-    end;
-  if sys_error(stat) then return;      {return with error ?}
+  if not escr_term_raw (               {get characters of next term}
+      e,                               {ESCR library use state}
+      e.funarg.s, e.funarg.p,          {source string and parse index}
+      keyw,                            {returned term characters}
+      quoted,                          {indicates whether term was quoted}
+      stat)
+    then return;
+  if quoted then return;               {quoted string isn't a keyword}
 
   string_upcase (keyw);                {convert keyword to all upper case}
   escr_ifn_get_keyw := true;           {indicate returning with a keyword}
+  end;
+{
+********************************************************************************
+*
+*   Function ESCR_IFN_GET_NAME (E, NAME, STAT)
+*
+*   Get the next function parameter as a symbol name in NAME.  The function
+*   returns TRUE when returning with a name.  If no parameter was available,
+*   then the funtion returns FALSE with STAT not indicating error.  On error,
+*   the function returns FALSE with STAT indicating the error.
+}
+function escr_ifn_get_name (           {get next parameter as symbol name}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  name: univ string_var_arg_t; {returned name}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {returning with name}
+  val_param;
+
+var
+  quoted: boolean;                     {term was quoted string}
+
+begin
+  escr_ifn_get_name := false;          {init to not returning with a name}
+
+  if not escr_term_raw (               {get characters of next term}
+      e,                               {ESCR library use state}
+      e.funarg.s, e.funarg.p,          {source string and parse index}
+      name,                            {returned term characters}
+      quoted,                          {indicates whether term was quoted}
+      stat)
+    then return;
+  if quoted then return;               {quoted string isn't a name}
+
+  escr_ifn_get_name := true;           {indicate returning with a name}
+  end;
+{
+********************************************************************************
+*
+*   Function ESCR_IFN_GET_VAR_INT (E, SYM_P, STAT)
+*
+*   Get the next function parameter as a integer variable name.  SYM_P is
+*   returned pointing to the variable.
+*
+*   The function returns TRUE iff the variable name was successfully parsed, and
+*   it is the name of a integer variable.  In this case SYM_P will always point
+*   to the symbol descriptor.  The symbol is guaranteed to be a variable with
+*   integer data type.
+*
+*   If there is no parameter, then the function returns FALSE, SYM_P nil, and
+*   STAT not indicating error.
+*
+*   If any error is detected, the function returns FALSE, SYM_P is undefined,
+*   and STAT indicates the error.
+}
+function escr_ifn_get_var_int (        {get next funct parameter as integer variable}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     sym_p: escr_sym_p_t;         {pointer to integer variable symbol descriptor}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {term was available}
+  val_param;
+
+var
+  name: string_var80_t;
+
+begin
+  name.max := size_char(name.str);     {init local var string}
+  escr_ifn_get_var_int := false;       {init to not returning with integer variable}
+
+  if not escr_ifn_get_name (e, name, stat)
+    then return;
+
+  escr_sym_find_type (                 {try to find the variable}
+    e,                                 {ESCR library use state}
+    name,                              {name of symbol to find}
+    escr_sytype_var_k,                 {symbol must be a variable}
+    sym_p,                             {returned point to symbol descriptor}
+    stat);
+  if sys_error(stat) then return;
+  if sym_p = nil then begin            {no such variable ?}
+    sys_stat_set (escr_subsys_k, escr_err_var_nfound_k, stat);
+    sys_stat_parm_vstr (name, stat);
+    return;
+    end;
+  if sym_p^.var_val.dtype <> escr_dtype_int_k then begin {variable is not integer ?}
+    sys_stat_set (escr_subsys_k, escr_err_var_not_int_k, stat);
+    sys_stat_parm_vstr (name, stat);
+    return;
+    end;
+
+  escr_ifn_get_var_int := true;        {indicate returning with integer variable}
   end;
 {
 ********************************************************************************

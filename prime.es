@@ -35,22 +35,20 @@ var new end integer = end_k
 //
 loop
   var local arg integer = 1
+  var local opt string
   if [not [exist arg arg]] then //no more command line arguments ?
     quit
     endif
-  if [= [ucase [qstr [arg arg]]] "-START"] then
-    set arg [+ arg 1]
-    set start [arg arg]
-    set arg [+ arg 1]
+  set opt [ucase [qstr [arg [1+ arg]]]] //get command line option name into OPT
+  if [= opt "-START"] then
+    set start [arg [1+ arg]]
     repeat
     endif
-  if [= [ucase [qstr [arg arg]]] "-END"] then
-    set arg [+ arg 1]
-    set end [arg arg]
-    set arg [+ arg 1]
+  if [= opt "-END"] then
+    set end [arg [1+ arg]]
     repeat
     endif
-  show "Command line parameter " [qstr [arg arg]] " is unrecognized."
+  show "Command line parameter """ opt """ is unrecognized."
   stop
   endloop
 

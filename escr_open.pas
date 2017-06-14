@@ -282,6 +282,10 @@ begin
   addfunc ('OR', addr(escr_ifun_or), stat); if sys_error(stat) then goto err;
   addfunc ('PI', addr(escr_ifun_pi), stat); if sys_error(stat) then goto err;
   addfunc ('+', addr(escr_ifun_plus), stat); if sys_error(stat) then goto err;
+  addfunc ('1+', addr(escr_ifun_postinc), stat); if sys_error(stat) then goto err;
+  addfunc ('1-', addr(escr_ifun_postdec), stat); if sys_error(stat) then goto err;
+  addfunc ('+1', addr(escr_ifun_preinc), stat); if sys_error(stat) then goto err;
+  addfunc ('-1', addr(escr_ifun_predec), stat); if sys_error(stat) then goto err;
   addfunc ('QSTR', addr(escr_ifun_qstr), stat); if sys_error(stat) then goto err;
   addfunc ('RDEG', addr(escr_ifun_rdeg), stat); if sys_error(stat) then goto err;
   addfunc ('RND', addr(escr_ifun_rnd), stat); if sys_error(stat) then goto err;

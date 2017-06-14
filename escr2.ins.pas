@@ -347,6 +347,26 @@ procedure escr_ifun_plus(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_postdec(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_postinc(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_predec(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_preinc(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_qstr(
   in out  e: escr_t;
   out     stat: sys_err_t);
