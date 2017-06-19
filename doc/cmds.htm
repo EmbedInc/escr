@@ -15,27 +15,32 @@
 
 <ul>
   <li><a href="#include">include</a>
-  <li><a href="#var-new">var new</a>
-  <li><a href="#var-exist">var exist</a>
-  <li><a href="#var-local">var local</a>
-  <li><a href="#set">set</a>
+  <li><a href="#var-new">var new</a>,
+    <a href="#var-exist">var exist</a>,
+    <a href="#var-local">var local</a>
   <li><a href="#const">const</a>
+  <li><a href="#set">set</a>
   <li><a href="#del">del</a>
   <li><a href="#sylist">sylist</a>
-  <li><a href="#write">write</a>
   <li><a href="#show">show</a>
+  <li>
+    <a href="#write">write</a>,
+    <a href="#writepush">writepush</a>,
+    <a href="#writepop">writepop</a>
   <li><a href="#if">if then else endif</a>
-  <li><a href="#subroutine">subroutine</a>
-  <li><a href="#return">return</a>
-  <li><a href="#endsub">endsub</a>
-  <li><a href="#call">call</a>
-  <li><a href="#macro">macro</a>
-  <li><a href="#quitmac">quitmac</a>
-  <li><a href="#endmac">endmac</a>
-  <li><a href="#block">block</a>
-  <li><a href="#endblock">endblock</a>
-  <li><a href="#loop">loop</a><br>
-    types:
+  <li><a href="#subroutine">subroutine</a>,
+    <a href="#return">return</a>,
+    <a href="#endsub">endsub</a>,
+    <a href="#call">call</a>
+  <li><a href="#macro">macro</a>,
+    <a href="#quitmac">quitmac</a>,
+    <a href="#endmac">endmac</a>
+  <li><a href="#block">block</a>,
+    <a href="#endblock">endblock</a>
+  <li><a href="#loop">loop</a>,
+    <a href="#repeat">repeat</a>,
+    <a href="#endlop">endloop</a>
+    <br>types:
     <a href="#loop-unconditional">unconditional</a>,
     <a href="#loop-counted">counted</a>,
     <a href="#loop-symbols">symbols</a><br>
@@ -46,10 +51,7 @@
     <a href="#loop-n">n</a>,
     <a href="#loop-by">by</a>,
     <a href="#loop-sym">symbols</a>
-  <li><a href="#endloop">endloop</a>
   <li><a href="#quit">quit</a>
-  <li><a href="#writeto">writeto</a>
-  <li><a href="#writeend">writeend</a>
   <li><a href="#stop">stop</a>
   </ul>
 
@@ -129,12 +131,6 @@ keyword.
 
     </ul>
 
-<p><dt><b><tt id="set">SET</b> <i>name value</i></tt></dt><dd>
-
-  <p>Set the variable <i>name</i> to the value <i>value</i>.  It is an
-  error if <i>value</i> can not be converted to the data type of
-  <i>name</i>, or if there is no such variable.
-
 <p><dt><tt id="const"><b>CONST</b> <i>name [dtype]</i> <b>=</b> <i>value</i></tt></dt><dd>
 
   <p>Create a new constant of name <i>name</i>.  The symbol <i>name</i>
@@ -144,6 +140,12 @@ keyword.
 
   <p>The optional <i>dtype</i> parameter specifies the data type of the
   constant.  The default data type is <b>string</b>.
+
+<p><dt><b><tt id="set">SET</b> <i>name value</i></tt></dt><dd>
+
+  <p>Set the variable <i>name</i> to the value <i>value</i>.  It is an
+  error if <i>value</i> can not be converted to the data type of
+  <i>name</i>, or if there is no such variable.
 
 <p><dt><tt id="del"><b>DEL</b> <i>name</i></tt></dt><dd>
 
@@ -157,6 +159,12 @@ keyword.
   their values to the output file as data file comments.  It is an
   error if there is no current output file.
 
+<p><dt><tt id="show"><b>SHOW</b> <i>arg ... arg</i></tt></dt><dd>
+
+  <p>Write the concatenation of the string representation of all arguments
+  as one line to standard output.  If no arguments are supplied, then a
+  blank line is written.
+
 <p><dt><tt id="write"><b>WRITE</b> <i>arg ... arg</i></tt></dt><dd>
 
   <p>Write the concatenation of the string representation of all arguments
@@ -165,11 +173,19 @@ keyword.
 
   <p>It is an error if there is not current output file.
 
-<p><dt><tt id="show"><b>SHOW</b> <i>arg ... arg</i></tt></dt><dd>
+<p><dt><tt id="writepush"><b>WRITEPUSH</b> <i>name</i></tt></dt><dd>
 
-  <p>Write the concatenation of the string representation of all arguments
-  as one line to standard output.  If no arguments are supplied, then a
-  blank line is written.
+  <p>Any output that would normally go to the preprocessed output file
+  will now go to the file indicated by <i>name</i>.  <i>Name</i> is a
+  string. The file is created if it does not previously exist, and is
+  overwritten if it does.
+
+<p><dt><tt id="writepop"><b>WRITEPOP</b></tt></dt><dd>
+
+  <p>Ends writing to the file started with the most recently executed
+  WRITEPUSH command.  The output file is restored to what it was when
+  WRITEPUSH was executed.  In preprocessor mode, it is not possible to stop
+  writing to the original output file.
 
 <p><dt><tt id="if"><b>IF</b> <i>condition [</i><b>then</b><i>]</i><br>
 <b>THEN</b><br>
@@ -587,11 +603,6 @@ keyword.
   will resolve arguments of the next enclosing execution block that does
   take arguments.
 
-<p><dt><tt id="endloop"><b>ENDLOOP</b></tt></dt><dd>
-
-  <p>Ends a <b>loop</b> execution block.  If this command is encountered
-  when the loop is being executed, then it functions like <b>repeat</b>.
-
 <p><dt><tt id="repeat"><b>REPEAT</b></tt></dt><dd>
 
   <p>Go back to immediately after the command that started the current
@@ -604,26 +615,17 @@ keyword.
   terminating condition, then the loop is ended and execution resumes
   immediately after the end of the block (functions like <b>quit</b>).
 
+<p><dt><tt id="endloop"><b>ENDLOOP</b></tt></dt><dd>
+
+  <p>Ends a <b>loop</b> execution block.  If this command is encountered
+  when the loop is being executed, then it functions like <b>repeat</b>.
+
 <p><dt><tt id="quit"><b>QUIT</b></tt></dt><dd>
 
   <p>Exits the current execution block.  Execution resumes with parameters
   in effect before the block was entered.  Resources used internally in
   the preprocessor to manage the block are deallocated and local variables
   defined in the block are deleted.
-
-<p><dt><tt id="writeto"><b>WRITETO</b> <i>name</i></tt></dt><dd>
-
-  <p>Any output that would normally go to the preprocessed output file
-  will now go to the file indicated by <i>name</i>.  <i>Name</i> is a
-  string. The file is created if it does not previously exist, and is
-  overwritten if it does.
-
-<p><dt><tt id="writeend"><b>WRITEEND</b></tt></dt><dd>
-
-  <p>Ends writing to the file started with the most recently executed
-  WRITETO command.  The output file is restored to what it was when
-  WRITETO was executed.  In preprocessor mode, it is not possible to stop
-  writing to the original output file.
 
 <p><dt><tt id="stop"><b>STOP</b></tt></dt><dd>
 

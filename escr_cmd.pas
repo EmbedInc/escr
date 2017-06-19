@@ -28,8 +28,8 @@ define escr_cmd_sylist;
 define escr_cmd_include;
 define escr_cmd_write;
 define escr_cmd_show;
-define escr_cmd_writeto;
-define escr_cmd_writeend;
+define escr_cmd_writepush;
+define escr_cmd_writepop;
 define escr_cmd_stop;
 %include 'escr2.ins.pas';
 {
@@ -573,9 +573,9 @@ begin
 {
 ********************************************************************************
 *
-*   /WRITETO fnam
+*   /WRITEPUSH fnam
 }
-procedure escr_cmd_writeto (
+procedure escr_cmd_writepush (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
@@ -605,9 +605,9 @@ err_missing:
 {
 ********************************************************************************
 *
-*   /WRITEND
+*   /WRITEPOP
 }
-procedure escr_cmd_writeend (
+procedure escr_cmd_writepop (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;

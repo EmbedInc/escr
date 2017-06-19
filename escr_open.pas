@@ -238,8 +238,8 @@ begin
   addcmd ('THEN', addr(escr_cmd_then), stat); if sys_error(stat) then goto err;
   addcmd ('VAR', addr(escr_cmd_var), stat); if sys_error(stat) then goto err;
   addcmd ('WRITE', addr(escr_cmd_write), stat); if sys_error(stat) then goto err;
-  addcmd ('WRITEEND', addr(escr_cmd_writeend), stat); if sys_error(stat) then goto err;
-  addcmd ('WRITETO', addr(escr_cmd_writeto), stat); if sys_error(stat) then goto err;
+  addcmd ('WRITEPOP', addr(escr_cmd_writepop), stat); if sys_error(stat) then goto err;
+  addcmd ('WRITEPUSH', addr(escr_cmd_writepush), stat); if sys_error(stat) then goto err;
   {
   *   Add the intrinsic functions to the functions symbol table.
   }

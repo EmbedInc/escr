@@ -138,12 +138,12 @@ procedure escr_cmd_write (
   out     stat: sys_err_t);
   val_param; extern;
 
-procedure escr_cmd_writeend (
+procedure escr_cmd_writepop (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
 
-procedure escr_cmd_writeto (
+procedure escr_cmd_writepush (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
