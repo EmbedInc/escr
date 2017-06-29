@@ -386,12 +386,7 @@ escr_looptype_cnt_k: begin
     end;
 
   if not (keyw_by_k in keyw) then begin {increment not explicitly set ?}
-    if
-        (keyw_from_k in keyw) and      {have explicit start value ?}
-        (keyw_to_k in keyw) and        {have explicit end value ?}
-        (loop_p^.cnt_end < loop_p^.cnt_start) {going down ?}
-      then loop_p^.cnt_inc := -1
-      else loop_p^.cnt_inc := 1;
+    loop_p^.cnt_inc := 1;
     end;
 
   if keyw_n_k in keyw then begin       {number of iterations explicitly set ?}

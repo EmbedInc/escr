@@ -376,8 +376,8 @@ keyword.
   case-insensitive.
 
   <p>There are several distinct loop types that can be created with this
-  command.  The options are used determine the loop type and its specific
-  parameters.  The loop types are:<dl>
+  command.  The options used determine the loop type and its specific
+  characteristics.  The loop types are:<dl>
 
   <p><dt id="loop-unconditional">Unconditional</dt><dd>
 
@@ -465,10 +465,7 @@ keyword.
       <p><dt><tt id="loop-by"><b>by</b> <i>n</i></tt></dt><dd>
 
         <p>Specifies the amount to add to the loop value each iteration.
-        This value must be non-zero.  The default is 1 unless both
-        <b>from</b> and <b>to</b> are specified.  In that case the default
-        is 1 when <i>to</i> &ge; <i>from</i>, and -1 when <i>to</i> &lt;
-        <i>from</i>.
+        This value must be non-zero.  The default is 1.
 
       </dl><!-- End of counted loop options -->
 
@@ -481,6 +478,11 @@ keyword.
 
         <p><dt><tt><b>loop with</b> ii <b>from</b> 2 <b>to</b>
         -1</tt></dt><dd>
+
+          <p>Loop values: None.  The loop code is never executed.
+
+        <p><dt><tt><b>loop with</b> ii <b>from</b> 2 <b>to</b>
+        -1 <b>by</b> -1</tt></dt><dd>
 
           <p>Loop values: 2, 1, 0, -1
 
