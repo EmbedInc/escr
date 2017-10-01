@@ -433,6 +433,7 @@ escr_inhty_blk_k: (                    {in execution block}
     syfunc: escr_syrange_t;            {start/end syntax for script functions}
     syfunc_st_p: escr_syfunc_st_p_t;   {app routine to identify function start}
     flags: escr_flags_t;               {system-wide control flags}
+    exstat: sys_int_machine_t;         {script exit status}
     end;
 {
 ****************************************

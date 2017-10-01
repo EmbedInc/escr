@@ -31,6 +31,7 @@ define escr_cmd_show;
 define escr_cmd_writepush;
 define escr_cmd_writepop;
 define escr_cmd_stop;
+define escr_cmd_run;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -150,7 +151,7 @@ err_missing:
 {
 ********************************************************************************
 *
-*   /SET name value
+*   SET name value
 }
 procedure escr_cmd_set (
   in out  e: escr_t;
@@ -194,7 +195,7 @@ err_missing:
 {
 ********************************************************************************
 *
-*   /CONST name [dtype] = value
+*   CONST name [dtype] = value
 }
 procedure escr_cmd_const (
   in out  e: escr_t;
@@ -261,7 +262,7 @@ err_missing:
 {
 ********************************************************************************
 *
-*   /DEL name
+*   DEL name
 *
 *   Delete a version of the symbol NAME.  NAME may be a fully qualified symbol
 *   name, indicating a particular symbol type and version.
@@ -295,7 +296,7 @@ err_missing:
 {
 ********************************************************************************
 *
-*   /SYLIST
+*   SYLIST
 *
 *   List all user-defined symbols as comments to the output file.
 }
@@ -402,12 +403,69 @@ escr_sym_const_k: begin                {symbol is a constant}
         write_val (sym_p^.const_val);
         end;
 
-escr_sym_subr_k: begin                 {symbol is a subroutine name}
+escr_sym_subr_k: begin                 {user-defined subroutine}
         string_appends (e.obuf, ' subroutine, line '(0));
         string_f_int (tk, sym_p^.subr_line_p^.lnum);
         string_append (e.obuf, tk);
         string_appends (e.obuf, ' of '(0));
         string_append (e.obuf, sym_p^.subr_line_p^.file_p^.tnam);
+        end;
+
+escr_sym_isubr_k: begin                {intrinsic subroutine}
+        string_appends (e.obuf, ' intrinsic subroutine'(0));
+        end;
+
+escr_sym_macro_k: begin                {user-defined macro}
+        string_appends (e.obuf, ' macro, line '(0));
+        string_f_int (tk, sym_p^.macro_line_p^.lnum);
+        string_append (e.obuf, tk);
+        string_appends (e.obuf, ' of '(0));
+        string_append (e.obuf, sym_p^.macro_line_p^.file_p^.tnam);
+        end;
+
+escr_sym_imacro_k: begin               {intrinsic macro}
+        string_appends (e.obuf, ' intrinsic macro'(0));
+        end;
+
+escr_sym_func_k: begin                 {user-defined function}
+        string_appends (e.obuf, ' function, line '(0));
+        string_f_int (tk, sym_p^.func_line_p^.lnum);
+        string_append (e.obuf, tk);
+        string_appends (e.obuf, ' of '(0));
+        string_append (e.obuf, sym_p^.func_line_p^.file_p^.tnam);
+        end;
+
+escr_sym_ifunc_k: begin                {intrinsic function}
+        string_appends (e.obuf, ' intrinsic function'(0));
+        end;
+
+escr_sym_cmd_k: begin                  {user-defined command}
+        string_appends (e.obuf, ' command, line '(0));
+        string_f_int (tk, sym_p^.cmd_line_p^.lnum);
+        string_append (e.obuf, tk);
+        string_appends (e.obuf, ' of '(0));
+        string_append (e.obuf, sym_p^.cmd_line_p^.file_p^.tnam);
+        end;
+
+escr_sym_icmd_k: begin                 {intrinsic command}
+        string_appends (e.obuf, ' intrinsic command'(0));
+        end;
+
+escr_sym_label_k: begin                {label}
+        string_appends (e.obuf, ' label, line '(0));
+        string_f_int (tk, sym_p^.label_line_p^.lnum);
+        string_append (e.obuf, tk);
+        string_appends (e.obuf, ' of '(0));
+        string_append (e.obuf, sym_p^.label_line_p^.file_p^.tnam);
+        end;
+
+escr_sym_src_k: begin                  {label for source code snippet}
+        string_appends (e.obuf, ' source code block, lines ');
+        string_append_intu (e.obuf, sym_p^.src_p^.lfirst_p^.lnum, 0);
+        string_appends (e.obuf, ' to ');
+        string_append_intu (e.obuf, sym_p^.src_p^.llast_p^.lnum, 0);
+        string_appends (e.obuf, ' of '(0));
+        string_append (e.obuf, sym_p^.src_p^.tnam);
         end;
 
 otherwise
@@ -478,7 +536,7 @@ begin
 {
 ********************************************************************************
 *
-*   /INCLUDE string
+*   INCLUDE string
 *
 *   Switch to reading from the file indicated by STRING.  Reading at the current
 *   input file will resume after the end of this new file is encountered.  The
@@ -533,7 +591,7 @@ err_missing:
 {
 ********************************************************************************
 *
-*   /WRITE arg ... arg
+*   WRITE arg ... arg
 *
 *   Write the concatenation of the string representation of all the arguments
 *   as one line to the output file.
@@ -553,7 +611,7 @@ begin
 {
 ********************************************************************************
 *
-*   /SHOW arg ... arg
+*   SHOW arg ... arg
 *
 *   Just like command WRITE, except that the line is written to standard output
 *   instead of the output file.
@@ -573,7 +631,7 @@ begin
 {
 ********************************************************************************
 *
-*   /WRITEPUSH fnam
+*   WRITEPUSH fnam
 }
 procedure escr_cmd_writepush (
   in out  e: escr_t;
@@ -605,7 +663,7 @@ err_missing:
 {
 ********************************************************************************
 *
-*   /WRITEPOP
+*   WRITEPOP
 }
 procedure escr_cmd_writepop (
   in out  e: escr_t;
@@ -635,17 +693,28 @@ begin
 {
 ********************************************************************************
 *
-*   /STOP
+*   STOP [exstat]
 }
 procedure escr_cmd_stop (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
+var
+  exstat: sys_int_machine_t;           {explicit exit status code}
+  haveex: boolean;                     {exit status code explicitly set}
+  ii: sys_int_max_t;
+
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  if not escr_get_end (e, stat) then return; {abort on extra parameter}
+  haveex := false;                     {init to exit status code not explicitly set}
+  if escr_get_int (e, ii, stat) then begin {got exit status code ?}
+    if not escr_get_end (e, stat) then return; {abort on extra parameters}
+    exstat := ii;                      {save the exit status code}
+    haveex := true;                    {indicate exit status code set}
+    end;
+  if sys_error(stat) then return;
 
   while e.exblock_p^.prev_p <> nil do begin {loop until only top block left}
     escr_exblock_close (e, stat);
@@ -657,4 +726,75 @@ begin
     end;
 
   e.exblock_p^.inpos_p^.line_p := nil; {as if hit end of input file}
+
+  if haveex then begin                 {exit status code supplied ?}
+    e.exstat := exstat;                {explicitly set script exit status code}
+    end;
+  end;
+{
+********************************************************************************
+*
+*   RUN arg ... arg
+}
+procedure escr_cmd_run (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  cmline: string_var8192_t;            {command line to execute}
+  tf: boolean;                         {true/false returned by the program}
+  exstat: sys_sys_exstat_t;            {program exist status code}
+  sym_p: escr_sym_p_t;                 {pointer to variable to update}
+  name: string_var32_t;                {symbol name}
+
+begin
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
+
+  cmline.max := size_char(cmline.str); {init local var strings}
+  name.max := size_char(name.str);
+{
+*   Get the command line to run and run it.
+}
+  escr_get_args_str (e, cmline, stat); {get all arguments concatenated as strings}
+  if sys_error(stat) then return;
+  if cmline.len <= 0 then begin
+    escr_stat_cmd_noarg (e, stat);
+    return;
+    end;
+
+  sys_run_wait_stdsame (               {run the command line}
+    cmline,                            {command line to run}
+    tf,                                {true/false returned by the program}
+    exstat,                            {program exit status code}
+    stat);
+  if sys_error(stat) then return;
+{
+*   Save the program's exit status code in the integer variable EXITSTATUS.
+*   This variable is created if it does not exist.
+}
+  string_vstring (name, 'EXITSTATUS'(0), -1); {set variable name}
+
+  escr_sym_find_curr (                 {find EXITSTATUS variable}
+    e,                                 {ESCR library use state}
+    name,                              {NAME of symbol to find}
+    escr_sytype_var_k,                 {symbol must be a variable}
+    sym_p);                            {returned pointer to the symbol}
+
+  if                                   {need to create the variable ?}
+      (sym_p = nil) or else            {variable doesn't exist at all ?}
+      (sym_p^.var_val.dtype <> escr_dtype_int_k) {variable is not integer ?}
+      then begin
+    escr_sym_new_var (                 {create the variable}
+      e,
+      name,                            {variable name}
+      escr_dtype_int_k,                {integer}
+      0,                               {length, unused}
+      true,                            {global}
+      sym_p,                           {returned pointer to new variable}
+      stat);
+    if sys_error(stat) then return;
+    end;
+
+  sym_p^.var_val.int := exstat;        {set to the program's exist status code}
   end;

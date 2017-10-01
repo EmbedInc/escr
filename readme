@@ -28,8 +28,8 @@ Examples
   prime.es
 
     ESCR source file that computes prime numbers.  The start and end range
-    to find prime numbers in can be set with the integer values "start"
-    and "end".  See the header comment for details.
+    to find prime numbers in can be set with the -START and -END command
+    line argument.  See the header comment for details.
 
   fib.es
 

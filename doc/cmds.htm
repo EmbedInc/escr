@@ -171,7 +171,7 @@ keyword.
   as one line to the current output file.  If no arguments are supplied,
   then a blank line is written.
 
-  <p>It is an error if there is not current output file.
+  <p>It is an error if there is no current output file.
 
 <p><dt><tt id="writepush"><b>WRITEPUSH</b> <i>name</i></tt></dt><dd>
 
@@ -629,11 +629,32 @@ keyword.
   the preprocessor to manage the block are deallocated and local variables
   defined in the block are deleted.
 
-<p><dt><tt id="stop"><b>STOP</b></tt></dt><dd>
+<p><dt><tt id="run"><b>RUN</b> <i>arg ... arg</i></tt></dt><dd>
 
-  <p>Completely ends this run of the preprocessor.  No more input file
-  is read, and no more output file written.  Any open output files
-  are closed, and the program exits.
+  <p>Runs a external program.  The concatenation of the string
+  representation of all the arguments form the command line to execute.
+  The first token of this resulting string must be the name of something
+  the underlying operating system can execute.  The remaining tokens are
+  passed to that executable, and are generally interpreted as command line
+  arguments by that executable.
+
+  <p>The integer variable <tt>EXITSTATUS</tt> is set to the exit status
+  code of the program that was executed.  This variable is created if it
+  does not already exist.
+
+<p><dt><tt id="stop"><b>STOP</b> <i>[exstat]</i></tt></dt><dd>
+
+  <p>Completely ends this run of the preprocessor.  No more input file is
+  read, and no more output file written.  Any open output files are
+  closed, and the program exits.
+
+  <p>The exit status code of the script is set to the integer value
+  <i>exstat</i>, if present.  Otherwise, the script exit status is set to
+  0.  The script exit status is made available to the application program.
+  It is up to each application program what, if anything, to do with it.
+
+  <p>The ESCR program returns the the script exit status code as its own
+  program exit status code.
 
 </dl>
 

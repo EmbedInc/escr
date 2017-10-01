@@ -185,6 +185,7 @@ begin
   string_vstring (e_p^.syfunc.en, ']', 1);
   e_p^.syfunc_st_p := nil;
   e_p^.flags := [];
+  e_p^.exstat := 0;
 {
 *   Do higher level initialization now that all fields have at least legal
 *   values.
@@ -240,6 +241,7 @@ begin
   addcmd ('WRITE', addr(escr_cmd_write), stat); if sys_error(stat) then goto err;
   addcmd ('WRITEPOP', addr(escr_cmd_writepop), stat); if sys_error(stat) then goto err;
   addcmd ('WRITEPUSH', addr(escr_cmd_writepush), stat); if sys_error(stat) then goto err;
+  addcmd ('RUN', addr(escr_cmd_run), stat); if sys_error(stat) then goto err;
   {
   *   Add the intrinsic functions to the functions symbol table.
   }

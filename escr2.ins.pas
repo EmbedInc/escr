@@ -98,6 +98,11 @@ procedure escr_cmd_return (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_run (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_set (
   in out  e: escr_t;
   out     stat: sys_err_t);

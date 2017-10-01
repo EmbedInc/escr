@@ -1,4 +1,4 @@
-//   Demonstation of ESCR's prgramming and computational abilities.
+//   Demonstation of ESCR's computational abilities and command line handling.
 //
 //   This program writes out all the prime numbers within a range.  The default
 //   range is set by the constants START_K and END_K.

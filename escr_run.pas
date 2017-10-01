@@ -370,6 +370,7 @@ begin
   escr_infile_add_lines (e, infile_p^, conn, stat); {save file contents in memory}
   if sys_error(stat) then return;
 
+  e.exstat := 0;                       {init script exit status code}
   escr_run_atline (                    {run the code in this file}
     e,                                 {state for this use of the ESCR system}
     infile_p^.lfirst_p,                {pointer to line to start running at}
@@ -412,6 +413,7 @@ begin
       -1);                             {argument number}
     end;
 
+  e.exstat := 0;                       {init script exit status code}
   escr_run_atline (                    {run the code in this file}
     e,                                 {state for this use of the ESCR system}
     infile_p^.lfirst_p,                {pointer to line to start running at}

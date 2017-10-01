@@ -20,6 +20,7 @@ var
   fnam:                                {input file name}
     %include '(cog)lib/string_treename.ins.pas';
   e_p: escr_p_t;                       {points to state for this ESCR use}
+  exstat: sys_int_machine_t;           {script exit status code}
 
   parm:                                {command line option parameter}
     %include '(cog)lib/string_treename.ins.pas';
@@ -58,6 +59,8 @@ begin
     '.escr .es',                       {allowed file name suffixes}
     stat);
   escr_err_atline_abort (e_p^, stat, '', '', nil, 0);
+  exstat := e_p^.exstat;               {save script exit status code}
 
   escr_close (e_p);                    {end this use of the ESCR system}
+  sys_exit_n (exstat);                 {exit with the status code of the script}
   end.
