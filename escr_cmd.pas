@@ -701,20 +701,32 @@ procedure escr_cmd_stop (
   val_param;
 
 var
-  exstat: sys_int_machine_t;           {explicit exit status code}
-  haveex: boolean;                     {exit status code explicitly set}
   ii: sys_int_max_t;
+  sym_p: escr_sym_p_t;                 {pointer to variable}
 
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  haveex := false;                     {init to exit status code not explicitly set}
-  if escr_get_int (e, ii, stat) then begin {got exit status code ?}
-    if not escr_get_end (e, stat) then return; {abort on extra parameters}
-    exstat := ii;                      {save the exit status code}
-    haveex := true;                    {indicate exit status code set}
-    end;
-  if sys_error(stat) then return;
+  if escr_get_int (e, ii, stat)
+    then begin                         {exit status code set explicitly on command line}
+      if not escr_get_end (e, stat) then return; {abort on extra parameters}
+      e.exstat := ii;                  {set the overall script exit status code}
+      end
+    else begin                         {no exit status code on command line}
+      if sys_error(stat) then return;  {hard error on getting command line argument ?}
+      escr_sym_find_curr (             {try to find exit status variable}
+        e,
+        string_v('EXITSTATUS'(0)),     {name of symbol to look up}
+        escr_sytype_var_k,             {looking only for a variable}
+        sym_p);                        {returned pointer to symbol if found}
+      if                               {get exit status from the variable ?}
+          (sym_p <> nil) and then      {variable of the right name exists ?}
+          (sym_p^.var_val.dtype = escr_dtype_int_k) {variable is integer ?}
+          then begin
+        e.exstat := sym_p^.var_val.int; {set the overall script exit status code}
+        end;
+      end
+    ;
 
   while e.exblock_p^.prev_p <> nil do begin {loop until only top block left}
     escr_exblock_close (e, stat);
@@ -726,10 +738,6 @@ begin
     end;
 
   e.exblock_p^.inpos_p^.line_p := nil; {as if hit end of input file}
-
-  if haveex then begin                 {exit status code supplied ?}
-    e.exstat := exstat;                {explicitly set script exit status code}
-    end;
   end;
 {
 ********************************************************************************

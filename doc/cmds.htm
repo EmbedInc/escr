@@ -149,15 +149,15 @@ keyword.
 
 <p><dt><tt id="del"><b>DEL</b> <i>name</i></tt></dt><dd>
 
-  <p>Delete the current version of the preprocessor symbol <i>name</i>. If
-  no previous version exists, then <i>name</i> becomes unused and
-  references to it are errors.
+  <p>Delete the current version of the symbol <i>name</i>. If no previous
+  version exists, then <i>name</i> becomes unused and references to it are
+  errors.
 
 <p><dt><tt id="sylist"><b>SYLIST</b></tt></dt><dd>
 
-  <p>Write the list of all currently defined preprocessor symbols and
-  their values to the output file as data file comments.  It is an
-  error if there is no current output file.
+  <p>Write the list of all currently defined symbols and their values to
+  the output file as data file comments.  It is an error if there is no
+  current output file.
 
 <p><dt><tt id="show"><b>SHOW</b> <i>arg ... arg</i></tt></dt><dd>
 
@@ -175,10 +175,17 @@ keyword.
 
 <p><dt><tt id="writepush"><b>WRITEPUSH</b> <i>name</i></tt></dt><dd>
 
-  <p>Any output that would normally go to the preprocessed output file
-  will now go to the file indicated by <i>name</i>.  <i>Name</i> is a
-  string. The file is created if it does not previously exist, and is
-  overwritten if it does.
+  <p>Set the file that subsequent WRITE commands write to.  The current
+  output file can be restored with the WRITEPOP command.  <i>Name</i> is a
+  string, and indicates the name of the new output file.  The file is
+  created if it does not previously exist, and is overwritten if it does.
+
+  <p>In preprocessor mode, there is always a output file.  The top level
+  output file is the file being pre-processed into.
+
+  <p>In script mode, there is no output file until one is explicitly set
+  up with the WRITEPUSH command.  It is a error to attempt to write to the
+  output file when there is no output file.
 
 <p><dt><tt id="writepop"><b>WRITEPOP</b></tt></dt><dd>
 
@@ -231,10 +238,10 @@ keyword.
 <p><dt><tt id="subroutine"><b>SUBROUTINE</b> <i>name</i></tt></dt><dd>
 
   <p>Define the entry point of a subroutine and define the symbol
-  <i>name</i> to refer to that subroutine.  The preprocessor symbol
-  <i>name</i> will now refer to the new subroutine regardless of its
-  previous meaning, if any.  <i>Name</i> will revert to its previous
-  meaning when this symbol is deleted.
+  <i>name</i> to refer to that subroutine.  The symbol <i>name</i> will
+  now refer to the new subroutine regardless of its previous meaning, if
+  any.  <i>Name</i> will revert to its previous meaning when this symbol
+  is deleted.
 
   <p>Following code is considered part of the subroutine until an
   <b>endsub</b> command is encountered.  The code from <b>subroutine</b>
@@ -307,22 +314,22 @@ keyword.
 
 <p><dt><tt id="macro"><b>MACRO</b> <i>name</i></tt></dt><dd>
 
-  <p>Defines a preprocessor macro.  These are defined just like
-  preprocessor subroutines except that the definition starts with
-  <b>macro</b> and ends with <b>endmac</b>.
+  <p>Defines a macro.  These are defined just like subroutines, except
+  that the definition starts with <b>macro</b> and ends with
+  <b>endmac</b>.
 
-  <p>Macros differ from subroutines in how they are called.  A
-  preprocessor macro is called just like a native assembler macro.  If the
-  macro name appears syntactically as an opcode, then the macro is run and
-  its output replaces the macro invocation line.
+  <p>Macros differ from subroutines in how they are called.  A macro is
+  called just like a native assembler macro.  If the macro name appears
+  syntactically as an opcode, then the macro is run and its output
+  replaces the macro invocation line.
 
   <p>Arguments can be passed to the macro by placing them following the
   macro name on the macro invocation line.  Argument handling inside the
-  macro is identical to that of preprocessor subroutine arguments.  See
-  the <b>call</b> command description for more details on arguments.  Note
-  that the call argument syntax in the macro invocation differs from the
-  <b>call</b> command.  Macro arguments are separated by commas with any
-  number of spaces before and after each comma.
+  macro is identical to that of subroutine.  See the <b>call</b> command
+  description for more details on arguments.  Note that the call argument
+  syntax in the macro invocation differs from the <b>call</b> command.
+  Macro arguments are separated by commas with any number of spaces before
+  and after each comma.
 
   <p>If a label preceeds the macro invocation on the same line, then the
   special argument -1 is created that will be the label name.  The special
@@ -342,8 +349,8 @@ keyword.
 
 <p><dt><tt id="quitmac"><b>QUITMAC</b></tt></dt><dd>
 
-  <p>Stops execution of a macro.  Preprocessor execution is returned to
-  the line following the macro invocation.
+  <p>Stops execution of a macro.  Execution is returned to the line
+  following the macro invocation.
 
 <p><dt><tt id="endmac"><b>ENDMAC</b></tt></dt><dd>
 
@@ -522,9 +529,8 @@ keyword.
         <p><i>Const</i> is the name of a constant of type <b>string</b>
         that will created.  It will be local to the loop block, so will
         not exist after the loop is ended.  This constant will contain the
-        name of a different preprocessor symbol each iteration.
-        <i>Const</i> is the name of the constant to create directly.  It
-        is not a string.
+        name of a different symbol each iteration.  <i>Const</i> is the
+        name of the constant to create directly.  It is not a string.
 
         <p>The constant will be set to the fully qualified name of
         successive symbols in the list of symbols that was saved when the
@@ -626,8 +632,8 @@ keyword.
 
   <p>Exits the current execution block.  Execution resumes with parameters
   in effect before the block was entered.  Resources used internally in
-  the preprocessor to manage the block are deallocated and local variables
-  defined in the block are deleted.
+  the script system to manage the block are deallocated and local
+  variables defined in the block are deleted.
 
 <p><dt><tt id="run"><b>RUN</b> <i>arg ... arg</i></tt></dt><dd>
 
@@ -644,16 +650,29 @@ keyword.
 
 <p><dt><tt id="stop"><b>STOP</b> <i>[exstat]</i></tt></dt><dd>
 
-  <p>Completely ends this run of the preprocessor.  No more input file is
-  read, and no more output file written.  Any open output files are
-  closed, and the program exits.
+  <p>Completely ends this run of the script or preprocessor input file.
+  No more input file is read, and no more output file written.  Any open
+  output files are closed, and the program exits.
 
-  <p>The exit status code of the script is set to the integer value
-  <i>exstat</i>, if present.  Otherwise, the script exit status is set to
-  0.  The script exit status is made available to the application program.
+  <p>The script exit status is set according to the following rules, in
+  decending precedence:<ol>
+
+    <p><li><i>Exstat</i>, if present.
+
+    <p><li>The value of the integer variable EXITSTATUS, if it exists.  Note
+    that this variable is automatically set (and created if needed) to the
+    exit status returned by any external program run from the script.
+
+    <p><li>The exit status of the last nested script the application ran
+    if the script state was not cleared afterwards.
+
+    <p><li>0.
+
+    </ol>
+
+  <p>The script exit status is made available to the application program.
   It is up to each application program what, if anything, to do with it.
-
-  <p>The ESCR program returns the the script exit status code as its own
+  The ESCR program returns the the script exit status code as its own
   program exit status code.
 
 </dl>
