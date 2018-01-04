@@ -34,7 +34,7 @@ begin
   while true do begin                  {once for each symbol in the symbol table}
     escr_sytable_scan (scan, name_p, ent_p); {get this next symbol table entry}
     if ent_p = nil then exit;          {hit end of table ?}
-    sym_p := ent_p^.curr_p;            {get pointe to current version of symbol}
+    sym_p := ent_p^.curr_p;            {get pointer to current version of symbol}
     if sym_p = nil then next;          {no curr version, default doesn't exist ?}
     if sym_p^.stype in stypes then begin {include this symbol in list ?}
       escr_sym_name (sym_p^, name);    {make fully qualified symbol name}

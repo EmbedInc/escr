@@ -100,15 +100,14 @@ begin
   name_p := nil;
   if not scan.valid then return;       {previously hit end of table ?}
 
-  string_hash_pos_next (               {advance to the next hash table entry}
-    scan.pos,                          {current position in hash table}
-    scan.valid);                       {TRUE if new position exists}
-  if not scan.valid then return;       {hit end of table ?}
-
   string_hash_ent_atpos (              {get the table info at this position}
     scan.pos,                          {position of entry to get info of}
     name_p,                            {returned pointing to entry name}
     ent_p);                            {returned pointing to entry data}
+
+  string_hash_pos_next (               {advance to the next hash table entry}
+    scan.pos,                          {current position in hash table}
+    scan.valid);                       {TRUE if new position exists}
   end;
 {
 ********************************************************************************
