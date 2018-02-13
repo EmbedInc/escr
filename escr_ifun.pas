@@ -10,7 +10,7 @@
 *   The function invocation is in E.FUNARG.  This is the string starting with
 *   the function name and including the function arguments.  It does not contain
 *   whatever syntax was used to indicate the start and end of the function
-*   invocation.  The parse index in FUNARG is set to next character after the
+*   invocation.  The parse index in FUNARG is set to the next character after the
 *   delimiter after the function name.  In other words, it is ready to parse the
 *   first parameter.  There is no guarantee there are any parameters.  If there
 *   are no parameters, then the parse index will be past the end of the string.
@@ -89,6 +89,7 @@ define escr_ifun_preinc;
 define escr_ifun_postinc;
 define escr_ifun_predec;
 define escr_ifun_postdec;
+define escr_ifun_unquote;
 %include 'escr2.ins.pas';
 
 const
@@ -3364,4 +3365,93 @@ otherwise
   if sys_error(stat) then return;
 
   escr_ifn_ret_int (e, resi);          {return the integer value}
+  end;
+{
+********************************************************************************
+*
+*   UNQUOTE str
+*
+*   Return the string STR without surrounding quotes, if any.  If STR does not
+*   have starting and ending quotes, then nothing is done.  If it does, then the
+*   string inside these quotes is returned.  This function can will remove
+*   multiple layers of quotes, if present.
+*
+*   Surrounding quotes can be either the quote character (") or the apostrophie
+*   (').  Two successive quotes in the interior of the string will be translated
+*   to a single quote.
+}
+procedure escr_ifun_unquote (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  sind: sys_int_machine_t;             {source index into S}
+  slen: sys_int_machine_t;             {source length of S}
+  c: char;                             {current character}
+  q: char;                             {quote character}
+  qp: boolean;                         {the previous character was a quote}
+  s: string_var8192_t;
+
+label
+  retry, nquote;
+
+begin
+  s.max := size_char(s.str);           {init local var string}
+
+  if not escr_ifn_get_str (e, s, stat) then begin {get input string into S}
+    escr_ifn_stat_required (e, stat);
+    return;
+    end;
+
+retry:                                 {back here to try again after one unquote layer}
+  if s.len < 2 then goto nquote;       {too short to be quoted string ?}
+  q := s.str[1];                       {save first character, could be quote}
+  if s.str[s.len] <> q then goto nquote; {first and last characters don't match ?}
+  if (q <> '''') and (q <> '"') then goto nquote; {start and end not quotes ?}
+{
+*   The input string is quoted.  Q is the quote character.
+}
+  slen := s.len;                       {save length of the input string}
+  sind := 2;                           {init input string index}
+  s.len := 0;                          {init the result to empty}
+  qp := false;                         {init to previous character was not a quote}
+
+  while sind < slen do begin           {loop thru body of input string}
+    c := s.str[sind];                  {fetch this input string character}
+    sind := sind + 1;                  {update source index for next time}
+    if c = q
+      then begin                       {this character is a quote}
+        if qp
+          then begin                   {second quote in a row}
+            qp := false;               {done with pair}
+            end
+          else begin                   {first quote in a row}
+            qp := true;                {remember that previous char was quote}
+            next;                      {nothing more to do this character}
+            end
+          ;
+        end
+      else begin                       {this character is not a quote}
+        if qp then begin               {previous character was a quote ?}
+          s.len := s.len + 1;          {write lone quote skipped over last time}
+          s.str[s.len] := q;
+          end;
+        qp := false;                   {previous char not a quote next time}
+        end
+      ;
+    s.len := s.len + 1;                {append this character to output string}
+    s.str[s.len] := c;
+    end;                               {back to do next input character}
+
+  if qp then begin                     {previous character was a quote}
+    s.len := s.len + 1;                {write lone quote skipped over last time}
+    s.str[s.len] := q;
+    end;
+  goto retry;                          {unquoted string, back to check for another layer}
+{
+*   The string in S is not quoted.  Return it.
+}
+nquote:
+  escr_ifn_ret_str (e, s);             {return the unquoted string}
   end;

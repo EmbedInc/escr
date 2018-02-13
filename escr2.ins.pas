@@ -462,6 +462,11 @@ procedure escr_ifun_ucase(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_unquote(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_v(
   in out  e: escr_t;
   out     stat: sys_err_t);
@@ -538,4 +543,3 @@ function escr_str_to_time (            {make absolute time descriptor from strin
   out     time: sys_clock_t)           {returned time descriptor}
   :boolean;                            {TRUE on success}
   val_param; extern;
-

@@ -76,6 +76,7 @@
     <a href="#tnam">TNAM</a>&nbsp;
     <a href="#trunc">TRUNC</a>&nbsp;
     <a href="#ucase">UCASE</a>&nbsp;
+    <a href="#unquote">UNQUOTE</a>&nbsp;
     <a href="#v">V</a>&nbsp;
     <a href="#xor">XOR</a>&nbsp;
 
@@ -134,7 +135,9 @@
     <a href="#ccode">CCODE</a> &nbsp; - &nbsp; Get character code<br>
     <a href="#char">CHAR</a> &nbsp; - &nbsp; Character from code<br>
     <a href="#chars">CHARS</a> &nbsp; - &nbsp; Raw unquoted characters from string<br>
-    <a href="#qstr">QSTR</a> &nbsp; - &nbsp; Quote characters to make string<br>
+    <a href="#qstr">QSTR</a> &nbsp; - &nbsp; Quote raw characters to make string<br>
+    <a href="#ucase">UCASE</a>&nbsp; - &nbsp; Remove layers of quotes
+      around string, if any<br>
     <a href="#str">STR</a> &nbsp; - &nbsp; Build string from multiple pieces<br>
     <a href="#slen">SLEN</a> &nbsp; - &nbsp; Get string length<br>
     <a href="#sindx">SINDX</a> &nbsp; - &nbsp; Index into string to get specific character<br>
@@ -1117,6 +1120,19 @@ start and end sequences have been removed.
 
   <p>Returns the string representation of <i>arg</i> with all aphabetic
   characters upper case.
+
+<p><dt><tt id="unquote"><b>UNQUOTE</b> <i>str</i></tt></dt><dd>
+
+  <p>Returns the string argument with all layers of quotes removed.
+  Double quote characters internal to the string will be interpreted as a
+  single quote character.  The valid quote characters are the double quote
+  (") and apostrophie (').
+
+  <p>For example:
+
+  <p><tt>&nbsp;
+  [<b>unquote</b> ""'Messy string'"" ] --> "Messy string"
+  </tt>
 
 <p><dt><tt id="v"><b>V</b> <i>arg</i></tt></dt><dd>
 

@@ -306,6 +306,7 @@ begin
   addfunc ('TNAM', addr(escr_ifun_tnam), stat); if sys_error(stat) then goto err;
   addfunc ('TRUNC', addr(escr_ifun_trunc), stat); if sys_error(stat) then goto err;
   addfunc ('UCASE', addr(escr_ifun_ucase), stat); if sys_error(stat) then goto err;
+  addfunc ('UNQUOTE', addr(escr_ifun_unquote), stat); if sys_error(stat) then goto err;
   addfunc ('V', addr(escr_ifun_v), stat); if sys_error(stat) then goto err;
   addfunc ('XOR', addr(escr_ifun_xor), stat); if sys_error(stat) then goto err;
 
