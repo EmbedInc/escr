@@ -272,6 +272,16 @@ procedure escr_ifun_inv(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_isint(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_isnum(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_lab(
   in out  e: escr_t;
   out     stat: sys_err_t);

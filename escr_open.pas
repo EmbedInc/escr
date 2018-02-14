@@ -268,6 +268,8 @@ begin
   addfunc ('IF', addr(escr_ifun_if), stat); if sys_error(stat) then goto err;
   addfunc ('INT', addr(escr_ifun_int), stat); if sys_error(stat) then goto err;
   addfunc ('~', addr(escr_ifun_inv), stat); if sys_error(stat) then goto err;
+  addfunc ('ISINT', addr(escr_ifun_isint), stat); if sys_error(stat) then goto err;
+  addfunc ('ISNUM', addr(escr_ifun_isnum), stat); if sys_error(stat) then goto err;
   addfunc ('LAB', addr(escr_ifun_lab), stat); if sys_error(stat) then goto err;
   addfunc ('LCASE', addr(escr_ifun_lcase), stat); if sys_error(stat) then goto err;
   addfunc ('<=', addr(escr_ifun_le), stat); if sys_error(stat) then goto err;

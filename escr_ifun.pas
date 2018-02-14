@@ -90,6 +90,8 @@ define escr_ifun_postinc;
 define escr_ifun_predec;
 define escr_ifun_postdec;
 define escr_ifun_unquote;
+define escr_ifun_isint;
+define escr_ifun_isnum;
 %include 'escr2.ins.pas';
 
 const
@@ -3454,4 +3456,64 @@ retry:                                 {back here to try again after one unquote
 }
 nquote:
   escr_ifn_ret_str (e, s);             {return the unquoted string}
+  end;
+{
+********************************************************************************
+*
+*   ISINT arg
+*
+*   Returns TRUE iff the argument can be interpreted as a integer value.
+}
+procedure escr_ifun_isint (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  b: boolean;                          {function return value}
+  ival: sys_int_max_t;                 {argument integer value}
+
+begin
+  b := true;                           {init to argument is integer}
+
+  if not escr_ifn_get_int (e, ival, stat) then begin {error ?}
+    escr_ifn_stat_required (e, stat);  {ARG is required}
+    discard(                           {don't abort with not-integer error}
+      sys_stat_match(escr_subsys_k, escr_err_notint_k, stat) );
+    discard(                           {don't abort with not-value error}
+      sys_stat_match(escr_subsys_k, escr_err_termbad_k, stat) );
+    b := false;                        {argument is not integer}
+    end;
+
+  escr_ifn_ret_bool (e, b);            {return the boolean function value}
+  end;
+{
+********************************************************************************
+*
+*   ISNUM arg
+*
+*   Returns TRUE iff the argument can be interpreted as a numeric value.
+}
+procedure escr_ifun_isnum (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  b: boolean;                          {function return value}
+  fpval: sys_fp_max_t;                 {the argument value in floating point}
+
+begin
+  b := true;                           {init to argument is numeric}
+
+  if not escr_ifn_get_fp (e, fpval, stat) then begin {error ?}
+    escr_ifn_stat_required (e, stat);  {ARG is required}
+    discard(                           {don't abort with not-numeric error}
+      sys_stat_match(escr_subsys_k, escr_err_notfp_k, stat) );
+    discard(                           {don't abort with not-value error}
+      sys_stat_match(escr_subsys_k, escr_err_termbad_k, stat) );
+    b := false;                        {argument is not numeric}
+    end;
+
+  escr_ifn_ret_bool (e, b);            {return the boolean function value}
   end;
