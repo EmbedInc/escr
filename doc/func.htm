@@ -1117,11 +1117,15 @@ start and end sequences have been removed.
   <p>Returns the tangent of the angle <i>ang</i>.  <i>Ang</i> must be
   numeric, and is in radians.
 
-<p><dt><tt id="tnam"><b>TNAM</b> <i>filename</i></tt></dt><dd>
+<p><dt><tt id="tnam"><b>TNAM</b> <i>[arg ... arg]</i></tt></dt><dd>
 
   <p>Returns the full absolute treename of the file indicated by the
-  string <i>filename</i>.  Embed Inc portable pathname rules are used to
-  interpret <i>filename</i>.
+  concatentation of the string representation of all the arguments.  If no
+  arguments are supplied, the input file name is the empty string, which
+  resolves to the current directory.
+
+  <p>Embed Inc portable pathname rules are used to interpret the file
+  name.
 
 <p><dt><tt id="trunc"><b>TRUNC</b> <i>arg</i></tt></dt><dd>
 

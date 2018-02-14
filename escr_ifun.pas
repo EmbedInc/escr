@@ -3156,10 +3156,8 @@ begin
   fnam.max := size_char(fnam.str);     {init local var strings}
   ress.max := size_char(ress.str);
 
-  if not escr_ifn_get_str (e, fnam, stat) then begin
-    escr_ifn_stat_required (e, stat);
-    return;
-    end;
+  escr_ifn_get_strs (e, fnam, stat);   {get concatenation of all arguments}
+  if sys_error(stat) then return;
 
   string_treename (fnam, ress);
   escr_ifn_ret_str (e, ress);
