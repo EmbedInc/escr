@@ -1,22 +1,11 @@
 @echo off
 rem
-rem   BUILD_ESCR_LIB [-dbg]
+rem   BUILD_LIB [-dbg]
 rem
-rem   Build the ESCR library from the ESCR source directory.
+rem   Build the ESCR library.
 rem
 setlocal
-set srcdir=escr
-set libname=escr
-
-call src_go %srcdir%
-call src_getfrom sys base.ins.pas
-call src_getfrom sys sys.ins.pas
-call src_getfrom util util.ins.pas
-call src_getfrom string string.ins.pas
-call src_getfrom file file.ins.pas
-call src_getfrom pic pic.ins.pas
-
-call src_msg %srcdir% %libname%
+call build_pasinit
 
 call src_insall %srcdir% %libname%
 
@@ -49,3 +38,4 @@ call src_pas %srcdir% %libname%_util %1
 call src_pas %srcdir% %libname%_val %1
 
 call src_lib %srcdir% %libname%
+call src_msg %srcdir% %libname%
