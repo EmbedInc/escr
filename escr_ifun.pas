@@ -81,6 +81,7 @@ define escr_ifun_sym;
 define escr_ifun_exist;
 define escr_ifun_tnam;
 define escr_ifun_lnam;
+define escr_ifun_dnam;
 define escr_ifun_evar;
 define escr_ifun_lab;
 define escr_ifun_v;
@@ -3199,6 +3200,43 @@ begin
   string_terminate_null (suff);
   string_generic_fnam (fnam, suff.str, ress); {do the conversion}
   escr_ifn_ret_str (e, ress);          {return the result}
+  end;
+{
+********************************************************************************
+*
+*   DNAM fnam
+*
+*   Full directory pathname of FNAM.
+}
+procedure escr_ifun_dnam (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  fnam: string_treename_t;             {input pathname}
+  ress: string_treename_t;             {resulting string}
+  tnam: string_treename_t;             {scratch treename}
+
+begin
+  fnam.max := size_char(fnam.str);     {init local var strings}
+  ress.max := size_char(ress.str);
+  tnam.max := size_char(tnam.str);
+
+  escr_ifn_get_strs (e, fnam, stat);   {get concatenation of all arguments}
+  if sys_error(stat) then return;
+
+  if fnam.len = 0
+    then begin                         {empty string arg, return current directory}
+      string_treename (fnam, ress);
+      end
+    else begin                         {pathname supplies, return lowest directory}
+      string_treename (fnam, tnam);    {make full pathname of FNAM}
+      string_pathname_split (tnam, ress, fnam); {split into directory and leafname}
+      end
+    ;
+
+  escr_ifn_ret_str (e, ress);          {return the directory name}
   end;
 {
 ********************************************************************************

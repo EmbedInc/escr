@@ -255,6 +255,7 @@ begin
   addfunc ('DATE', addr(escr_ifun_date), stat); if sys_error(stat) then goto err;
   addfunc ('DEGR', addr(escr_ifun_degr), stat); if sys_error(stat) then goto err;
   addfunc ('DIV', addr(escr_ifun_div), stat); if sys_error(stat) then goto err;
+  addfunc ('DNAM', addr(escr_ifun_dnam), stat); if sys_error(stat) then goto err;
   addfunc ('/', addr(escr_ifun_divide), stat); if sys_error(stat) then goto err;
   addfunc ('E', addr(escr_ifun_e), stat); if sys_error(stat) then goto err;
   addfunc ('ENG', addr(escr_ifun_eng), stat); if sys_error(stat) then goto err;

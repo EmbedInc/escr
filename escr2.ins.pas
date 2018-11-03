@@ -212,6 +212,11 @@ procedure escr_ifun_divide(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_dnam(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_e(
   in out  e: escr_t;
   out     stat: sys_err_t);
