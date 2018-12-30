@@ -1,12 +1,10 @@
 @echo off
 rem
-rem   BUILD [-dbg]
-rem
-rem   Build everything from the ESCR source directory.
+rem   Build everything from this source directory.
 rem
 setlocal
-call godir (cog)source/escr
+call godir "(cog)source/escr"
 
-call build_lib %1
-call build_progs %1
-call build_doc %1
+call build_lib
+call build_progs
+call build_doc

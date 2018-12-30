@@ -3,15 +3,13 @@ rem
 rem   Build and install the documentation from this source directory.
 rem
 setlocal
-call build_pasinit
-set docname=escr
+call build_vars
+set docname=%srcdir%
 
-call treename_var (cog)source/%srcdir%/doc srcdoc
-call treename_var (cog)doc dstdoc
-cd /d "%dstdoc%"
-if not exist %docname% mkdir %docname%
-cd %docname%
-copy "%srcdoc%\*.htm" /y
-copyt "%srcdoc%/backg.jpg" backg.jpg
-cd ..
-slink %docname%.htm escr/index.htm
+call treename_var (cog)source/%docname%/doc srcdoc
+call godir (cog)doc
+if exist "%docname%.txt" del "%docname%.txt"
+if exist "%docname%.htm" del "%docname%.htm"
+if exist "%docname%.@" del "%docname%.@"
+if exist "%docname%" delt "%docname%" -nshow
+copyt "%srcdoc%" "%docname%"
