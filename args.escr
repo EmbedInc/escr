@@ -1,7 +1,9 @@
 //   Show all arguments.
 //
 var new arg integer = 1      //current argument number
-
+//
+//   Find the first argument by looking backwards from 0.
+//
 loop with ii from 0 by -1
   if [exist ii arg] then
     set arg ii               //update number of lowest existing argument
@@ -10,12 +12,11 @@ loop with ii from 0 by -1
   quit
   endloop
 //
-//   ARG is set to the number of the first available argument, if any.
+//   Loop forwards thru all the arguments until the first non-existant one.
 //
 loop                         //loop over all arguments
   if [not [exist arg arg]] then //done all the available arguments ?
     quit
     endif
-  show [int arg "fw 3"] ": " [qstr [arg arg]]
-  set arg [+ arg 1]          //advance to next argument
+  show [int [1+ arg] "fw 3"] ": " [qstr [arg arg]]
   endloop

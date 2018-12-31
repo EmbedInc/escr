@@ -208,7 +208,7 @@ begin
 *   ESCR_SYM_NAME_BARE_CHECK (NAME, STAT)
 *
 *   Set STAT according to whether NAME is a valid bare symbol name or not.  STAT
-*   is set to no errror when NAME is a valid bare symbol name, and a appropriate
+*   is set to no error when NAME is a valid bare symbol name, and a appropriate
 *   error when not.
 }
 procedure escr_sym_name_bare_check (   {check for valid bare symbol name}
@@ -478,7 +478,7 @@ begin
         sy_p := sy_p^.next_p;          {advance to next version}
         end;
       end
-    else begin                         {no symbol if this name currently exists}
+    else begin                         {no symbol of this name currently exists}
       string_hash_ent_add (pos, name_p, ent_p); {create new symbol table entry}
       ent_p^.first_p := nil;           {init table entry data}
       ent_p^.curr_p := nil;
@@ -488,7 +488,8 @@ begin
     ;
 {
 *   The symbol table entry for this name exists.  NAME_P is pointing to the name
-*   string in the symbol table and ENT_P to the data.
+*   string in the symbol table and ENT_P to the data.  VERN is the 1-N version
+*   of the symbol to create.
 *
 *   Now create the new version of the symbol, link it into the chain of existing
 *   versions immediately after the current version, and make it the current
@@ -511,13 +512,13 @@ begin
     }
     sym_p^.table_p := addr(sytable);   {point to symbol table this symbol is in}
     sym_p^.ent_p := ent_p;             {point to symbol table data for this symbol}
+    sym_p^.prev_p := ent_p^.curr_p;    {point back to previous version of this symbol}
     sym_p^.name_p := name_p;           {point to name in symbol table}
     sym_p^.vern := vern;               {set the 1-N version number}
     sym_p^.scope_p := nil;             {init to global scope}
     {
     *   Link this symbol into the chain after PREV_P^.
     }
-    sym_p^.prev_p := ent_p^.curr_p;    {point back to previous version of this symbol}
     if sym_p^.prev_p = nil
       then begin                       {install at start of chain}
         sym_p^.next_p := ent_p^.first_p;
@@ -670,7 +671,7 @@ otherwise
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_LOOKUP (NAME, SYTABLE, HPOS, ENT_P)
+*   Local subroutine ESCR_SYM_LOOKUP (NAME, SYTABLE, HPOS, ENT_P)
 *
 *   Look up a bare name in the symbol table SYTABLE.  If a symbol table entry
 *   with that name exists, then HPOS is set to the symbol table position for

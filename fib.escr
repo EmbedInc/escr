@@ -1,0 +1,46 @@
+//  ESCR example script that generates Fibbonacci series.
+//
+const llen integer = 70      //max line length
+var new ii integer
+var new jj integer
+var new kk integer
+var new str string
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//   Subroutine SHOWNUM var
+//
+//   Show the number in the variable VAR.  This routine handles wrapping the
+//   output appropriately.
+//
+subroutine shownum
+  var local s string = [str [arg 1]]
+  if [> [+ [slen str] [slen s] 1] llen] then
+    show str
+    set str ""
+    endif
+  if [<> [slen str] 0] then
+    set str [str str " "]
+    endif
+  set str [str str s]
+  endsub
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//   Start of main routine.
+//
+set ii 0                     //initialize the first two numbers of the sequence
+set jj 1
+call shownum ii
+call shownum jj
+
+loop from 1 to 30            //back here each new number to generate
+  set kk [+ ii jj]           //make the new number
+  call shownum kk            //show it
+  set ii jj                  //update the previous two numbers for next time
+  set jj kk
+  endloop
+
+if [> [slen str] 0] then     //show any remaining partial output line
+  show str
+  endif

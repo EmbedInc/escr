@@ -487,6 +487,11 @@ procedure escr_ifun_v(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_vnl(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_xor(
   in out  e: escr_t;
   out     stat: sys_err_t);

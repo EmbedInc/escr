@@ -1043,13 +1043,6 @@ procedure escr_sym_find_type (         {find symbol of specific type}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_sym_lookup (            {look up bare name in specific symbol table}
-  in      name: univ string_var_arg_t; {bare symbol name}
-  in      sytable: escr_sytable_t;     {symbol table to look up name in}
-  out     hpos: string_hash_pos_t;     {returned position of name in symbol table}
-  out     ent_p: escr_sytable_data_p_t); {pointer to data in symbol table, NIL not found}
-  val_param; extern;
-
 procedure escr_sym_lookup_qual (       {get symbol version from qualified name}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name, may be fully qualified}

@@ -10,6 +10,7 @@ escr_format.obj
 escr_get.obj
 escr_ifn.obj
 escr_ifun.obj
+escr_ifun_vnl.obj
 escr_infile.obj
 escr_inh.obj
 escr_inline.obj

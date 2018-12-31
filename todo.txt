@@ -8,8 +8,6 @@ Command APPEND - Appends to end of string.
 
 LOOP DIR - Loops over directory entries.
 
-Function VNL - Expression value ignoring local symbols of this block.
-
 Command FUNCTION - Define a new function.
 
 Command COMMAND - Define a new command.

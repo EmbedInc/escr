@@ -25,12 +25,12 @@ Documentation
 
 Examples
 
-  prime.es
+  prime.escr
 
     ESCR source file that computes prime numbers.  The start and end range
-    to find prime numbers in can be set with the -START and -END command
+    to find prime numbers in can be set with the -FROM and -TO command
     line argument.  See the header comment for details.
 
-  fib.es
+  fib.escr
 
     ESCR source file that generates numbers in a Fibbonacci series.

@@ -81,6 +81,7 @@
     <a href="#ucase">UCASE</a>&nbsp;
     <a href="#unquote">UNQUOTE</a>&nbsp;
     <a href="#v">V</a>&nbsp;
+    <a href="#vnl">VNL</a>&nbsp;
     <a href="#xor">XOR</a>&nbsp;
 
   <p><li>Arithmetic operations<p>
@@ -100,7 +101,7 @@
     <a href="#trunc">TRUNC</a> &nbsp; - &nbsp; Truncate fraction to make integer<br>
     <a href="#abs">ABS</a> &nbsp; - &nbsp; Absolute value<br>
     <a href="#min">MIN</a> &nbsp;
-    <a href="#max">MAX</a> &nbsp; - &nbsp; Minimum/Maximum<br>
+    <a href="#max">MAX</a> &nbsp; - &nbsp; Minimum, maximum<br>
     <a href="#sqrt">SQRT</a> &nbsp; - &nbsp; Square root<br>
     <a href="#sin">SIN</a> &nbsp; - &nbsp; Sine<br>
     <a href="#cos">COS</a> &nbsp; - &nbsp; Cosine<br>
@@ -166,6 +167,7 @@
     <a href="#if">IF</a> &nbsp; - &nbsp; Return argument based on condition<br>
     <a href="#sym">SYM</a> &nbsp; - &nbsp; Information about a symbol<br>
     <a href="#v">V</a> &nbsp; - &nbsp; Value of symbol or expression<br>
+    <a href="#vnl">VNL</a> &nbsp; - &nbsp; Value of symbol or expression, no local vars<br>
 
   <p><li>Host operating system<p>
 
@@ -1166,8 +1168,57 @@ start and end sequences have been removed.
 
 <p><dt><tt id="v"><b>V</b> <i>arg</i></tt></dt><dd>
 
-  <p>Writes the value of <i>arg</i>.  This can be useful, for example, to
+  <p>Returns the value of <i>arg</i>.  This can be useful, for example, to
   explicitly dereference a variable.
+
+<p><dt><tt id="vnl"><b>VNL</b> <i>arg</i></tt></dt><dd>
+
+  <p>Returns the value of <i>arg</i>.  The evaluation of <i>arg</i> is
+  performed with the current version of any symbols that have local
+  versions, being the version previous to the local one.  When explicit
+  symbol versions are not used, this effectively means that local versions
+  of symbols are ignored.
+
+  <p>One purpose of this function is to allow interpreting references to
+  variables in the context of the parent block.  This is usually necessary
+  when unqualified variable names are passed to a subroutine, for example.
+  Well-written subroutines function regardless of the choice of variable
+  name passed to them.  However, if a passed-in variable name happens to
+  match the name of a variable created in the subroutine, then a simple
+  reference to that variable name will refer to the internal version, not
+  the caller's version.
+
+  <p>The solution is to evaluate the caller's variable with the VNL
+  function, before any new global variables are created.  In practise,
+  this usually means to save the caller's value in a local variable early
+  in the subroutine.  If only local variables are created in the
+  subroutine when the caller's variable is evaluated with the VNL
+  function, then the variable will be evaluated in the caller's context.
+
+  <p>NOTE: Functions are evaluated in the order from innermost to
+  outermost.  If the VNL argument is a result of other functions, local
+  variables are disabled for the interpretation of the VNL argument, and
+  NOT during the construction of the VNL argument.  For example, suppose
+  that ii is a global variable with value 3, then subroutine xxx is
+  called:
+
+  <pre><tt>
+  var new ii integer = 3
+
+  ...
+
+  Subroutine xxx
+    var local ii integer = 7
+    show ii                 //references local var, writes 7
+    show [vnl ii]           //references parent var, writes 3
+    show [vnl [+ ii 2]]     //the VNL arg is 9, writes 9
+    show [+ [vnl ii] 2]     //writes 5
+    endsub
+    </tt></pre>
+
+  <p>The above means that the values of local variables can be used, for
+  example, to build the name of a variable for the VNL function to
+  dereference.
 
 <p><dt><tt id="xor"><b>XOR</b> <i>arg1 [arg2 ... argN]</i></tt></dt><dd>
 

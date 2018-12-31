@@ -5,18 +5,18 @@
 //
 //   The command line options are:
 //
-//     -START start
+//     -FROM start
 //
-//       Sets the start of the range.
+//       Set the start of the range.
 //
-//     -END end
+//     -TO end
 //
 //       Set the end of the range.
 //
 //   For example, the following command line will show all prime numbers from
 //   1000 to 2000:
 //
-//     escr prime -start 1000 -end 2000
+//     escr prime -from 1000 -to 2000
 //
 const   start_k integer = 0  //default start of prime number search range
 const   end_k integer = 1000 //default end of prime number search range
@@ -40,11 +40,11 @@ loop
     quit
     endif
   set opt [ucase [qstr [arg [1+ arg]]]] //get command line option name into OPT
-  if [= opt "-START"] then
+  if [= opt "-FROM"] then
     set start [arg [1+ arg]]
     repeat
     endif
-  if [= opt "-END"] then
+  if [= opt "-TO"] then
     set end [arg [1+ arg]]
     repeat
     endif
@@ -64,7 +64,7 @@ set ii [or [and ii [~ 1]] 1] //bump up to next odd number if even
 loop with p from ii to end by 2 //once for each odd number in the range
   var local tk string        //scratch string
 
-  loop with f from 3 to p by 2 //scan over possible factors
+  loop with f from 3 by 2    //scan over possible factors
     if [> [* f f] p] then    //exhausted all possible factors, P is prime ?
       //
       //   P is prime.  Add it to the end of LINE.
