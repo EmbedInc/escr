@@ -213,6 +213,7 @@ begin
   {
   *   Add the standard commands to the commands symbol table.
   }
+  addcmd ('APPEND', addr(escr_cmd_append), stat); if sys_error(stat) then goto err;
   addcmd ('BLOCK', addr(escr_cmd_block), stat); if sys_error(stat) then goto err;
   addcmd ('CALL', addr(escr_cmd_call), stat); if sys_error(stat) then goto err;
   addcmd ('CONST', addr(escr_cmd_const), stat); if sys_error(stat) then goto err;
@@ -231,6 +232,7 @@ begin
   addcmd ('QUITMAC', addr(escr_cmd_quitmac), stat); if sys_error(stat) then goto err;
   addcmd ('REPEAT', addr(escr_cmd_repeat), stat); if sys_error(stat) then goto err;
   addcmd ('RETURN', addr(escr_cmd_return), stat); if sys_error(stat) then goto err;
+  addcmd ('RUN', addr(escr_cmd_run), stat); if sys_error(stat) then goto err;
   addcmd ('SET', addr(escr_cmd_set), stat); if sys_error(stat) then goto err;
   addcmd ('SHOW', addr(escr_cmd_show), stat); if sys_error(stat) then goto err;
   addcmd ('STOP', addr(escr_cmd_stop), stat); if sys_error(stat) then goto err;
@@ -241,7 +243,6 @@ begin
   addcmd ('WRITE', addr(escr_cmd_write), stat); if sys_error(stat) then goto err;
   addcmd ('WRITEPOP', addr(escr_cmd_writepop), stat); if sys_error(stat) then goto err;
   addcmd ('WRITEPUSH', addr(escr_cmd_writepush), stat); if sys_error(stat) then goto err;
-  addcmd ('RUN', addr(escr_cmd_run), stat); if sys_error(stat) then goto err;
   {
   *   Add the intrinsic functions to the functions symbol table.
   }

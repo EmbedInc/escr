@@ -86,6 +86,7 @@ const
   escr_err_run_nested_k = 67;          {trying to run new code in nested execution context}
   escr_err_var_not_int_k = 68;         {variable is not integer <name>}
   escr_err_var_nfound_k = 69;          {variable not found <name>}
+  escr_err_var_nstring_k = 70;         {variable is not string <name>}
 {
 *   Derived constants.
 }

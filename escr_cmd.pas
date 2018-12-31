@@ -23,6 +23,7 @@ module escr_cmd;
 define escr_cmd_var;
 define escr_cmd_const;
 define escr_cmd_set;
+define escr_cmd_append;
 define escr_cmd_del;
 define escr_cmd_sylist;
 define escr_cmd_include;
@@ -191,6 +192,56 @@ begin
 }
 err_missing:
   escr_stat_cmd_noarg (e, stat);
+  end;
+{
+********************************************************************************
+*
+*   APPEND name arg ... arg
+*
+*   Append the concatenation of the ARG arguments to the string in variable
+*   NAME.
+}
+procedure escr_cmd_append (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  sym_p: escr_sym_p_t;                 {pointer to symbol descriptor}
+  name: string_var80_t;                {symbol name}
+  str: string_var8192_t;               {the string to append}
+
+begin
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
+  name.max := size_char(name.str);     {init local var strings}
+  str.max := size_char(str.str);
+
+  if not escr_get_token (e, name) then begin {get the variable name into NAME}
+    escr_stat_cmd_noarg (e, stat);
+    return;
+    end;
+
+  escr_sym_find_curr (e, name, escr_sytype_vcon_k, sym_p);
+  if sym_p = nil then begin            {no such symbol ?}
+    escr_stat_sym_nfound (name, stat);
+    return;
+    end;
+  if sym_p^.stype <> escr_sym_var_k then begin {symbol is not a variable ?}
+    sys_stat_set (escr_subsys_k, escr_err_sym_nvar_k, stat);
+    sys_stat_parm_vstr (name, stat);
+    return;
+    end;
+  if sym_p^.var_val.dtype <> escr_dtype_str_k then begin {variable not a string ?}
+    sys_stat_set (escr_subsys_k, escr_err_var_nstring_k, stat);
+    sys_stat_parm_vstr (name, stat);
+    return;
+    end;
+{
+*   SYM_P is pointing to the string variable to append to.
+}
+  escr_get_args_str (e, str, stat);    {get concatenation of remaining arguments}
+  if sys_error(stat) then return;
+  string_append (sym_p^.var_val.str, str); {do the append}
   end;
 {
 ********************************************************************************

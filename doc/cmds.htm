@@ -20,6 +20,7 @@
     <a href="#var-local">var local</a>
   <li><a href="#const">const</a>
   <li><a href="#set">set</a>
+  <li><a href="#append">append</a>
   <li><a href="#del">del</a>
   <li><a href="#sylist">sylist</a>
   <li><a href="#show">show</a>
@@ -147,6 +148,12 @@ keyword.
   <p>Set the variable <i>name</i> to the value <i>value</i>.  It is an
   error if <i>value</i> can not be converted to the data type of
   <i>name</i>, or if there is no such variable.
+
+<p><dt><b><tt id="append">APPEND</b> <i>name arg ... arg</i></tt></dt><dd>
+
+  <p>Append the concatenation of all the <i>arg</i> arguments to the end
+  of the string in the variable <i>name</i>.  <i>Name</i> must be the name
+  of a variable with <b>string</b> data type.
 
 <p><dt><tt id="del"><b>DEL</b> <i>name</i></tt></dt><dd>
 

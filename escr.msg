@@ -97,7 +97,7 @@ msg err31
 msg err32
   lan english -def
     The string "%p1s" is not one character long.  Only a one-character
-    string is allowe here.
+    string is allowed here.
 msg err33
   lan english -def
     A required parameter to function "%p1s" is missing.
@@ -214,6 +214,9 @@ msg err68
 msg err69
   lan english -def
     The variable "%p1s" does not exist.
+msg err70
+  lan english -def
+    The variable "%p1s" does not have data type STRING.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.

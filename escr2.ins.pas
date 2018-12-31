@@ -8,6 +8,11 @@
 *   of these have the same interface.  See the header comments in module
 *   ESCR_CMD for the details.
 }
+procedure escr_cmd_append (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_block (
   in out  e: escr_t;
   out     stat: sys_err_t);
