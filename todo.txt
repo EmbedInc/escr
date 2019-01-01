@@ -8,4 +8,4 @@ LOOP DIR - Loops over directory entries.
 
 Command FUNCTION - Define a new function.
 
-Command COMMAND - Define a new command.
+Function SYM - Add NL option to make fully qualified name without locals.

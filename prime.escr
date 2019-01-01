@@ -18,8 +18,8 @@
 //
 //     escr prime -from 1000 -to 2000
 //
-const   start_k integer = 0  //default start of prime number search range
-const   end_k integer = 1000 //default end of prime number search range
+const   start_k integer = 1000 //default start of prime number search range
+const   end_k integer = 9999 //default end of prime number search range
 const   llen integer = 80    //maximum allowed output line length
 
 var new t1 time = [now]      //start time

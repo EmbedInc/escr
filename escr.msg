@@ -166,7 +166,8 @@ msg err54
     Symbol %p1s is not a subroutine.
 msg err55
   lan english -def
-    Not in a subroutine.
+    Invalid RETURN command encountered.  Not in a user-defined subroutine,
+    command, or function.
 msg err56
   lan english -def
     Attempt to exceed maximum execution block nesting level of %p1i.
@@ -217,6 +218,9 @@ msg err69
 msg err70
   lan english -def
     The variable "%p1s" does not have data type STRING.
+msg err71
+  lan english -def
+    Not in a COMMAND definition block.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.

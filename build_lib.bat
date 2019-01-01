@@ -11,6 +11,7 @@ call src_insall %srcdir% %libname%
 
 call src_pas %srcdir% %libname%_cmd %1
 call src_pas %srcdir% %libname%_cmd_block %1
+call src_pas %srcdir% %libname%_cmd_cmd %1
 call src_pas %srcdir% %libname%_cmd_if %1
 call src_pas %srcdir% %libname%_cmd_loop %1
 call src_pas %srcdir% %libname%_cmd_macro %1

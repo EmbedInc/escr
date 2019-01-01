@@ -23,6 +23,11 @@ procedure escr_cmd_call (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_command (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_const (
   in out  e: escr_t;
   out     stat: sys_err_t);
@@ -39,6 +44,11 @@ procedure escr_cmd_else (
   val_param; extern;
 
 procedure escr_cmd_endblock (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_cmd_endcmd (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;

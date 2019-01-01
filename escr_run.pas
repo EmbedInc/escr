@@ -163,8 +163,8 @@ loop_line:
     ;
   e.ip := 1;                           {init IBUF parse index}
 {
-*   Check for the line starts with a command.  If not, jump to NO_CMD.  If so,
-*   the upper case command name will be left in E.CMD.
+*   Check for the line starts with a command.  If so, the upper case command
+*   name will be left in E.CMD.  If not, jump to NO_CMD.
 }
   if escr_flag_preproc_k in e.flags
     then begin
@@ -224,7 +224,6 @@ loop_line:
         e.cmd.len := e.cmd.len - e.cmdst.len; {update length to command start removed}
         end;
 
-      string_upcase (e.cmd);           {make upper case for keyword matching}
       string_copy (buf, e.ibuf);       {process line with data file comments stripped}
       end
     else begin
@@ -232,7 +231,7 @@ loop_line:
       *   In script mode.  Data file comments don't exist in script mode.
       }
       string_token (e.ibuf, e.ip, e.cmd, stat); {get first input line token into CMD}
-      if sys_error(stat) then goto no_cmd; {definitely no preproc command on this line ?}
+      if sys_error(stat) then goto no_cmd; {definitely no command on this line ?}
 
       if e.cmdst.len > 0 then begin    {command start with special string ?}
         if e.cmd.len < (e.cmdst.len + 1) {not long enough to be a command ?}
@@ -246,8 +245,6 @@ loop_line:
           end;
         e.cmd.len := e.cmd.len - e.cmdst.len; {update length to command start removed}
         end;
-
-      string_upcase (e.cmd);           {make upper case for keyword matching}
       end
     ;
 {
@@ -265,29 +262,48 @@ loop_line:
     sys_stat_parm_vstr (e.cmd, stat);
     return;
     end;
-  inh := e.inhibit_p^.inh;             {save inhibit state at start of command}
 
   case sym_p^.stype of                 {what kind of symbol is this ?}
+
 escr_sym_icmd_k: begin                 {intrinsic command, implemented by compiled routine}
+      inh := e.inhibit_p^.inh;         {save inhibit state at start of command}
+
       sys_error_none (stat);           {init to no error encountered}
       sym_p^.icmd_p^ (addr(e), stat);  {run the command routine}
       if sys_error(stat) then return;
+
+      if not inh then begin            {check for extra parms if command was run}
+        if not escr_get_end (e, stat) then return; {abort on extra parameter}
+        end;
+      if e.obuf.len > 0 then escr_write_obuf (e, stat); {write any line fragment left in out buffer}
+      if sys_error(stat) then return;
       end;
-escr_sym_cmd_k: begin                  {command defined with script code}
-      writeln ('Script-defined commands not implemented yet.');
-      escr_err_atline (e, '', '', nil, 0);
-      end;
-otherwise
+
+escr_sym_cmd_k: begin                  {user-defined command, implemented with script code}
+      if not e.inhibit_p^.inh then begin {only run command if execution not inhibited}
+        escr_exblock_new (e, stat);    {create new  execution block}
+        if sys_error(stat) then return;
+        escr_exblock_refsym (e, sym_p^); {indicate referencing symbol for this command}
+        e.exblock_p^.bltype := escr_exblock_cmd_k; {new block is a command}
+        e.exblock_p^.args := true;     {this block can take arguments}
+        escr_exblock_arg_addn (e, e.cmd, 0); {command name is special argument 0}
+        while true do begin            {loop until argument list exhausted}
+          if not escr_get_tkraw (e, buf) then exit; {get command parameter}
+          escr_exblock_arg_add (e, buf); {add as next argument to new execution block}
+          end;
+        escr_exblock_inline_set (      {go to command definition line}
+          e, sym_p^.cmd_line_p, stat);
+        if sys_error(stat) then return;
+        escr_infile_skipline (e);      {skip over command definition line}
+        escr_exblock_ulab_init (e);    {create table for local labels}
+        end;                           {end of execution not inhibited case}
+      end;                             {end of user-defined command case}
+
+otherwise                              {not any kind of command name symbol}
     sys_stat_set (escr_subsys_k, escr_err_notcmd_k, stat); {symbol is not a command}
     sys_stat_parm_vstr (e.cmd, stat);
     return;
-    end;
-
-  if not inh then begin                {check for extra parms if command was run}
-    if not escr_get_end (e, stat) then return; {abort on extra parameter}
-    end;
-  if e.obuf.len > 0 then escr_write_obuf (e, stat); {write any line fragment left in out buffer}
-  if sys_error(stat) then return;
+    end;                               {end of command symbol type cases}
   goto loop_line;
 {
 *   This input line does not contain a command.

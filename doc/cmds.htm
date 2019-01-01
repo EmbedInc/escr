@@ -33,6 +33,9 @@
     <a href="#return">return</a>,
     <a href="#endsub">endsub</a>,
     <a href="#call">call</a>
+  <li><a href="#command">command</a>,
+    <a href="#return">return</a>,
+    <a href="#endcmd">endcmd</a>
   <li><a href="#macro">macro</a>,
     <a href="#quitmac">quitmac</a>,
     <a href="#endmac">endmac</a>
@@ -59,22 +62,37 @@
 
 <dl>
 
-<p>Commands are whole source lines that cause specific actions to be
-taken by the scripting system.  Commands start with a keyword, which
-is possibly followed by parameters.  The command name and parameters
-are separated from each other by one or more spaces. Command names are
-not case sensitive.  Command parameters are also case-insensitive to
-the extent possible.
+<p>Commands are whole source lines that cause specific actions to be taken
+by the scripting system.  Commands start with the command name, which is
+possibly followed by parameters.  The command name and parameters are
+separated from each other by one or more spaces.
 
-<p>Depending on the implementation, a special sequence of characters
-may be required to identify commands.  This is generally required in
+<p>There are two types of commands, intrinsic and user-defined.
+
+<p>Intrinsic commands are built into the ESCR system.  They are all
+available by default.  Applications can remove specific intrinsic commands
+and add their own.  The ESCR program leaves all the default intrinsic
+commands and defines none of its own.
+
+<p>User-defined commands are defined by script code using the COMMAND
+command.  Once defined, these commands are indistiguishable from intrinsic
+commands to code that invokes them.  See the COMMAND command description
+for more information about user-defined commands.
+
+<p>Command names are case-sensitive.  All intrinsic command names contain
+only lower case letters.  User-defined command names can contain both
+upper and lower case letters.  Parameters to the intrinsic commands are
+case-insensitive to the extent possible.
+
+<p>Depending on the implementation, a special sequence of characters may
+be required to identify commands.  This is generally required in
 pre-processor mode to distinguish commands from ordinary data.
 
 <p>The ESCR program uses no special syntax to identify commands.  The
 first non-blank character on a line is the start of a command name
 keyword.
 
-<p>The ESCR system commands are:
+<p>The ESCR system intrinsic commands are:
 
 <p><dt><tt id="include"><b>INCLUDE</b> <i>pathname</i></tt></dt><dd>
 
@@ -265,23 +283,24 @@ keyword.
 
 <p><dt><tt id="return"><b>RETURN</b></tt></dt><dd>
 
-  <p>Ends the execution of the current subroutine (latest subroutine
-  called).  Execution resumes after the last <b>call</b> command.
+  <p>Ends the execution of the current subroutine or user-defined command.
+  Execution resumes after where the routine was invoked.
 
 <p><dt><tt id="endsub"><b>ENDSUB</b></tt></dt><dd>
 
   <p>Ends a subroutine definition started with the last <b>subroutine</b>
   command.  Code following this command is no longer considered part of
   the subroutine, and will be executed if code execution was enabled when
-  the <b>subroutine</b> command was encountered.  If <b>endsub</b> is
-  encountered while executing a subroutine, it functions just like
-  <b>return</b>.
+  the <b>subroutine</b> command was encountered.
+
+  <p>If <b>endsub</b> is encountered while executing a subroutine, it
+  functions just like <b>return</b>.
 
 <p><dt><tt id="call"><b>CALL</b> <i>name [arg ... arg]</i></tt></dt><dd>
 
   <p>Executes the most recently defined subroutine of name <i>name</i>.
   Execution returns to after the <i>call</i> command when the subroutine
-  completes.
+  ends.
 
   <p>There may be zero or more <i>arg</i> parameters separated by spaces. These
   become the execution block arguments inside the subroutine.  They
@@ -319,6 +338,43 @@ keyword.
         Arg 3: <tt>7</tt><br>
 
     </dl>
+
+<p><dt><tt id="command"><b>COMMAND</b> <i>name</i></tt></dt><dd>
+
+  <p>Create a user-defined command of name <i>name</i>.  The command
+  <i>name</i> will now refer to the new command regardless of its previous
+  meaning, if any.  <i>Name</i> will revert to its previous meaning when
+  this symbol is deleted.
+
+  <p>Following code is considered part of the command until an
+  <b>endcmd</b> command is encountered.  The code from <b>command</b> thru
+  <b>endcmd</b> will not be executed when the command is being defined.
+  User-defined commands are invoked just like intrinsic commands.
+
+  <p>The code from <b>command</b> thru <b>endcmd</b> is an execution
+  block.  This type of execution block can take arguments, which are taken
+  from the command parameters.  Argument 0 is always the command name as
+  it appeared in the command line.  Any arguments supplied to the command
+  will be available in the command routine as numbered arguments starting
+  at 1.  The argument passing mechanism is the same as implemented by the
+  <b>call</b> command for subroutines.  See the <b>call</b> command
+  description (above) for how arguments are parsed from the command line
+  and passed to the command routine.
+
+  <p>When a command is invoked, execution jumps to the first line after
+  the defining <b>command</b> command.  Execution continues until a
+  <b>return</b> or <b>endcmd</b> command is encountered.  Execution is
+  then resumed on the line following the command invocation.
+
+<p><dt><tt id="endcmd"><b>ENDCMD</b></tt></dt><dd>
+
+  <p>Ends a command definition started with the last <b>command</b>
+  command.  Code following this command is no longer considered part of
+  the command definition, and will be executed if code execution was
+  enabled when the <b>command</b> was encountered.
+
+  <p>If <b>endcmd</b> is encountered while executing a command, it
+  functions just like <b>return</b>.
 
 <p><dt><tt id="macro"><b>MACRO</b> <i>name</i></tt></dt><dd>
 

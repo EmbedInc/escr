@@ -71,7 +71,7 @@ const
   escr_err_notmacro_k = 52;            {not in MACRO block}
   escr_err_notsubdef_k = 53;           {not in subroutine definition}
   escr_err_sym_nsub_k = 54;            {symbol is not a subroutine, <name>}
-  escr_err_notsub_k = 55;              {not in a subroutine}
+  escr_err_nretblk_k = 55;             {not in a block where RETURN is valid}
   escr_err_bltoomany_k = 56;           {block nesting too deep, <level>}
   escr_err_inftoomany_k = 57;          {input file nesting too deep, <level>}
   escr_err_fmtint_k = 58;              {bad integer format string keyword, <name>}
@@ -87,6 +87,7 @@ const
   escr_err_var_not_int_k = 68;         {variable is not integer <name>}
   escr_err_var_nfound_k = 69;          {variable not found <name>}
   escr_err_var_nstring_k = 70;         {variable is not string <name>}
+  escr_err_notcmddef_k = 71;           {not in command definition}
 {
 *   Derived constants.
 }

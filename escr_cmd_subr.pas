@@ -9,12 +9,12 @@ define escr_cmd_return;
 {
 ********************************************************************************
 *
-*   Subroutine  ESCR_CMD_SUBROUTINE (E, STAT)
+*   Subroutine ESCR_CMD_SUBROUTINE (E, STAT)
 *
-*   /SUBROUTINE name
+*   Command SUBROUTINE name
 *
-*   Define the start of a subroutine.  The subroutine definition is stored,
-*   but is not executed now.
+*   Define the start of a subroutine.  The subroutine definition is stored, but
+*   is not executed now.
 }
 procedure escr_cmd_subroutine (
   in out  e: escr_t;
@@ -34,7 +34,7 @@ begin
   name.max := size_char(name.str);     {init local var string}
 
   escr_inh_new (e);                    {create new execution inhibit layer}
-  e.inhibit_p^.inhty := escr_inhty_blkdef_k; {inhibit it due to reading block definition}
+  e.inhibit_p^.inhty := escr_inhty_blkdef_k; {inhibit is due to reading block definition}
   e.inhibit_p^.blkdef_type := escr_exblock_sub_k; {block type is subroutine}
   if e.inhibit_p^.inh then return;     {previously inhibited, don't define subroutine}
   e.inhibit_p^.inh := true;            {inhibit execution during subroutine definition}
@@ -61,9 +61,9 @@ error:                                 {error after inhibit created, STAT set}
 {
 ********************************************************************************
 *
-*   Subroutine  ESCR_CMD_ENDSUB (E, STAT)
+*   Subroutine ESCR_CMD_ENDSUB (E, STAT)
 *
-*   /ENDSUB
+*   Command ENDSUB
 *
 *   Indicate the end of a subroutine definition.
 }
@@ -93,7 +93,7 @@ begin
 *
 *   Subroutine ESCR_CMD_CALL (E, STAT)
 *
-*   /CALL name [arg ... arg]
+*   Command CALL name [arg ... arg]
 *
 *   Execute the indicated subroutine, then return to after this command when the
 *   subroutine completes.
@@ -145,11 +145,16 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine  ESCR_CMD_RETURN (E, STAT)
+*   Subroutine ESCR_CMD_RETURN (E, STAT)
 *
-*   /RETURN
+*   Command RETURN
 *
-*   Return from the innermost subroutine currently in.
+*   Return from the innermost routine currently in.  This command performs the
+*   run-time exit from any of these blocks:
+*
+*     Subroutine
+*     Command
+*     Function
 }
 procedure escr_cmd_return (
   in out  e: escr_t;
@@ -161,22 +166,20 @@ begin
 
   while e.exblock_p <> nil do begin    {up thru the nested blocks}
     case e.exblock_p^.bltype of        {what kind of block is this ?}
-escr_exblock_top_k: begin              {at top block}
-        sys_stat_set (escr_subsys_k, escr_err_notsub_k, stat);
+escr_exblock_sub_k,                    {this is the block to close}
+escr_exblock_cmd_k,
+escr_exblock_func_k: begin
+        escr_exblock_close (e, stat);  {end this routine}
         return;
         end;
-escr_exblock_sub_k: begin              {the block to close}
-        escr_exblock_close (e, stat);  {end this subroutine}
-        return;
-        end;
-escr_exblock_blk_k,                    {BLOCK ... ENDBLOCK}
-escr_exblock_loop_k: begin             {LOOP ... ENDLOOP}
+escr_exblock_blk_k,                    {subordinate block within main block}
+escr_exblock_loop_k: begin
         escr_exblock_close (e, stat);  {close this block}
         if sys_error(stat) then return;
         end;
-otherwise                              {invalid block type for QUITMAC}
-      sys_stat_set (escr_subsys_k, escr_err_notsub_k, stat);
+otherwise                              {invalid block type for RETURN}
+      sys_stat_set (escr_subsys_k, escr_err_nretblk_k, stat);
       return;
-      end;
+      end;                             {end of block type cases}
     end;                               {back to close new current block}
   end;
