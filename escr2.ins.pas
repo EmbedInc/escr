@@ -58,6 +58,11 @@ procedure escr_cmd_endif (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_endfunc (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_endloop (
   in out  e: escr_t;
   out     stat: sys_err_t);
@@ -73,7 +78,17 @@ procedure escr_cmd_endsub (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_funcval (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_if (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_cmd_function (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;

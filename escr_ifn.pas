@@ -43,7 +43,8 @@ function escr_ifn_get_val (            {get arbitrary value of next func paramet
   val_param;
 
 begin
-  escr_ifn_get_val := escr_term_get (e, e.funarg.s, e.funarg.p, val, stat);
+  escr_ifn_get_val :=
+    escr_term_val (e, e.parse_p^.funarg.s, e.parse_p^.funarg.p, val, stat);
   end;
 {
 ********************************************************************************
@@ -249,9 +250,9 @@ var
 begin
   escr_ifn_get_keyw := false;          {init to not returning with a keyword}
 
-  if not escr_term_raw (               {get characters of next term}
+  if not escr_term_parse (             {get characters of next term}
       e,                               {ESCR library use state}
-      e.funarg.s, e.funarg.p,          {source string and parse index}
+      e.parse_p^.funarg.s, e.parse_p^.funarg.p, {source string and parse index}
       keyw,                            {returned term characters}
       quoted,                          {indicates whether term was quoted}
       stat)
@@ -284,9 +285,9 @@ var
 begin
   escr_ifn_get_name := false;          {init to not returning with a name}
 
-  if not escr_term_raw (               {get characters of next term}
+  if not escr_term_parse (             {get characters of next term}
       e,                               {ESCR library use state}
-      e.funarg.s, e.funarg.p,          {source string and parse index}
+      e.parse_p^.funarg.s, e.parse_p^.funarg.p, {source string and parse index}
       name,                            {returned term characters}
       quoted,                          {indicates whether term was quoted}
       stat)
@@ -365,8 +366,8 @@ procedure escr_ifn_ret_bool (          {return boolean value}
 
 begin
   if b
-    then string_appendn (e.funret, 'TRUE', 4)
-    else string_appendn (e.funret, 'FALSE', 5);
+    then string_appendn (e.parse_p^.funret, 'TRUE', 4)
+    else string_appendn (e.parse_p^.funret, 'FALSE', 5);
   end;
 {
 ********************************************************************************
@@ -387,7 +388,7 @@ begin
   tk.max := size_char(tk.str);         {init local var string}
 
   string_f_int_max (tk, ii);           {make string representation}
-  string_append (e.funret, tk);        {append it to function return string}
+  string_append (e.parse_p^.funret, tk); {append it to function return string}
   end;
 {
 ********************************************************************************
@@ -408,7 +409,7 @@ begin
   tk.max := size_char(tk.str);         {init local var string}
 
   escr_str_from_fp (e, fp, tk);        {make string representation}
-  string_append (e.funret, tk);        {append it to function return string}
+  string_append (e.parse_p^.funret, tk); {append it to function return string}
   end;
 {
 ********************************************************************************
@@ -440,15 +441,15 @@ begin
 {
 *   Q is the string quoting character to use.
 }
-  string_append1 (e.funret, q);        {write leading quote}
+  string_append1 (e.parse_p^.funret, q); {write leading quote}
   for i := 1 to str.len do begin       {once for each string character}
     c := str.str[i];                   {get this string character}
     if c = q then begin                {this is quote character ?}
-      string_append1 (e.funret, c);    {write quote character twice}
+      string_append1 (e.parse_p^.funret, c); {write quote character twice}
       end;
-    string_append1 (e.funret, c);      {write string character}
+    string_append1 (e.parse_p^.funret, c); {write string character}
     end;
-  string_append1 (e.funret, q);        {write closing quote}
+  string_append1 (e.parse_p^.funret, q); {write closing quote}
   end;
 {
 ********************************************************************************
@@ -485,7 +486,7 @@ procedure escr_ifn_ret_chars (         {return raw characters}
   val_param;
 
 begin
-  string_append (e.funret, str);
+  string_append (e.parse_p^.funret, str);
   end;
 {
 ********************************************************************************
@@ -501,7 +502,7 @@ procedure escr_ifn_ret_charsp (        {return raw characters from Pascal string
   val_param;
 
 begin
-  string_appends (e.funret, strp);
+  string_appends (e.parse_p^.funret, strp);
   end;
 {
 ********************************************************************************
@@ -524,9 +525,9 @@ begin
     q := '''';                         {use single quote instead}
     end;
 
-  string_append1 (e.funret, q);        {write the quoted string}
-  string_append1 (e.funret, c);
-  string_append1 (e.funret, q);
+  string_append1 (e.parse_p^.funret, q); {write the quoted string}
+  string_append1 (e.parse_p^.funret, c);
+  string_append1 (e.parse_p^.funret, q);
   end;
 {
 ********************************************************************************
@@ -540,8 +541,8 @@ procedure escr_ifn_ret_empty (         {return the empty string}
   val_param;
 
 begin
-  string_append1 (e.funret, '"');
-  string_append1 (e.funret, '"');
+  string_append1 (e.parse_p^.funret, '"');
+  string_append1 (e.parse_p^.funret, '"');
   end;
 {
 ********************************************************************************
@@ -562,7 +563,7 @@ begin
   tk.max := size_char(tk.str);         {init local var string}
 
   escr_str_from_time (e, t, tk);       {make string representation}
-  string_append (e.funret, tk);        {append it to function return string}
+  string_append (e.parse_p^.funret, tk); {append it to function return string}
   end;
 {
 ********************************************************************************
@@ -620,7 +621,7 @@ begin
   if sys_error(stat) then return;      {STAT already indicates error ?}
 
   sys_stat_set (escr_subsys_k, escr_err_noparmfun_k, stat);
-  sys_stat_parm_vstr (e.funame, stat);
+  sys_stat_parm_vstr (e.parse_p^.funame, stat);
   end;
 {
 ********************************************************************************
@@ -663,5 +664,5 @@ procedure escr_ifn_bad_keyw (          {set STAT for bad keyword}
 begin
   sys_stat_set (escr_subsys_k, escr_err_badparmfun_k, stat);
   sys_stat_parm_vstr (keyw, stat);
-  sys_stat_parm_vstr (e.funame, stat);
+  sys_stat_parm_vstr (e.parse_p^.funame, stat);
   end;

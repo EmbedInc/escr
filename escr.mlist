@@ -1,6 +1,7 @@
 escr_cmd.obj
 escr_cmd_block.obj
 escr_cmd_cmd.obj
+escr_cmd_func.obj
 escr_cmd_if.obj
 escr_cmd_loop.obj
 escr_cmd_macro.obj

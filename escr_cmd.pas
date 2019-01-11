@@ -80,7 +80,7 @@ begin
 2:  scmd := scmd_exist_k;              {EXISTS}
 3:  begin                              {LOCAL}
       if not e.exblock_p^.iter1 then begin {not first iteration of a loop ?}
-        e.ip := e.ibuf.len + 1;        {indicate whole input line used}
+        e.parse_p^.ip := e.parse_p^.ibuf.len + 1; {indicate whole input line used}
         return;
         end;
       scmd := scmd_new_k;
@@ -95,19 +95,19 @@ otherwise
 
   dtype := escr_dtype_str_k;           {init to default data type}
   hval := false;                       {init to no initial value specified}
-  p := e.ip;                           {save parse index before getting next token}
+  p := e.parse_p^.ip;                  {save parse index before getting next token}
   if escr_get_token (e, tk) then begin {some token exists after NAME ?}
     if                                 {not the "=" keyword, must be data type ?}
         (tk.len <> 1) or
         (tk.str[1] <> '=')
         then begin
-      e.ip := p;                       {restore parse position to before token}
+      e.parse_p^.ip := p;              {restore parse position to before token}
       discard( escr_get_dtype (e, dtype, stat) ); {get the optional data type}
       if sys_error(stat) then return;
       if not escr_get_token (e, tk) then goto done_cmdline; {hit end of command line ?}
       if (tk.len <> 1) or (tk.str[1] <> '=') then begin {not "=" keyword as expected ?}
         sys_stat_set (escr_subsys_k, escr_err_badparm_k, stat);
-        sys_stat_parm_vstr (e.cmd, stat);
+        sys_stat_parm_vstr (e.parse_p^.cmd, stat);
         sys_stat_parm_vstr (tk, stat);
         return;
         end;
@@ -278,11 +278,11 @@ begin
 *   Get the data type, if present, and read up to the "=".
 }
   val.dtype := escr_dtype_str_k;       {init to default data type}
-  p := e.ip;                           {save parse index before this token}
+  p := e.parse_p^.ip;                  {save parse index before this token}
   if not escr_get_token (e, tk)        {get DTYPE or "=" token}
     then goto err_missing;
   if not string_equal (tk, string_v('=')) then begin {not "=", assume dtype ?}
-    e.ip := p;                         {restore parse index to before dtype token}
+    e.parse_p^.ip := p;                {restore parse index to before dtype token}
     if not escr_get_dtype (e, val.dtype, stat) {get the explicit data type}
       then goto err_missing;
     escr_get_keyword (e, '=', pick, stat); {parse the "=" token}

@@ -158,7 +158,7 @@ var
 
 begin
   sys_msg_parm_vstr (msg_parm[1], parm);
-  sys_msg_parm_vstr (msg_parm[2], e.cmd);
+  sys_msg_parm_vstr (msg_parm[2], e.parse_p^.cmd);
   escr_err_atline (e, 'escr', 'parm_bad_cmd', msg_parm, 2);
   end;
 {
@@ -174,7 +174,7 @@ procedure escr_err_parm_last_bad (     {last parameter parsed was bad}
   options (val_param, noreturn);
 
 begin
-  escr_err_parm_bad (e, e.lparm);
+  escr_err_parm_bad (e, e.parse_p^.lparm);
   end;
 {
 ****************************************************************************

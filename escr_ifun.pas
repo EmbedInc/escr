@@ -7,16 +7,17 @@
 *
 *      escr_ifun_<name> (E, STAT)
 *
-*   The function invocation is in E.FUNARG.  This is the string starting with
-*   the function name and including the function arguments.  It does not contain
-*   whatever syntax was used to indicate the start and end of the function
-*   invocation.  The parse index in FUNARG is set to the next character after the
-*   delimiter after the function name.  In other words, it is ready to parse the
-*   first parameter.  There is no guarantee there are any parameters.  If there
-*   are no parameters, then the parse index will be past the end of the string.
+*   The function invocation is in E.PARSE_P^.FUNARG.  This is the string
+*   starting with the function name and including the function arguments.  It
+*   does not contain whatever syntax was used to indicate the start and end of
+*   the function invocation.  The parse index in FUNARG is set to the next
+*   character after the delimiter after the function name.  In other words, it
+*   is ready to parse the first parameter.  There is no guarantee there are any
+*   parameters.  If there are no parameters, then the parse index will be past
+*   the end of the string.
 *
-*   The function routine must write the expansion of the function to E.FUNRET.
-*   This string has been initialized to empty.
+*   The function routine must write the expansion of the function to
+*   E.PARSE_P^.FUNRET.  This string has been initialized to empty.
 *
 *   STAT has been initialized to indicate no error.  If a error is encountered,
 *   STAT must be set accordingly.
@@ -170,14 +171,17 @@ begin
   str.max := size_char(str.str);       {init local var string}
 
   repeat                               {scan back to find the last function name char}
-    e.funarg.p := e.funarg.p - 1;
-    until e.funarg.s.str[e.funarg.p] <> ' ';
-  e.funarg.p := e.funarg.p + 2;        {go to first raw string character}
+    e.parse_p^.funarg.p := e.parse_p^.funarg.p - 1;
+    until e.parse_p^.funarg.s.str[e.parse_p^.funarg.p] <> ' ';
+  e.parse_p^.funarg.p := e.parse_p^.funarg.p + 2; {go to first raw string character}
 
   str.len := 0;                        {init function parameter characters}
-  while e.funarg.p <= e.funarg.s.len do begin {copy all characters to STR}
-    string_append1 (str, e.funarg.s.str[e.funarg.p]); {copy this char}
-    e.funarg.p := e.funarg.p + 1;      {advance to next character}
+  while                                {copy all characters to STR}
+      e.parse_p^.funarg.p <= e.parse_p^.funarg.s.len
+      do begin
+    string_append1 (                   {copy this char}
+      str, e.parse_p^.funarg.s.str[e.parse_p^.funarg.p]);
+    e.parse_p^.funarg.p := e.parse_p^.funarg.p + 1; {advance to next character}
     end;
   escr_ifn_ret_str (e, str);           {return the characters as a string}
   end;
@@ -2789,7 +2793,7 @@ begin
 otherwise                              {unrecognized keyword}
       sys_stat_set (escr_subsys_k, escr_err_badparmfun_k, stat);
       sys_stat_parm_vstr (tk, stat);
-      sys_stat_parm_vstr (e.funame, stat);
+      sys_stat_parm_vstr (e.parse_p^.funame, stat);
       return;
       end;                             {end of keyword cases}
     end;                               {back to get next keyword}

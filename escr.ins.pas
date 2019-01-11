@@ -88,6 +88,11 @@ const
   escr_err_var_nfound_k = 69;          {variable not found <name>}
   escr_err_var_nstring_k = 70;         {variable is not string <name>}
   escr_err_notcmddef_k = 71;           {not in command definition}
+  escr_err_notfuncdef_k = 72;          {not in function definition}
+  escr_err_noblock_k = 73;             {not in any execution block}
+  escr_err_parsesaved_k = 74;          {parsing state already saved in curr block}
+  escr_err_nfunc_k = 75;               {not in a function}
+  escr_err_nparse_fval_k = 76;         {no parse state for FUNCVAL value}
 {
 *   Derived constants.
 }
@@ -205,11 +210,6 @@ escr_dtype_time_k: (                   {absolute time descriptor}
     escr_sym_src_k);                   {label for a source code snippet}
   escr_symty_t = set of escr_sym_k_t;
 
-  escr_instr_t = record                {input string to be parsed}
-    p: string_index_t;                 {1-N string string parse index}
-    s: string_var8192_t;               {the string}
-    end;
-
   escr_isubr_p_t = ^procedure (        {template for subroutine implemented by compiled code}
     in    e_p: escr_p_t;               {points to state for this use of the ESCR system}
     out   stat: sys_err_t);            {completion status}
@@ -317,8 +317,25 @@ escr_looptype_cnt_k: (                 {loop over integer values with fixed incr
       );
     end;
 
+  escr_instr_t = record                {input string to be parsed}
+    p: string_index_t;                 {1-N string string parse index}
+    s: string_var8192_t;               {the string}
+    end;
+
+  escr_parse_p_t = ^escr_parse_t;
+  escr_parse_t = record                {complete copy of input parsing state}
+    prev_p: escr_parse_p_t;            {points to last pushed parse state, NIL at top}
+    ibuf: string_var8192_t;            {curr input line after function expansions}
+    ip: string_index_t;                {IBUF parse index}
+    lparm: string_var8192_t;           {last parameter parsed from input line}
+    cmd: string_var32_t;               {name of current command}
+    funarg: escr_instr_t;              {function and arguments with parse state}
+    funame: string_var80_t;            {name of function currently being executed}
+    funret: string_var8192_t;          {function return string}
+    end;
+
   escr_exblock_k_t = (                 {types of execution block}
-    escr_exblock_top_k,                {top level initial unnested block}
+    escr_exblock_top_k,                {top level block, not defined by code}
     escr_exblock_blk_k,                {BLOCK ... ENDBLOCK}
     escr_exblock_loop_k,               {LOOP ... ENDLOOP}
     escr_exblock_sub_k,                {subroutine}
@@ -340,6 +357,7 @@ escr_looptype_cnt_k: (                 {loop over integer values with fixed incr
     inpos_p: escr_inpos_p_t;           {points to current nested input file position}
     previnh_p: escr_inh_p_t;           {points to previous inhibit before this block}
     loop_p: escr_loop_p_t;             {points to loop definition, NIL = none}
+    parse_p: escr_parse_p_t;           {points to saved parse state, NIL = none}
     bltype: escr_exblock_k_t;          {type of execution block}
     ulab: string_hash_handle_t;        {table of local labels, NIL for none, use parent}
     args: boolean;                     {this block takes arguments}
@@ -414,13 +432,8 @@ escr_inhty_blk_k: (                    {in execution block}
     sym_lab: escr_sytable_t;           {symbol table for input file line labels}
     sym_src: escr_sytable_t;           {symbol table for input file source snippets}
     files_p: escr_infile_p_t;          {points to list of input files}
-    ibuf: string_var8192_t;            {current input line after function expansions}
-    funarg: escr_instr_t;              {function and arguments with parse state}
-    funame: string_var80_t;            {name of function currently being executed}
-    funret: string_var8192_t;          {function return string}
-    ip: string_index_t;                {IBUF parse index}
-    lparm: string_var8192_t;           {last parameter parsed from input line}
-    cmd: string_var32_t;               {name of current command}
+    parse: escr_parse_t;               {root input parsing state}
+    parse_p: escr_parse_p_t;           {points to current input parsing state}
     exblock_p: escr_exblock_p_t;       {points to info about current execution block}
     inhroot: escr_inh_t;               {root execution inhibit, always enabled}
     inhibit_p: escr_inh_p_t;           {points to current execution inhibit}
@@ -788,6 +801,11 @@ procedure escr_exblock_inline_set (    {go to new input source position in curr 
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
+procedure escr_exblock_parse_save (    {save parsing state, will be restored on block end}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
 procedure escr_exblock_refsym (        {set referencing symbol of current block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  sym: escr_sym_t);            {version of symbol referencing this block}
@@ -932,9 +950,12 @@ procedure escr_out_open (              {open new output file, save previous stat
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_run_atlabel (           {run starting at label}
+procedure escr_parse_init (            {init input parsing state descriptor}
+  out     par: escr_parse_t);          {parsing state to init}
+  val_param; extern;
+
+procedure escr_run (                   {run, state all set up, returns on block end}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t; {name of label to start running at}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
@@ -1190,16 +1211,7 @@ procedure escr_syrlist_clear (         {clear syntax ranges list}
   in out  syl_p: escr_syrlist_p_t);    {pointer to list to clear, returned NIL}
   val_param; extern;
 
-function escr_term_get (               {get value of next term in list}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      fstr: univ string_var_arg_t; {source string, term will be next token}
-  in out  p: string_index_t;           {source string parse index, updated}
-  out     val: escr_val_t;             {returned value of the term}
-  out     stat: sys_err_t)             {completion status, no error on func TRUE}
-  :boolean;                            {TRUE if term was available}
-  val_param; extern;
-
-function escr_term_raw (               {get next term raw characters}
+function escr_term_parse (             {parse next term from input string}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fstr: univ string_var_arg_t; {source string, term will be next token}
   in out  p: string_index_t;           {source string parse index, updated}
@@ -1207,6 +1219,24 @@ function escr_term_raw (               {get next term raw characters}
   out     quoted: boolean;             {the characters were quoted}
   out     stat: sys_err_t)             {completion status, no error on func TRUE}
   :boolean;                            {TRUE if term was available and no error}
+  val_param; extern;
+
+function escr_term_raw (               {get chars of next token from input string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fstr: univ string_var_arg_t; {source string, term will be next token}
+  in out  p: string_index_t;           {source string parse index, updated}
+  in out  term: univ string_var_arg_t; {returned raw term characters, unquoted}
+  out     stat: sys_err_t)             {completion status, no error on func TRUE}
+  :boolean;                            {TRUE if term was available and no error}
+  val_param; extern;
+
+function escr_term_val (               {get value of next term in input string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fstr: univ string_var_arg_t; {source string, term will be next token}
+  in out  p: string_index_t;           {source string parse index, updated}
+  out     val: escr_val_t;             {returned value of the term}
+  out     stat: sys_err_t)             {completion status, no error on func TRUE}
+  :boolean;                            {TRUE if term was available}
   val_param; extern;
 
 procedure escr_uptocomm (              {find line length without comment}

@@ -169,14 +169,15 @@ begin
   name.max := size_char(name.str);
   tk.max := size_char(tk.str);
 
-  oldlen := e.ibuf.len;                {save original length of the input line}
-  escr_uptocomm (e, e.ibuf, nclen);    {get length of line with comment stripped}
-  e.ibuf.len := nclen;                 {strip off comment from input line}
-  if e.ibuf.len < 2 then goto nomac;   {macro invocation requires at least 2 chars}
+  oldlen := e.parse_p^.ibuf.len;       {save original length of the input line}
+  escr_uptocomm (e, e.parse_p^.ibuf, nclen); {get length of line with comment stripped}
+  e.parse_p^.ibuf.len := nclen;        {strip off comment from input line}
+  if e.parse_p^.ibuf.len < 2           {macro invocation requires at least 2 chars}
+    then goto nomac;
 
-  e.ip := 1;                           {init input line parse index}
+  e.parse_p^.ip := 1;                  {init input line parse index}
   label.len := 0;                      {init to no label on this line}
-  if e.ibuf.str[1] <> ' ' then begin   {a non-blank is in column 1 ?}
+  if e.parse_p^.ibuf.str[1] <> ' ' then begin {a non-blank is in column 1 ?}
     if not escr_get_token (e, label) then goto nomac; {get the label name into LABEL}
     end;
   if not escr_get_token (e, name) then goto nomac; {get the opcode name into NAME}
@@ -216,5 +217,5 @@ begin
   return;
 
 nomac:                                 {no macro on this line}
-  e.ibuf.len := oldlen;                {restore full original input line}
+  e.parse_p^.ibuf.len := oldlen;       {restore full original input line}
   end;

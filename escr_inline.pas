@@ -2,7 +2,6 @@
 }
 module escr_inline;
 define escr_inline_expand_line;
-define escr_inline_func;
 %include 'escr2.ins.pas';
 {
 *   Private routines used inside this module only.
@@ -21,6 +20,12 @@ procedure inline_expand_func (         {expand rest of line starting at inline f
   in      linst: string_index_t;       {LIN index after special func start syntax}
   in out  lot: string_var8192_t;       {output string to append expansion to}
   in out  stat: sys_err_t);            {completion status}
+  val_param; internal; forward;
+
+procedure inline_func (                {perform inline function operation}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  lot: string_var8192_t;       {string to append function expansion to}
+  out     stat: sys_err_t);            {completion status}
   val_param; internal; forward;
 {
 ********************************************************************************
@@ -49,7 +54,7 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine INLINE_EXPAND_LREST (E, LIN, LINST, LOT, STAT)
+*   Local subroutine INLINE_EXPAND_LREST (E, LIN, LINST, LOT, STAT)
 *
 *   Expand the rest of the input line LIN starting at LINST and append the
 *   result to LOT.
@@ -142,7 +147,7 @@ nextp:                                 {advance to next input string character}
 {
 ********************************************************************************
 *
-*   Subroutine INLINE_EXPAND_FUNC (E, LIN, LINST, LOT, STAT)
+*   Local subroutine INLINE_EXPAND_FUNC (E, LIN, LINST, LOT, STAT)
 *
 *   Expand an inline function and the remainder of the input line.  The
 *   input line is in LIN, and LINST is the index of the first character
@@ -180,7 +185,7 @@ begin
 *   Look for the end of this function.  The content of this function will be
 *   copied to FUNARG with comments stripped.
 }
-  e.funarg.s.len := 0;                 {init extracted function string to empty}
+  e.parse_p^.funarg.s.len := 0;        {init extracted function string to empty}
   p := 1;                              {init EXP input string parse index}
 
   while p <= exp.len do begin          {loop until input string exhausted}
@@ -190,7 +195,7 @@ begin
           exp,                         {input string}
           p,                           {input string parse index}
           e.syexcl_p,                  {pointer to exclusions to check}
-          addr(e.funarg.s),            {where to copy skipped characters to}
+          addr(e.parse_p^.funarg.s),   {where to copy skipped characters to}
           stat)
         then begin
       if sys_error(stat) then return;  {error ?}
@@ -206,7 +211,7 @@ begin
           stat)
         then begin
       if sys_error(stat) then return;  {error ?}
-      string_append1 (e.funarg.s, ' '); {replace comment with single space}
+      string_append1 (e.parse_p^.funarg.s, ' '); {replace comment with single space}
       next;                            {back and check again after this comment}
       end;
     {
@@ -227,8 +232,8 @@ begin
     *   followed by the rest of the expaneded input line after the function end
     *   sequence.
     }
-    e.funarg.p := 1;                   {init to parse at start of function string}
-    escr_inline_func (                 {expand function and append result to output string}
+    e.parse_p^.funarg.p := 1;          {init to parse at start of function string}
+    inline_func (                      {expand function and append result to output string}
       e,                               {state for this use of the ESCR system}
       lot,                             {string to append function expansion to}
       stat);
@@ -242,104 +247,126 @@ begin
     return;
 
 nextp:                                 {done with this input string char, on to next}
-    string_append1 (e.funarg.s, exp.str[p]); {copy this input string char to output string}
+    string_append1 (                   {copy this input string char to output string}
+      e.parse_p^.funarg.s, exp.str[p]);
     p := p + 1;                        {to next input string character}
     end;                               {back to check at this new character}
 {
 *   The function end was not found.
 }
   sys_stat_set (escr_subsys_k, escr_err_funcnend_k, stat); {end of function not found}
-  sys_stat_parm_vstr (e.funarg.s, stat);
+  sys_stat_parm_vstr (e.parse_p^.funarg.s, stat);
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESTR_INLINE_FUNC (E, LOT, STAT)
+*   Local subroutine INLINE_FUNC (E, LOT, STAT)
 *
 *   Perform the operation indicated by the inline function in FUNARG.  The
 *   resulting expansion, if any, is appended to LOT.  FUNARG contains exactly
-*   the function body.  This is the part just inside the "[" and "]".
+*   the function body.  This is the part just inside the "[" and "]" when the
+*   default syntax is used.
 }
-procedure escr_inline_func (           {perform inline function operation}
+procedure inline_func (                {perform inline function operation}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  lot: string_var8192_t;       {string to append function expansion to}
   out     stat: sys_err_t);            {completion status}
-  val_param;
+  val_param; internal;
 
 var
   sym_p: escr_sym_p_t;                 {pointer to function symbol in symbol table}
-  parm: string_var32_t;                {unexpected parameter}
+  parm: string_var32_t;                {unused function parameter}
 
 begin
   parm.max := size_char(parm.str);     {init local var string}
 {
 *   Parse the function name into E.FUNAME.
 }
-  string_token (e.funarg.s, e.funarg.p, e.funame, stat); {get function name}
+  string_token (                       {get function name}
+    e.parse_p^.funarg.s,               {source string}
+    e.parse_p^.funarg.p,               {parse index, updated}
+    e.parse_p^.funame,                 {returned token}
+    stat);
   if string_eos(stat) then begin       {end of string, no function name ?}
-    e.funame.len := 0;
+    e.parse_p^.funame.len := 0;
     end;
   if sys_error(stat) then return;
-
-  string_upcase (e.funame);            {function names stored upper case in symbol table}
 {
 *   Look up the function name in the functions symbol table.
 }
   escr_sym_find_type (                 {find the function name symbol}
     e,                                 {state for this use of the ESCR system}
-    e.funame,                          {name of symbol to look for}
+    e.parse_p^.funame,                 {name of symbol to look for}
     escr_sytype_func_k,                {the symbol must be a function}
     sym_p,                             {returned pointer to symbol in the table}
     stat);
   if sys_error(stat) then return;
   if sym_p = nil then begin            {no such function ?}
     sys_stat_set (escr_subsys_k, escr_err_funcnfnd_k, stat);
-    sys_stat_parm_vstr (e.funame, stat); {message parameter 1 is function name}
+    sys_stat_parm_vstr (e.parse_p^.funame, stat); {function name}
     return;                            {abort}
     end;
 
+  e.parse_p^.funret.len := 0;          {init function expansion string to empty}
   case sym_p^.stype of                 {what kind of symbol is this ?}
 {
 *   Intrinsic function.  These are implemented by compiled code that has been
 *   statically linked in.
 }
 escr_sym_ifunc_k: begin                {intrinsic function}
-      e.funret.len := 0;               {init function expansion string to empty}
       sys_error_none (stat);           {init to no error encountered in function}
       sym_p^.ifunc_p^ (                {run the intrinsic function routine}
         addr(e),                       {pointer to this ESCR system use state}
         stat);                         {returned error status, initialized to no err}
       if sys_error(stat) then return;
 
-      string_append (lot, e.funret);   {append function expansion to output line}
+      string_append (lot, e.parse_p^.funret); {append function expansion to output line}
+
+      string_token (                   {try to get another function parameter}
+        e.parse_p^.funarg.s,           {source string}
+        e.parse_p^.funarg.p,           {parse index, updated}
+        parm,                          {returned token}
+        stat);
+      if not string_eos(stat) then begin {found unused parameter ?}
+        sys_stat_set (escr_subsys_k, escr_err_exparmfun_k, stat); {extra parameter error}
+        sys_stat_parm_vstr (parm, stat); {the extra parameter}
+        sys_stat_parm_vstr (e.parse_p^.funame, stat); {the function name}
+        return;
+        end;
       end;
 {
 *   User-defined function.
 }
 escr_sym_func_k: begin                 {user-defined function}
-      writeln ('User-defined functions not supported yet.');
-      escr_err_atline (e, '', '', nil, 0);
+      escr_exblock_new (e, stat);      {create new  execution block}
+      if sys_error(stat) then return;
+      escr_exblock_refsym (e, sym_p^); {indicate referencing symbol for this block}
+      e.exblock_p^.bltype := escr_exblock_func_k; {new block is a function}
+      e.exblock_p^.args := true;       {this block can take arguments}
+      escr_exblock_arg_addn (          {function name is special argument 0}
+        e, e.parse_p^.funame, 0);
+      while true do begin              {loop until argument list exhausted}
+        if not                         {try to get next function parameter}
+          escr_term_raw (e, e.parse_p^.funarg.s, e.parse_p^.funarg.p, parm, stat)
+          then exit;                   {exhausted function arguments ?}
+        escr_exblock_arg_add (e, parm); {add as next argument to new execution block}
+        end;
+      escr_exblock_parse_save (e, stat); {save parsing state, create new}
+      if sys_error(stat) then return;
+      escr_exblock_inline_set (        {go to function definition line}
+        e, sym_p^.func_line_p, stat);
+      if sys_error(stat) then return;
+      escr_infile_skipline (e);        {skip over command definition line}
+      escr_exblock_ulab_init (e);      {create table for local labels}
+      escr_run (e, stat);              {run function, block deleted when done}
+      string_append (lot, e.parse_p^.funret); {append function expansion to output line}
       end;
 {
 *   Unexpected symbol type.
 }
 otherwise
     sys_stat_set (escr_subsys_k, escr_err_notfunc_k, stat);
-    sys_stat_parm_vstr (e.funame, stat); {message parameter 1 is function name}
+    sys_stat_parm_vstr (e.parse_p^.funame, stat); {function name}
     return;
     end;                               {end of symbol type cases}
-
-  string_token (e.funarg.s, e.funarg.p, parm, stat); {try to get another parameter}
-  if not string_eos(stat) then begin   {found unused parameter ?}
-    sys_stat_set (escr_subsys_k, escr_err_exparmfun_k, stat); {extra parameter error}
-    sys_stat_parm_vstr (parm, stat);   {the extra parameter}
-    sys_stat_parm_vstr (e.funame, stat); {the function name}
-    return;
-    end;
-
-(*
-  writeln ('Function: ', e.funarg.s.str:e.funarg.s.len,
-    ' --> ', e.funret.str:e.funret.len, ' <--');
-*)
-
   end;

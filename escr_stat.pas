@@ -21,7 +21,7 @@ begin
   if sys_error(stat) then return;      {indicating previous error ?}
 
   sys_stat_set (escr_subsys_k, escr_err_missingparm_k, stat);
-  sys_stat_parm_vstr (e.cmd, stat);
+  sys_stat_parm_vstr (e.parse_p^.cmd, stat);
   end;
 {
 ********************************************************************************

@@ -221,6 +221,22 @@ msg err70
 msg err71
   lan english -def
     Not in a COMMAND definition block.
+msg err72
+  lan english -def
+    Not in a FUNCTION definition block.
+msg err73
+  lan english -def
+    Not in any execution block.  A current execution block is required here.
+msg err74
+  lan english -def
+    Parsing state has already been saved in the current execution block.
+msg err75
+  lan english -def
+    Not in a function.
+msg err76
+  lan english -def
+    INTERNAL ERROR: The input parsing state to add the FUNCVAL value to
+    does not exist.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.

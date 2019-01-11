@@ -72,15 +72,15 @@ procedure escr_cmd_endblock (
 begin
   if e.exblock_p^.prev_p = nil then begin {in root execution block}
     sys_stat_set (escr_subsys_k, escr_err_endblock_root_k, stat);
-    sys_stat_parm_vstr (e.cmd, stat);
+    sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     end;
   if e.exblock_p^.bltype <> escr_exblock_blk_k then begin {not in BLOCK ... ENDBLOCK block type ?}
     sys_stat_set (escr_subsys_k, escr_err_endblock_type_k, stat);
-    sys_stat_parm_vstr (e.cmd, stat);
+    sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     end;
   if e.exblock_p^.inpos_p^.prev_p <> nil then begin {block ended in include file ?}
     sys_stat_set (escr_subsys_k, escr_err_endblock_include_k, stat);
-    sys_stat_parm_vstr (e.cmd, stat);
+    sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     end;
 
   e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}

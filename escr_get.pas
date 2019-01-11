@@ -36,9 +36,10 @@ var
 begin
   escr_get_token := false;             {init to not returning with a token}
 
-  string_token (e.ibuf, e.ip, e.lparm, stat); {try to get the next token}
+  string_token (                       {try to get the next token}
+    e.parse_p^.ibuf, e.parse_p^.ip, e.parse_p^.lparm, stat);
   if not sys_error(stat) then begin    {got it ?}
-    string_copy (e.lparm, tk);
+    string_copy (e.parse_p^.lparm, tk);
     escr_get_token := true;
     return;
     end;
@@ -77,16 +78,21 @@ begin
   escr_get_tkraw := false;             {init to no token available}
   tk.len := 0;
 
-  while e.ip <= e.ibuf.len do begin    {skip over blanks at current position}
-    if e.ibuf.str[e.ip] <> ' ' then exit; {at a non-blank ?}
-    e.ip := e.ip + 1;                  {skip over this blank}
+  while                                {skip over blanks at current position}
+      e.parse_p^.ip <= e.parse_p^.ibuf.len
+      do begin
+    if e.parse_p^.ibuf.str[e.parse_p^.ip] <> ' ' then exit; {at a non-blank ?}
+    e.parse_p^.ip := e.parse_p^.ip + 1; {skip over this blank}
     end;
-  if e.ip > e.ibuf.len then return;    {no token before end of input string ?}
+  if e.parse_p^.ip > e.parse_p^.ibuf.len {no token before end of input string ?}
+    then return;
   escr_get_tkraw := true;              {will be returning with a token}
 
   quote := false;                      {init to not within a quoted string}
-  while e.ip <= e.ibuf.len do begin    {scan the remainder of the input string}
-    c := e.ibuf.str[e.ip];             {fetch this character}
+  while                                {scan the remainder of the input string}
+      e.parse_p^.ip <= e.parse_p^.ibuf.len
+      do begin
+    c := e.parse_p^.ibuf.str[e.parse_p^.ip]; {fetch this character}
     if quote
       then begin                       {in a quoted string}
         string_append1 (tk, c);        {copy this char to returned token}
@@ -94,7 +100,7 @@ begin
         end
       else begin                       {not in a quoted string}
         if c = ' ' then begin          {unquoted blank ends token}
-          e.ip := e.ip + 1;            {skip over this blank}
+          e.parse_p^.ip := e.parse_p^.ip + 1; {skip over this blank}
           exit;
           end;
         string_append1 (tk, c);        {copy this char to returned token}
@@ -104,7 +110,7 @@ begin
           end;
         end
       ;
-    e.ip := e.ip + 1;                  {make index of the next char}
+    e.parse_p^.ip := e.parse_p^.ip + 1; {make index of the next char}
     end;                               {back to process this new char}
   end;
 {
@@ -131,18 +137,23 @@ begin
   escr_get_tkrawc := false;            {init to no token available}
   tk.len := 0;
 
-  while e.ip <= e.ibuf.len do begin    {skip over blanks at current position}
-    if e.ibuf.str[e.ip] <> ' ' then exit; {at a non-blank ?}
-    e.ip := e.ip + 1;                  {skip over this blank}
+  while                                {skip over blanks at current position}
+      e.parse_p^.ip <= e.parse_p^.ibuf.len
+      do begin
+    if e.parse_p^.ibuf.str[e.parse_p^.ip] <> ' ' then exit; {at a non-blank ?}
+    e.parse_p^.ip := e.parse_p^.ip + 1; {skip over this blank}
     end;
-  if e.ip > e.ibuf.len then return;    {no token before end of input string ?}
+  if e.parse_p^.ip > e.parse_p^.ibuf.len {no token before end of input string ?}
+    then return;
   escr_get_tkrawc := true;             {will be returning with a token}
 
   quote := false;                      {init to not within a quoted string}
   blcnt := 0;                          {init to no blanks skipped over}
-  while e.ip <= e.ibuf.len do begin    {scan the remainder of the input string}
-    c := e.ibuf.str[e.ip];             {fetch this character}
-    e.ip := e.ip + 1;                  {update index to next character to fetch}
+  while                                {scan the remainder of the input string}
+      e.parse_p^.ip <= e.parse_p^.ibuf.len
+      do begin
+    c := e.parse_p^.ibuf.str[e.parse_p^.ip]; {fetch this character}
+    e.parse_p^.ip := e.parse_p^.ip + 1; {update index to next character to fetch}
     if quote
       then begin                       {in a quoted string}
         string_append1 (tk, c);        {copy this char to returned token}
@@ -183,7 +194,7 @@ otherwise                              {all other characters}
 *
 *   Returns TRUE iff there are no more tokens on the current input line.  If a
 *   token is found, STAT is set to indicate extra parameters, and includes the
-*   extra parameter.  The extra parameter is also saved in E.LPARM.
+*   extra parameter.  The extra parameter is also saved in E.PARSE_P^.LPARM.
 }
 function escr_get_end (                {check for no more tokens on input line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -246,7 +257,7 @@ begin
     pick := -1;                        {indicate no match}
     sys_stat_set (escr_subsys_k, escr_err_badparm_k, stat);
     sys_stat_parm_vstr (tk, stat);
-    sys_stat_parm_vstr (e.cmd, stat);
+    sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     end;
   end;
 {
@@ -277,7 +288,7 @@ begin
   case pick of
 -1: begin                              {error}
       sys_stat_set (escr_subsys_k, escr_err_baddtype_k, stat);
-      sys_stat_parm_vstr (e.lparm, stat);
+      sys_stat_parm_vstr (e.parse_p^.lparm, stat);
       return;
       end;
 0:  return;                            {no token}
@@ -310,7 +321,7 @@ function escr_get_val (                {get value of next input stream token}
   val_param;
 
 begin
-  escr_get_val := escr_term_get (e, e.ibuf, e.ip, val, stat);
+  escr_get_val := escr_term_val (e, e.parse_p^.ibuf, e.parse_p^.ip, val, stat);
   end;
 {
 ********************************************************************************
@@ -515,7 +526,8 @@ begin
   str.len := 0;                        {init return string to empty}
 
 loop:                                  {back here each new input argument}
-  if not escr_get_str (e, tk, stat) then return; {get string representation of next argument}
+  if not escr_get_str (e, tk, stat)    {get string representation of next argument}
+    then return;
   string_append (str, tk);             {append it to end of return string}
   goto loop;                           {back to get next argument}
   end;

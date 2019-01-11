@@ -16,6 +16,7 @@ define escr_exblock_arg_get_bl;
 define escr_exblock_arg_get;
 define escr_exblock_repeat;
 define escr_exblock_quit;
+define escr_exblock_parse_save;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -41,17 +42,17 @@ begin
 
   if e.exblock_p = nil
     then begin                         {creating top level block}
-      util_mem_context_get (e.mem_p^, mem_p); {create mem context for top block}
       nlev := 0;                       {set nesting level for top block}
+      util_mem_context_get (e.mem_p^, mem_p); {create mem context for top block}
       end
     else begin                         {creating nested block}
-      util_mem_context_get (e.exblock_p^.mem_p^, mem_p); {create new mem context for block}
       nlev := e.exblock_p^.level + 1;  {nesting level one more than parent block}
       if nlev > escr_max_blklev_k then begin {new block would be nested too deep ?}
         sys_stat_set (escr_subsys_k, escr_err_bltoomany_k, stat);
         sys_stat_parm_int (escr_max_blklev_k, stat);
         return;
         end;
+      util_mem_context_get (e.exblock_p^.mem_p^, mem_p); {create new mem context for block}
       end
     ;
   util_mem_grab (                      {allocate memory for execution block descriptor}
@@ -70,6 +71,7 @@ begin
   bl_p^.inpos_p := nil;                {indicate source reading position not filled in}
   bl_p^.previnh_p := e.inhibit_p;      {save pointer to inhibit before this block}
   bl_p^.loop_p := nil;                 {init to block is not a explicit loop}
+  bl_p^.parse_p := nil;                {init to no saved input parsing state}
   bl_p^.bltype := escr_exblock_top_k;  {init to top block type}
   bl_p^.ulab := nil;                   {init to no list of unique labels}
   bl_p^.args := false;                 {init to this block does not take arguments}
@@ -94,6 +96,7 @@ procedure escr_exblock_close (         {close curr execution block and delete te
 var
   mem_p: util_mem_context_p_t;         {points to mem context for the block}
   sym_p: escr_sym_p_t;                 {pointer to symbol to delete}
+  par_p: escr_parse_p_t;               {pointer to saved input parsing state}
 
 begin
   sys_error_none (stat);               {init to no error encountered}
@@ -115,6 +118,11 @@ begin
     end;
 
   e.inhibit_p := e.exblock_p^.previnh_p; {restore to inhibit before this block}
+
+  par_p := e.exblock_p^.parse_p;       {get pointer to any saved input parsing state}
+  if par_p <> nil then begin           {this block has its own parsing state ?}
+    e.parse_p := par_p^.prev_p;        {pop back to the previous parsing state}
+    end;
 
   mem_p := e.exblock_p^.mem_p;         {save memory context for this block}
   e.exblock_p := e.exblock_p^.prev_p;  {make parent execution block current}
@@ -422,4 +430,51 @@ begin
     if inh_p^.prev_p = e.exblock_p^.previnh_p then exit; {at base inhibit for the block ?}
     inh_p := inh_p^.prev_p;            {back to previous execution inhibit}
     end;
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_EXBLOCK_PARSE_SAVE (E, STAT)
+*
+*   Save the current input stream parsing state such that it will be restored to
+*   this state when the block is closed.  The input parsing state can only be
+*   saved once per execution block.  This is usually done after a new block is
+*   created, before any code is run in it.  It is a error if the input parsing
+*   state was previously saved in this block.
+}
+procedure escr_exblock_parse_save (    {save parsing state, will be restored on block end}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+var
+  par_p: escr_parse_p_t;               {points to new saved parsing state}
+
+begin
+  sys_error_none (stat);               {init to no error encountered}
+
+  if e.exblock_p = nil then begin      {not in a execution block ?}
+    sys_stat_set (escr_subsys_k, escr_err_noblock_k, stat);
+    return;
+    end;
+  if e.exblock_p^.parse_p <> nil then begin {parse state already saved this block ?}
+    sys_stat_set (escr_subsys_k, escr_err_parsesaved_k, stat);
+    return;
+    end;
+
+  util_mem_grab (                      {allocate memory for the saved parsing state}
+    sizeof(par_p^),                    {amount of memory to allocate}
+    e.exblock_p^.mem_p^,               {mem context to allocate under}
+    false,                             {will not be individually deallocated}
+    par_p);                            {returned pointer to the new memory}
+  if par_p = nil then begin            {failed to allocate the memory ?}
+    sys_stat_set (escr_subsys_k, escr_err_nomem_k, stat);
+    sys_stat_parm_int (sizeof(par_p^), stat);
+    return;
+    end;
+
+  escr_parse_init (par_p^);            {init the new parsing state descriptor}
+  par_p^.prev_p := e.parse_p;          {link to previous parsing state}
+  e.exblock_p^.parse_p := par_p;       {link this block to the new parsing state}
+  e.parse_p := par_p;                  {make the new parsing state current}
   end;

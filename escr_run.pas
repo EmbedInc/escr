@@ -1,8 +1,8 @@
 {   Routines that cause execution of code.
 }
 module escr_run;
+define escr_run;
 define escr_run_atline;
-define escr_run_atlabel;
 define escr_run_conn;
 define escr_run_file;
 define escr_run_clean;
@@ -10,71 +10,60 @@ define escr_run_clean;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_RUN_ATLINE (E, LINE, STAT)
+*   Subroutine ESCR_RUN (E, STAT)
 *
-*   Execute script code starting at the indicated input file line.
+*   Execute script code from the current state.  The routine returns when the
+*   starting execution block is deleted or the input stream ends with execution
+*   at the same level as on entry.  When not returning with error, the current
+*   execution block at entry will be deleted, and the current execution state
+*   will be that of the original parent, if any.
 *
-*   If the current execution block is the top level block, then the new code is
-*   run within it.  If no block exists, then a top level block is created, and
-*   the new code run within it.  It is a error if other then the top execution
-*   block exists.
-*
-*   To guarantee the new code is run in a new clean context (no local variables,
-*   arguments, etc), call ESCR_RUN_CLEAN before this routine.
+*   This routine may be called recursively.  One example is when a user-defined
+*   function is called.  When that happens, the current parsing state is saved,
+*   a new execution block is created for the function, then ESCR_RUN called
+*   recursively to execute the function.
 }
-procedure escr_run_atline (            {run starting at specific input files line}
+procedure escr_run (                   {run, state all set up, returns on script exit}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t;     {pointer to first input files line to execute}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
+  parent_p: escr_exblock_p_t;          {points to parent execution block}
   str_p: string_var_p_t;               {pointer to current source line}
+  p: string_index_t;                   {raw source line parse index}
   ii: sys_int_machine_t;               {scratch integer and loop counter}
   sym_p: escr_sym_p_t;                 {pointer to symbol in symbol table}
   buf: string_var8192_t;               {temp processed input line buffer}
   inh: boolean;                        {saved inhibit at start of command}
 
 label
-  loop_line, no_cmd;
+  loop_line, no_cmd, leave_end, leave;
 
 begin
   buf.max := size_char(buf.str);       {init local var string}
+  sys_error_none (stat);               {init to no error encountered}
 
-  if                                   {in nested execution context ?}
-      (e.exblock_p <> nil) and then    {current execution block exists ?}
-      ( (e.exblock_p^.prev_p <> nil) or {not top block ?}
-        (e.exblock_p^.bltype <> escr_exblock_top_k) {not top block type ?}
-        )
-      then begin
-    sys_stat_set (escr_subsys_k, escr_err_run_nested_k, stat);
+  if e.exblock_p = nil then begin      {not in any execution block ?}
+    sys_stat_set (escr_subsys_k, escr_err_noblock_k, stat);
     return;
     end;
-
-  if line_p = nil then return;         {nothing to do ?}
 {
-*   Create the top execution block if it does not already exist.
+*   Set up the state so that we exit when the current execution block is
+*   deleted.
 }
-  if e.exblock_p = nil then begin      {no current execution block ?}
-    escr_exblock_new (e, stat);        {create top level execution block}
-    if sys_error(stat) then return;
-    escr_exblock_ulab_init (e);        {top level block has unique labels context}
-    end;
-
-  escr_exblock_inline_set (e, line_p, stat); {set next source line to execute}
-  if sys_error(stat) then return;
+  parent_p := e.exblock_p^.prev_p;     {save pointer to parent execution block}
+  e.exblock_p^.prev_p := nil;          {prevent popping past this block without action here}
 {
 *   Main loop.  Back here each new source code line.
 }
 loop_line:
-  escr_infile_getline (e, str_p);      {get next input line this execution block}
-  if str_p = nil then begin            {no more input this execution block ?}
-    if e.exblock_p^.prev_p = nil then begin {end of top level exec block ?}
-      return;
-      end;
-    sys_stat_set (escr_subsys_k, escr_err_inend_k, stat);
-    return;
+  if e.exblock_p = nil then begin      {original execution block deleted ?}
+    goto leave;
     end;
+
+  escr_infile_getline (e, str_p);      {get next input line this execution block}
+  if str_p = nil then goto leave_end;  {no more input this execution block ?}
 {
 *   Handle blank line.
 *
@@ -86,8 +75,8 @@ loop_line:
   if str_p^.len = 0 then begin         {this is a blank line ?}
     if not (escr_flag_preproc_k in e.flags) {in script mode ?}
       then goto loop_line;             {ignore the blank line}
-    if e.exblock_p^.prev_p = nil then begin {in top level execution block ?}
-      e.ibuf.len := 0;                 {"copy" the input line to the output line}
+    if e.exblock_p^.level = 0 then begin {in top level execution block ?}
+      e.parse_p^.ibuf.len := 0;        {"copy" the input line to the output line}
       goto no_cmd;                     {pass to output file}
       end;
     goto loop_line;                    {ignore this line}
@@ -97,13 +86,13 @@ loop_line:
 *   off.
 }
   buf.len := 0;                        {init the input line to empty}
-  e.ip := 1;                           {init source line parse index}
-  while e.ip <= str_p^.len do begin    {loop until source line exhausted}
+  p := 1;                              {init source line parse index}
+  while p <= str_p^.len do begin       {loop until source line exhausted}
     if                                 {syntax exclusion here ?}
         escr_excl_check (              {skip over syntax exclusion, if present}
           e,                           {state for this use of the ESCR system}
           str_p^,                      {input string}
-          e.ip,                        {input string parse index}
+          p,                           {input string parse index}
           e.syexcl_p,                  {points to list of syntax exclusions}
           addr(buf),                   {pointer to string to append exclusion to}
           stat)                        {completion status, always OK on function false}
@@ -115,7 +104,7 @@ loop_line:
         escr_excl_check (              {copy data file comments}
           e,                           {state for this use of the ESCR system}
           str_p^,                      {input string}
-          e.ip,                        {input string parse index}
+          p,                           {input string parse index}
           e.commdat_p,                 {points to list of syntax exclusions}
           addr(buf),                   {pointer to string to append exclusion to}
           stat)                        {completion status, always OK on function false}
@@ -127,7 +116,7 @@ loop_line:
         escr_excl_check (              {skip over any script comment here}
           e,                           {state for this use of the ESCR system}
           str_p^,                      {input string}
-          e.ip,                        {input string parse index}
+          p,                           {input string parse index}
           e.commscr_p,                 {points to list of syntax exclusions}
           nil,                         {discard the comment characters}
           stat)                        {completion status, always OK on function false}
@@ -136,8 +125,8 @@ loop_line:
       next;                            {back to check after this comment}
       end;
 
-    string_append1 (buf, str_p^.str[e.ip]); {copy this source character to output string}
-    e.ip := e.ip + 1;                  {advance to next source character}
+    string_append1 (buf, str_p^.str[p]); {copy this source character to output string}
+    p := p + 1;                        {advance to next source character}
     end;                               {back to process next source string character}
 
   string_unpad (buf);                  {strip trailing spaces from input line}
@@ -149,22 +138,23 @@ loop_line:
 *   The source line has been copied to the temporary buffer BUF with script
 *   comments removed, and the result is not a blank line.
 *
-*   Copy this into the input line buffer, E.IBUF.  If execution is not inhibited
-*   here, then expand inline functions in the process.
+*   Copy this into the input line buffer, PARSE.IBUF.  If execution is not
+*   inhibited here, then expand inline functions in the process.
 }
   if e.inhibit_p^.inh
     then begin                         {execution is inhibited}
-      string_copy (buf, e.ibuf);       {no further processing on input line}
+      string_copy (buf, e.parse_p^.ibuf); {no further processing on input line}
       end
     else begin                         {execution is active}
-      escr_inline_expand_line (e, buf, e.ibuf, stat); {expand all inline functions on this line}
+      escr_inline_expand_line (        {expand all inline functions on this line}
+        e, buf, e.parse_p^.ibuf, stat);
       if sys_error(stat) then return;
       end
     ;
-  e.ip := 1;                           {init IBUF parse index}
+  e.parse_p^.ip := 1;                  {init IBUF parse index}
 {
 *   Check for the line starts with a command.  If so, the upper case command
-*   name will be left in E.CMD.  If not, jump to NO_CMD.
+*   name will be left in PARSE.CMD.  If not, jump to NO_CMD.
 }
   if escr_flag_preproc_k in e.flags
     then begin
@@ -178,12 +168,12 @@ loop_line:
       *   execution goes to NO_CMD.
       }
       buf.len := 0;                    {init result line to empty}
-      while e.ip <= e.ibuf.len do begin {loop until source line exhausted}
+      while e.parse_p^.ip <= e.parse_p^.ibuf.len do begin {loop until line exhausted}
         if                             {syntax exclusion here ?}
             escr_excl_check (          {skip over syntax exclusion, if present}
               e,                       {state for this use of the ESCR system}
-              e.ibuf,                  {input string}
-              e.ip,                    {input string parse index}
+              e.parse_p^.ibuf,         {input string}
+              e.parse_p^.ip,           {input string parse index}
               e.syexcl_p,              {points to list of syntax exclusions}
               addr(buf),               {pointer to string to append exclusion to}
               stat)                    {completion status, always OK on function false}
@@ -194,8 +184,8 @@ loop_line:
         if                             {data file comment here ?}
             escr_excl_check (          {skip over any script comment here}
               e,                       {state for this use of the ESCR system}
-              e.ibuf,                  {input string}
-              e.ip,                    {input string parse index}
+              e.parse_p^.ibuf,         {input string}
+              e.parse_p^.ip,           {input string parse index}
               e.commdat_p,             {points to list of comments start/end}
               nil,                     {discard the comment characters}
               stat)                    {completion status, always OK on function false}
@@ -203,70 +193,78 @@ loop_line:
           if sys_error(stat) then return;
           next;                        {back to check after this comment}
           end;
-        string_append1 (buf, e.ibuf.str[e.ip]); {copy this source character to output string}
-        e.ip := e.ip + 1;              {advance to next source character}
+        string_append1 (               {copy this source character to output string}
+          buf, e.parse_p^.ibuf.str[e.parse_p^.ip]);
+        e.parse_p^.ip := e.parse_p^.ip + 1; {advance to next source character}
         end;                           {back to process next source string character}
 
-      e.ip := 1;                       {init parse index to start of string}
-      string_token (buf, e.ip, e.cmd, stat); {get first input line token into CMD}
+      e.parse_p^.ip := 1;              {init parse index to start of string}
+      string_token (buf, e.parse_p^.ip, e.parse_p^.cmd, stat); {get first input line token into CMD}
       if sys_error(stat) then goto no_cmd; {definitely no preproc command on this line ?}
 
       if e.cmdst.len > 0 then begin    {commands start with special string ?}
-        if e.cmd.len < (e.cmdst.len + 1) {not long enough to be a command ?}
+        if e.parse_p^.cmd.len < (e.cmdst.len + 1) {not long enough to be a command ?}
           then goto no_cmd;
         for ii := 1 to e.cmdst.len do begin {check for command start string}
-          if e.cmd.str[ii] <> e.cmdst.str[ii] {mismatch ?}
+          if e.parse_p^.cmd.str[ii] <> e.cmdst.str[ii] {mismatch ?}
             then goto no_cmd;
           end;
-        for ii := 1 to e.cmd.len - e.cmdst.len do begin {shift to delete command start string}
-          e.cmd.str[ii] := e.cmd.str[ii + e.cmdst.len];
+        for                            {shift to delete command start string}
+            ii := 1 to e.parse_p^.cmd.len - e.cmdst.len
+            do begin
+          e.parse_p^.cmd.str[ii] := e.parse_p^.cmd.str[ii + e.cmdst.len];
           end;
-        e.cmd.len := e.cmd.len - e.cmdst.len; {update length to command start removed}
+        e.parse_p^.cmd.len :=          {update length to command start removed}
+          e.parse_p^.cmd.len - e.cmdst.len;
         end;
 
-      string_copy (buf, e.ibuf);       {process line with data file comments stripped}
+      string_copy (buf, e.parse_p^.ibuf); {process line with data file comments stripped}
       end
     else begin
       {
       *   In script mode.  Data file comments don't exist in script mode.
       }
-      string_token (e.ibuf, e.ip, e.cmd, stat); {get first input line token into CMD}
+      string_token (                   {get first input line token into CMD}
+        e.parse_p^.ibuf, e.parse_p^.ip, e.parse_p^.cmd, stat);
       if sys_error(stat) then goto no_cmd; {definitely no command on this line ?}
 
-      if e.cmdst.len > 0 then begin    {command start with special string ?}
-        if e.cmd.len < (e.cmdst.len + 1) {not long enough to be a command ?}
+      if e.cmdst.len > 0 then begin    {commands start with special string ?}
+        if e.parse_p^.cmd.len < (e.cmdst.len + 1) {not long enough to be a command ?}
           then goto no_cmd;
         for ii := 1 to e.cmdst.len do begin {check for command start string}
-          if e.ibuf.str[ii] <> e.cmdst.str[ii] {mismatch ?}
+          if e.parse_p^.ibuf.str[ii] <> e.cmdst.str[ii] {mismatch ?}
             then goto no_cmd;
           end;
-        for ii := 1 to e.cmd.len - e.cmdst.len do begin {shift to delete command start string}
-          e.cmd.str[ii] := e.cmd.str[ii + e.cmdst.len];
+        for                            {shift to delete command start string}
+            ii := 1 to e.parse_p^.cmd.len - e.cmdst.len
+            do begin
+          e.parse_p^.cmd.str[ii] := e.parse_p^.cmd.str[ii + e.cmdst.len];
           end;
-        e.cmd.len := e.cmd.len - e.cmdst.len; {update length to command start removed}
+        e.parse_p^.cmd.len :=          {update length to command start removed}
+          e.parse_p^.cmd.len - e.cmdst.len;
         end;
       end
     ;
 {
-*   Handle the specific preprocessor command in CMD.
+*   Handle the command in CMD.
 }
   escr_sym_find_type (                 {look up command name}
     e,                                 {state for this use of the ESCR system}
-    e.cmd,                             {name to look up}
+    e.parse_p^.cmd,                    {name to look up}
     escr_sytype_cmd_k,                 {must be command}
     sym_p,                             {returned pointer to symbol data}
     stat);
   if sys_error(stat) then return;
   if sym_p = nil then begin            {no such command ?}
     sys_stat_set (escr_subsys_k, escr_err_cmdbad_k, stat);
-    sys_stat_parm_vstr (e.cmd, stat);
+    sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     return;
     end;
 
   case sym_p^.stype of                 {what kind of symbol is this ?}
 
 escr_sym_icmd_k: begin                 {intrinsic command, implemented by compiled routine}
-      inh := e.inhibit_p^.inh;         {save inhibit state at start of command}
+      inh := e.inhibit_p^.inh;         {temp save inhibit state at start of command}
 
       sys_error_none (stat);           {init to no error encountered}
       sym_p^.icmd_p^ (addr(e), stat);  {run the command routine}
@@ -275,7 +273,9 @@ escr_sym_icmd_k: begin                 {intrinsic command, implemented by compil
       if not inh then begin            {check for extra parms if command was run}
         if not escr_get_end (e, stat) then return; {abort on extra parameter}
         end;
-      if e.obuf.len > 0 then escr_write_obuf (e, stat); {write any line fragment left in out buffer}
+      if e.obuf.len > 0 then begin     {write any line fragment left in out buffer}
+        escr_write_obuf (e, stat);
+        end;
       if sys_error(stat) then return;
       end;
 
@@ -286,9 +286,9 @@ escr_sym_cmd_k: begin                  {user-defined command, implemented with s
         escr_exblock_refsym (e, sym_p^); {indicate referencing symbol for this command}
         e.exblock_p^.bltype := escr_exblock_cmd_k; {new block is a command}
         e.exblock_p^.args := true;     {this block can take arguments}
-        escr_exblock_arg_addn (e, e.cmd, 0); {command name is special argument 0}
+        escr_exblock_arg_addn (e, e.parse_p^.cmd, 0); {command name is special argument 0}
         while true do begin            {loop until argument list exhausted}
-          if not escr_get_tkraw (e, buf) then exit; {get command parameter}
+          if not escr_get_tkraw (e, buf) then exit; {try to get command parameter}
           escr_exblock_arg_add (e, buf); {add as next argument to new execution block}
           end;
         escr_exblock_inline_set (      {go to command definition line}
@@ -301,7 +301,7 @@ escr_sym_cmd_k: begin                  {user-defined command, implemented with s
 
 otherwise                              {not any kind of command name symbol}
     sys_stat_set (escr_subsys_k, escr_err_notcmd_k, stat); {symbol is not a command}
-    sys_stat_parm_vstr (e.cmd, stat);
+    sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     return;
     end;                               {end of command symbol type cases}
   goto loop_line;
@@ -319,50 +319,68 @@ no_cmd:
   if e.inhibit_p^.inh then goto loop_line; {execution inhibited for this line ?}
   if escr_macro_run (e, stat) then goto loop_line; {macro invocation on this line processed ?}
   if sys_error(stat) then return;
-  escr_write_vstr (e, e.ibuf, stat);
+  escr_write_vstr (e, e.parse_p^.ibuf, stat);
   if sys_error(stat) then return;
   goto loop_line;
+{
+********************
+*
+*   Normal exit points.
+*
+*   The input stream has ended.
+}
+leave_end:
+  escr_exblock_close (e, stat);        {pop to the parent execution block}
+  if sys_error(stat) then return;
+
+  if e.exblock_p <> nil then begin     {didn't pop off the original top block ?}
+    sys_stat_set (escr_subsys_k, escr_err_inend_k, stat);
+    return;
+    end;
+{
+*   There is no current execution block.  This is assumed to be because the
+*   original execution block was deleted.  This block had its parent pointer set
+*   to NIL at the beginning of this routine.
+}
+leave:
+  e.exblock_p := parent_p;             {pop to original parent block}
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_RUN_ATLABEL (E, NAME, STAT)
+*   Subroutine ESCR_RUN_ATLINE (E, LINE, STAT)
 *
-*   Execute script code starting at the labeled input files line.  NAME must be
-*   the name of a previously existing label.
+*   Execute script code starting at the indicated input file line.
+*
+*   The script code will be run in the current execution block, unless there is
+*   none.  In that case, the top level execution block is first created, then
+*   the script run in it.  In either case, the execution block that the script
+*   is run in will be deleted.
+*
+*   To guarantee the new code is run in a new clean context (no local variables,
+*   arguments, etc), call ESCR_RUN_CLEAN before this routine.
 }
-procedure escr_run_atlabel (           {run starting at label}
+procedure escr_run_atline (            {run starting at specific input files line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      name: univ string_var_arg_t; {name of label to start running at}
+  in      line_p: escr_inline_p_t;     {pointer to first input files line to execute}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
-var
-  sym_p: escr_sym_p_t;                 {label symbol}
-
 begin
-  escr_sym_find_type (                 {look up name in symbol table}
-    e,                                 {state for this use of ESCR system}
-    name,                              {name to look up}
-    escr_sytype_label_k,               {must be a label}
-    sym_p,                             {returned pointer to the symbol}
-    stat);
-  if sys_error(stat) then return;
-  if sym_p = nil then begin            {named label doesn't exist ?}
-    sys_stat_set (escr_subsys_k, escr_err_nflab_k, stat);
-    sys_stat_parm_vstr (name, stat);
-    return;
-    end;
-  if sym_p^.stype <> escr_sym_label_k then begin
-    sys_stat_set (escr_subsys_k, escr_err_notlab_k, stat);
-    sys_stat_parm_vstr (name, stat);
-    return;
+  sys_error_none (stat);               {init to no error encountered}
+  if line_p = nil then return;         {nothing to do ?}
+{
+*   Create the new execution block to run the code in.
+}
+  if e.exblock_p = nil then begin      {no execution block ?}
+    escr_exblock_new (e, stat);        {create top level execution block}
+    if sys_error(stat) then return;
+    escr_exblock_ulab_init (e);        {top level block has unique labels context}
     end;
 
-  escr_run_atline (                    {run the user code}
-    e,                                 {state for this use of the ESCR system}
-    sym_p^.label_line_p,               {pointer to line to start running at}
-    stat);
+  escr_exblock_inline_set (e, line_p, stat); {set next source line to execute}
+  if sys_error(stat) then return;
+  escr_run (e, stat);                  {run code, delete block when done}
   end;
 {
 ********************************************************************************
@@ -452,7 +470,7 @@ begin
   sys_error_none (stat);               {init to no error encountered}
 
   while e.exblock_p <> nil do begin    {in a execution block ?}
-    escr_exblock_close (e, stat);      {not anymore}
+    escr_exblock_close (e, stat);      {end this block and pop back to parent}
     if sys_error(stat) then return;
     end;                               {back to close parent block, if any}
   end;

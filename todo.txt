@@ -6,6 +6,4 @@ Function RUNSO - Runs program, returns first standard output line.
 
 LOOP DIR - Loops over directory entries.
 
-Command FUNCTION - Define a new function.
-
 Function SYM - Add NL option to make fully qualified name without locals.

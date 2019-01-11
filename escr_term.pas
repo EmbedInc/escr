@@ -2,18 +2,83 @@
 }
 module escr_term;
 define escr_term_raw;
-define escr_term_get;
+define escr_term_parse;
+define escr_term_val;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
-*   Function ESCR_TERM_RAW (E, FSTR, P, TERM, QUOTED, STAT)
+*   Function ESCR_TERM_RAW (E, FSTR, P, TERM, STAT)
 *
-*   Gets the raw characters of the next term in FSTR.  The characters of the
-*   term are returned in TERM, and QUOTED is set iff these were enclosed in
-*   quotes or apostrophies.  These enclosing quotes, if any, are not returned
-*   in TERM.  Also, escaped literal quotes are returned interpreted in TERM,
-*   not exactly as found in FSTR.
+*   Return the raw characters of the next term in FSTR exactly as found.  P is
+*   the starting parse index, and will be udpated to after the term.  The
+*   returns TRUE to indicate returning with a term normally.
+*
+*   No interpretation of the token is performed, except that spaces within
+*   quotes or apostrophies do not represet breaks between tokens.
+*
+*   When the end of the input string is encountered before a term is found, the
+*   function returns FALSE with STAT indicating no error.  On error, STAT is set
+*   to indicate the error, and the function returns FALSE.
+}
+function escr_term_raw (               {get chars of next token from input string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fstr: univ string_var_arg_t; {source string, term will be next token}
+  in out  p: string_index_t;           {source string parse index, updated}
+  in out  term: univ string_var_arg_t; {returned raw term characters}
+  out     stat: sys_err_t)             {completion status, no error on func TRUE}
+  :boolean;                            {TRUE if term was available and no error}
+  val_param;
+
+var
+  qchar: char;                         {string quote character}
+  quote: boolean;                      {token is a quoted string}
+  c: char;                             {current character}
+
+begin
+  escr_term_raw := false;              {init to no token available}
+  term.len := 0;
+
+  while p <= fstr.len do begin         {skip over blanks at current position}
+    if fstr.str[p] <> ' ' then exit;   {at a non-blank ?}
+    p := p + 1;                        {skip over this blank}
+    end;
+  if p > fstr.len then return;         {no token before end of input string ?}
+  escr_term_raw := true;               {will be returning with a token}
+
+  quote := false;                      {init to not within a quoted string}
+  while p <= fstr.len do begin         {scan the remainder of the input string}
+    c := fstr.str[p];                  {fetch this character}
+    if quote
+      then begin                       {in a quoted string}
+        string_append1 (term, c);      {copy this char to returned token}
+        if c = qchar then quote := false; {hit closed quote ?}
+        end
+      else begin                       {not in a quoted string}
+        if c = ' ' then begin          {unquoted blank ends token}
+          p := p + 1;                  {skip over this blank}
+          exit;
+          end;
+        string_append1 (term, c);      {copy this char to returned token}
+        if (c = '''') or (c = '"') then begin {leading quote ?}
+          qchar := c;                  {set closing quote character}
+          quote := true;               {indicate now in a quoted string}
+          end;
+        end
+      ;
+    p := p + 1;                        {make index of the next char}
+    end;                               {back to process this new char}
+  end;
+{
+********************************************************************************
+*
+*   Function ESCR_TERM_PARSE (E, FSTR, P, TERM, QUOTED, STAT)
+*
+*   Parse the next term from the input string FSTR.  The characters of the term
+*   are returned in TERM, and QUOTED is set iff these were enclosed in quotes or
+*   apostrophies.  These enclosing quotes, if any, are not returned in TERM.
+*   Also, escaped literal quotes are returned interpreted in TERM, not exactly
+*   as found in FSTR.
 *
 *   Examples:
 *
@@ -31,7 +96,7 @@ define escr_term_get;
 *
 *   The function returns FALSE when STAT is returned indicating error.
 }
-function escr_term_raw (               {get next term raw characters}
+function escr_term_parse (             {parse next term from input string}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fstr: univ string_var_arg_t; {source string, term will be next token}
   in out  p: string_index_t;           {source string parse index, updated}
@@ -48,7 +113,7 @@ begin
   term.len := 0;                       {init returned string to empty}
   quoted := false;                     {init to term is not a quoted string}
   sys_error_none (stat);               {init to no error encountered}
-  escr_term_raw := false;              {init to no term found}
+  escr_term_parse := false;            {init to no term found}
 
   if p > fstr.len then return;         {nothing left to parse from input string ?}
   while fstr.str[p] = ' ' do begin     {skip over blanks}
@@ -62,14 +127,14 @@ begin
   string_token (fstr, p, term, stat);  {get the token contents into TERM}
   if string_eos(stat) then return;     {nothing there ?}
   if sys_error(stat) then return;      {hard error ?}
-  escr_term_raw := true;               {indicate returning with a term}
+  escr_term_parse := true;             {indicate returning with a term}
 
   quoted := (c = '''') or (c = '"');   {was quoted string ?}
   end;
 {
 ********************************************************************************
 *
-*   Function ESCR_TERM_GET (E, FSTR, P, VAL, STAT)
+*   Function ESCR_TERM_VAL (E, FSTR, P, VAL, STAT)
 *
 *   Get the next token in FSTR and interpret it as a term or inline function
 *   argument.  P is the FSTR parse index and VAL is the returned value of the
@@ -83,7 +148,7 @@ begin
 *   that may have less memory allocated, such as used to hold the value of a
 *   variable or constant.
 }
-function escr_term_get (               {get value of next term in list}
+function escr_term_val (               {get value of next term in input string}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fstr: univ string_var_arg_t; {source string, term will be next token}
   in out  p: string_index_t;           {source string parse index}
@@ -105,11 +170,11 @@ label
 begin
   tk.max := size_char(tk.str);         {init local var string}
   tku.max := size_char(tku.str);
-  escr_term_get := false;              {init to no term found}
+  escr_term_val := false;              {init to no term found}
 
-  if not escr_term_raw (e, fstr, p, tk, quoted, stat)
+  if not escr_term_parse (e, fstr, p, tk, quoted, stat)
     then return;
-  escr_term_get := true;               {default is now returning with a value}
+  escr_term_val := true;               {default is now returning with a value}
 {
 *   Check for token is text string.
 }
@@ -174,7 +239,7 @@ escr_sym_const_k: begin                {symbol is a constant}
 otherwise                              {this symbol can't be used as a term}
     sys_stat_set (escr_subsys_k, escr_err_notval_k, stat); {symbol has no value}
     sys_stat_parm_vstr (tk, stat);     {symbol name}
-    escr_term_get := false;
+    escr_term_val := false;
     return;
     end;
 not_sym:                               {skip to here on not a symbol reference}
@@ -183,5 +248,5 @@ not_sym:                               {skip to here on not a symbol reference}
 }
   sys_stat_set (escr_subsys_k, escr_err_termbad_k, stat); {not a valid term}
   sys_stat_parm_vstr (tk, stat);       {term string}
-  escr_term_get := false;
+  escr_term_val := false;
   end;

@@ -361,7 +361,7 @@ begin
 otherwise
       sys_stat_set (escr_subsys_k, escr_err_badparm_k, stat);
       sys_stat_parm_vstr (tk, stat);
-      sys_stat_parm_vstr (e.cmd, stat);
+      sys_stat_parm_vstr (e.parse_p^.cmd, stat);
       goto err_abort;
       end;                             {end of keyword cases}
     end;                               {back to get next keyword}
@@ -568,7 +568,7 @@ begin
     end;
   if e.exblock_p^.inpos_p^.prev_p <> nil then begin {block ended in include file ?}
     sys_stat_set (escr_subsys_k, escr_err_endblock_include_k, stat);
-    sys_stat_parm_vstr (e.cmd, stat);
+    sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     return;
     end;
   if e.inhibit_p^.inh then goto del_block; {execution is inhibited ?}
