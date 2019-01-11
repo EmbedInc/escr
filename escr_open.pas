@@ -252,6 +252,7 @@ begin
   addcmd ('endsub', addr(escr_cmd_endsub), stat); if sys_error(stat) then goto err;
   addcmd ('function', addr(escr_cmd_function), stat); if sys_error(stat) then goto err;
   addcmd ('funcval', addr(escr_cmd_funcval), stat); if sys_error(stat) then goto err;
+  addcmd ('funcstr', addr(escr_cmd_funcstr), stat); if sys_error(stat) then goto err;
   addcmd ('if', addr(escr_cmd_if), stat); if sys_error(stat) then goto err;
   addcmd ('include', addr(escr_cmd_include), stat); if sys_error(stat) then goto err;
   addcmd ('loop', addr(escr_cmd_loop), stat); if sys_error(stat) then goto err;

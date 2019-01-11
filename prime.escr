@@ -76,9 +76,9 @@ loop with p from ii to end by 2 //once for each odd number in the range
         set line ""          //reset the output line being built to empty
         endif
       if [> [slen line] 0] then //add blank before new number if not first
-        set line [str line " "]
+        append line " "
         endif
-      set line [str line p]
+      append line p
       quit                   //stop checking factors of this prime
       endif
     set ii [div p f]         //divide the candidate prime by this factor
@@ -94,9 +94,9 @@ if [> [slen line] 0] then    //there is a partial unwritten output line ?
 
 show
 set line ""
-set line [str line n " prime numbers"]
+append line n " prime numbers"
 set r [* [/ n range] 100]
-set line [str line " (" [fp r "sig 2 mxr 4 nptn nexp"] "% of range)"]
+append line " (" [fp r "sig 2 mxr 4 nptn nexp"] "% of range)"
 set r [- [now] t1]
-set line [str line " found in " [eng r] "s."]
+append line " found in " [eng r] "s."
 show line

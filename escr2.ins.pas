@@ -83,6 +83,11 @@ procedure escr_cmd_funcval (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_funcstr (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_if (
   in out  e: escr_t;
   out     stat: sys_err_t);

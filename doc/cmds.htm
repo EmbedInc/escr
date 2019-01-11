@@ -36,6 +36,11 @@
   <li><a href="#command">command</a>,
     <a href="#return">return</a>,
     <a href="#endcmd">endcmd</a>
+  <li><a href="#function">function</a>,
+    <a href="#funcval">funcval</a>,
+    <a href="#funcstr">funcstr</a>,
+    <a href="#return">return</a>,
+    <a href="#endfunc">endfunc</a>
   <li><a href="#macro">macro</a>,
     <a href="#quitmac">quitmac</a>,
     <a href="#endmac">endmac</a>
@@ -84,7 +89,7 @@ only lower case letters.  User-defined command names can contain both
 upper and lower case letters.  Parameters to the intrinsic commands are
 case-insensitive to the extent possible.
 
-<p>Depending on the implementation, a special sequence of characters may
+<p>Depending on the application, a special sequence of characters may
 be required to identify commands.  This is generally required in
 pre-processor mode to distinguish commands from ordinary data.
 
@@ -283,8 +288,9 @@ keyword.
 
 <p><dt><tt id="return"><b>RETURN</b></tt></dt><dd>
 
-  <p>Ends the execution of the current subroutine or user-defined command.
-  Execution resumes after where the routine was invoked.
+  <p>Ends the execution of the current subroutine, user-defined command,
+  or user-defined function.  Execution resumes after where the routine was
+  invoked.
 
 <p><dt><tt id="endsub"><b>ENDSUB</b></tt></dt><dd>
 
@@ -371,10 +377,111 @@ keyword.
   <p>Ends a command definition started with the last <b>command</b>
   command.  Code following this command is no longer considered part of
   the command definition, and will be executed if code execution was
-  enabled when the <b>command</b> was encountered.
+  enabled when <b>command</b> was encountered.
 
   <p>If <b>endcmd</b> is encountered while executing a command, it
   functions just like <b>return</b>.
+
+<p><dt><tt id="function"><b>FUNCTION</b> <i>name</i></tt></dt><dd>
+
+  <p>Create a user-defined function of name <i>name</i>.  <i>Name</i> will
+  now refer to the new function regardless of its previous meaning, if
+  any.  <i>Name</i> will revert to its previous meaning when this symbol
+  is deleted.
+
+  <p>Following code is considered part of the function until a
+  <b>endfunc</b> command is encountered.  The code from <b>function</b>
+  thru <b>endfunc</b> will not be executed when the function is being
+  defined. User-defined functions are invoked just like intrinsic
+  functions.
+
+  <p>The code from <b>function</b> thru <b>endfunc</b> is an execution
+  block.  This type of execution block can take arguments, which are taken
+  from the function parameters.  Argument 0 is always the function name as
+  it appeared in the function reference.  Any arguments supplied to the
+  function will be available in the function routine as numbered arguments
+  starting at 1.  The argument passing mechanism is the same as
+  implemented by the <b>call</b> command for subroutines.  See the
+  <b>call</b> command description (above) for how arguments are parsed and
+  passed to the function.
+
+  <p>The current version of the function name symbol becomes the previous
+  version inside the function.  This means that the default is to call the
+  previously-defined version of a function, not recursion, when using a
+  function within itself.  It is possible for a function to call itself
+  recursively by referencing the +1 relative version of the function name.
+
+  <p>Consider this example, using ESCR program syntax:
+
+  <pre>
+  function +
+    funcval [+ [arg 1] [arg 2] 1]
+    endfunc
+  show [+ 3 4] " " [+:1 3 4]</pre>
+
+  <p>This script produces the output:<pre>
+  8 7</pre>
+
+  <p>The first command in the script defines a new version for the
+  function "+".  Note that the function is not run at this time.  It is
+  essentially stored so that it can be recalled and run later as needed.
+
+  <p>When the <b>show</b> command envokes the "+" function, the
+  user-defined version is run instead of the intrinsic version of "+".
+  This user defined version assumes there are two integer arguments.  It
+  returns their sum plus 1.  This results in the "8" written to the
+  output.
+
+  <p>Note that a "+" function is used inside the function.  The current
+  version of a function is the one previous to the one that invoked the
+  current code.  Outside the function, such as in the <b>show</b> command,
+  "+" refers to the user-defined function.  Inside the user-defined
+  function block, "+" refers to the previous version of that symbol, which
+  is the intrinsic addition function.  The "+" reference in the
+  <b>funcval</b> command therefore causes normal addition.  This is where
+  the additional 1 is explicitly added.
+
+  <p>The second invocation of the "+" function in the <b>show</b> command
+  explicitly references the absolute version 1 of symbol "+", and
+  therefore gets normal addtion with the result being 7 instead of 8.
+
+<p><dt><tt id="funcval"><b>FUNCVAL</b> <i>arg ... arg</i></tt></dt><dd>
+
+  <p>Appends the concatenation of the string representation of all the
+  arguments to the return value of the innermost function being executed.
+  This command is only allowed inside a function routine.
+
+  <p>The resulting characters are returned by the function as a sequence
+  of characters, not as a string.  Use the FUNCSTR command to return a
+  string value.
+
+  <p>The return value of a function is initialized to nothing.  Each
+  FUNCVAL command adds characters to the return value.
+
+<p><dt><tt id="funcstr"><b>FUNCSTR</b> <i>arg ... arg</i></tt></dt><dd>
+
+  <p>Sets the concatenation of the string representation of all the
+  arguments to the return value of the innermost function being executed.
+  This command is only allowed inside a function routine.
+
+  <p>The resulting characters are returned by the function as a string,
+  not as a sequence of characters.  To return raw characters, use the
+  FUNCVAL command.
+
+  <p>The return value of a function is initialized to nothing.  A FUNCSTR
+  command explicitly sets the return value, replacing any previously
+  defined return value.  Unlike FUNCVAL, multiple FUNCSTR commands are not
+  cumulative.
+
+<p><dt><tt id="endfunc"><b>ENDFUNC</b></tt></dt><dd>
+
+  <p>Ends a function definition started with the last <b>function</b>
+  command.  Code following this command is no longer considered part of
+  the function definition, and will be executed if code execution was
+  enabled when <b>function</b> was encountered.
+
+  <p>If <b>endfunc</b> is encountered while executing a function, it acts
+  like <b>return</b>.
 
 <p><dt><tt id="macro"><b>MACRO</b> <i>name</i></tt></dt><dd>
 

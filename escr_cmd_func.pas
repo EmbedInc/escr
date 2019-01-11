@@ -4,6 +4,7 @@ module escr_cmd_subr;
 define escr_cmd_function;
 define escr_cmd_endfunc;
 define escr_cmd_funcval;
+define escr_cmd_funcstr;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -113,7 +114,7 @@ var
   par_p: escr_parse_p_t;               {pointer to parse state to add values to}
 
 begin
-  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
+  if e.inhibit_p^.inh then return;     {do nothing if execution is inhibited}
 
   blk_p := e.exblock_p;                {init pointer to current block}
   while blk_p^.bltype <> escr_exblock_func_k do begin {not in top level of function}
@@ -140,4 +141,53 @@ begin
     e, e.parse_p^.funret, stat);
   if sys_error(stat) then return;
   string_append (par_p^.funret, e.parse_p^.funret); {append to function return}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_CMD_FUNCSTR (E, STAT)
+*
+*   Command FUNCSTR arg ... arg
+*
+*   Append the concatenation of all the command arguments to the innermost
+*   user-defined function return value.
+}
+procedure escr_cmd_funcstr (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  blk_p: escr_exblock_p_t;             {pointer to function excecution block}
+  par_p: escr_parse_p_t;               {pointer to parse state to add values to}
+
+begin
+  if e.inhibit_p^.inh then return;     {do nothing if execution is inhibited}
+
+  blk_p := e.exblock_p;                {init pointer to current block}
+  while blk_p^.bltype <> escr_exblock_func_k do begin {not in top level of function}
+    blk_p := blk_p^.prev_p;            {go to parent block}
+    if blk_p = nil then begin          {no function block found at all ?}
+      sys_stat_set (escr_subsys_k, escr_err_nfunc_k, stat);
+      return;
+      end;
+    end;                               {back to check this new execution block}
+{
+*   BLK_P is pointing to the the execution block for the function to return the
+*   value of.
+}
+  par_p := blk_p^.parse_p;             {point to internal parse state of func block}
+  if par_p <> nil then par_p := par_p^.prev_p; {go to parse state to add func val to}
+  if par_p = nil then begin            {function return value parse state not exist ?}
+    sys_stat_set (escr_subsys_k, escr_err_nparse_fval_k, stat);
+    return;
+    end;
+{
+*   PAR_P is pointing to the parsing state to add the function return value to.
+}
+  escr_get_args_str (                  {get concatenation of all command args}
+    e, e.parse_p^.funret, stat);
+
+  par_p^.funret.len := 0;              {init the function return to empty}
+  escr_str_quote (e.parse_p^.funret, par_p^.funret);
   end;

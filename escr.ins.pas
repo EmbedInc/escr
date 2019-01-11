@@ -1007,6 +1007,11 @@ procedure escr_stat_sym_nfound (       {symbol not found}
   in out  stat: sys_err_t);            {set, not altered if already err}
   val_param; extern;
 
+procedure escr_str_quote (             {quote and append string, ESCR syntax}
+  in      stri: univ string_var_arg_t; {input string}
+  in out  stro: univ string_var_arg_t); {string to append to}
+  val_param; extern;
+
 procedure escr_syexcl_add (            {add syntax exclusion}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      st: univ string_var_arg_t;   {characters that start exclusion}

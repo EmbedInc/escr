@@ -9,6 +9,7 @@ define escr_str_from_fp;
 define escr_uptocomm;
 define escr_set_preproc;
 define escr_set_func_detect;
+define escr_str_quote;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -345,4 +346,47 @@ procedure escr_set_func_detect (       {set routine for detecting function start
 
 begin
   e.syfunc_st_p := p;                  {save the pointer}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_STR_QUOTE (STRI, STRO)
+*
+*   Append the quoted string of the characters in STRI to the string STRO.  This
+*   follows ESCR syntax rules where quoted strings are either enclosed in quotes
+*   or apostrophies.  To express the quoting character in a string, the quoting
+*   character is doubled.
+}
+procedure escr_str_quote (             {quote and append string, ESCR syntax}
+  in      stri: univ string_var_arg_t; {input string}
+  in out  stro: univ string_var_arg_t); {string to append to}
+  val_param;
+
+var
+  p: sys_int_machine_t;                {string index}
+  c: char;                             {scratch character}
+  q: char;                             {" or ' quote character to use}
+
+begin
+  q := '"';                            {init to default quote char}
+  for p := 1 to stri.len do begin      {scan the input string}
+    c := stri.str[p];                  {get this input string character}
+    if c = '''' then begin             {found apostrophy in string ?}
+      q := '"';                        {use quotes}
+      exit;                            {no point scanning further}
+      end;
+    if c = '"' then q := '''';         {use apostrophies if string contains quotes}
+    end;
+{
+*   Q is the string quoting character to use.
+}
+  string_append1 (stro, q);            {write leading quote}
+  for p := 1 to stri.len do begin      {once for each string character}
+    c := stri.str[p];                  {get this string character}
+    if c = q then begin                {this is quote character ?}
+      string_append1 (stro, c);        {write quote character twice}
+      end;
+    string_append1 (stro, c);          {write string character}
+    end;
+  string_append1 (stro, q);            {write closing quote}
   end;

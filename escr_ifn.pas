@@ -423,33 +423,8 @@ procedure escr_ifn_ret_str (           {return string value}
   in      str: univ string_var_arg_t); {the string value to return}
   val_param;
 
-var
-  i: sys_int_machine_t;                {string index}
-  c: char;                             {scratch character}
-  q: char;                             {" or ' quote character to use}
-
 begin
-  q := '"';                            {init to default quote char}
-  for i := 1 to str.len do begin       {scan the input string}
-    c := str.str[i];                   {get this input string character}
-    if c = '''' then begin             {found apostrophy in string ?}
-      q := '"';                        {use quotes}
-      exit;                            {no point scanning further}
-      end;
-    if c = '"' then q := '''';         {use apostrophies if string contains quotes}
-    end;
-{
-*   Q is the string quoting character to use.
-}
-  string_append1 (e.parse_p^.funret, q); {write leading quote}
-  for i := 1 to str.len do begin       {once for each string character}
-    c := str.str[i];                   {get this string character}
-    if c = q then begin                {this is quote character ?}
-      string_append1 (e.parse_p^.funret, c); {write quote character twice}
-      end;
-    string_append1 (e.parse_p^.funret, c); {write string character}
-    end;
-  string_append1 (e.parse_p^.funret, q); {write closing quote}
+  escr_str_quote (str, e.parse_p^.funret); {quote and append the string}
   end;
 {
 ********************************************************************************
@@ -470,7 +445,7 @@ begin
   tk.max := size_char(tk.str);         {init local var string}
 
   string_vstring (tk, strp, 80);       {convert to var string}
-  escr_ifn_ret_str (e, tk);            {return the string}
+  escr_str_quote (tk, e.parse_p^.funret); {quote and append the string}
   end;
 {
 ********************************************************************************
