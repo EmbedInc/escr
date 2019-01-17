@@ -28,6 +28,7 @@ var new ii integer           //scratch integer
 var new line string          //output line
 var new n integer            //number of primes found
 var new range integer        //number of numbers to check for prime
+var new tk string            //scratch string
 var new start integer = start_k
 var new end integer = end_k
 
@@ -62,8 +63,6 @@ if [and [<= start 2] [>= end 2]] then //handle the special case of 2 in the rang
 set ii [max start 3]         //make first candidate to check
 set ii [or [and ii [~ 1]] 1] //bump up to next odd number if even
 loop with p from ii to end by 2 //once for each odd number in the range
-  var local tk string        //scratch string
-
   loop with f from 3 by 2    //scan over possible factors
     if [> [* f f] p] then    //exhausted all possible factors, P is prime ?
       //
