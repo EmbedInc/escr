@@ -94,6 +94,7 @@ define escr_ifun_postdec;
 define escr_ifun_unquote;
 define escr_ifun_isint;
 define escr_ifun_isnum;
+define escr_ifun_vnl;
 %include 'escr2.ins.pas';
 
 const
@@ -3556,4 +3557,41 @@ begin
     end;
 
   escr_ifn_ret_bool (e, b);            {return the boolean function value}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_IFUN_VNL (E, STAT)
+*
+*   Evaluates the argument with local symbols ignored.  Specifically, for any
+*   symbol that has a local version, the current version of that symbol is the
+*   one before the local version.  The local versions are restored to the
+*   current versions before the function returns.
+*
+*   This function is like V, except for the handling of local symbols.  The
+*   purpose of this function is to be able to evaluate expressions in the
+*   context of the parent block.  This is necessary for the proper evaluation of
+*   call arguments in most cases.
+}
+procedure escr_ifun_vnl (              {evaluate without local variables}
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  val: escr_val_t;                     {argument value}
+  gotit: boolean;                      {got argument value}
+
+begin
+  escr_exblock_locals_off (e);         {make parent versions of local symbols current}
+  gotit := escr_ifn_get_val (e, val, stat); {try to get the argument value}
+  escr_exblock_locals_on (e);          {make local versions of local symbols current}
+
+  if not gotit then begin              {no function argument ?}
+    escr_ifn_stat_required (e, stat);  {this argument is required}
+    return;
+    end;
+  if sys_error(stat) then return;      {error getting function argument ?}
+
+  escr_ifn_ret_val (e, val);           {return the value of the argument}
   end;

@@ -17,6 +17,8 @@ define escr_exblock_arg_get;
 define escr_exblock_repeat;
 define escr_exblock_quit;
 define escr_exblock_parse_save;
+define escr_exblock_locals_off;
+define escr_exblock_locals_on;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -477,4 +479,57 @@ begin
   par_p^.prev_p := e.parse_p;          {link to previous parsing state}
   e.exblock_p^.parse_p := par_p;       {link this block to the new parsing state}
   e.parse_p := par_p;                  {make the new parsing state current}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_EXBLOCK_LOCALS_OFF (E)
+*
+*   Make the current version of all symbols the one before any local versions.
+*   This effectively makes the current versions those that were the latest when
+*   this execution block was entered.  These would be the parent versions of
+*   local symbols inside the block.
+}
+procedure escr_exblock_locals_off (    {current version of symbols parent, not local}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param;
+
+var
+  lsym_p: escr_sylist_p_t;             {points to current local symbol}
+
+begin
+  if e.exblock_p = nil then return;
+
+  lsym_p := e.exblock_p^.locsym_p;     {init to first local symbol in the list}
+  while lsym_p <> nil do begin         {loop over the local symbols}
+    lsym_p^.sym_p^.ent_p^.curr_p :=    {make curr version one before local}
+      lsym_p^.sym_p^.prev_p;
+    lsym_p := lsym_p^.next_p;          {advance to next local symbol in list}
+    end;
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_EXBLOCK_LOCALS_ON (E)
+*
+*   Make the local versions of symbols the current version.  This is the normal
+*   state inside a execution block.  The routine effectively undoes what
+*   ESCR_EXBLOCK_LOCALS_OFF does.
+}
+procedure escr_exblock_locals_on (     {make local versions of symbols current}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param;
+
+var
+  lsym_p: escr_sylist_p_t;             {points to current local symbol}
+
+begin
+  if e.exblock_p = nil then return;
+
+  lsym_p := e.exblock_p^.locsym_p;     {init to first local symbol in the list}
+  while lsym_p <> nil do begin         {loop over the local symbols}
+    lsym_p^.sym_p^.ent_p^.curr_p :=    {make curr version the local version}
+      lsym_p^.sym_p;
+    lsym_p := lsym_p^.next_p;          {advance to next local symbol in list}
+    end;
   end;

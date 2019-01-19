@@ -801,6 +801,14 @@ procedure escr_exblock_inline_set (    {go to new input source position in curr 
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
+procedure escr_exblock_locals_off (    {current version of symbols parent, not local}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param; extern;
+
+procedure escr_exblock_locals_on (     {make local versions of symbols current}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param; extern;
+
 procedure escr_exblock_parse_save (    {save parsing state, will be restored on block end}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     stat: sys_err_t);            {completion status}
