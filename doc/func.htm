@@ -1062,7 +1062,7 @@ start and end sequences have been removed.
   [<b>substr</b> 2 5 "This is a test"] --> "his i"
   </tt>
 
-<p><dt><tt id="sym"><b>SYM</b> <i>name [opt]</i></tt></dt><dd>
+<p><dt><tt id="sym"><b>SYM</b> <i>name [</i><b>NL</b><i>] [opt]</i></tt></dt><dd>
 
   <p>Returns information about a preprocessor symbol.  <i>Name</i> is a
   string that is the name of the symbol inquiring about.  <i>Name</i> may
@@ -1071,6 +1071,13 @@ start and end sequences have been removed.
 
   <p>In all cases, if the symbol specified by <i>name</i> does not exist,
   the function returns the empty string.
+
+  <p>The NL keyword cause <i>name</i> to be evaluated with local symbols
+  ignored.  Specifically, for any symbol that has a local version, the
+  current version of that symbol will be the version previous to the local
+  version.  This effectively means symbols are evaluated in the parent
+  context to the current block.  NL has no effect if <i>name</i> specifies
+  a absolute version.
 
   <p><i>Opt</i> is a optional keyword specifying the type of information
   to return about the symbol.  The choices for <i>opt</i> are:<dl>

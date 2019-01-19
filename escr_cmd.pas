@@ -172,8 +172,13 @@ begin
 
   if not escr_get_token (e, name)      {get the variable name into NAME}
     then goto err_missing;
-
-  escr_sym_find_curr (e, name, escr_sytype_vcon_k, sym_p);
+  escr_sym_find_type (                 {look up the variable}
+    e,                                 {library use state}
+    name,                              {symbol name, may be qualified}
+    escr_sytype_vcon_k,                {required symbol type}
+    sym_p,                             {returned pointer to symbol}
+    stat);
+  if sys_error(stat) then return;
   if sym_p = nil then begin            {no such symbol ?}
     escr_stat_sym_nfound (name, stat);
     return;
@@ -220,8 +225,13 @@ begin
     escr_stat_cmd_noarg (e, stat);
     return;
     end;
-
-  escr_sym_find_curr (e, name, escr_sytype_vcon_k, sym_p);
+  escr_sym_find_type (                 {look up the variable}
+    e,                                 {library use state}
+    name,                              {symbol name, may be qualified}
+    escr_sytype_vcon_k,                {required symbol type}
+    sym_p,                             {returned pointer to symbol}
+    stat);
+  if sys_error(stat) then return;
   if sym_p = nil then begin            {no such symbol ?}
     escr_stat_sym_nfound (name, stat);
     return;

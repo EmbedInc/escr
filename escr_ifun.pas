@@ -2896,7 +2896,7 @@ begin
 {
 ********************************************************************************
 *
-*   SYM name [qual]
+*   SYM name [NL] [qual]
 *
 *   Returns infomation about the symbol NAME.  QUAL can be:
 *
@@ -2909,6 +2909,10 @@ begin
 *     QUAL  -  Returns fully qualified symbol name.
 *
 *   The empty string is returned if the symbol does not exist.
+*
+*   The optional NL keyword causes local versions of symbols to be ignored.
+*   Symbols are resolved as they would be in the parent context of the current
+*   execution block.
 }
 procedure escr_ifun_sym (
   in out  e: escr_t;
@@ -2921,9 +2925,10 @@ var
   dtype: escr_dtype_k_t;               {data type of symbol}
   pick: sys_int_machine_t;             {number of keyword picked from list}
   tk: string_var132_t;
+  locoff: boolean;                     {local symbols have been disabled}
 
 label
-  ret_empty;
+  next_token, leave, ret_empty;
 
 begin
   name.max := size_char(name.str);     {init local var strings}
@@ -2934,18 +2939,20 @@ begin
     return;
     end;
 
-  if escr_ifn_get_keyw (e, tk, stat)   {get QUAL keyword}
+  locoff := false;                     {init to local symbols not off}
+next_token:
+  if escr_ifn_get_keyw (e, tk, stat)   {get next keyword}
     then begin                         {got it}
       string_tkpick80 (tk,             {pick keyword from the list}
-        'TYPE DTYPE VER QUAL NAME',
+        'TYPE DTYPE VER QUAL NAME NL',
         pick);
       if pick <= 0 then begin
         escr_ifn_bad_keyw (e, tk, stat);
-        return;
+        goto leave;
         end;
       end
     else begin                         {no keyword or error}
-      if sys_error(stat) then return;  {hard error}
+      if sys_error(stat) then goto leave; {hard error}
       pick := 1;                       {set choice to default keyword}
       end
     ;
@@ -3020,16 +3027,34 @@ otherwise                              {unsupported data type}
 {
 ********************
 *
+*   NL
+}
+6:  begin
+      if not locoff then begin         {locals not already off ?}
+        escr_exblock_locals_off (e);   {turn off local symbols}
+        locoff := true;                {remember that local symbols are off}
+        end;
+      goto next_token;                 {back to get next function option keyword}
+      end;
+{
+********************
+*
 *   Unrecognized qualifier.
 }
 otherwise                              {unrecognized QUAL keyword}
     writeln ('INTERNAL ERROR: Unexpected PICK value of ', pick, ' in IFUN_SYM.');
     escr_err_atline (e, '', '', nil, 0);
     end;                               {end of QUAL cases}
+
+leave:                                 {common exit point if locals may be off}
+  if locoff then begin                 {local symbols temporarily off ?}
+    escr_exblock_locals_on (e);        {re-enable the local symbols}
+    end;
   return;
 
 ret_empty:                             {return the empty string}
   escr_ifn_ret_empty (e);              {no such symbol, return the empty string}
+  goto leave;
   end;
 {
 ********************************************************************************
