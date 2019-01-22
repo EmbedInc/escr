@@ -284,6 +284,7 @@ begin
   addfunc ('cos', addr(escr_ifun_cos), stat); if sys_error(stat) then goto err;
   addfunc ('date', addr(escr_ifun_date), stat); if sys_error(stat) then goto err;
   addfunc ('degr', addr(escr_ifun_degr), stat); if sys_error(stat) then goto err;
+  addfunc ('dent', addr(escr_ifun_dent), stat); if sys_error(stat) then goto err;
   addfunc ('div', addr(escr_ifun_div), stat); if sys_error(stat) then goto err;
   addfunc ('dnam', addr(escr_ifun_dnam), stat); if sys_error(stat) then goto err;
   addfunc ('/', addr(escr_ifun_divide), stat); if sys_error(stat) then goto err;

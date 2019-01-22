@@ -237,6 +237,9 @@ msg err76
   lan english -def
     INTERNAL ERROR: The input parsing state to add the FUNCVAL value to
     does not exist.
+msg err77
+  lan english -def
+    Not in a directory entries loop.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.

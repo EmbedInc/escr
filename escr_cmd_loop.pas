@@ -5,6 +5,7 @@ define escr_loop_iter;
 define escr_cmd_loop;
 define escr_loop_close;
 define escr_cmd_endloop;
+define escr_ifun_dent;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -110,25 +111,6 @@ escr_looptype_dir_k: begin
         then begin
       next;                            {back to try next directory entry}
       end;
-
-
-
-    {***** TEMP DEBUG *****}
-    write ('LOOP DIR "', loop_p^.dir_fnam.str:loop_p^.dir_fnam.len,
-      '", type ');
-    case loop_p^.dir_finfo.ftype of
-file_type_other_k: write ('OTHER');
-file_type_data_k: write ('FILE');
-file_type_dir_k: write ('DIR');
-file_type_link_k: write ('LINK');
-otherwise
-      write ('ID ', ord(loop_p^.dir_finfo.ftype));
-      end;
-    writeln (', length ', loop_p^.dir_finfo.len);
-    {***** END DEBUG *****}
-
-
-
     exit;                              {now at a new valid directory entry}
     end;
   end;
@@ -716,4 +698,94 @@ del_block:                             {delete this block}
   e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}
     e.exblock_p^.inpos_p^.line_p;
   escr_exblock_close (e, stat);        {end this execution block}
+  end;
+{
+********************************************************************************
+*
+*   Escr function DENT [FNAM TNAM TYPE LEN DTM DIR]
+*
+*   Return information about the directory entry for the current iteration of
+*   a directory entries loop.
+*
+*   See the header comments of the IFUN module for the interface to intrinsic
+*   function routines.
+}
+procedure escr_ifun_dent(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  block_p: escr_exblock_p_t;           {pointer to execution block}
+  loop_p: escr_loop_p_t;               {pointer to loop state}
+  pick: sys_int_machine_t;             {number of keyword picked from list}
+  tk: string_treename_t;               {scratch token}
+  tnam: string_treename_t;             {scratch arbitrary pathname}
+
+begin
+  tk.max := size_char(tk.str);         {init local var strings}
+  tnam.max := size_char(tnam.str);
+
+  block_p := e.exblock_p;              {init to current inner-most block}
+  while true do begin                  {scan up nested blocks looking for DIR loop}
+    if block_p = nil then begin        {no DIR loop found}
+      sys_stat_set (escr_subsys_k, escr_err_ndirloop_k, stat);
+      return;
+      end;
+    loop_p := block_p^.loop_p;         {get point to any loop state of this block}
+    if                                 {this block is not a DIR loop ?}
+        (loop_p = nil) or else         {not a loop at all}
+        (loop_p^.looptype <> escr_looptype_dir_k) {loop is not a DIR loop ?}
+        then begin
+      block_p := block_p^.prev_p;      {up to parent block}
+      next;                            {try again with parent block}
+      end;
+    exit;                              {LOOP_P is pointing to the DIR loop state}
+    end;
+
+  if escr_ifn_get_keyw (e, tk, stat)   {try to get optional keyword}
+    then begin                         {got a keyword}
+      string_tkpick80 (tk,             {pick keyword from list}
+        'FNAM TNAM TYPE LEN DTM DIR',
+        pick);
+      end
+    else begin                         {no keyword or error}
+      discard( string_eos(stat) );     {no keyword is not error}
+      if sys_error(stat) then return;  {hard error ?}
+      pick := 1;                       {default to as if first keyword in list}
+      end
+    ;
+
+  case pick of                         {which information to return ?}
+1:  begin                              {FNAM - file name as in directory}
+      escr_ifn_ret_str (e, loop_p^.dir_fnam);
+      end;
+2:  begin                              {TNAM - full treename of directory entry}
+      string_pathname_join (           {make complete pathname of this dir entry}
+        loop_p^.dir_conn.tnam,         {treename of the directory}
+        loop_p^.dir_fnam,              {leafname of this entry}
+        tnam);                         {resulting full treename}
+      escr_ifn_ret_str (e, tnam);
+      end;
+3:  begin                              {TYPE - type of file: FILE, LINK, DIR}
+      case loop_p^.dir_finfo.ftype of  {what kind of file system object is this ?}
+file_type_dir_k: escr_ifn_ret_strp (e, 'DIR'(0));
+file_type_link_k: escr_ifn_ret_strp (e, 'LINK'(0));
+otherwise
+        escr_ifn_ret_strp (e, 'FILE'(0));
+        end;
+      end;
+4:  begin                              {LEN - file length, bytes}
+      escr_ifn_ret_int (e, loop_p^.dir_finfo.len);
+      end;
+5:  begin                              {DTM - time last modified}
+      escr_ifn_ret_time (e, loop_p^.dir_finfo.modified);
+      end;
+6:  begin                              {DIR - treename of the directory being scanned}
+      escr_ifn_ret_str (e, loop_p^.dir_conn.tnam);
+      end;
+otherwise                              {unrecognized keyword}
+    escr_ifn_bad_keyw (e, tk, stat);
+    return;
+    end;
   end;

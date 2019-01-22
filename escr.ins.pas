@@ -93,6 +93,7 @@ const
   escr_err_parsesaved_k = 74;          {parsing state already saved in curr block}
   escr_err_nfunc_k = 75;               {not in a function}
   escr_err_nparse_fval_k = 76;         {no parse state for FUNCVAL value}
+  escr_err_ndirloop_k = 77;            {not in a DIR loop}
 {
 *   Derived constants.
 }

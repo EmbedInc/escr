@@ -237,6 +237,11 @@ procedure escr_ifun_degr(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_dent(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_div(
   in out  e: escr_t;
   out     stat: sys_err_t);

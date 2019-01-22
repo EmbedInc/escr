@@ -39,6 +39,7 @@
     <a href="#cos">COS</a>&nbsp;
     <a href="#date">DATE</a>&nbsp;
     <a href="#degr">DEGR</a>&nbsp;
+    <a href="#dent">DENT</a>&nbsp;
     <a href="#div">DIV</a>&nbsp;
     <a href="#dnam">DNAM</a>&nbsp;
     <a href="#e">E</a>&nbsp;
@@ -176,6 +177,7 @@
     <a href="#dnam">DNAM</a> &nbsp; - &nbsp; Directory name<br>
     <a href="#lnam">LNAM</a> &nbsp; - &nbsp; File leafname, can remove suffix<br>
     <a href="#tnam">TNAM</a> &nbsp; - &nbsp; File full treename<br>
+    <a href="#dent">DENT</a> &nbsp; - &nbsp; Directory entry info, in DIR loop<br>
 
   <p><li>Miscellaneous<p>
 
@@ -516,6 +518,51 @@ start and end sequences have been removed.
 
   <p>Converts degrees to radians.  <i>Deg</i> must be numeric.  The result
   is always floating point.
+
+<p><dt><tt id="dent"><b>DENT</b> <i>[opt]</i></tt></dt><dd>
+
+  <p>Returns one piece of information about the current directory entry in
+  a directory entries loop (command LOOP DIR).  This function is only
+  valid inside a directory entries loop.
+
+  <p><i>Opt</i> is keyword specifying the piece of information to return.
+  The valid <i>opt</i> keywords and the resulting function return values
+  are:<dl>
+
+    <p><dt><tt><b>FNAM</b></tt></dt><dd>
+
+      <p>String.  The bare directory entry name.
+
+    <p><dt><tt><b>TNAM</b></tt></dt><dd>
+
+      <p>String.  The full absolute pathname of the directory entry.
+
+    <p><dt><tt><b>TYPE</b></tt></dt><dd>
+
+      <p>String.  Keyword indicating the type of file system object.  The
+      possible function values are:
+
+      <p><tt><b>FILE</b></tt> - Ordinary data file.
+
+      <p><tt><b>LINK</b></tt> - Symbolic link.
+
+      <p><tt><b>DIR</b></tt> - Nested directory (subdirectory).
+
+    <p><dt><tt><b>LEN</b></tt></dt><dd>
+
+      <p>Integer.  The file length in bytes.
+
+    <p><dt><tt><b>DTM</b></tt></dt><dd>
+
+      <p>Time.  The time the file was last modified.
+
+    <p><dt><tt><b>DIR</b></tt></dt><dd>
+
+      <p>String.  The full pathname of the directory being listed.  This
+      is not dependent on the specific entry.  This value is therefore the
+      same every iteration of the loop.
+
+    </dl><!-- End of OPT keywords -->
 
 <p><dt><tt id="div"><b>DIV</b> <i>arg1 [arg2 ... argN]</i></tt></dt><dd>
 
