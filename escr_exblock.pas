@@ -103,6 +103,11 @@ var
 begin
   sys_error_none (stat);               {init to no error encountered}
   if e.exblock_p = nil then return;    {nothing to close ?}
+
+  if e.exblock_p^.loop_p <> nil then begin {loop state exists ?}
+    escr_loop_close (e.exblock_p^.loop_p^, stat); {close system loop state}
+    if sys_error(stat) then return;
+    end;
 {
 *   Delete the local symbols.  SYM_DEL will delete a symbol and all later
 *   versions of it.  It will also delete the entry for that symbol from the

@@ -1,10 +1,148 @@
 {   Commands related to loops.
 }
 module escr_cmd_loop;
-define escr_cmd_loop;
 define escr_loop_iter;
+define escr_cmd_loop;
+define escr_loop_close;
 define escr_cmd_endloop;
 %include 'escr2.ins.pas';
+{
+********************************************************************************
+*
+*   Function ESCR_LOOP_ITER
+*
+*   Advance the loop state to the next iteration.  If the terminating condition
+*   is met, then the function returns FALSE.  If looping should continue, then
+*   the loop state is advanced to the next iteration and the function returns
+*   TRUE.
+}
+function escr_loop_iter (              {advance to next loop iteration}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {looped continues, not terminated}
+  val_param;
+
+var
+  loop_p: escr_loop_p_t;               {pointer to loop descriptor}
+  sym_p: escr_sym_p_t;                 {scratch symbol descriptor pointer}
+
+label
+  loop;
+
+begin
+  escr_loop_iter := false;             {init to loop terminated}
+
+  if e.exblock_p^.bltype <> escr_exblock_loop_k {not in explicit loop block ?}
+    then goto loop;                    {loop back unconditionally}
+  loop_p := e.exblock_p^.loop_p;       {get pointer to loop descriptor}
+  if loop_p = nil then goto loop;      {no loop data ?}
+  case loop_p^.looptype of             {what kind of loop is this ?}
+{
+******************************
+*
+*   Unconditional loop.  There is no loop state to advance and no terminating
+*   condition to check.
+}
+escr_looptype_unc_k: ;
+{
+******************************
+*
+*   Looping thru a previously saved list of symbol names.
+}
+escr_looptype_sym_k: begin             {looping thru list of symbols}
+  while true do begin
+    string_list_pos_rel (loop_p^.sym_list_p^, 1); {advance to next symbols list entry}
+    if loop_p^.sym_list_p^.str_p = nil {hit end of list ?}
+      then return;
+
+    escr_sym_find (                    {try to find the symbol}
+      e, loop_p^.sym_list_p^.str_p^, sym_p);
+    if sym_p = nil then next;          {this symbol got deleted, skip it}
+
+    string_copy (                      {copy new name into loop variable}
+      loop_p^.sym_list_p^.str_p^, loop_p^.sym_const_p^.const_val.str);
+    exit;                              {successfully found next symbol name}
+    end;
+  end;
+{
+******************************
+*
+*   Counted loop.
+}
+escr_looptype_cnt_k: begin
+  loop_p^.cnt_curr :=                  {advance loop value to next iteration}
+    loop_p^.cnt_curr + loop_p^.cnt_inc;
+  if loop_p^.cnt_const_p <> nil then begin {there is a iteration value constant ?}
+    loop_p^.cnt_const_p^.const_val.int := loop_p^.cnt_curr; {update variable for this iteration}
+    end;
+
+  if loop_p^.cnt_inf then goto loop;   {infinite loop, no terminating condition ?}
+
+  if                                   {done counting up ?}
+      (loop_p^.cnt_end >= loop_p^.cnt_start) and {counting up ?}
+      (loop_p^.cnt_curr > loop_p^.cnt_end) {this iteration would be past end ?}
+    then return;                       {terminate the loop}
+  if                                   {done counting down ?}
+      (loop_p^.cnt_end < loop_p^.cnt_start) and {counting up ?}
+      (loop_p^.cnt_curr < loop_p^.cnt_end) {this iteration would be past end ?}
+    then return;                       {terminate the loop}
+  end;
+{
+******************************
+*
+*   Looping over directory entries.
+}
+escr_looptype_dir_k: begin
+  while true do begin                  {loop until find entry of the right type}
+    file_read_dir (                    {try to read next directory entry}
+      loop_p^.dir_conn,                {connection to the directory}
+      [                                {list of info to request with entry name}
+        file_iflag_dtm_k,              {date/time}
+        file_iflag_len_k,              {file length}
+        file_iflag_type_k],            {file type}
+      loop_p^.dir_fnam,                {returned directory entry name}
+      loop_p^.dir_finfo,               {additional info about the entry}
+      stat);
+    if file_eof(stat) then return;     {end of directory ?}
+    if sys_error(stat) then return;    {hard error ?}
+    if not                             {not one of the selected file types ?}
+        (loop_p^.dir_finfo.ftype in loop_p^.dir_ftype)
+        then begin
+      next;                            {back to try next directory entry}
+      end;
+
+
+
+    {***** TEMP DEBUG *****}
+    write ('LOOP DIR "', loop_p^.dir_fnam.str:loop_p^.dir_fnam.len,
+      '", type ');
+    case loop_p^.dir_finfo.ftype of
+file_type_other_k: write ('OTHER');
+file_type_data_k: write ('FILE');
+file_type_dir_k: write ('DIR');
+file_type_link_k: write ('LINK');
+otherwise
+      write ('ID ', ord(loop_p^.dir_finfo.ftype));
+      end;
+    writeln (', length ', loop_p^.dir_finfo.len);
+    {***** END DEBUG *****}
+
+
+
+    exit;                              {now at a new valid directory entry}
+    end;
+  end;
+{
+******************************
+}
+otherwise                              {unimplemented loop type}
+    writeln ('INTERNAL ERROR: Unexpected loop type encountered in LOOP_ITER.');
+    escr_err_atline (e, '', '', nil, 0);
+    end;                               {end of loop type cases}
+
+loop:                                  {loop execution back to start of block}
+  escr_loop_iter := true;              {indicate execution was looped back}
+  end;
 {
 ********************************************************************************
 *
@@ -54,6 +192,8 @@ begin
 *   LOOP SYMBOLS var [VAR CONST VCON SUBR MACRO FUNC CMD LABEL]
 *
 *   LOOP [WITH var] [FROM n] [TO n] [BY n] [N n]
+*
+*   LOOP DIR dirname [FILE LINK DIR]
 }
 procedure escr_cmd_loop (
   in out  e: escr_t;
@@ -67,7 +207,8 @@ type
     keyw_from_k,
     keyw_to_k,
     keyw_by_k,
-    keyw_n_k);
+    keyw_n_k,
+    keyw_dir_k);
   keyw_t = set of keyw_k_t;            {set of all possible keywords}
 
 var
@@ -76,7 +217,8 @@ var
   pick: sys_int_machine_t;             {number of keyword picked from list}
   n_n: sys_int_machine_t;              {value with N keyword}
   name: string_var80_t;                {variable name}
-  tk: string_var32_t;                  {scratch token}
+  tk: string_var32_t;                  {scratch token and file name}
+  fnam: string_treename_t;             {scratch file name}
   sym_p: escr_sym_p_t;                 {pointer to symbol name}
   slist_p: string_list_p_t;            {points to strings list}
   sytypes: escr_sytype_t;              {set of user-visible symbol types}
@@ -84,11 +226,12 @@ var
   stat2: sys_err_t;                    {to avoid corrupting STAT}
 
 label
-  err_missing, err_keyw, err_abort;
+  err_missing, err_keyw, err_abort, loop_done;
 
 begin
   name.max := size_char(name.str);     {init local var string}
   tk.max := size_char(tk.str);
+  fnam.max := size_char(fnam.str);
   sys_error_none (stat);               {init to no error occurred}
 
   escr_exblock_new (e, stat);          {create new execution block state}
@@ -114,7 +257,7 @@ begin
       then exit;                       {exhausted the command line ?}
     string_upcase (tk);                {make upper case for keyword matching}
     string_tkpick80 (tk,               {pick the keyword from list}
-      'SYMBOLS WITH FROM TO BY N',
+      'SYMBOLS WITH FROM TO BY N DIR',
       pick);
     case pick of                       {which keyword is it ?}
 {
@@ -228,10 +371,7 @@ begin
 
   string_list_pos_abs (slist_p^, 1);   {go to first list entry}
 
-  if slist_p^.str_p = nil then begin   {the list is empty ?}
-    e.inhibit_p^.inh := true;          {inhibit execution for this block}
-    return;
-    end;
+  if slist_p^.str_p = nil then goto loop_done; {the list is empty ?}
 
   string_copy (                        {init loop value to first symbol name}
     slist_p^.str_p^, loop_p^.sym_const_p^.const_val.str);
@@ -356,6 +496,41 @@ begin
 {
 ******************************
 *
+*   LOOP DIR dirname [FILE LINK DIR]
+}
+7: begin
+  if loop_p^.looptype <> escr_looptype_unc_k {incompatible with previous keyword ?}
+    then goto err_keyw;
+  if keyw_dir_k in keyw
+    then goto err_keyw;
+  keyw := keyw + [keyw_dir_k];         {record that this keyword used}
+
+  loop_p^.looptype := escr_looptype_dir_k; {looping over directory entries}
+  loop_p^.dir_ftype := [];             {init to no file types specified}
+  loop_p^.dir_fnam.max := sizeof(loop_p^.dir_fnam.str);
+  loop_p^.dir_open := false;           {init to directory not open}
+
+  if not escr_get_str (e, fnam, stat) then begin {get directory name into FNAM}
+    if sys_error(stat) then goto err_abort;
+    goto err_missing;
+    end;
+
+  while true do begin                  {back here each file type specifier}
+    escr_get_keyword (e,
+      'FILE LINK DIR',
+      pick, stat);
+    if pick = 0 then exit;
+    if sys_error(stat) then goto err_abort; {hard error ?}
+    case pick of
+1:    loop_p^.dir_ftype := loop_p^.dir_ftype + [file_type_data_k];
+2:    loop_p^.dir_ftype := loop_p^.dir_ftype + [file_type_link_k];
+3:    loop_p^.dir_ftype := loop_p^.dir_ftype + [file_type_dir_k];
+      end;
+    end;
+  end;
+{
+******************************
+*
 *   Unrecognized keyword.  The upper case keyword is in TK.
 }
 otherwise
@@ -397,10 +572,7 @@ escr_looptype_cnt_k: begin
       sys_stat_set (escr_subsys_k, escr_err_loop_n_k, stat);
       goto err_abort;
       end;
-    if n_n <= 0 then begin             {zero iterations, don't run the loop ?}
-      e.inhibit_p^.inh := true;        {inhibit execution for this block}
-      return;
-      end;
+    if n_n <= 0 then goto loop_done;   {zero iterations, don't run the loop ?}
     if not (keyw_to_k in keyw)
       then begin                       {make end from start and number}
         loop_p^.cnt_end :=
@@ -435,6 +607,26 @@ escr_looptype_cnt_k: begin
     loop_p^.cnt_const_p^.const_val.int := loop_p^.cnt_curr; {init to value for first iteration}
     end;
   end;                                 {end of counted loop case}
+{
+*   Post-keyword processing for directory entries loop.
+*
+*   The directory name is in FNAM and DIR_FTYPE has been set to the mentioned
+*   file types.
+}
+escr_looptype_dir_k: begin
+  if loop_p^.dir_ftype = [] then begin {no file types explicitly mentioned ?}
+    loop_p^.dir_ftype := [             {set to all file types}
+      file_type_other_k,
+      file_type_data_k,
+      file_type_dir_k,
+      file_type_link_k];
+    end;
+
+  file_open_read_dir (fnam, loop_p^.dir_conn, stat); {open directory for reading}
+  if sys_error(stat) then goto err_abort;
+  loop_p^.dir_open := true;            {indicate directory is now open}
+  if not escr_loop_iter (e, stat) then goto loop_done; {loop terminates here ?}
+  end;
 
     end;                               {end of looptype cases for post-keyword processing}
   return;
@@ -451,105 +643,44 @@ err_keyw:                              {keyword in TK incompatible with previous
 
 err_abort:                             {abort with exblock created, STAT all set}
   escr_exblock_close (e, stat2);       {remove the loop execution block created above}
+  return;
+
+loop_done:                             {no error, but loop should not be run at all}
+  e.inhibit_p^.inh := true;            {inhibit execution for this block}
   end;
 {
 ********************************************************************************
 *
-*   Function LOOP_ITER
+*   Subroutine ESCR_LOOP_CLOSE (LOOP, STAT)
 *
-*   Advance the loop state to the next iteration.  If the terminating condition
-*   is met, then the function returns FALSE and the execution location is not
-*   altered.  If the terminating condition is not met, then the execution point
-*   is set to the first line within the current execution block.
+*   Deallocate non-memory system resources associated with the indicated loop
+*   state.  This routine is called when a block with loop state is being
+*   deleted.  Dynamic memory is NOT deallocated here, since it will be
+*   automatically deallocated when the memory context for the block is deleted.
 }
-function escr_loop_iter (              {advance to next loop iteration}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {looped back, not terminated}
+procedure escr_loop_close (            {close system state of loop of curr block}
+  in out  loop: escr_loop_t;           {the loop to close out}
+  out     stat: sys_err_t);            {completion status}
   val_param;
 
-var
-  loop_p: escr_loop_p_t;               {pointer to loop descriptor}
-  sym_p: escr_sym_p_t;                 {scratch symbol descriptor pointer}
-
-label
-  loop;
-
 begin
-  escr_loop_iter := false;             {init to loop terminated}
+  sys_error_none (stat);               {init to no error}
 
-  if e.exblock_p^.bltype <> escr_exblock_loop_k {not in explicit loop block ?}
-    then goto loop;                    {loop back unconditionally}
-  loop_p := e.exblock_p^.loop_p;       {get pointer to loop descriptor}
-  if loop_p = nil then goto loop;      {no loop data ?}
-  case loop_p^.looptype of             {what kind of loop is this ?}
-{
-******************************
-*
-*   Unconditional loop.  There is no loop state to advance and no terminating
-*   condition to check.
-}
-escr_looptype_unc_k: ;
-{
-******************************
-*
-*   Looping thru a previously saved list of symbol names.
-}
-escr_looptype_sym_k: begin             {looping thru list of symbols}
-  while true do begin
-    string_list_pos_rel (loop_p^.sym_list_p^, 1); {advance to next symbols list entry}
-    if loop_p^.sym_list_p^.str_p = nil {hit end of list ?}
-      then return;
+  case loop.looptype of                {what kind of loop is this ?}
 
-    escr_sym_find (                    {try to find the symbol}
-      e, loop_p^.sym_list_p^.str_p^, sym_p);
-    if sym_p = nil then next;          {this symbol got deleted, skip it}
+escr_looptype_dir_k: begin             {looping thru directory entries}
+      if loop.dir_open then begin      {directory is open ?}
+        file_close (loop.dir_conn);    {close it}
+        loop.dir_open := false;
+        end;
+      end;
 
-    string_copy (                      {copy new name into loop variable}
-      loop_p^.sym_list_p^.str_p^, loop_p^.sym_const_p^.const_val.str);
-    exit;                              {successfully found next symbol name}
-    end;
-  end;
-{
-******************************
-*
-*   Counted loop.
-}
-escr_looptype_cnt_k: begin
-  loop_p^.cnt_curr :=                  {advance loop value to next iteration}
-    loop_p^.cnt_curr + loop_p^.cnt_inc;
-  if loop_p^.cnt_const_p <> nil then begin {there is a iteration value constant ?}
-    loop_p^.cnt_const_p^.const_val.int := loop_p^.cnt_curr; {update variable for this iteration}
-    end;
-
-  if loop_p^.cnt_inf then goto loop;   {infinite loop, no terminating condition ?}
-
-  if                                   {done counting up ?}
-      (loop_p^.cnt_end >= loop_p^.cnt_start) and {counting up ?}
-      (loop_p^.cnt_curr > loop_p^.cnt_end) {this iteration would be past end ?}
-    then return;                       {terminate the loop}
-  if                                   {done counting down ?}
-      (loop_p^.cnt_end < loop_p^.cnt_start) and {counting up ?}
-      (loop_p^.cnt_curr < loop_p^.cnt_end) {this iteration would be past end ?}
-    then return;                       {terminate the loop}
-  end;
-{
-******************************
-}
-otherwise                              {unimplemented loop type}
-    writeln ('INTERNAL ERROR: Unexpected loop type encountered in LOOP_ITER.');
-    escr_err_atline (e, '', '', nil, 0);
     end;                               {end of loop type cases}
-
-loop:                                  {loop execution back to start of block}
-  escr_exblock_repeat (e, stat);       {jump back to start of block}
-  if sys_error(stat) then return;
-  escr_loop_iter := true;              {indicate execution was looped back}
   end;
 {
 ********************************************************************************
 *
-*   Subroutine  ESCR_CMD_ENDLOOP (E, STAT)
+*   Subroutine ESCR_CMD_ENDLOOP (E, STAT)
 }
 procedure escr_cmd_endloop (
   in out  e: escr_t;
@@ -574,8 +705,12 @@ begin
   if e.inhibit_p^.inh then goto del_block; {execution is inhibited ?}
 
   if not escr_get_end (e, stat) then return; {abort on extra parameter}
-  if escr_loop_iter(e, stat) then return; {back to do next loop iteration ?}
   if sys_error(stat) then return;
+
+  if escr_loop_iter(e, stat) then begin {back to do next loop iteration ?}
+    escr_exblock_repeat (e, stat);     {jump back to start of block}
+    return;
+    end;
 
 del_block:                             {delete this block}
   e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}

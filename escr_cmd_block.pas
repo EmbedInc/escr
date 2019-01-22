@@ -40,10 +40,13 @@ begin
   sys_error_none (stat);               {init to no error encountered}
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
 
-  if not escr_loop_iter(e, stat) then begin {loop terminated ?}
-    if sys_error(stat) then return;
-    escr_exblock_quit (e);             {leave block without executing anything}
+  if escr_loop_iter(e, stat) then begin {back for another iteration ?}
+    escr_exblock_repeat (e, stat);     {go back to start of block}
+    return;
     end;
+
+  if sys_error(stat) then return;
+  escr_exblock_quit (e);               {leave block without executing anything}
   end;
 {
 ********************************************************************************

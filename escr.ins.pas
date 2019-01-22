@@ -295,7 +295,8 @@ escr_sym_src_k: (                      {label for a source code snippet}
   escr_looptype_k_t = (                {type of explicit loop}
     escr_looptype_unc_k,               {unconditional, no terminating condition}
     escr_looptype_sym_k,               {looping over list of symbols}
-    escr_looptype_cnt_k);              {counted loop}
+    escr_looptype_cnt_k,               {counted loop}
+    escr_looptype_dir_k);              {looping over entries in a directory}
 
   escr_loop_p_t = ^escr_loop_t;
   escr_loop_t = record                 {info about a loop}
@@ -314,6 +315,13 @@ escr_looptype_cnt_k: (                 {loop over integer values with fixed incr
       cnt_end: sys_int_max_t;          {ending value}
       cnt_inc: sys_int_max_t;          {increment per iteration}
       cnt_inf: boolean;                {infinite loop}
+      );
+escr_looptype_dir_k: (                 {loop over directory entries}
+      dir_conn: file_conn_t;           {connection to the directory}
+      dir_ftype: file_type_t;          {file types to not ignore}
+      dir_fnam: string_leafname_t;     {current directory entry name}
+      dir_finfo: file_info_t;          {info about the current dir entry}
+      dir_open: boolean;               {connection to directory is open}
       );
     end;
 
@@ -930,10 +938,15 @@ procedure escr_inline_func (           {perform inline function operation}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
+procedure escr_loop_close (            {close system state of loop of curr block}
+  in out  loop: escr_loop_t;           {the loop to close out}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
 function escr_loop_iter (              {advance to next loop iteration}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     stat: sys_err_t)             {completion status}
-  :boolean;                            {looped back, not terminated}
+  :boolean;                            {looped continues, not terminated}
   val_param; extern;
 
 procedure escr_open (                  {start a new use of the ESCR system}
