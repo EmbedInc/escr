@@ -5,6 +5,7 @@ define escr_sytable_init;
 define escr_sytable_scan_start;
 define escr_sytable_scan;
 define escr_sym_sytype_name;
+define escr_sym_name_sytype;
 define escr_sym_name;
 define escr_sym_name_bare;
 define escr_sym_name_bare_check;
@@ -22,6 +23,7 @@ define escr_sym_find_type;
 define escr_sym_del_pos;
 define escr_sym_del;
 define escr_sym_del_name;
+define escr_sym_del_name_type;
 define escr_sym_curr_sym;
 define escr_sym_curr_sym;
 %include 'escr2.ins.pas';
@@ -137,6 +139,44 @@ otherwise
     writeln ('INTERNAL ERROR: Unexpected symbol type ID of ',
       ord(sytype), ' in SYM_SYTYPE_NAME');
     sys_bomb;
+    end;
+  end;
+{
+********************************************************************************
+*
+*   Function ESCR_SYM_NAME_SYTYPE (NAME)
+*
+*   Interpret NAME as a symbol type keyword and return the indicated symbol type
+*   ID.  The valid symbol type keywords are:
+*
+*     VAR, CONST, VCON, SUBR, MACRO, FUNC, CMD, LABEL
+*
+*   If NAME is not one of the above, then the function returns
+*   ESCR_SYTYPE_UNSP_K.
+}
+function escr_sym_name_sytype (        {interpret symbol type keyword}
+  in      name: univ string_var_arg_t) {the keyword, must be upper case}
+  :escr_sytype_k_t;                    {symbol type ID or ESCR_SYTYPE_UNSP_K}
+  val_param;
+
+var
+  pick: sys_int_machine_t;             {number of keyword picked from list}
+
+begin
+  escr_sym_name_sytype := escr_sytype_unsp_k; {init to symbol type not recognized}
+
+  string_tkpick80 (name,               {pick the type name keyword from list}
+    'VAR CONST VCON SUBR MACRO FUNC CMD LABEL',
+    pick);                             {1-N number of keyword picked from list}
+  case pick of                         {which keyword is it ?}
+1:  escr_sym_name_sytype := escr_sytype_var_k;
+2:  escr_sym_name_sytype := escr_sytype_const_k;
+3:  escr_sym_name_sytype := escr_sytype_vcon_k;
+4:  escr_sym_name_sytype := escr_sytype_subr_k;
+5:  escr_sym_name_sytype := escr_sytype_macro_k;
+6:  escr_sym_name_sytype := escr_sytype_func_k;
+7:  escr_sym_name_sytype := escr_sytype_cmd_k;
+8:  escr_sym_name_sytype := escr_sytype_label_k;
     end;
   end;
 {
@@ -326,20 +366,9 @@ begin
   if tk.len <= 0 then goto done_type;  {type left empty ?}
 
   string_upcase (tk);                  {make upper case for keyword matching}
-  string_tkpick80 (tk,                 {pick the type name keyword from list}
-    'VAR CONST VCON SUBR MACRO FUNC CMD LABEL',
-    ii);                               {1-N number of keyword picked from list}
-case ii of                             {which keyword is it ?}
-1:  sytype := escr_sytype_var_k;
-2:  sytype := escr_sytype_const_k;
-3:  sytype := escr_sytype_vcon_k;
-4:  sytype := escr_sytype_subr_k;
-5:  sytype := escr_sytype_macro_k;
-6:  sytype := escr_sytype_func_k;
-7:  sytype := escr_sytype_cmd_k;
-8:  sytype := escr_sytype_label_k;
-otherwise
-    goto try_ver;                      {not valid symbol type, try version}
+  sytype := escr_sym_name_sytype (tk); {get symbol type ID indicated by token}
+  if sytype = escr_sytype_unsp_k then begin {not a recognized symbol type name ?}
+    goto try_ver;
     end;
 done_type:                             {done getting symbol type}
 {
@@ -1250,6 +1279,73 @@ begin
     sym_p,                             {returned pointer to specified version}
     stat);
   if sys_error(stat) then return;
+  if sym_p = nil then begin            {not found ?}
+    sys_stat_set (escr_subsys_k, escr_err_nfsym_k, stat); {symbol not found}
+    sys_stat_parm_vstr (name, stat);   {symbol name}
+    return;
+    end;
+
+  escr_sym_del_pos (e, sym_p, hpos, stat); {delete the symbol version}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_SYM_DEL_NAME_TYPE (E, NAME, SYTYPE, STAT)
+*
+*   Delete a version of a symbol.  NAME is the name of the symbol, and may be
+*   fully qualified.  SYTYPE specifies the type of the symbol.  It is a error
+*   if a symbol with the indicated name and type does not exist.
+}
+procedure escr_sym_del_name_type (     {delete symbol version by name, specific type}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {symbol name, may be fully qualified}
+  in      sytype: escr_sytype_k_t;     {symbol must be this type}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+var
+  rawname: string_var80_t;             {bare symbol name}
+  natype: escr_sytype_k_t;             {symbol type specified in NAME}
+  naver: escr_syver_t;                 {symbol version specified in NAME}
+  sym_p: escr_sym_p_t;                 {pointer to symbol descriptor to delete}
+  hpos: string_hash_pos_t;             {handle to position in symbol table}
+
+begin
+  rawname.max := size_char(rawname.str); {init local var string}
+
+  escr_sym_name_parse (                {extract info from qualified symbol name}
+    name,                              {qualified symbol name input}
+    rawname,                           {returned bare symbol name}
+    natype,                            {returned user-visible symbol type}
+    naver,                             {returned version information}
+    stat);
+  if sys_error(stat) then return;      {invalid qualified symbol name ?}
+
+  while true do begin                  {resolve required symbol type in NATYPE}
+    if natype = sytype then exit;      {parsed type matches user request ?}
+    if sytype = escr_sytype_unsp_k then exit; {caller is OK with any type ?}
+    if natype = escr_sytype_unsp_k then begin {name doesn't specify a type ?}
+      natype := sytype;                {use the caller's specified type}
+      exit;
+      end;
+    if
+        (sytype = escr_sytype_vcon_k) and ( {user wants variable or constant ?}
+          (natype = escr_sytype_var_k) or {is a variable ?}
+          (natype = escr_sytype_const_k) {is a constant ?}
+          )
+      then exit;                       {qualified name matches user request}
+    sys_stat_set (escr_subsys_k, escr_err_sytypemm_k, stat);
+    sys_stat_parm_vstr (name, stat);
+    return;                            {qualified type doesn't match required type}
+    end;
+
+  escr_sym_lookup_ver (                {look up the specific symbol}
+    e,                                 {ESCR library use state}
+    rawname,                           {base symbol name}
+    natype,                            {symbol type}
+    naver,                             {symbol version}
+    hpos,                              {returned position in symbol table}
+    sym_p);                            {returned pointer to the symbol}
   if sym_p = nil then begin            {not found ?}
     sys_stat_set (escr_subsys_k, escr_err_nfsym_k, stat); {symbol not found}
     sys_stat_parm_vstr (name, stat);   {symbol name}

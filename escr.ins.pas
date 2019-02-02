@@ -94,6 +94,7 @@ const
   escr_err_nfunc_k = 75;               {not in a function}
   escr_err_nparse_fval_k = 76;         {no parse state for FUNCVAL value}
   escr_err_ndirloop_k = 77;            {not in a DIR loop}
+  escr_err_sytypemm_k = 78;            {sytype mismatch with name <name>}
 {
 *   Derived constants.
 }
@@ -856,6 +857,11 @@ function escr_excl_check (             {check for syntax exclusion at char}
   :boolean;                            {excl found, P changed, excl appended to STRO}
   val_param; extern;
 
+procedure escr_exitstatus (            {set EXITSTATUS, create if needed}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      exstat: sys_int_machine_t);  {value to set EXITSTATUS to}
+  val_param; extern;
+
 procedure escr_icmd_add (              {add intrinsic command}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {name of the command to add}
@@ -998,7 +1004,7 @@ procedure escr_run_conn (              {run at current line of open file}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_run_file (              {run starting at first line file}
+procedure escr_run_file (              {run starting at first line of file}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {name of file to run script code from}
   in      suff: string;                {allowed file name suffixes, blank separated}
@@ -1072,6 +1078,13 @@ procedure escr_sym_del_name (          {delete symbol version by name}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
+procedure escr_sym_del_name_type (     {delete symbol version by name, specific type}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {symbol name, may be fully qualified}
+  in      sytype: escr_sytype_k_t;     {symbol must be this type}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
 procedure escr_sym_find (              {find version from qualified symbol name}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {qualified symbol name}
@@ -1137,6 +1150,11 @@ procedure escr_sym_name_parse (        {parse qualified symbol name}
   out     sytype: escr_sytype_k_t;     {user-visible symbol type ID}
   out     syver: escr_syver_t;         {symbol version information}
   out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+function escr_sym_name_sytype (        {interpret symbol type keyword}
+  in      name: univ string_var_arg_t) {the keyword, must be upper case}
+  :escr_sytype_k_t;                    {symbol type ID or ESCR_SYTYPE_UNSP_K}
   val_param; extern;
 
 procedure escr_sym_new (               {create new symbol}
@@ -1205,6 +1223,11 @@ procedure escr_sym_new_var (           {create new symbol for a variable}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
+procedure escr_sym_sytype_name (       {get name of user-visible symbol type}
+  in      sytype: escr_sytype_k_t;     {user-visible type to get name of}
+  in out  name: univ string_var_arg_t); {returned type name}
+  val_param; extern;
+
 procedure escr_sytable_init (          {initialize a symbol table}
   in out  mem: util_mem_context_t;     {parent memory context}
   out     sytable: escr_sytable_t;     {the symbol table to initialize}
@@ -1220,11 +1243,6 @@ procedure escr_sytable_scan (          {get next symbol table entry}
   in out  scan: escr_sytable_scan_t;   {symbol table scanning state}
   out     name_p: string_var_p_t;      {returned pointer to symbol name in table}
   out     ent_p: escr_sytable_data_p_t); {returned pointer to next entry, NIL at end}
-  val_param; extern;
-
-procedure escr_sym_sytype_name (       {get name of user-visible symbol type}
-  in      sytype: escr_sytype_k_t;     {user-visible type to get name of}
-  in out  name: univ string_var_arg_t); {returned type name}
   val_param; extern;
 
 procedure escr_syrlist_add (           {add new blank entry to syntax ranges list}

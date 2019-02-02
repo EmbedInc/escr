@@ -38,6 +38,11 @@ procedure escr_cmd_del (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_dir (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_else (
   in out  e: escr_t;
   out     stat: sys_err_t);

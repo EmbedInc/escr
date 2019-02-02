@@ -10,6 +10,7 @@ define escr_uptocomm;
 define escr_set_preproc;
 define escr_set_func_detect;
 define escr_str_quote;
+define escr_exitstatus;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -389,4 +390,50 @@ begin
     string_append1 (stro, c);          {write string character}
     end;
   string_append1 (stro, q);            {write closing quote}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_EXITSTATUS (E, EXSTAT)
+*
+*   Set the ESCR variable EXITSTATUS to the value in EXSTAT.  If EXITSTATUS
+*   does not exist, it is created.
+}
+procedure escr_exitstatus (            {set EXITSTATUS, create if needed}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      exstat: sys_int_machine_t);  {value to set EXITSTATUS to}
+  val_param;
+
+var
+  sym_p: escr_sym_p_t;                 {pointer to variable to update}
+  name: string_var32_t;                {symbol name}
+  stat: sys_err_t;
+
+begin
+  name.max := size_char(name.str);     {init local var string}
+  string_vstring (name, 'EXITSTATUS'(0), -1); {set variable name}
+
+  escr_sym_find_curr (                 {find EXITSTATUS variable}
+    e,                                 {ESCR library use state}
+    name,                              {NAME of symbol to find}
+    escr_sytype_var_k,                 {symbol must be a variable}
+    sym_p);                            {returned pointer to the symbol}
+
+  if                                   {need to create the variable ?}
+      (sym_p = nil) or else            {variable doesn't exist at all ?}
+      (sym_p^.var_val.dtype <> escr_dtype_int_k) {variable is not integer ?}
+      then begin
+    escr_sym_new_var (                 {create the variable}
+      e,
+      name,                            {variable name}
+      escr_dtype_int_k,                {integer}
+      0,                               {length, unused}
+      true,                            {global}
+      sym_p,                           {returned pointer to new variable}
+      stat);
+    sys_error_abort (stat, '', '', nil, 0);
+    end;
+
+  sym_p^.var_val.int := exstat;        {set the variable to the exit status code}
+  e.exstat := max(e.exstat, exstat);   {update the whole script exit status}
   end;

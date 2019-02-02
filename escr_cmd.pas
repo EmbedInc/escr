@@ -7,7 +7,7 @@
 *     escr_cmd_<name> (E, STAT)
 *
 *   The input line is in IBUF and IP is the parse index after the command name.
-*   The upper case command name is in CMD.  The program will abort and indicate
+*   The command name is in CMD.  The program will abort with error and indicate
 *   the current source line if STAT is returned other than normal status.  An
 *   error is also automatically generated if the input line is not exhausted.
 *   STAT is initialized to normal status before the command routine is called.
@@ -33,6 +33,7 @@ define escr_cmd_writepush;
 define escr_cmd_writepop;
 define escr_cmd_stop;
 define escr_cmd_run;
+define escr_cmd_dir;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -323,10 +324,41 @@ err_missing:
 {
 ********************************************************************************
 *
-*   DEL name
+*   DEL [objtype] name
 *
-*   Delete a version of the symbol NAME.  NAME may be a fully qualified symbol
-*   name, indicating a particular symbol type and version.
+*   Delete the object named NAME.  OBJTYPE specifies the type of object, and can
+*   be one of the following:
+*
+*     SYM  -  ESCR system symbol.  This is the default.
+*
+*     VAR  -  ESCR variable.
+*
+*     CONST  -  ESCR constant.
+*
+*     VCON  -  ESCR variable or constant.
+*
+*     SUBR  -  ESCR subroutine.
+*
+*     MACRO  -  ESCR macro.
+*
+*     FUNC  -  ESCR function.
+*
+*     CMD  -  ESCR command.
+*
+*     LABEL  -  ESCR label.
+*
+*     FILE  -  File system file.  Links followed.  Abort on error
+*
+*     TREE  -  File system file, link, or directory, and anything under it.
+*       Continues on error.  EXITSTATUS set to 3 on error, 0 on no error.
+*
+*   In these cases, NAME is a string that is the name of the object to delete.
+*   In the case of a ESCR symbol, the symbol name may be qualified.  In that
+*   case, the symbol type, if included in the qualifier, must match the symbol
+*   type(s) specified by OBJTYPE.
+*
+*   When OBJTYPE is omitted, then NAME is the name of a ESCR symbol directly,
+*   not a string.
 }
 procedure escr_cmd_del (
   in out  e: escr_t;
@@ -334,25 +366,80 @@ procedure escr_cmd_del (
   val_param;
 
 var
-  name: string_var80_t;                {symbol name}
+  objt: string_var132_t;               {object type name}
+  name: string_treename_t;             {name of the object to delete}
+  sytype: escr_sytype_k_t;             {ESCR symbol type ID}
+  pick: sys_int_machine_t;             {number of keyword picked from list}
 
 label
-  err_missing;
+  have_objt, not_sytype;
 
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
-  name.max := size_char(name.str);     {init local var string}
 
-  if not escr_get_token (e, name)      {get the variable name into NAME}
-    then goto err_missing;
-  if not escr_get_end (e, stat) then return; {abort on extra parameter}
-  escr_sym_del_name (e, name, stat);   {delete the symbol version}
+  objt.max := size_char(objt.str);     {init local var strings}
+  name.max := size_char(name.str);
+
+  if not escr_get_token (e, objt) then begin {get first command parameter}
+    escr_stat_cmd_noarg (e, stat);
+    return;
+    end;
+  if escr_get_str (e, name, stat)      {try to get second parameter}
+    then goto have_objt;
+  if sys_error(stat) then return;      {hard error ?}
+{
+*   Single parameter.  OBJT is the name of the ESCR symbol to delete.
+}
+  escr_sym_del_name (e, objt, stat);   {delete the indicated symbol}
   return;
 {
-*   Abort due to missing required parameter.
+*   Two parameters were found.  The first is a token in OBJT, and the second a
+*   string in NAME.
 }
-err_missing:
-  escr_stat_cmd_noarg (e, stat);
+have_objt:
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
+
+  string_upcase (objt);                {make object type keyword upper case}
+  sytype := escr_sym_name_sytype (objt); {try to interpret as symbol type}
+  if sytype = escr_sytype_unsp_k       {not a symbol type ?}
+    then goto not_sytype;
+  escr_sym_del_name_type (             {delete the symbol}
+    e,                                 {ESCR library use state}
+    name,                              {symbol name, may be qualified}
+    sytype,                            {delete symbol of this type only}
+    stat);
+  return;
+
+not_sytype:                            {OBJT does not specify a explicit symbol type}
+  string_tkpick80 (objt,               {match against remaining possible keywords}
+    'SYM FILE TREE',
+    pick);
+  case pick of                         {what type of objet is it ?}
+1:  begin                              {any ESCR symbol}
+      escr_sym_del_name (e, name, stat); {delete the indicated symbol}
+      end;
+2:  begin                              {file system file}
+      file_delete_name (name, stat);
+      end;
+3:  begin                              {file system tree}
+      file_delete_tree (               {delete file system tree}
+        name,                          {name of tree to delete}
+        [file_del_errgo_k],            {continue on error}
+        stat);
+      if sys_error(stat)
+        then begin                     {some error occurred}
+          sys_error_print (stat, '', '', nil, 0); {show the error}
+          escr_exitstatus (e, 3);      {set exit status to indicate error}
+          sys_error_none(stat);        {don't abort on this error}
+          end
+        else begin                     {no error}
+          escr_exitstatus (e, 0);      {set exit status to indicate success}
+          end
+        ;
+      end;
+otherwise                              {unrecognized object type}
+    escr_err_parm_bad (e, objt);       {bomb program with bad parameter error}
+    end;
   end;
 {
 ********************************************************************************
@@ -814,14 +901,11 @@ var
   cmline: string_var8192_t;            {command line to execute}
   tf: boolean;                         {true/false returned by the program}
   exstat: sys_sys_exstat_t;            {program exist status code}
-  sym_p: escr_sym_p_t;                 {pointer to variable to update}
-  name: string_var32_t;                {symbol name}
 
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
-  cmline.max := size_char(cmline.str); {init local var strings}
-  name.max := size_char(name.str);
+  cmline.max := size_char(cmline.str); {init local var string}
 {
 *   Get the command line to run and run it.
 }
@@ -838,32 +922,40 @@ begin
     exstat,                            {program exit status code}
     stat);
   if sys_error(stat) then return;
+
+  escr_exitstatus (e, exstat);         {save exit status in EXITSTATUS}
+  end;
 {
-*   Save the program's exit status code in the integer variable EXITSTATUS.
-*   This variable is created if it does not exist.
+********************************************************************************
+*
+*   DIR directory
+*
+*   Set the current directory.
 }
-  string_vstring (name, 'EXITSTATUS'(0), -1); {set variable name}
+procedure escr_cmd_dir (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
 
-  escr_sym_find_curr (                 {find EXITSTATUS variable}
-    e,                                 {ESCR library use state}
-    name,                              {NAME of symbol to find}
-    escr_sytype_var_k,                 {symbol must be a variable}
-    sym_p);                            {returned pointer to the symbol}
+var
+  tnam: string_treename_t;             {directory name}
 
-  if                                   {need to create the variable ?}
-      (sym_p = nil) or else            {variable doesn't exist at all ?}
-      (sym_p^.var_val.dtype <> escr_dtype_int_k) {variable is not integer ?}
-      then begin
-    escr_sym_new_var (                 {create the variable}
-      e,
-      name,                            {variable name}
-      escr_dtype_int_k,                {integer}
-      0,                               {length, unused}
-      true,                            {global}
-      sym_p,                           {returned pointer to new variable}
-      stat);
-    if sys_error(stat) then return;
-    end;
+label
+  err_missing;
 
-  sym_p^.var_val.int := exstat;        {set to the program's exist status code}
+begin
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
+  tnam.max := size_char(tnam.str);     {init local var string}
+
+  if not escr_get_str (e, tnam, stat)  {get new directory name into TNAM}
+    then goto err_missing;
+  if not escr_get_end (e, stat) then return; {abort on extra parameter}
+
+  file_currdir_set (tnam, stat);       {set the new current directory}
+  return;
+{
+*   Abort due to missing required parameter.
+}
+err_missing:
+  escr_stat_cmd_noarg (e, stat);
   end;

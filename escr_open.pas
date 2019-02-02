@@ -242,6 +242,7 @@ begin
   addcmd ('command', addr(escr_cmd_command), stat); if sys_error(stat) then goto err;
   addcmd ('const', addr(escr_cmd_const), stat); if sys_error(stat) then goto err;
   addcmd ('del', addr(escr_cmd_del), stat); if sys_error(stat) then goto err;
+  addcmd ('dir', addr(escr_cmd_dir), stat); if sys_error(stat) then goto err;
   addcmd ('else', addr(escr_cmd_else), stat); if sys_error(stat) then goto err;
   addcmd ('endblock', addr(escr_cmd_endblock), stat); if sys_error(stat) then goto err;
   addcmd ('endcmd', addr(escr_cmd_endcmd), stat); if sys_error(stat) then goto err;

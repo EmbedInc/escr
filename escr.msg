@@ -240,6 +240,10 @@ msg err76
 msg err77
   lan english -def
     Not in a directory entries loop.
+msg err78
+  lan english -def
+    The qualified symbol name "%p1s" does not match the specified
+    symbol type.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.

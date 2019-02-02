@@ -7,5 +7,3 @@ Function RUNSO - Runs program, returns first standard output line.
 Function FINFO - Get information about a file.
 
 Add LIST data type.
-
-Add DIR command to set the working directory.

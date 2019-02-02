@@ -64,6 +64,7 @@
     <a href="#loop-dir">dir</a>
   <li><a href="#quit">quit</a>
   <li><a href="#run">run</a>
+  <li><a href="#dir">dir</a>
   <li><a href="#stop">stop</a>
   </ul>
 
@@ -180,11 +181,73 @@ keyword.
   of the string in the variable <i>name</i>.  <i>Name</i> must be the name
   of a variable with <b>string</b> data type.
 
-<p><dt><tt id="del"><b>DEL</b> <i>name</i></tt></dt><dd>
+<p><dt><tt id="del"><b>DEL</b> <i>[objtype] name</i></tt></dt><dd>
 
-  <p>Delete the current version of the symbol <i>name</i>. If no previous
-  version exists, then <i>name</i> becomes unused and references to it are
-  errors.
+  <p>Delete the object named <i>name</i>.  <i>Objtype</i> specifies
+  the type of object, and can be one of the following:<dl>
+
+    <p><dt><tt><b>SYM</b></tt></dt><dd>
+
+      <p>ESCR symbol of any type.
+
+    <p><dt><tt><b>VAR</b></tt></dt><dd>
+
+      <p>ESCR variable.
+
+    <p><dt><tt><b>CONST</b></tt></dt><dd>
+
+      <p>ESCR constant.
+
+    <p><dt><tt><b>VCON</b></tt></dt><dd>
+
+      <p>ESCR variable or constant.
+
+    <p><dt><tt><b>SUBR</b></tt></dt><dd>
+
+      <p>ESCR subroutine.
+
+    <p><dt><tt><b>MACRO</b></tt></dt><dd>
+
+      <p>ESCR macro.
+
+    <p><dt><tt><b>FUNC</b></tt></dt><dd>
+
+      <p>ESCR function.
+
+    <p><dt><tt><b>CMD</b></tt></dt><dd>
+
+      <p>ESCR command.
+
+    <p><dt><tt><b>LABEL</b></tt></dt><dd>
+
+      <p>ESCR label.
+
+    <p><dt><tt><b>FILE</b></tt></dt><dd>
+
+      <p>File system non-directory object.  Symbolic links are
+      followed.  The script will abort on error, such as <i>name</i>
+      not found.
+
+    <p><dt><tt><b>TREE</b></tt></dt><dd>
+
+      <p>File system object.  Symbolic links are not followed.  If the
+      file system object is a directory, then the entire tree from
+      that directory on down is deleted.  On error the ESCR integer
+      variable <tt><b>EXITSTATUS</b></tt> is set to 3, otherwise to 0.
+      <tt><b>EXITSTATUS</b></tt> is created if it does not already
+      exist.  The script exit status value is raised to what
+      <tt><b>EXITSTATUS</b></tt> is set to, if previously lower.
+
+    </dl>
+
+    <p>In these cases, <i>name</i> is a string that is the name of the
+    object to delete.  In the case of a ESCR symbol, the symbol name
+    may be qualified.  In that case, the symbol type, if included in
+    the qualifier, must match the symbol type(s) specified by
+    <i>objtype</i>.
+
+    <p>When <i>objtype</i> is omitted, <i>name</i> is the name of a
+    ESCR symbol directly, not a string.
 
 <p><dt><tt id="sylist"><b>SYLIST</b></tt></dt><dd>
 
@@ -862,6 +925,11 @@ keyword.
   <p>The integer variable <tt>EXITSTATUS</tt> is set to the exit status
   code of the program that was executed.  This variable is created if it
   does not already exist.
+
+<p><dt><tt id="dir"><b>DIR</b> <i>directory</i></tt></dt><dd>
+
+  <p>Set the current directory to <i>directory</i>.  <i>Directory</i>
+  is a string.
 
 <p><dt><tt id="stop"><b>STOP</b> <i>[exstat]</i></tt></dt><dd>
 
