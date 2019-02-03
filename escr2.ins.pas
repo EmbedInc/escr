@@ -447,6 +447,21 @@ procedure escr_ifun_rnd(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_runex(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_runso(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_ifun_runtf(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_seq(
   in out  e: escr_t;
   out     stat: sys_err_t);

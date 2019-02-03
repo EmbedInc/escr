@@ -1,9 +1,3 @@
-Function RUNEX - Runs program, returns exit status code.
-
-Function RUNTF - Runs program, TRUE if exit status code 0.
-
-Function RUNSO - Runs program, returns first standard output line.
-
 Function FINFO - Get information about a file.
 
 Add LIST data type.

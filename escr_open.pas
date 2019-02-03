@@ -326,6 +326,9 @@ begin
   addfunc ('qstr', addr(escr_ifun_qstr), stat); if sys_error(stat) then goto err;
   addfunc ('rdeg', addr(escr_ifun_rdeg), stat); if sys_error(stat) then goto err;
   addfunc ('rnd', addr(escr_ifun_rnd), stat); if sys_error(stat) then goto err;
+  addfunc ('runex', addr(escr_ifun_runex), stat); if sys_error(stat) then goto err;
+  addfunc ('runso', addr(escr_ifun_runso), stat); if sys_error(stat) then goto err;
+  addfunc ('runtf', addr(escr_ifun_runtf), stat); if sys_error(stat) then goto err;
   addfunc ('seq', addr(escr_ifun_seq), stat); if sys_error(stat) then goto err;
   addfunc ('shiftl', addr(escr_ifun_shiftl), stat); if sys_error(stat) then goto err;
   addfunc ('shiftr', addr(escr_ifun_shiftr), stat); if sys_error(stat) then goto err;

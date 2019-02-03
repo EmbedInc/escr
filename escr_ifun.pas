@@ -95,6 +95,9 @@ define escr_ifun_unquote;
 define escr_ifun_isint;
 define escr_ifun_isnum;
 define escr_ifun_vnl;
+define escr_ifun_runex;
+define escr_ifun_runtf;
+define escr_ifun_runso;
 %include 'escr2.ins.pas';
 
 const
@@ -104,6 +107,15 @@ const
   pi = 3.14159265358979323846;         {what it sounds like, don't touch}
   ek = 2.718281828;                    {ditto}
   ln2 = ln(2.0);                       {natural log of 2}
+
+type
+  th_read_p_t = ^th_read_t;
+  th_read_t = record                   {data for threads that read from I/O units}
+    e_p: escr_p_t;                     {pointer to ESCR library use state}
+    sysconn: sys_sys_file_conn_t;      {handle to system I/O stream}
+    thid: sys_sys_thread_id_t;         {ID of this thread}
+    run: boolean;                      {the thread was launced successfully}
+    end;
 {
 ********************************************************************************
 *
@@ -3586,7 +3598,7 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_IFUN_VNL (E, STAT)
+*   VNL arg
 *
 *   Evaluates the argument with local symbols ignored.  Specifically, for any
 *   symbol that has a local version, the current version of that symbol is the
@@ -3619,4 +3631,280 @@ begin
   if sys_error(stat) then return;      {error getting function argument ?}
 
   escr_ifn_ret_val (e, val);           {return the value of the argument}
+  end;
+{
+********************************************************************************
+*
+*   RUNEX agr ... arg
+*
+*   Run the command line that is the concatenation of the string representation
+*   of all the arguments.  The function returns the exit status code resulting
+*   from running the command.  The variable EXITSTATUS and the script exit
+*   status code are NOT altered.  Any output from the program is discarded.
+}
+procedure escr_ifun_runex (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  tk: string_var8192_t;
+  tf: boolean;                         {TRUE/FALSE result from the program}
+  exstat: sys_sys_exstat_t;            {exit status code from program}
+
+begin
+  tk.max := size_char(tk.str);         {init local var string}
+
+  escr_ifn_get_strs (e, tk, stat);     {get the concatenated string}
+  if sys_error(stat) then return;
+
+  sys_run_wait_stdnone (               {run program, no I/O}
+    tk,                                {command line to run}
+    tf,                                {TRUE/FALSE result returned by program}
+    exstat,                            {exit status returned by program}
+    stat);
+  if sys_error(stat) then return;
+
+  escr_ifn_ret_int (e, exstat);
+  end;
+{
+********************************************************************************
+*
+*   RUNTF agr ... arg
+*
+*   Run the command line that is the concatenation of the string representation
+*   of all the arguments.  The function returns TRUE or FALSE depending on the
+*   exit status code.  The exact interpretation of TRUE/FALSE from the exit
+*   status code is operating-system dependent.  However, generally a exit status
+*   code of 0 is interpreted as TRUE, with anything else being FALSE.  The
+*   variable EXITSTATUS and the script exit status code are NOT altered.
+}
+procedure escr_ifun_runtf (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  tk: string_var8192_t;
+  tf: boolean;                         {TRUE/FALSE result from the program}
+  exstat: sys_sys_exstat_t;            {exit status code from program}
+
+begin
+  tk.max := size_char(tk.str);         {init local var string}
+
+  escr_ifn_get_strs (e, tk, stat);     {get the concatenated string}
+  if sys_error(stat) then return;
+
+  sys_run_wait_stdnone (               {run program, no I/O}
+    tk,                                {command line to run}
+    tf,                                {TRUE/FALSE result returned by program}
+    exstat,                            {exit status returned by program}
+    stat);
+  if sys_error(stat) then return;
+
+  escr_ifn_ret_bool (e, tf);
+  end;
+{
+********************************************************************************
+*
+*   Local subroutine THREAD_READ_DISCARD (ARG)
+*
+*   This routine is run in a separate thread.  ARG is the address of the
+*   TH_READ_T structure providing the library state and information about what
+*   to read from.
+*
+*   The thread establishes a connection to a I/O unit.  It then reads and
+*   discards all information received.  The thread ends when any error is
+*   encountered on reading from the I/O connection, such as end of file or end
+*   of pipe.
+}
+procedure thread_read_discard (        {thread to read and discard data from I/O unit}
+  in      arg: sys_int_adr_t);         {address of TH_READ_T structure}
+  val_param;
+
+var
+  th_p: th_read_p_t;                   {pointer to structure passed from caller}
+  conn: file_conn_t;                   {connection to the I/O unit}
+  str: string_var80_t;                 {one line read from I/O connection}
+  stat: sys_err_t;
+
+begin
+  str.max := size_char(str.str);       {init local var string}
+  th_p := th_read_p_t(arg);            {get pointer to data for this thread}
+
+  file_open_sysconn_text (             {open connection to the I/O stream}
+    th_p^.sysconn,                     {system I/O unit to connect to}
+    [file_rw_read_k],                  {we will read from the I/O connection}
+    conn,                              {returned I/O connection}
+    stat);
+  if sys_error(stat) then begin        {error opening I/O connection ?}
+    sys_thread_exit;                   {end this thread}
+    end;
+
+  while true do begin                  {back here each new line to read}
+    file_read_text (conn, str, stat);  {read a line}
+    if sys_error(stat) then exit;      {didn't get the line}
+    end;                               {back to read the next line}
+
+  file_close (conn);                   {close the connection to the I/O unit}
+  end;
+{
+********************************************************************************
+*
+*   Local subroutine THREAD_READ_LINE1 (ARG)
+*
+*   This routine is run in a separate thread.  ARG is the address of the
+*   TH_READ_T structure providing the library state and information about what
+*   to read from.
+*
+*   The thread establishes a connection to a I/O unit.  It then reads all text
+*   lines from the I/O connection.  The current function return value is set to
+*   the first line.  All other lines are discarded.
+*
+*   The thread ends when any error is encountered on reading from the I/O
+*   connection, such as end of file or end of pipe.
+}
+procedure thread_read_line1 (          {thread to return first line from I/O unit}
+  in      arg: sys_int_adr_t);         {address of TH_READ_T structure}
+  val_param;
+
+var
+  th_p: th_read_p_t;                   {pointer to structure passed from caller}
+  conn: file_conn_t;                   {connection to the I/O unit}
+  str: string_var8192_t;               {one line read from I/O connection}
+  first: boolean;                      {next line is the first}
+  stat: sys_err_t;
+
+begin
+  str.max := size_char(str.str);       {init local var string}
+  th_p := th_read_p_t(arg);            {get pointer to data for this thread}
+
+  file_open_sysconn_text (             {open connection to the I/O stream}
+    th_p^.sysconn,                     {system stream to connect to}
+    [file_rw_read_k],                  {we will read from the I/O connection}
+    conn,                              {returned I/O connection}
+    stat);
+  if sys_error(stat) then begin        {error opening I/O connection ?}
+    sys_thread_exit;                   {end this thread}
+    end;
+
+  first := true;                       {init to next line is the first}
+  while true do begin                  {back here each new line to read}
+    file_read_text (conn, str, stat);  {read a line}
+    if sys_error(stat) then exit;      {didn't get the line}
+    if first then begin                {this was the first line ?}
+      first := false;                  {subsequent lines won't be the first}
+      escr_ifn_ret_str (th_p^.e_p^, str); {set function return value}
+      end;
+    end;                               {back to read the next line}
+
+  file_close (conn);                   {close the connection to the I/O unit}
+  end;
+{
+********************************************************************************
+*
+*   RUNSO agr ... arg
+*
+*   Run the command line that is the concatenation of the string representation
+*   of all the arguments.
+*
+*   The function returns the first standard output line emitted by the program.
+*   The standard output of the program is otherwise lost, and not copied to the
+*   standard output of the script running this function.
+*
+*   The integer variable EXITSTATUS is set to the exit status code of the
+*   program.  This variable is created if it does not already exist.  The script
+*   exit status is raised to the program exit status code if it was previously
+*   lower.
+}
+procedure escr_ifun_runso (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  tk: string_var8192_t;
+  exstat: sys_sys_exstat_t;            {exit status code from program}
+  procid: sys_sys_proc_id_t;           {ID of process running the program}
+  th_out: th_read_t;                   {data for thread reading STDOUT}
+  th_err: th_read_t;                   {data for thread reading STDERR}
+  io_in: sys_sys_file_conn_t;          {system handle to command's STDIN}
+  ev: sys_sys_event_id_t;              {scratch system event}
+
+begin
+  tk.max := size_char(tk.str);         {init local var string}
+
+  escr_ifn_get_strs (e, tk, stat);     {get the concatenated string}
+  if sys_error(stat) then return;
+{
+*   Run the command in a separate process.
+}
+  sys_run_stdtalk (                    {run the command}
+    tk,                                {command line to run}
+    procid,                            {returned ID of new process running the prog}
+    io_in,                             {handle to program's STDIN stream}
+    th_out.sysconn,                    {handle to program's STDOUT stream}
+    th_err.sysconn,                    {handle to program's STDERR stream}
+    stat);
+  if sys_error(stat) then return;
+
+  file_close_sysconn (io_in);          {program's STDIN is not used}
+{
+*   Start the threads to read from the STDOUT and STDERR output streams from the
+*   new process.
+}
+  th_out.e_p := addr(e);               {pass pointer to ESCR library use state}
+  sys_thread_create (                  {start thread to handle STDOUT from the command}
+    addr(thread_read_line1),           {thread routine}
+    sys_int_adr_t(addr(th_out)),       {pass address of data for this thread}
+    th_out.thid,                       {returned ID of this thread}
+    stat);
+  th_out.run := not sys_error(stat);   {save whether thread was launched}
+
+  th_err.e_p := addr(e);               {pass pointer to ESCR library use state}
+  sys_thread_create (                  {start thread to handle STDOUT from the command}
+    addr(thread_read_discard),         {thread routine}
+    sys_int_adr_t(addr(th_err)),       {pass address of data for this thread}
+    th_err.thid,                       {returned ID of this thread}
+    stat);
+  th_err.run := not sys_error(stat);   {save whether thread was launched}
+{
+*   Wait for the command and the I/O read threads to complete.
+}
+  discard( sys_proc_status (           {wait for command to complete}
+    procid,                            {ID of the process}
+    true,                              {wait for the process to terminate}
+    exstat,                            {exit status from the process}
+    stat) );
+
+  while true do begin                  {code block for STDOUT thread exit}
+    if not th_out.run then exit;       {thread was never run ?}
+    sys_thread_event_get (             {get system event to wait on for thread exit}
+      th_out.thid,                     {thread ID}
+      ev,                              {returned event}
+      stat);
+    if sys_error(stat) then exit;
+    sys_event_wait (ev, stat);         {wait for the thread to exit}
+    sys_event_del_bool (ev);           {done with the event}
+    exit;
+    end;
+  file_close_sysconn (th_out.sysconn); {close system I/O connection}
+
+  while true do begin                  {code block for STDERR thread exit}
+    if not th_err.run then exit;       {thread was never run ?}
+    sys_thread_event_get (             {get system event to wait on for thread exit}
+      th_err.thid,                     {thread ID}
+      ev,                              {returned event}
+      stat);
+    if sys_error(stat) then exit;
+    sys_event_wait (ev, stat);         {wait for the thread to exit}
+    sys_event_del_bool (ev);           {done with the event}
+    exit;
+    end;
+  file_close_sysconn (th_err.sysconn); {close system I/O connection}
+{
+*   Update the system state to the exit status code of the command.
+}
+  escr_exitstatus (e, exstat);         {update EXITSTATUS variable and thread ex stat}
+  sys_error_none (stat);               {end the function without error}
   end;

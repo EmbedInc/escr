@@ -66,6 +66,9 @@
     <a href="#qstr">QSTR</a>&nbsp;
     <a href="#rdeg">RDEG</a>&nbsp;
     <a href="#rnd">RND</a>&nbsp;
+    <a href="#runex">RUNEX</a>&nbsp;
+    <a href="#runso">RUNSO</a>&nbsp;
+    <a href="#runtf">RUNTF</a>&nbsp;
     <a href="#seq">SEQ</a>&nbsp;
     <a href="#shiftl">SHIFTL</a>&nbsp;
     <a href="#shiftr">SHIFTR</a>&nbsp;
@@ -178,6 +181,9 @@
     <a href="#lnam">LNAM</a> &nbsp; - &nbsp; File leafname, can remove suffix<br>
     <a href="#tnam">TNAM</a> &nbsp; - &nbsp; File full treename<br>
     <a href="#dent">DENT</a> &nbsp; - &nbsp; Directory entry info, in DIR loop<br>
+    <a href="#runex">RUNEX</a> &nbsp;
+    <a href="#runtf">RUNTF</a> &nbsp;
+    <a href="#runso">RUNSO</a> &nbsp; - Run external program
 
   <p><li>Miscellaneous<p>
 
@@ -1009,6 +1015,43 @@ start and end sequences have been removed.
 
   <p>Returns <i>arg</i> rounded to the nearest integer.  <i>Arg</i> must
   be numeric.
+
+<p><dt><tt id="runex"><b>RUNEX</b> <i>arg ... arg</i></tt></dt><dd>
+
+  <p>Run the command line that is the concatenation of the string
+  representation of all the arguments.
+
+  <p>The function returns the exit status code resulting from running the
+  command.  The variable <tt>EXITSTATUS</tt> and the script exit status
+  code are NOT altered.
+
+  <p>Any output from the program is discarded.
+
+<p><dt><tt id="runso"><b>RUNSO</b> <i>arg ... arg</i></tt></dt><dd>
+
+  <p>Run the command line that is the concatenation of the string
+  representation of all the arguments.
+
+  <p>The function returns the first standard output line emitted by the
+  program as a string.  All other output of the program is discarded.
+
+  <p>The integer variable EXITSTATUS is set to the exit status code of the
+  program.  This variable is created if it does not already exist.  The
+  script exit status is raised to the program exit status code if it was
+  previously lower.
+
+<p><dt><tt id="runtf"><b>RUNTF</b> <i>arg ... arg</i></tt></dt><dd>
+
+  <p>Run the command line that is the concatenation of the string
+  representation of all the arguments.
+
+  <p>The function returns TRUE or FALSE depending on the exit status code.
+  The exact interpretation of TRUE/FALSE from the exit status code is
+  operating-system dependent.  However, generally a exit status code of 0
+  is interpreted as TRUE, with anything else being FALSE.  The variable
+  EXITSTATUS and the script exit status code are NOT altered.
+
+  <p>Any output from the program is discarded.
 
 <p><dt><tt id="seq"><b>SEQ</b> <i>fnam</i> [<i>opt ... opt</i>]</tt></dt><dd>
 
