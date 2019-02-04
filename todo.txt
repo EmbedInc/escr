@@ -1,3 +1,4 @@
-Function FINFO - Get information about a file.
-
 Add LIST data type.
+
+Add a command to execute matching choice(s).  Like Pascal CASE, C SWITCH,
+etc.

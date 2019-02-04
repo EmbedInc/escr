@@ -292,6 +292,11 @@ procedure escr_ifun_exp(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_file(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_fp(
   in out  e: escr_t;
   out     stat: sys_err_t);

@@ -295,6 +295,7 @@ begin
   addfunc ('evar', addr(escr_ifun_evar), stat); if sys_error(stat) then goto err;
   addfunc ('exist', addr(escr_ifun_exist), stat); if sys_error(stat) then goto err;
   addfunc ('exp', addr(escr_ifun_exp), stat); if sys_error(stat) then goto err;
+  addfunc ('file', addr(escr_ifun_file), stat); if sys_error(stat) then goto err;
   addfunc ('fp', addr(escr_ifun_fp), stat); if sys_error(stat) then goto err;
   addfunc ('>=', addr(escr_ifun_ge), stat); if sys_error(stat) then goto err;
   addfunc ('>', addr(escr_ifun_gt), stat); if sys_error(stat) then goto err;

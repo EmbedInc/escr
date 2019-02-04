@@ -47,6 +47,7 @@
     <a href="#evar">EVAR</a>&nbsp;
     <a href="#exist">EXIST</a>&nbsp;
     <a href="#exp">EXP</a>&nbsp;
+    <a href="#file">FILE</a>&nbsp;
     <a href="#fp">FP</a>&nbsp;
     <a href="#if">IF</a>&nbsp;
     <a href="#int">INT</a>&nbsp;
@@ -177,6 +178,7 @@
 
     <a href="#evar">EVAR</a> &nbsp; - &nbsp; Environment variable value<br>
     <a href="#exist">EXIST</a> &nbsp; - &nbsp; Check for file or variable existing<br>
+    <a href="#file">FILE</a> &nbsp; - &nbsp; Info about file system object<br>
     <a href="#dir">DIR</a> &nbsp; - &nbsp; Directory name<br>
     <a href="#lnam">LNAM</a> &nbsp; - &nbsp; File leafname, can remove suffix<br>
     <a href="#tnam">TNAM</a> &nbsp; - &nbsp; File full treename<br>
@@ -698,6 +700,34 @@ start and end sequences have been removed.
   <p>Returns <i>a</i> to the power of <i>b</i> (<i>a<sup>b</sup></i>).
   <i>A</i> and <i>b</i> must be numeric. When <i>a</i> is negative,
   <i>b</i> must be integer.
+
+<p><dt><tt id="file"><b>FILE</b> <i>infotype name</i></tt></dt><dd>
+
+  <p>Returns information about the file system object <i>name</i>.
+  <i>Infotype</i> is a keyword selecting which information about the file
+  system object is returned.  The valid values of <i>infotype</i> and the
+  resulting function values are:<dl>
+
+    <p><dt><tt><b>TYPE</b></tt></dt><dd>
+
+      <p>String.  The string is a keyword indicating the file system
+      object type:
+
+      <p><tt><b>FILE</b></tt> - Ordinary data file.
+
+      <p><tt><b>LINK</b></tt> - Symbolic link.
+
+      <p><tt><b>DIR</b></tt> - Directory.
+
+    <p><dt><tt><b>LEN</b></tt></dt><dd>
+
+      <p>Integer.  The file length in bytes.
+
+    <p><dt><tt><b>DTM</b></tt></dt><dd>
+
+      <p>Time.  The time the file was last modified.
+
+    </dl>
 
 <p><dt><tt id="fp"><b>FP</b> <i>val</i> [<i>fmt ... fmt</i>]</tt></dt><dd>
 

@@ -98,6 +98,7 @@ define escr_ifun_vnl;
 define escr_ifun_runex;
 define escr_ifun_runtf;
 define escr_ifun_runso;
+define escr_ifun_file;
 %include 'escr2.ins.pas';
 
 const
@@ -2689,6 +2690,7 @@ begin
   daysave := sys_daysave_no_k;
   str.len := 0;                        {init returned string to empty}
   havedate := false;                   {init to DATE not filled in yet}
+  wstr := false;                       {init to nothing written to STR yet}
 
   while true do begin                  {loop over each keyword}
     if not escr_ifn_get_keyw (e, tk, stat) then begin
@@ -3907,4 +3909,100 @@ begin
 }
   escr_exitstatus (e, exstat);         {update EXITSTATUS variable and thread ex stat}
   sys_error_none (stat);               {end the function without error}
+  end;
+{
+********************************************************************************
+*
+*   FILE action fnam
+*
+*   Returns information about a file.  The possible action keywords and the
+*   resulting function values are:
+*
+*     TYPE  -  String containing a file type keyword:
+*
+*       FILE  -  Ordinary file.
+*       DIR  -  Directory.
+*       LINK  -  Symbolic link.
+*
+*     LEN  -  Integer file length in bytes.
+*
+*     DTM  -  Time of last modification.
+}
+procedure escr_ifun_file(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  pick: sys_int_machine_t;             {number of keyword picked from list}
+  iflag: file_iflag_k_t;               {ID for which information requested}
+  finfo: file_info_t;                  {information about a file system object}
+  tk: string_var32_t;                  {scratch token}
+  fnam: string_treename_t;             {file name}
+
+label
+  missing;
+
+begin
+  tk.max := size_char(tk.str);         {init local var strings}
+  fnam.max := size_char(fnam.str);
+
+  if not escr_ifn_get_keyw (e, tk, stat) {get action keyword}
+    then goto missing;
+  string_tkpick80 (tk,
+    'TYPE LEN DTM',
+    pick);
+  case pick of                         {which action is requested ?}
+1:  iflag := file_iflag_type_k;
+2:  iflag := file_iflag_len_k;
+3:  iflag := file_iflag_dtm_k;
+otherwise
+    escr_ifn_bad_keyw (e, tk, stat);   {set bad keyword error}
+    return;
+    end;
+
+  if not escr_ifn_get_str (e, fnam, stat) {get the file name}
+    then goto missing;
+
+  file_info (                          {get the information about the file}
+    fnam,                              {name of object inquiring about}
+    [iflag],                           {ID for the information being requested}
+    finfo,                             {the returned information}
+    stat);
+  if sys_error(stat) then return;
+
+  case iflag of                        {which information to return ?}
+
+file_iflag_type_k: begin               {type of file system object}
+      case finfo.ftype of              {which type is it ?}
+file_type_dir_k: begin                 {directory}
+          string_vstring (tk, 'DIR'(0), -1);
+          end;
+file_type_link_k: begin                {symbolic link}
+          string_vstring (tk, 'LINK'(0), -1);
+          end;
+otherwise                              {anything else}
+      string_vstring (tk, 'FILE'(0), -1);
+      end;
+    escr_ifn_ret_str (e, tk);          {return the keyword string}
+    end;                               {end of TYPE case}
+
+file_iflag_len_k: begin                {file length in bytes}
+    escr_ifn_ret_int (e, finfo.len);
+    end;
+
+file_iflag_dtm_k: begin                {time of last modification}
+    escr_ifn_ret_time (e, finfo.modified);
+    end;
+
+otherwise
+    writeln ('INTERNAL ERROR: Unexpected IFLAG value of ', ord(iflag),
+      ' in ESCR_IFUN_FILE.');
+    sys_bomb;
+    end;
+  return;                              {normal return point}
+
+missing:                               {a required argument is missing}
+  if sys_error(stat) then return;      {STAT already set to previous error ?}
+  escr_ifn_stat_required (e, stat);
   end;
