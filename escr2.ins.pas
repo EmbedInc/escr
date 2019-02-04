@@ -247,17 +247,17 @@ procedure escr_ifun_dent(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_dir(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_div(
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
 
 procedure escr_ifun_divide(
-  in out  e: escr_t;
-  out     stat: sys_err_t);
-  val_param; extern;
-
-procedure escr_ifun_dnam(
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;

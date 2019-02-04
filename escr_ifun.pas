@@ -82,7 +82,7 @@ define escr_ifun_sym;
 define escr_ifun_exist;
 define escr_ifun_tnam;
 define escr_ifun_lnam;
-define escr_ifun_dnam;
+define escr_ifun_dir;
 define escr_ifun_evar;
 define escr_ifun_lab;
 define escr_ifun_v;
@@ -3246,11 +3246,11 @@ begin
 {
 ********************************************************************************
 *
-*   DNAM fnam
+*   DIR fnam
 *
 *   Full directory pathname of FNAM.
 }
-procedure escr_ifun_dnam (
+procedure escr_ifun_dir (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;

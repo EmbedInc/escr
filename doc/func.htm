@@ -40,8 +40,8 @@
     <a href="#date">DATE</a>&nbsp;
     <a href="#degr">DEGR</a>&nbsp;
     <a href="#dent">DENT</a>&nbsp;
+    <a href="#dir">DIR</a>&nbsp;
     <a href="#div">DIV</a>&nbsp;
-    <a href="#dnam">DNAM</a>&nbsp;
     <a href="#e">E</a>&nbsp;
     <a href="#eng">ENG</a>&nbsp;
     <a href="#evar">EVAR</a>&nbsp;
@@ -177,7 +177,7 @@
 
     <a href="#evar">EVAR</a> &nbsp; - &nbsp; Environment variable value<br>
     <a href="#exist">EXIST</a> &nbsp; - &nbsp; Check for file or variable existing<br>
-    <a href="#dnam">DNAM</a> &nbsp; - &nbsp; Directory name<br>
+    <a href="#dir">DIR</a> &nbsp; - &nbsp; Directory name<br>
     <a href="#lnam">LNAM</a> &nbsp; - &nbsp; File leafname, can remove suffix<br>
     <a href="#tnam">TNAM</a> &nbsp; - &nbsp; File full treename<br>
     <a href="#dent">DENT</a> &nbsp; - &nbsp; Directory entry info, in DIR loop<br>
@@ -570,6 +570,15 @@ start and end sequences have been removed.
 
     </dl><!-- End of OPT keywords -->
 
+<p><dt><tt id="dir"><b>DIR</b> <i>[arg ... arg]</i></tt></dt><dd>
+
+  <p>Returns the pathname of the lowest level directory containing the
+  file indicated by the concatenation of the string representation of all
+  arguments.
+
+  <p>If no arguments are supplied, then the pathname of the current
+  working directory is returned.
+
 <p><dt><tt id="div"><b>DIV</b> <i>arg1 [arg2 ... argN]</i></tt></dt><dd>
 
   <p>Integer division.  <p><i>Arg1</i> is divided by the next argument.
@@ -585,13 +594,6 @@ start and end sequences have been removed.
   &nbsp; [<b>div</b> 59 7 -3] --> -2<br>
   &nbsp; [<b>div</b> -103 5] --> -20
   </tt>
-
-<p><dt><tt id="dnam"><b>DNAM</b> <i>[arg ... arg]</i></tt></dt><dd>
-
-  <p>Returns the pathname of the lowest level directory containing the
-  file indicated by the concatenation of the string representation of all
-  arguments.  If no arguments are supplied, then the pathname of the
-  current working directory is returned.
 
 <p><dt><tt id="exp"><b>E</b> <i>[arg]</i></tt></dt><dd>
 
