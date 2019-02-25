@@ -2,3 +2,5 @@ Add LIST data type.
 
 Add a command to execute matching choice(s).  Like Pascal CASE, C SWITCH,
 etc.
+
+Add LOOP LIST.  Loops over explicit list of tokens in a string.
