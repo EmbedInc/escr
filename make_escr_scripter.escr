@@ -1,0 +1,92 @@
+//   Set up ESCR scripts to be automatically run by the ESCR program.
+//
+var new suff string = ".escr" //suffix to add to executable list
+
+var new tnam string          //scratch treename
+var new pathext string       //PATHEXT environment variable value
+var new newext string        //new PATHEXT value
+var new p integer            //PATHEXT parse index
+var new tk string            //scratch token
+var new found bool           //found .ESCR executable suffix
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//   Function NextExt
+//
+//   Returns the next file name suffix in the PATHEXT string.  Suffixes are
+//   separated by semicolons.  P is the parse index.  The empty string is
+//   returned when PATHEXT has been exhausted.
+//
+function NextExt
+  var local ext string       //extension parsed from PATHEXT
+  var local c string         //single character parsed from PATHEXT
+
+  loop
+    set c [substr [1+ p] 1 pathext]
+    if [= c ""] then         //past end of string ?
+      quit
+      endif
+    if [and [= [slen ext] 0] [= c ";"]] then //ignore empty token
+      repeat
+      endif
+    if [= c ";"] then        //found terminator for this token ?
+      quit
+      endif
+    append ext c             //add this character to end of token
+    endloop
+
+  funcstr ext
+  endfunc
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//   Start of main program.
+//
+
+//   Do nothing if the ESCR program is not installed.
+//
+set tnam [tnam "(cog)com/escr.exe"] //get full treename of ESCR executable
+if [not [exist tnam fnamnl]] then //ESCR program is not installed ?
+  stop
+  endif
+
+//   Set the basic file name suffix associations.  These can be set regardless
+//   of their previous values.  TNAM is the full pathname of the ESCR program
+//   executable.
+//
+run "cmd /c assoc .es=EmbedScript"
+run "cmd /c assoc .escr=EmbedScript"
+run "cmd /c ftype EmbedScript=" tnam " ""%0"" %*"
+
+//   Add ".escr" to the list of executable file name suffixes, if not already
+//   present.  The list of suffixes are stored in the PATHEXT environment
+//   variable, separated by semicolons.
+//
+set tnam [tnam "(cog)com/envvar.exe"]
+set pathext [runso tnam " PATHEXT -sget"] //get PATHEXT startup value
+
+set p 1                      //init PATHEXT parse index
+set found False              //init to ".escr" not found
+set newext ""                //init new string of suffixes
+loop from 1
+  set tk [NextExt]
+  if [= [slen tk] 0] then
+    quit
+    endif
+  if [= [lcase tk] suff] then //our suffix is already in the list ?
+    set found True
+    quit
+    endif
+  if [<> [slen newext] 0] then
+    append newext ";"
+    endif
+  append newext tk
+  endloop
+
+if [not found] then          //need to add our suffix ?
+  if [<> [slen newext] 0] then
+    append newext ";"
+    endif
+  append newext suff         //add our suffix to end of list
+  run [tnam "(cog)com/envvar.exe"] " PATHEXT -sset """ newext """"
+  endif
