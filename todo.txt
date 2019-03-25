@@ -4,8 +4,3 @@ Add a command to execute matching choice(s).  Like Pascal CASE, C SWITCH,
 etc.
 
 Add LOOP LIST.  Loops over explicit list of tokens in a string.
-
-Find a way to have Windows automatically run .escr files.  Need procedural
-interface equivalent to the ASSOC and FTYPE commands, and the PATHEXT
-environment variable.  The IQueryAssociations function seems to be
-relevant.

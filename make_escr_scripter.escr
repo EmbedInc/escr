@@ -22,7 +22,7 @@ function NextExt
   var local c string         //single character parsed from PATHEXT
 
   loop
-    set c [substr [1+ p] 1 pathext]
+    set c [sindx [1+ p] pathext]
     if [= c ""] then         //past end of string ?
       quit
       endif
@@ -56,7 +56,7 @@ if [not [exist tnam fnamnl]] then //ESCR program is not installed ?
 //
 run "cmd /c assoc .es=EmbedScript"
 run "cmd /c assoc .escr=EmbedScript"
-run "cmd /c ftype EmbedScript=" tnam " ""%0"" %*"
+run "cmd /c ftype EmbedScript=" tnam " ""%1"" %*"
 
 //   Add ".escr" to the list of executable file name suffixes, if not already
 //   present.  The list of suffixes are stored in the PATHEXT environment
