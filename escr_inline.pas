@@ -280,7 +280,7 @@ var
 begin
   parm.max := size_char(parm.str);     {init local var string}
 {
-*   Parse the function name into E.FUNAME.
+*   Parse the function name into E.PARSE_P^.FUNAME.
 }
   string_token (                       {get function name}
     e.parse_p^.funarg.s,               {source string}

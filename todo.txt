@@ -1,6 +1,8 @@
 Add LIST data type.
 
+Add LOOP LIST.  Loops over list entries.
+
+Add LOOP TOKENS.  Loops over explicit list of tokens in a string.
+
 Add a command to execute matching choice(s).  Like Pascal CASE, C SWITCH,
 etc.
-
-Add LOOP LIST.  Loops over explicit list of tokens in a string.

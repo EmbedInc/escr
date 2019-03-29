@@ -164,22 +164,24 @@ procedure escr_cmd_return (
 begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
+  if not escr_get_end (e, stat) then return; {check for no extra command line tokens}
+
   while e.exblock_p <> nil do begin    {up thru the nested blocks}
     case e.exblock_p^.bltype of        {what kind of block is this ?}
 escr_exblock_sub_k,                    {this is the block to close}
 escr_exblock_cmd_k,
-escr_exblock_func_k: begin
+escr_exblock_func_k,
+escr_exblock_mac_k: begin
         escr_exblock_close (e, stat);  {end this routine}
         return;
         end;
-escr_exblock_blk_k,                    {subordinate block within main block}
-escr_exblock_loop_k: begin
-        escr_exblock_close (e, stat);  {close this block}
-        if sys_error(stat) then return;
+escr_exblock_top_k: begin              {invalid block type for RETURN}
+        sys_stat_set (escr_subsys_k, escr_err_nretblk_k, stat);
+        return;
         end;
-otherwise                              {invalid block type for RETURN}
-      sys_stat_set (escr_subsys_k, escr_err_nretblk_k, stat);
-      return;
+otherwise                              {all other blocks, close and keep looking}
+      escr_exblock_close (e, stat);    {close this block}
+      if sys_error(stat) then return;
       end;                             {end of block type cases}
     end;                               {back to close new current block}
   end;

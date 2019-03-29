@@ -34,6 +34,7 @@ var
   p: string_index_t;                   {raw source line parse index}
   ii: sys_int_machine_t;               {scratch integer and loop counter}
   sym_p: escr_sym_p_t;                 {pointer to symbol in symbol table}
+  parse_p: escr_parse_p_t;             {saved pointer to input parsing state}
   buf: string_var8192_t;               {temp processed input line buffer}
   inh: boolean;                        {saved inhibit at start of command}
 
@@ -265,12 +266,16 @@ loop_line:
 
 escr_sym_icmd_k: begin                 {intrinsic command, implemented by compiled routine}
       inh := e.inhibit_p^.inh;         {temp save inhibit state at start of command}
+      parse_p := e.parse_p;            {save pointer to parsing state before command}
 
       sys_error_none (stat);           {init to no error encountered}
       sym_p^.icmd_p^ (addr(e), stat);  {run the command routine}
       if sys_error(stat) then return;
 
-      if not inh then begin            {check for extra parms if command was run}
+      if                               {check for extra parms if appropriate}
+          (not inh) and                {command was actually run ?}
+          (e.parse_p = parse_p)        {still same parsing state ?}
+          then begin
         if not escr_get_end (e, stat) then return; {abort on extra parameter}
         end;
       if e.obuf.len > 0 then begin     {write any line fragment left in out buffer}
