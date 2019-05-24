@@ -65,6 +65,7 @@
     <a href="#or">OR</a>&nbsp;
     <a href="#pi">PI</a>&nbsp;
     <a href="#qstr">QSTR</a>&nbsp;
+    <a href="#qtk">QTK</a>&nbsp;
     <a href="#rdeg">RDEG</a>&nbsp;
     <a href="#rnd">RND</a>&nbsp;
     <a href="#runex">RUNEX</a>&nbsp;
@@ -150,6 +151,8 @@
     <a href="#unquote">UNQUOTE</a>&nbsp; - &nbsp; String from multi-quoted
       string<br>
     <a href="#qstr">QSTR</a> &nbsp; - &nbsp; Quote raw characters to make
+      string<br>
+    <a href="#qtk">QTK</a> &nbsp; - &nbsp; Single quoted token from
       string<br>
     <a href="#str">STR</a> &nbsp; - &nbsp; Build string from multiple
       pieces<br>
@@ -1038,6 +1041,17 @@ start and end sequences have been removed.
   <p><tt>&nbsp;
   [<b>qstr</b> This is a simple test.] --> "This is a simple test."
   </tt>
+
+<p><dt><tt id="qtk"><b>QTK</b> <i>[arg ... arg]</i></tt></dt><dd>
+
+  <p>Returns the single quoted token resulting from the concatenation of
+  the string representation of all the arguments.  The resulting string will
+  start and end with quote (") characters.  If the body of the string
+  contains any quote characters, they will be doubled.
+
+  <p>This function can be used, for example, to create a single command
+  line parameter to a program.  Raw strings on the command line would be
+  interpreted incorrectly if they contained spaces or quote characters.
 
 <p><dt><tt id="rdeg"><b>RDEG</b> <i>rad</i></tt></dt><dd>
 

@@ -442,6 +442,11 @@ procedure escr_ifun_qstr(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_qtk(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_rdeg(
   in out  e: escr_t;
   out     stat: sys_err_t);

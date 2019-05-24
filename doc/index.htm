@@ -215,18 +215,42 @@ actual source code.&nbsp;
   now takes multiple arguments. <a href="func.htm#pi">PI</a> function now
   takes second optional argument.
 
+<p><dt><h3>16 Mar 2017</h3></dt><dd>
+
+  <p>The <a href="cmds.htm#loop">LOOP</a> command is now more flexible.
+  What were previously options that had to be specified in a particular
+  sequence are now arbitrary options that can be specified in any
+  sequence.  Merged all counted loop types into one.  LOOP N is no longer
+  a special case, for example.
+
+  <p>Change FOR keyword to WITH, to more accurately reflect what it does,
+  despite convention of existing computing history.
+
+  <p>The loop value is now available in a constant instead of a variable.
+
 <p><dt><h3>2 Apr 2017</h3></dt><dd>
 
-  <p>Added VER, NAME, and QUAL options to SYM function.  A SYMBOLS loop
-  now loops over fully qualified symbol names.  It previously looped over
-  bare symbol names.  A SYMBOLS loop can now take keywords that explicitly
-  list the type of symbols to loop over.  Previously, all symbols were
-  looped over.
+  <p>Added <a href="sym.htm#syntax">qualified symbols syntax</a>.
+
+  <p>Added VER, NAME, and QUAL options to <a href="func.htm#sym">SYM</a>
+  function.  A <a href="cmds.htm#loop-symbols">SYMBOLS loop</a> now loops
+  over fully qualified symbol names. It previously looped over bare symbol
+  names.  A SYMBOLS loop can now take keywords that explicitly list the
+  type of symbols to loop over. Previously, all symbols were looped over.
 
 <p><dt><h3>24 Apr 2017</h3></dt><dd>
 
   <p>Added <a href="sym.htm"><i>Symbols</i></a> section between <i>Data
   types</i> and <i>Commands</i>.
+
+<p><dt><h3>13 Jun 2017</h3></dt><dd>
+
+  <p>Changed ESCR program command line argument handling
+
+  <p>All command line arguments to the ESCR program beyond the script name
+  now become the arguments to the top level execution block.  Previously,
+  there were arguments for creating constants of specific values before
+  the script was run.
 
 <p><dt><h3>14 Jun 2017</h3></dt><dd>
 
@@ -253,6 +277,11 @@ actual source code.&nbsp;
 
   <p>Made some minor typo and formatting fixes.
 
+<p><dt><h3>4 Jan 2018</h3></dt><dd>
+
+  <p>Fixed bug in <a href="cmds.htm#loop-symbols">LOOP SYMBOLS</a> where
+  the first entry of a symbol table was not included.
+
 <p><dt><h3>13 Feb 2018</h3></dt><dd>
 
   <p>Added <a href="func.htm#unquote">UNQUOTE</a> function.
@@ -264,6 +293,79 @@ actual source code.&nbsp;
 
   <p><a href="func.htm#tnam">TNAM</a> function can now take multiple
   arguments.  The function operates on the concatenation of the arguments.
+
+<p><dt><h3>3 Nov 2018</h3></dt><dd>
+
+  <p>Added DNAM function.  This function was later renamed to <a
+  href="func.htm#dir">DIR</a>.
+
+<p><dt><h3>31 Dec 2018</h3></dt><dd>
+
+  <p>Added <a href="func.htm#vnl">VNL</a> function.
+
+  <p>Added <a href="cmds.htm#append">APPEND</a> command.
+
+<p><dt><h3>1 Jan 2019</h3></dt><dd>
+
+  <p>Added user-defined commands via the <a
+  href="cmds.htm#command">COMMAND</a> and <a
+  href="cmds.htm#endcmd">ENDCMD</a> commands.
+
+<p><dt><h3>11 Jan 2019</h3></dt><dd>
+
+  <p>Added user-defined functions.  Added commands <a
+  href="cmds.htm#function">FUNCTION</a>, <a
+  href="cmds.htm#endfunc">ENDFUNC</a>, <a
+  href="cmds.htm#funcval">FUNCVAL</a>, and <a
+  href="cmds.htm#funcstr">FUNCSTR</a>.
+
+<p><dt><h3>19 Jan 2019</h3></dt><dd>
+
+  <p>Added NL option to <a href="func.htm#sym">SYM</a> function.
+
+  <p>Fixed bugs in the <a href="cmds.htm#set">SET</a> and <a
+  href="cmds.htm#append">APPEND</a> commands.  These did not previously
+  allow the variable to be specified with a qualified name.
+
+<p><dt><h3>22 Jan 2019</h3></dt><dd>
+
+  <p>Added <a href="cmds.htm#loop-dir">LOOP DIR</a> command and <a
+  href="func.htm#dent">DENT</a> function.
+
+<p><dt><h3>2 Feb 2019</h3></dt><dd>
+
+  <p>Added <a href="cmds.htm#dir">DIR</a> command.
+
+  <p>Enhanced the <a href="cmds.htm#del">DEL</a> command.  The type of
+  symbol can now be specified, and it can now delete file system objects.
+
+<p><dt><h3>3 Feb 2019</h3></dt><dd>
+
+  <p>Added functions <a href="func.htm#runex">RUNEX</a>, <a
+  href="func.htm#runtf">RUNTF</a>, and <a href="func.htm#runso">RUNSO</a>.
+
+<p><dt><h3>4 Feb 2019</h3></dt><dd>
+
+  <p>Renamed DNAM function to <a href="func.htm#dir">DIR</a>.
+
+  <p>Added <a href="func.htm#file">FILE</a> function.
+
+  <p>Fixed bug in <a href="func.htm#date">DATE</a> function where there
+  output could sometimes be corrupted.
+
+<p><dt><h3>29 Mar 2019</h3></dt><dd>
+
+  <p>Fixed bug in user-defined function handling.  Would sometimes get
+  "extra token" error on line where user-defined function was envoked.
+
+<p><dt><h3>13 May 2019</h3></dt><dd>
+
+  <p>Fixed <a href="func.htm#dent">DENT</a> function documentation to
+  indicate the default case.
+
+<p><dt><h3>24 May 2019</h3></dt><dd>
+
+  <p>Added <a href="func.htm#qtk">QTK</a> function.
 
 </dl>
 

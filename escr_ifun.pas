@@ -99,6 +99,7 @@ define escr_ifun_runex;
 define escr_ifun_runtf;
 define escr_ifun_runso;
 define escr_ifun_file;
+define escr_ifun_qtk;
 %include 'escr2.ins.pas';
 
 const
@@ -4005,4 +4006,46 @@ otherwise
 missing:                               {a required argument is missing}
   if sys_error(stat) then return;      {STAT already set to previous error ?}
   escr_ifn_stat_required (e, stat);
+  end;
+{
+********************************************************************************
+*
+*   QTK arg ... arg
+*
+*   The concatention of the string representation of all the arguments returned
+*   as a single quoted token.
+}
+procedure escr_ifun_qtk (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  str: string_var8192_t;               {raw string}
+  tk: string_var8192_t;                {quoted string as single token}
+  ii: sys_int_machine_t;               {loop counter}
+
+begin
+  str.max := size_char(str.str);       {init local var strings}
+  tk.max := size_char(tk.str);
+
+  escr_ifn_get_strs (e, str, stat);    {get the concatenated string}
+  if sys_error(stat) then return;
+{
+*   Copy the string from STR into TK, converting it to a quoted token at the
+*   same time.
+}
+  tk.str[1] := '"';                    {init TK with the leading quote}
+  tk.len := 1;
+
+  for ii := 1 to str.len do begin      {scan the input string}
+    string_append1 (tk, str.str[ii]);  {add this char to token}
+    if str.str[ii] = '"' then begin    {this is a quote character ?}
+      string_append1 (tk, '"');        {double the quote}
+      end;
+    end;
+
+  string_append1 (tk, '"');            {add trailing quote}
+
+  escr_ifn_ret_str (e, tk);            {return the token}
   end;
