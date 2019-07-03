@@ -44,6 +44,8 @@ begin
   block_p := e.exblock_p;              {get pointer to current execution block}
   if block_p = nil then return;        {not in a execution block, nothing to report ?}
   inpos_p := block_p^.inpos_p;         {get pointer to nested input file state}
+  if inpos_p = nil then return;        {no input files open ?}
+
   line_p := inpos_p^.last_p;           {get pointer to current input line info}
   sys_msg_parm_vstr (msg_parm[1], line_p^.file_p^.tnam); {input file name}
   sys_msg_parm_int (msg_parm[2], line_p^.lnum); {input file line number}
@@ -89,8 +91,8 @@ procedure escr_err_atline_abort (      {bomb with msg and source line on error}
 begin
   if not sys_error(stat) then return;  {STAT is not indicating an error ?}
 
-  sys_error_print (stat, subsys, msg, parms, n_parms); {write caller's error msg}
-  escr_err_atline (e, '', '', nil, 0); {indicate source line and bomb}
+  sys_error_print (stat, '', '', nil, 0); {show the error}
+  escr_err_atline (e, subsys, msg, parms, n_parms); {indicate source line and bomb}
   end;
 {
 ****************************************************************************
