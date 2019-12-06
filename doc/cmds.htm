@@ -14,58 +14,125 @@
 <br><p><center><h2>Commands</h2></center>
 
 <ul>
-  <li><a href="#include">include</a>
-  <li><a href="#var-new">var new</a>,
-    <a href="#var-exist">var exist</a>,
-    <a href="#var-local">var local</a>
-  <li><a href="#const">const</a>
-  <li><a href="#set">set</a>
-  <li><a href="#append">append</a>
-  <li><a href="#del">del</a>
-  <li><a href="#sylist">sylist</a>
-  <li><a href="#show">show</a>
-  <li>
-    <a href="#write">write</a>,
-    <a href="#writepush">writepush</a>,
-    <a href="#writepop">writepop</a>
-  <li><a href="#if">if then else endif</a>
-  <li><a href="#subroutine">subroutine</a>,
-    <a href="#return">return</a>,
-    <a href="#endsub">endsub</a>,
-    <a href="#call">call</a>
-  <li><a href="#command">command</a>,
-    <a href="#return">return</a>,
-    <a href="#endcmd">endcmd</a>
-  <li><a href="#function">function</a>,
-    <a href="#funcval">funcval</a>,
-    <a href="#funcstr">funcstr</a>,
-    <a href="#return">return</a>,
-    <a href="#endfunc">endfunc</a>
-  <li><a href="#macro">macro</a>,
-    <a href="#quitmac">quitmac</a>,
-    <a href="#endmac">endmac</a>
-  <li><a href="#block">block</a>,
-    <a href="#endblock">endblock</a>
-  <li><a href="#loop">loop</a>,
-    <a href="#repeat">repeat</a>,
-    <a href="#endlop">endloop</a>
-    <br>types:
-    <a href="#loop-unconditional">unconditional</a>,
-    <a href="#loop-counted">counted</a>,
-    <a href="#loop-symbols">symbols</a>,
-    <a href="#loop-directory">directory</a><br>
-    Options:
-    <a href="#loop-with">with</a>,
-    <a href="#loop-from">from</a>,
-    <a href="#loop-to">to</a>,
-    <a href="#loop-n">n</a>,
-    <a href="#loop-by">by</a>,
-    <a href="#loop-sym">symbols</a>,
-    <a href="#loop-dir">dir</a>
-  <li><a href="#quit">quit</a>
-  <li><a href="#run">run</a>
-  <li><a href="#dir">dir</a>
-  <li><a href="#stop">stop</a>
+  <p><li>Listed alphabetically<p>
+
+    <a href="#append">APPEND</a>&nbsp;
+    <a href="#block">BLOCK</a>&nbsp;
+    <a href="#call">CALL</a>&nbsp;
+    <a href="#command">COMMAND</a>&nbsp;
+    <a href="#const">CONST</a>&nbsp;
+    <a href="#del">DEL</a>&nbsp;
+    <a href="#dir">DIR</a>&nbsp;
+    <a href="#endblock">ENDBLOCK</a>&nbsp;
+    <a href="#endcmd">ENDCMD</a>&nbsp;
+    <a href="#endfunc">ENDFUNC</a>&nbsp;
+    <a href="#endloop">ENDLOOP</a>&nbsp;
+    <a href="#endmac">ENDMAC</a>&nbsp;
+    <a href="#endsub">ENDSUB</a>&nbsp;
+    <a href="#funcstr">FUNCSTR</a>&nbsp;
+    <a href="#function">FUNCTION</a>&nbsp;
+    <a href="#funcval">FUNCVAL</a>&nbsp;
+    <a href="#if">IF</a>&nbsp;
+    <a href="#include">INCLUDE</a>&nbsp;
+    <a href="#loop">LOOP</a>&nbsp;
+    <a href="#macro">MACRO</a>&nbsp;
+    <a href="#quit">QUIT</a>&nbsp;
+    <a href="#quitmac">QUITMAC</a>&nbsp;
+    <a href="#repeat">REPEAT</a>&nbsp;
+    <a href="#return">RETURN</a>&nbsp;
+    <a href="#run">RUN</a>&nbsp;
+    <a href="#set">SET</a>&nbsp;
+    <a href="#show">SHOW</a>&nbsp;
+    <a href="#stop">STOP</a>&nbsp;
+    <a href="#subroutine">SUBROUTINE</a>&nbsp;
+    <a href="#sylist">SYLIST</a>&nbsp;
+    <a href="#var">VAR</a>&nbsp;
+    <a href="#write">WRITE</a>&nbsp;
+    <a href="#writepop">WRITEPOP</a>&nbsp;
+    <a href="#writepush">WRITEPUSH</a>&nbsp;
+
+  <p><li>Blocks and routines<p>
+
+    <a href="#block">BLOCK</a>&nbsp;
+    <a href="#repeat">REPEAT</a>&nbsp;
+    <a href="#quit">QUIT</a>&nbsp;
+    <a href="#endblock">ENDBLOCK</a>&nbsp; - &nbsp; Basic blocks<br>
+
+    <a href="#subroutine">SUBROUTINE</a>&nbsp;
+    <a href="#return">RETURN</a>&nbsp;
+    <a href="#endsub">ENDSUB</a>&nbsp;
+    <a href="#call">CALL</a>&nbsp; - &nbsp; Subroutines<br>
+
+    <a href="#macro">MACRO</a>&nbsp;
+    <a href="#quitmac">QUITMAC</a>&nbsp;
+    <a href="#endmac">ENDMAC</a>&nbsp; - &nbsp; Macros<br>
+
+    <a href="#function">FUNCTION</a>&nbsp;
+    <a href="#funcval">FUNCVAL</a>&nbsp;
+    <a href="#funcstr">FUNCSTR</a>&nbsp;
+    <a href="#return">RETURN</a>&nbsp;
+    <a href="#endfunc">ENDFUNC</a>&nbsp; - &nbsp; Functions<br>
+
+    <a href="#command">COMMAND</a>&nbsp;
+    <a href="#return">RETURN</a>&nbsp;
+    <a href="#endcmd">ENDCMD</a>&nbsp; - &nbsp; Commands<br>
+
+  <p><li>Symbols<p>
+
+    <a href="#const">CONST</a>&nbsp; - &nbsp; Define constant<br>
+    <a href="#var">VAR</a>&nbsp; - &nbsp; Define variable<br>
+    <a href="#del">DEL</a>&nbsp; - &nbsp; Delete symbol<br>
+    <a href="#set">SET</a>&nbsp; - &nbsp; Set variable to value<br>
+    <a href="#append">APPEND</a>&nbsp; - &nbsp; Append to string variable<br>
+    <a href="#sylist">SYLIST</a>&nbsp; - &nbsp; List symbols<br>
+
+  <p><li>Conditional execution<p>
+
+    <a href="#if">IF</a>&nbsp; - &nbsp; If ... then ... else<br>
+
+  <p><li>Looping<p>
+
+    <a href="#loop">LOOP</a>&nbsp; - &nbsp; Start loop<br>
+      &nbsp; &nbsp; <a href="#loop-unconditional">unconditional</a>&nbsp;
+        - &nbsp; No automatic end<br>
+      &nbsp; &nbsp; <a href="#loop-counted">counted</a>&nbsp;
+        - &nbsp; Integer, fixed increment/decrement<br>
+        &nbsp; &nbsp; &nbsp; &nbsp; <a href="#loop-with">WITH</a>&nbsp;
+          - &nbsp; Define loop variable<br>
+        &nbsp; &nbsp; &nbsp; &nbsp; <a href="#loop-from">FROM</a>&nbsp;
+          - &nbsp; Starting value<br>
+        &nbsp; &nbsp; &nbsp; &nbsp; <a href="#loop-to">TO</a>&nbsp;
+          - &nbsp; Ending value<br>
+        &nbsp; &nbsp; &nbsp; &nbsp; <a href="#loop-n">N</a>&nbsp;
+          - &nbsp; Number of iterations<br>
+        &nbsp; &nbsp; &nbsp; &nbsp; <a href="#loop-by">BY</a>&nbsp;
+          - &nbsp; Increment<br>
+      &nbsp; &nbsp; <a href="#loop-symbols">SYMBOLS</a>&nbsp;
+        - &nbsp; Preprocessor symbols<br>
+      &nbsp; &nbsp; <a href="#loop-directory">DIR</a>&nbsp;
+        - &nbsp; Directory entries<br>
+    <a href="#repeat">REPEAT</a>&nbsp; - &nbsp; Next iteration<br>
+    <a href="#quit">QUIT</a>&nbsp; - &nbsp; Exit loop<br>
+    <a href="#endloop">ENDLOOP</a>&nbsp; - &nbsp; End loop definition<br>
+
+  <p><li>Host operating system<p>
+
+    <a href="#del">DEL</a>&nbsp; - &nbsp; Delete<br>
+    <a href="#dir">DIR</a>&nbsp; - &nbsp; Set current directory<br>
+    <a href="#run">RUN</a>&nbsp; - &nbsp; Run external program<br>
+
+  <p><li>Input and output<p>
+
+    <a href="#show">SHOW</a>&nbsp; - &nbsp; Write to standard output<br>
+    <a href="#write">WRITE</a>&nbsp; - &nbsp; Write to file or preprocessor output<br>
+    <a href="#writepush">WRITEPUSH</a>&nbsp; - &nbsp; New writing state, save old<br>
+    <a href="#writepop">WRITEPOP</a>&nbsp; - &nbsp; Restore previous writing state<br>
+
+  <p><li>Scripting system<p>
+
+    <a href="#include">INCLUDE</a>&nbsp; - &nbsp; Include file as source<br>
+    <a href="#stop">STOP</a>&nbsp; - &nbsp; End execution<br>
+
   </ul>
 
 <dl>
@@ -82,10 +149,11 @@ available by default.  Applications can remove specific intrinsic commands
 and add their own.  The ESCR program leaves all the default intrinsic
 commands and defines none of its own.
 
-<p>User-defined commands are defined by script code using the COMMAND
-command.  Once defined, these commands are indistiguishable from intrinsic
-commands to code that invokes them.  See the COMMAND command description
-for more information about user-defined commands.
+<p>User-defined commands are defined by script code using the <a
+href="#command">COMMAND</a> command.  Once defined, these commands are
+indistiguishable from intrinsic commands to code that invokes them.  See
+the <a href="#command">COMMAND</a> description for more information about
+user-defined commands.
 
 <p>Command names are case-sensitive.  All intrinsic command names contain
 only lower case letters.  User-defined command names can contain both
@@ -94,7 +162,7 @@ case-insensitive to the extent possible.
 
 <p>Depending on the application, a special sequence of characters may
 be required to identify commands.  This is generally required in
-pre-processor mode to distinguish commands from ordinary data.
+pre-processor mode to distinguish commands from data.
 
 <p>The ESCR program uses no special syntax to identify commands.  The
 first non-blank character on a line is the start of a command name
@@ -102,84 +170,95 @@ keyword.
 
 <p>The ESCR system intrinsic commands are:
 
-<p><dt><tt id="include"><b>INCLUDE</b> <i>pathname</i></tt></dt><dd>
-
-  <p>Switch the input file to the indicated file.  When the end of
-  that file is encountered, reading of the original file is resumed on
-  the line following the <b>include</b> command.
-
-  <p><i>Pathname</i> is a string.  It must therefore be enclosed
-  in quotes or apostrophies if it is a constant.  See the <b>string</b> data
-  type description for details.  The pathname is relative to the
-  directory containing the current source file.
-
-<p><dt><tt id="var-new"><b>VAR NEW</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
-
-  <p>Create a new variable of name <i>name</i>.  The symbol <i>name</i>
-  will now refer to the new variable regardless of a previously existing
-  variable or constant of the same name.  <i>Name</i> will revert to its
-  previous meaning when this symbol is deleted.
-
-  <p><i>Dtype</i> specifies the data type of the variable.  The default
-  data type is <b>string</b>.
-
-  <p>The variable will be set to the <i>value</i>, if supplied.  Otherwsie
-  the variable's value will be the default for its data type.
-
-<p><dt><tt id="var-exist"><b>VAR EXIST</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
-
-  <p>Like <b>var new</b>, except that no new variable is created if
-  <i>name</i> is already a variable or constant of the indicated type.
-
-  <p>If a new variable is created, then it will be initialized to
-  <i>value</i>, if supplied, else it will be initialized to the default
-  for its data type.  If the variable previously existed, then its
-  existing value is preserved, whether <i>value</i> is supplied or not.
-
-<p><dt><tt id="var-local"><b>VAR LOCAL</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
-
-  <p>Like <b>var new</b> except for the following:<ul>
-
-    <p><li>The new variable will be automatically deleted at the end of
-    the current execution block.  Examples of execution blocks are
-    subroutines and explicit blocks defined with the <b>block</b> command.
-
-    <p><li>The action is only performed on the first iteration thru the
-    execution block.  This allows the command to be put inside a
-    <b>loop</b> ... <b>endloop</b> block, for example, but the variable
-    only created on the first pass.  Even if a local variable is not
-    created on the first pass due to conditional logic, it will not be
-    created on subsequent passes if the <b>var local</b> command for that
-    variable is run then.  It is recommended that <b>var local</b>
-    commands therefore be placed at the start of the block and before any
-    conditional logic.
-
-    <p>"First iteration" means the first pass thru the block after each
-    time it is entered, not the first time globally.
-
-    </ul>
-
-<p><dt><tt id="const"><b>CONST</b> <i>name [dtype]</i> <b>=</b> <i>value</i></tt></dt><dd>
-
-  <p>Create a new constant of name <i>name</i>.  The symbol <i>name</i>
-  will now refer to the new constant regardless of whether a constant or
-  variable of that name previously existed.  <i>Name</i> will revert to
-  its previous meaning when this symbol is deleted.
-
-  <p>The optional <i>dtype</i> parameter specifies the data type of the
-  constant.  The default data type is <b>string</b>.
-
-<p><dt><b><tt id="set">SET</b> <i>name value</i></tt></dt><dd>
-
-  <p>Set the variable <i>name</i> to the value <i>value</i>.  It is an
-  error if <i>value</i> can not be converted to the data type of
-  <i>name</i>, or if there is no such variable.
-
 <p><dt><b><tt id="append">APPEND</b> <i>name arg ... arg</i></tt></dt><dd>
 
   <p>Append the concatenation of all the <i>arg</i> arguments to the end
   of the string in the variable <i>name</i>.  <i>Name</i> must be the name
   of a variable with <b>string</b> data type.
+
+<p><dt><tt id="block"><b>BLOCK</b></tt></dt><dd>
+
+  <p>Starts a new execution block.  The block is ended with the
+  <b>endblock</b> command.  This type of execution block can not take
+  arguments.  Inside the block, the <b>arg</b> inline function will
+  resolve arguments for the next innermost block that can take arguments,
+  such as a <b>subroutine</b> ... <b>endsub</b> block, for example.
+
+<p><dt><tt id="call"><b>CALL</b> <i>name [arg ... arg]</i></tt></dt><dd>
+
+  <p>Executes the subroutine of name <i>name</i>.  Execution returns to
+  after the <i>call</i> command when the subroutine ends.
+
+  <p>There may be zero or more <i>arg</i> parameters separated by spaces.
+  These become the execution block arguments inside the subroutine.  They
+  are available to the subroutine via the <a
+  href="func.htm#arg"><b>arg</b></a> inline function. Arguments are
+  numbered sequentially starting at 1.  The special argument 0 is always
+  <i>name</i>.
+
+  <p>The arguments are interpreted as raw collection of characters.  One
+  or more blanks separate arguments.  Characters enclosed in quotes
+  ("...") or apostrophies ('...') are treated as one entity and are
+  not broken into individual arguments even if they contain blanks.
+  However, the whole string, including the enclosing quote
+  characters, becomes the argument value.
+
+  <p>Note that, as with all commands, any inline functions are first
+  evaluated before the command is interpreted.
+
+  <p>Some examples of calls to subroutine XYZ and the resulting value of
+  the arguments inside the subroutine are:<dl>
+
+    <p><dt><tt><b>call</b> xyz</tt></dt><dd>
+        Arg 0: <tt>xyz</tt><br>
+
+    <p><dt><tt><b>call</b> xyz a b "a b" "don't"</tt></dt><dd>
+        Arg 0: <tt>xyz</tt><br>
+        Arg 1: <tt>a</tt><br>
+        Arg 2: <tt>b</tt><br>
+        Arg 3: <tt>"a b"</tt><br>
+        Arg 4: <tt>"don't"</tt><br>
+
+    <p><dt><tt><b>call</b> xyz 1 2 [<b>+</b> 3 4]</tt></dt><dd>
+        Arg 0: <tt>xyz</tt><br>
+        Arg 1: <tt>1</tt><br>
+        Arg 2: <tt>2</tt><br>
+        Arg 3: <tt>7</tt><br>
+
+    </dl>
+
+<p><dt><tt id="command"><b>COMMAND</b> <i>name</i></tt></dt><dd>
+
+  <p>Create a user-defined command of name <i>name</i>.
+
+  <p>Code following <b>command</b> is considered part of the command until
+  an <a href="#endcmd"> <b>endcmd</b> </a> command is encountered.  The
+  code from <b>command</b> thru <b>endcmd</b> will not be executed when
+  the command is being defined. User-defined commands are invoked just
+  like intrinsic commands.
+
+  <p>The code from <b>command</b> thru <b>endcmd</b> is an execution
+  block.  This type of execution block can take arguments, which are taken
+  from the command parameters.  Argument 0 is always the command name as
+  it appeared on the command line.  Any arguments supplied to the command
+  will be available in the command routine as numbered arguments starting
+  at 1.  The argument passing mechanism is the same as implemented by the
+  <b>call</b> command for subroutines.  See the <a href="#call">
+  <b>call</b> </a> command description for how arguments are parsed from
+  the command line and passed to the command routine.
+
+  <p>When a command is invoked, execution jumps to the first line after
+  the defining <b>command</b> command.  Execution continues until a <a
+  href="#return"> <b>return</b> </a> or <b>endcmd</b> command is
+  encountered.  Execution is then resumed on the line following the
+  command invocation.
+
+<p><dt><tt id="const"><b>CONST</b> <i>name [dtype]</i> <b>=</b> <i>value</i></tt></dt><dd>
+
+  <p>Create a new constant of name <i>name</i>.
+
+  <p>The optional <i>dtype</i> parameter specifies the data type of the
+  constant.  The default data type is <b>string</b>.
 
 <p><dt><tt id="del"><b>DEL</b> <i>[objtype] name</i></tt></dt><dd>
 
@@ -249,113 +328,52 @@ keyword.
     <p>When <i>objtype</i> is omitted, <i>name</i> is the name of a
     ESCR symbol directly, not a string.
 
-<p><dt><tt id="sylist"><b>SYLIST</b></tt></dt><dd>
+<p><dt><tt id="dir"><b>DIR</b> <i>directory</i></tt></dt><dd>
 
-  <p>Write the list of all currently defined symbols and their values to
-  the output file as data file comments.  It is an error if there is no
-  current output file.
+  <p>Set the current directory to <i>directory</i>.  <i>Directory</i>
+  is a string.
 
-<p><dt><tt id="show"><b>SHOW</b> <i>arg ... arg</i></tt></dt><dd>
+<p><dt><tt id="endblock"><b>ENDBLOCK</b></tt></dt><dd>
 
-  <p>Write the concatenation of the string representation of all arguments
-  as one line to standard output.  If no arguments are supplied, then a
-  blank line is written.
+  <p>Ends the definition of the current execution block, which
+  must have been started with a <a href="#block"> <b>block</b> </a>
+  command.  This command functions like <a href="#quit"> <b>quit</b> </a>
+  when executed.
 
-<p><dt><tt id="write"><b>WRITE</b> <i>arg ... arg</i></tt></dt><dd>
+<p><dt><tt id="endcmd"><b>ENDCMD</b></tt></dt><dd>
 
-  <p>Write the concatenation of the string representation of all arguments
-  as one line to the current output file.  If no arguments are supplied,
-  then a blank line is written.
+  <p>Ends a command definition started with the last <a href="#command">
+  <b>command</b> </a> command.  Code following this command is no longer
+  considered part of the command definition, and will be executed if code
+  execution was enabled when <b>command</b> was encountered.
 
-  <p>It is an error if there is no current output file.
+  <p>If <b>endcmd</b> is encountered while executing a command, it
+  functions just like <a href="#return"> <b>return</b> </a>.
 
-<p><dt><tt id="writepush"><b>WRITEPUSH</b> <i>name</i></tt></dt><dd>
+<p><dt><tt id="endfunc"><b>ENDFUNC</b></tt></dt><dd>
 
-  <p>Set the file that subsequent WRITE commands write to.  The current
-  output file can be restored with the WRITEPOP command.  <i>Name</i> is a
-  string, and indicates the name of the new output file.  The file is
-  created if it does not previously exist, and is overwritten if it does.
+  <p>Ends a function definition started with the last <a href="#function">
+  <b>function</b> </a> command.  Code following this command is no longer
+  considered part of the function definition, and will be executed if code
+  execution was enabled when <b>function</b> was encountered.
 
-  <p>In preprocessor mode, there is always a output file.  The top level
-  output file is the file being pre-processed into.
+  <p>If <b>endfunc</b> is encountered while executing a function, it acts
+  like <a href="#return"> <b>return</b> </a>.
 
-  <p>In script mode, there is no output file until one is explicitly set
-  up with the WRITEPUSH command.  It is a error to attempt to write to the
-  output file when there is no output file.
+<p><dt><tt id="endloop"><b>ENDLOOP</b></tt></dt><dd>
 
-<p><dt><tt id="writepop"><b>WRITEPOP</b></tt></dt><dd>
+  <p>Ends a <a href="#loop"> <b>loop</b> </a> execution block.  If this
+  command is encountered when the loop is being executed, then it
+  functions like <a href="#repeat"> <b>repeat</b> </a>.
 
-  <p>Ends writing to the file started with the most recently executed
-  WRITEPUSH command.  The output file is restored to what it was when
-  WRITEPUSH was executed.  In preprocessor mode, it is not possible to stop
-  writing to the original output file.
+<p><dt><tt id="endmac"><b>ENDMAC</b></tt></dt><dd>
 
-<p><dt><tt id="if"><b>IF</b> <i>condition [</i><b>then</b><i>]</i><br>
-<b>THEN</b><br>
-<b>ELSE</b><br>
-<b>ENDIF</b>
-</tt></dt><dd>
-
-  <p>These commands are used to conditionally execute sections of code.
-
-  <p><i>Condition</i> is an expression of data type <b>bool</b>.  There are
-  two forms of the <b>if</b> construct, depending on whether the optional
-  <b>then</b> keyword is given on the <b>if</b> command line.
-
-  <dl>
-
-    <p><dt>The general form without the <b>then</b> keyword on the
-    <b>if</b> command line is:</dt><dd>
-
-      <p><tt><b>if</b> <i>condition</i><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<i>code that is always executed</i><br>
-        &nbsp;&nbsp;<b>then</b><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is true</i><br>
-        &nbsp;&nbsp;<b>else</b><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
-        &nbsp;&nbsp;<b>endif</b><br></tt>
-
-      <p>At least one of the <b>then</b> and <b>else</b> commands are
-      required.
-
-    <p><dt>The general form with the <b>then</b> keyword on the <b>if</b>
-    command line is:</dt><dd>
-
-      <p><tt><b>if</b> <i>condition</i> <b>then</b><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is true</i><br>
-        &nbsp;&nbsp;<b>else</b><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
-        &nbsp;&nbsp;<b>endif</b><br></tt>
-
-      <p>The <b>else</b> command is optional.
-
-    </dl>
-
-<p><dt><tt id="subroutine"><b>SUBROUTINE</b> <i>name</i></tt></dt><dd>
-
-  <p>Define the entry point of a subroutine and define the symbol
-  <i>name</i> to refer to that subroutine.  The symbol <i>name</i> will
-  now refer to the new subroutine regardless of its previous meaning, if
-  any.  <i>Name</i> will revert to its previous meaning when this symbol
-  is deleted.
-
-  <p>Following code is considered part of the subroutine until an
-  <b>endsub</b> command is encountered.  The code from <b>subroutine</b>
-  thru <b>endsub</b> will not be executed when the subroutine is being
-  defined.  Subroutines are executed by using a <b>call</b> command,
-  described below.
-
-  <p>The code from <b>subroutine</b> thru <b>endsub</b> is an execution
-  block.  This type of execution block can take arguments, which can be
-  set with the <b>call</b> command.  Argument 0 is always the subroutine
-  name as it appeared in the <b>call</b> command.  The arguments passed
-  from the <b>call</b> command are numbered sequentially starting at 1.
-
-<p><dt><tt id="return"><b>RETURN</b></tt></dt><dd>
-
-  <p>Ends the execution of the current subroutine, user-defined command,
-  or user-defined function.  Execution resumes after where the routine was
-  invoked.
+  <p>Ends a macro definition started with the last <b>macro</b> command.
+  Code following this command is no longer part of the macro, and will be
+  executed if code execution was enabled when the <b>macro</b> command was
+  encountered.  If <b>endmac</b> is encountered while executing a macro,
+  then execution returns to immediately after the macro invocation (just
+  like <b>quitmac</b> in this case).
 
 <p><dt><tt id="endsub"><b>ENDSUB</b></tt></dt><dd>
 
@@ -367,85 +385,20 @@ keyword.
   <p>If <b>endsub</b> is encountered while executing a subroutine, it
   functions just like <b>return</b>.
 
-<p><dt><tt id="call"><b>CALL</b> <i>name [arg ... arg]</i></tt></dt><dd>
+<p><dt><tt id="funcstr"><b>FUNCSTR</b> <i>arg ... arg</i></tt></dt><dd>
 
-  <p>Executes the most recently defined subroutine of name <i>name</i>.
-  Execution returns to after the <i>call</i> command when the subroutine
-  ends.
+  <p>Sets the concatenation of the string representation of all the
+  arguments to the return value of the innermost function being executed.
+  This command is only allowed inside a function routine.
 
-  <p>There may be zero or more <i>arg</i> parameters separated by spaces. These
-  become the execution block arguments inside the subroutine.  They
-  are available to the subroutine via the <b>arg</b> inline function.
-  Arguments are numbered sequentially starting at 1.  The special
-  argument 0 is always <i>name</i>.
+  <p>The resulting characters are returned by the function as a string,
+  not as a sequence of characters.  To return raw characters, use the
+  FUNCVAL command.
 
-  <p>The arguments are interpreted as raw collection of characters.  One
-  or more blanks separate arguments.  Characters enclosed in quotes
-  ("...") or apostrophies ('...') are treated as one entity and are
-  not broken into individual arguments even if they contain blanks.
-  However, the whole string, including the enclosing quote
-  characters, becomes the argument value.
-
-  <p>Note that, as with all commands, any inline functions are first
-  evaluated before the command is interpreted.
-
-  <p>Some examples of calls to subroutine XYZ and the resulting value of
-  the arguments inside the subroutine are:<dl>
-
-    <p><dt><tt><b>call</b> xyz</tt></dt><dd>
-        Arg 0: <tt>xyz</tt><br>
-
-    <p><dt><tt><b>call</b> xyz a b "a b" "don't"</tt></dt><dd>
-        Arg 0: <tt>xyz</tt><br>
-        Arg 1: <tt>a</tt><br>
-        Arg 2: <tt>b</tt><br>
-        Arg 3: <tt>"a b"</tt><br>
-        Arg 4: <tt>"don't"</tt><br>
-
-    <p><dt><tt><b>call</b> xyz 1 2 [<b>+</b> 3 4]</tt></dt><dd>
-        Arg 0: <tt>xyz</tt><br>
-        Arg 1: <tt>1</tt><br>
-        Arg 2: <tt>2</tt><br>
-        Arg 3: <tt>7</tt><br>
-
-    </dl>
-
-<p><dt><tt id="command"><b>COMMAND</b> <i>name</i></tt></dt><dd>
-
-  <p>Create a user-defined command of name <i>name</i>.  The command
-  <i>name</i> will now refer to the new command regardless of its previous
-  meaning, if any.  <i>Name</i> will revert to its previous meaning when
-  this symbol is deleted.
-
-  <p>Following code is considered part of the command until an
-  <b>endcmd</b> command is encountered.  The code from <b>command</b> thru
-  <b>endcmd</b> will not be executed when the command is being defined.
-  User-defined commands are invoked just like intrinsic commands.
-
-  <p>The code from <b>command</b> thru <b>endcmd</b> is an execution
-  block.  This type of execution block can take arguments, which are taken
-  from the command parameters.  Argument 0 is always the command name as
-  it appeared in the command line.  Any arguments supplied to the command
-  will be available in the command routine as numbered arguments starting
-  at 1.  The argument passing mechanism is the same as implemented by the
-  <b>call</b> command for subroutines.  See the <b>call</b> command
-  description (above) for how arguments are parsed from the command line
-  and passed to the command routine.
-
-  <p>When a command is invoked, execution jumps to the first line after
-  the defining <b>command</b> command.  Execution continues until a
-  <b>return</b> or <b>endcmd</b> command is encountered.  Execution is
-  then resumed on the line following the command invocation.
-
-<p><dt><tt id="endcmd"><b>ENDCMD</b></tt></dt><dd>
-
-  <p>Ends a command definition started with the last <b>command</b>
-  command.  Code following this command is no longer considered part of
-  the command definition, and will be executed if code execution was
-  enabled when <b>command</b> was encountered.
-
-  <p>If <b>endcmd</b> is encountered while executing a command, it
-  functions just like <b>return</b>.
+  <p>The return value of a function is initialized to nothing.  A FUNCSTR
+  command explicitly sets the return value, replacing any previously
+  defined return value.  Unlike FUNCVAL, multiple FUNCSTR commands are not
+  cumulative.
 
 <p><dt><tt id="function"><b>FUNCTION</b> <i>name</i></tt></dt><dd>
 
@@ -523,93 +476,57 @@ keyword.
   <p>The return value of a function is initialized to nothing.  Each
   FUNCVAL command adds characters to the return value.
 
-<p><dt><tt id="funcstr"><b>FUNCSTR</b> <i>arg ... arg</i></tt></dt><dd>
+<p><dt><tt id="if"><b>IF</b> <i>condition [</i><b>then</b><i>]</i><br>
+<b>THEN</b><br>
+<b>ELSE</b><br>
+<b>ENDIF</b>
+</tt></dt><dd>
 
-  <p>Sets the concatenation of the string representation of all the
-  arguments to the return value of the innermost function being executed.
-  This command is only allowed inside a function routine.
+  <p>These commands are used to conditionally execute sections of code.
 
-  <p>The resulting characters are returned by the function as a string,
-  not as a sequence of characters.  To return raw characters, use the
-  FUNCVAL command.
+  <p><i>Condition</i> is an expression of data type <b>bool</b>.  There are
+  two forms of the <b>if</b> construct, depending on whether the optional
+  <b>then</b> keyword is given on the <b>if</b> command line.
 
-  <p>The return value of a function is initialized to nothing.  A FUNCSTR
-  command explicitly sets the return value, replacing any previously
-  defined return value.  Unlike FUNCVAL, multiple FUNCSTR commands are not
-  cumulative.
+  <dl>
 
-<p><dt><tt id="endfunc"><b>ENDFUNC</b></tt></dt><dd>
+    <p><dt>The general form without the <b>then</b> keyword on the
+    <b>if</b> command line is:</dt><dd>
 
-  <p>Ends a function definition started with the last <b>function</b>
-  command.  Code following this command is no longer considered part of
-  the function definition, and will be executed if code execution was
-  enabled when <b>function</b> was encountered.
+      <p><tt><b>if</b> <i>condition</i><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<i>code that is always executed</i><br>
+        &nbsp;&nbsp;<b>then</b><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is true</i><br>
+        &nbsp;&nbsp;<b>else</b><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
+        &nbsp;&nbsp;<b>endif</b><br></tt>
 
-  <p>If <b>endfunc</b> is encountered while executing a function, it acts
-  like <b>return</b>.
+      <p>At least one of the <b>then</b> and <b>else</b> commands are
+      required.
 
-<p><dt><tt id="macro"><b>MACRO</b> <i>name</i></tt></dt><dd>
+    <p><dt>The general form with the <b>then</b> keyword on the <b>if</b>
+    command line is:</dt><dd>
 
-  <p>Defines a macro.  These are defined just like subroutines, except
-  that the definition starts with <b>macro</b> and ends with
-  <b>endmac</b>.
+      <p><tt><b>if</b> <i>condition</i> <b>then</b><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is true</i><br>
+        &nbsp;&nbsp;<b>else</b><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
+        &nbsp;&nbsp;<b>endif</b><br></tt>
 
-  <p>Macros differ from subroutines in how they are called.  A macro is
-  called just like a native assembler macro.  If the macro name appears
-  syntactically as an opcode, then the macro is run and its output
-  replaces the macro invocation line.
+      <p>The <b>else</b> command is optional.
 
-  <p>Arguments can be passed to the macro by placing them following the
-  macro name on the macro invocation line.  Argument handling inside the
-  macro is identical to that of subroutine.  See the <b>call</b> command
-  description for more details on arguments.  Note that the call argument
-  syntax in the macro invocation differs from the <b>call</b> command.
-  Macro arguments are separated by commas with any number of spaces before
-  and after each comma.
+    </dl>
 
-  <p>If a label preceeds the macro invocation on the same line, then the
-  special argument -1 is created that will be the label name.  The special
-  argument 0 is the macro name as given by <i>name</i>.
+<p><dt><tt id="include"><b>INCLUDE</b> <i>pathname</i></tt></dt><dd>
 
-  <p>The macro invocation syntax is deliberately compatible with the MPASM
-  macro invocation and instruction syntax.  This allows, for example,
-  existing MPASM directives or instructions to be "hooked" to execute
-  preprocessor code.
+  <p>Switch the input file to the indicated file.  When the end of
+  that file is encountered, reading of the original file is resumed on
+  the line following the <b>include</b> command.
 
-  <p>Following code is considered part of the macro until an <b>endmac</b>
-  command is encountered.  The code from <b>macro</b> thru <b>endmac</b>
-  will not be executed when the macro is being defined.
-
-  <p>A <b>macro</b> ... <b>endmac</b> is an execution block that can take
-  arguments.
-
-<p><dt><tt id="quitmac"><b>QUITMAC</b></tt></dt><dd>
-
-  <p>Stops execution of a macro.  Execution is returned to the line
-  following the macro invocation.
-
-<p><dt><tt id="endmac"><b>ENDMAC</b></tt></dt><dd>
-
-  <p>Ends a macro definition started with the last <b>macro</b> command.
-  Code following this command is no longer part of the macro, and will be
-  executed if code execution was enabled when the <b>macro</b> command was
-  encountered.  If <b>endmac</b> is encountered while executing a macro,
-  then execution returns to immediately after the macro invocation (just
-  like <b>quitmac</b> in this case).
-
-<p><dt><tt id="block"><b>BLOCK</b></tt></dt><dd>
-
-  <p>Starts a new executable block.  The block is ended with the
-  <b>endblock</b> command.  This type of execution block can not take
-  arguments.  Inside the block, the <b>arg</b> inline function will
-  resolve arguments for the next innermost block that can take arguments,
-  such as a <b>subroutine</b> ... <b>endsub</b> block, for example.
-
-<p><dt><tt id="endblock"><b>ENDBLOCK</b></tt></dt><dd>
-
-  <p>Ends the current execution block, which must have been started with a
-  <b>block</b> command.  Any internal resources associated with the block
-  are released, and local symbols defined in the block are deleted.
+  <p><i>Pathname</i> is a string.  It must therefore be enclosed
+  in quotes or apostrophies if it is a constant.  See the <b>string</b> data
+  type description for details.  The pathname is relative to the
+  directory containing the current source file.
 
 <p><dt><tt id="loop"><b>LOOP</b> <i>[opt [arg]] ... [opt [arg]]</i></tt></dt><dd>
 
@@ -889,6 +806,53 @@ keyword.
   will resolve arguments of the next enclosing execution block that does
   take arguments.
 
+<p><dt><tt id="macro"><b>MACRO</b> <i>name</i></tt></dt><dd>
+
+  <p>Defines a macro.  These are defined just like subroutines, except
+  that the definition starts with <b>macro</b> and ends with
+  <b>endmac</b>.
+
+  <p>Macros differ from subroutines in how they are called.  A macro is
+  called just like a native assembler macro.  If the macro name appears
+  syntactically as an opcode, then the macro is run and its output
+  replaces the macro invocation line.
+
+  <p>Arguments can be passed to the macro by placing them following the
+  macro name on the macro invocation line.  Argument handling inside the
+  macro is identical to that of subroutine.  See the <b>call</b> command
+  description for more details on arguments.  Note that the call argument
+  syntax in the macro invocation differs from the <b>call</b> command.
+  Macro arguments are separated by commas with any number of spaces before
+  and after each comma.
+
+  <p>If a label preceeds the macro invocation on the same line, then the
+  special argument -1 is created that will be the label name.  The special
+  argument 0 is the macro name as given by <i>name</i>.
+
+  <p>The macro invocation syntax is deliberately compatible with the MPASM
+  macro invocation and instruction syntax.  This allows, for example,
+  existing MPASM directives or instructions to be "hooked" to execute
+  preprocessor code.
+
+  <p>Following code is considered part of the macro until an <b>endmac</b>
+  command is encountered.  The code from <b>macro</b> thru <b>endmac</b>
+  will not be executed when the macro is being defined.
+
+  <p>A <b>macro</b> ... <b>endmac</b> is an execution block that can take
+  arguments.
+
+<p><dt><tt id="quit"><b>QUIT</b></tt></dt><dd>
+
+  <p>Exits the current execution block.  Execution resumes with parameters
+  in effect before the block was entered.  Resources used internally in
+  the script system to manage the block are deallocated and local
+  variables defined in the block are deleted.
+
+<p><dt><tt id="quitmac"><b>QUITMAC</b></tt></dt><dd>
+
+  <p>Stops execution of a macro.  Execution is returned to the line
+  following the macro invocation.
+
 <p><dt><tt id="repeat"><b>REPEAT</b></tt></dt><dd>
 
   <p>Go back to immediately after the command that started the current
@@ -901,17 +865,11 @@ keyword.
   terminating condition, then the loop is ended and execution resumes
   immediately after the end of the block (functions like <b>quit</b>).
 
-<p><dt><tt id="endloop"><b>ENDLOOP</b></tt></dt><dd>
+<p><dt><tt id="return"><b>RETURN</b></tt></dt><dd>
 
-  <p>Ends a <b>loop</b> execution block.  If this command is encountered
-  when the loop is being executed, then it functions like <b>repeat</b>.
-
-<p><dt><tt id="quit"><b>QUIT</b></tt></dt><dd>
-
-  <p>Exits the current execution block.  Execution resumes with parameters
-  in effect before the block was entered.  Resources used internally in
-  the script system to manage the block are deallocated and local
-  variables defined in the block are deleted.
+  <p>Ends the execution of the current subroutine, user-defined command,
+  or user-defined function.  Execution resumes after where the routine was
+  invoked.
 
 <p><dt><tt id="run"><b>RUN</b> <i>arg ... arg</i></tt></dt><dd>
 
@@ -926,10 +884,17 @@ keyword.
   code of the program that was executed.  This variable is created if it
   does not already exist.
 
-<p><dt><tt id="dir"><b>DIR</b> <i>directory</i></tt></dt><dd>
+<p><dt><b><tt id="set">SET</b> <i>name value</i></tt></dt><dd>
 
-  <p>Set the current directory to <i>directory</i>.  <i>Directory</i>
-  is a string.
+  <p>Set the variable <i>name</i> to the value <i>value</i>.  It is an
+  error if <i>value</i> can not be converted to the data type of
+  <i>name</i>, or if there is no such variable.
+
+<p><dt><tt id="show"><b>SHOW</b> <i>arg ... arg</i></tt></dt><dd>
+
+  <p>Write the concatenation of the string representation of all arguments
+  as one line to standard output.  If no arguments are supplied, then a
+  blank line is written.
 
 <p><dt><tt id="stop"><b>STOP</b> <i>[exstat]</i></tt></dt><dd>
 
@@ -957,6 +922,106 @@ keyword.
   It is up to each application program what, if anything, to do with it.
   The ESCR program returns the the script exit status code as its own
   program exit status code.
+<p><dt><tt id="subroutine"><b>SUBROUTINE</b> <i>name</i></tt></dt><dd>
+
+  <p>Define the entry point of a subroutine and define the symbol
+  <i>name</i> to refer to that subroutine.  The symbol <i>name</i> will
+  now refer to the new subroutine regardless of its previous meaning, if
+  any.  <i>Name</i> will revert to its previous meaning when this symbol
+  is deleted.
+
+  <p>Following code is considered part of the subroutine until an
+  <b>endsub</b> command is encountered.  The code from <b>subroutine</b>
+  thru <b>endsub</b> will not be executed when the subroutine is being
+  defined.  Subroutines are executed by using a <b>call</b> command,
+  described below.
+
+  <p>The code from <b>subroutine</b> thru <b>endsub</b> is an execution
+  block.  This type of execution block can take arguments, which can be
+  set with the <b>call</b> command.  Argument 0 is always the subroutine
+  name as it appeared in the <b>call</b> command.  The arguments passed
+  from the <b>call</b> command are numbered sequentially starting at 1.
+
+<p><dt><tt id="sylist"><b>SYLIST</b></tt></dt><dd>
+
+  <p>Write the list of all currently defined symbols and their values to
+  the output file as data file comments.  It is an error if there is no
+  current output file.
+
+<p><dt><tt id="var-exist"><b>VAR EXIST</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
+
+  <p>Like <b>var new</b>, except that no new variable is created if
+  <i>name</i> is already a variable or constant of the indicated type.
+
+  <p>If a new variable is created, then it will be initialized to
+  <i>value</i>, if supplied, else it will be initialized to the default
+  for its data type.  If the variable previously existed, then its
+  existing value is preserved, whether <i>value</i> is supplied or not.
+
+<p><dt><tt id="var-local"><b>VAR LOCAL</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
+
+  <p>Like <b>var new</b> except for the following:<ul>
+
+    <p><li>The new variable will be automatically deleted at the end of
+    the current execution block.  Examples of execution blocks are
+    subroutines and explicit blocks defined with the <b>block</b> command.
+
+    <p><li>The action is only performed on the first iteration thru the
+    execution block.  This allows the command to be put inside a
+    <b>loop</b> ... <b>endloop</b> block, for example, but the variable
+    only created on the first pass.  Even if a local variable is not
+    created on the first pass due to conditional logic, it will not be
+    created on subsequent passes if the <b>var local</b> command for that
+    variable is run then.  It is recommended that <b>var local</b>
+    commands therefore be placed at the start of the block and before any
+    conditional logic.
+
+    <p>"First iteration" means the first pass thru the block after each
+    time it is entered, not the first time globally.
+
+    </ul>
+
+<p><dt><tt id="var-new"><b>VAR NEW</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
+
+  <p>Create a new variable of name <i>name</i>.  The symbol <i>name</i>
+  will now refer to the new variable regardless of a previously existing
+  variable or constant of the same name.  <i>Name</i> will revert to its
+  previous meaning when this symbol is deleted.
+
+  <p><i>Dtype</i> specifies the data type of the variable.  The default
+  data type is <b>string</b>.
+
+  <p>The variable will be set to the <i>value</i>, if supplied.  Otherwsie
+  the variable's value will be the default for its data type.
+
+<p><dt><tt id="write"><b>WRITE</b> <i>arg ... arg</i></tt></dt><dd>
+
+  <p>Write the concatenation of the string representation of all arguments
+  as one line to the current output file.  If no arguments are supplied,
+  then a blank line is written.
+
+  <p>It is an error if there is no current output file.
+
+<p><dt><tt id="writepop"><b>WRITEPOP</b></tt></dt><dd>
+
+  <p>Ends writing to the file started with the most recently executed
+  WRITEPUSH command.  The output file is restored to what it was when
+  WRITEPUSH was executed.  In preprocessor mode, it is not possible to stop
+  writing to the original output file.
+
+<p><dt><tt id="writepush"><b>WRITEPUSH</b> <i>name</i></tt></dt><dd>
+
+  <p>Set the file that subsequent WRITE commands write to.  The current
+  output file can be restored with the WRITEPOP command.  <i>Name</i> is a
+  string, and indicates the name of the new output file.  The file is
+  created if it does not previously exist, and is overwritten if it does.
+
+  <p>In preprocessor mode, there is always a output file.  The top level
+  output file is the file being pre-processed into.
+
+  <p>In script mode, there is no output file until one is explicitly set
+  up with the WRITEPUSH command.  It is a error to attempt to write to the
+  output file when there is no output file.
 
 </dl>
 
