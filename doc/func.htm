@@ -714,14 +714,17 @@ start and end sequences have been removed.
 
     <p><dt><tt><b>TYPE</b></tt></dt><dd>
 
-      <p>String.  The string is a keyword indicating the file system
-      object type:
+      <p>String.  The string is a upper-case keyword indicating the file
+      system object type:
 
       <p><tt><b>FILE</b></tt> - Ordinary data file.
 
       <p><tt><b>LINK</b></tt> - Symbolic link.
 
       <p><tt><b>DIR</b></tt> - Directory.
+
+      <p>If the object does not exist, then the function returns the empty
+      string.
 
     <p><dt><tt><b>LEN</b></tt></dt><dd>
 

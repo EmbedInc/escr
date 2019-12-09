@@ -373,6 +373,11 @@ actual source code.&nbsp;
   took single argument of directory to go to.  Added subcommand to
   optionally perform other actions.
 
+  <p>Change <a href="func.htm#file">FILE</a> function to return the empty
+  string when the object type was requested but the object does not exist.
+  Previously, the program was bombed.  The object not existing is still a
+  hard error for the remaining sub-functions (other than TYPE).
+
 </dl>
 
 

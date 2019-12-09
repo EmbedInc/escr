@@ -3924,6 +3924,7 @@ begin
 *       FILE  -  Ordinary file.
 *       DIR  -  Directory.
 *       LINK  -  Symbolic link.
+*       <blank>  -  Object does not exist.
 *
 *     LEN  -  Integer file length in bytes.
 *
@@ -3970,6 +3971,13 @@ otherwise
     [iflag],                           {ID for the information being requested}
     finfo,                             {the returned information}
     stat);
+  if                                   {asking for type but not found ?}
+     (iflag = file_iflag_type_k) and then {requesting object type ?}
+      file_not_found(stat)             {the object does not exist ?}
+      then begin
+   escr_ifn_ret_empty (e);             {return the empty string}
+   return;
+   end;
   if sys_error(stat) then return;
 
   case iflag of                        {which information to return ?}
