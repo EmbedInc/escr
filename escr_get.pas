@@ -2,6 +2,8 @@
 }
 module escr_get;
 define escr_get_token;
+define escr_get_pos_save;
+define escr_get_pos_restore;
 define escr_get_tkraw;
 define escr_get_tkrawc;
 define escr_get_end;
@@ -51,6 +53,37 @@ begin
   sys_error_print (stat, '', '', nil, 0); {abort with error}
   escr_err_atline (e, '', '', nil, 0);
   return;                              {keep compiler from complaining}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_GET_POS_SAVE (E, POS)
+*
+*   Save the current command line parsing position in POS.
+}
+procedure escr_get_pos_save (          {save current command line parsing position}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     pos: escr_cmdpos_t);         {saved parsing position}
+  val_param;
+
+begin
+  pos.p := e.parse_p^.ip;
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_GET_POS_RESTORE (E, POS)
+*
+*   Restore the command line parsing position to the one previously saved in
+*   POS.
+}
+procedure escr_get_pos_restore (       {restore to previously saved parsing position}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      pos: escr_cmdpos_t);         {saved parsing position to go back to}
+  val_param;
+
+begin
+  e.parse_p^.ip := pos.p;
   end;
 {
 ********************************************************************************
@@ -236,7 +269,7 @@ procedure escr_get_keyword (           {get one of list of keywords from input s
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      klist: string;               {keywords, upper case separated by blanks}
   out     pick: sys_int_machine_t;     {1-N keyword number, 0 = no token, -1 = no match}
-  out     stat: sys_err_t);            {completion status}
+  out     stat: sys_err_t);            {completion status, no match or hard error}
   val_param;
 
 var

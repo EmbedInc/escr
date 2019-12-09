@@ -928,9 +928,9 @@ begin
 {
 ********************************************************************************
 *
-*   DIR directory
+*   DIR [GO | MAKE | EXIST | EXISTGO] directory
 *
-*   Set the current directory.
+*   Manipulate file system directory.
 }
 procedure escr_cmd_dir (
   in out  e: escr_t;
@@ -938,6 +938,8 @@ procedure escr_cmd_dir (
   val_param;
 
 var
+  pos: escr_cmdpos_t;                  {command parsing position}
+  pick: sys_int_machine_t;             {number of keyword picked from list}
   tnam: string_treename_t;             {directory name}
 
 label
@@ -947,15 +949,63 @@ begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
   tnam.max := size_char(tnam.str);     {init local var string}
 
-  if not escr_get_str (e, tnam, stat)  {get new directory name into TNAM}
+  escr_get_pos_save (e, pos);          {save parsing position before this parameter}
+  escr_get_keyword (e,                 {get subcommand keyword}
+    'GO MAKE EXIST EXISTGO',           {list of valid keywords}
+    pick,                              {1-N number of keyword in list}
+    stat);
+  case pick of
+0:  goto err_missing;                  {no token}
+-1: begin                              {token, but no match to keyword in list}
+      sys_error_none (stat);           {this is not an error}
+      pick := 1;                       {as if keyword was GO}
+      escr_get_pos_restore (e, pos);   {back before this command line token}
+      end;
+    end;
+  if sys_error(stat) then return;      {hard error ?}
+
+  if not escr_get_str (e, tnam, stat)  {get directory name into TNAM}
     then goto err_missing;
   if not escr_get_end (e, stat) then return; {abort on extra parameter}
+{
+*   The directory name is in TNAM, and PICK indicates which subcommand keyword
+*   applies.  PICK is guaranteed to be valid.
+}
+  case pick of                         {what action to perform ?}
 
-  file_currdir_set (tnam, stat);       {set the new current directory}
+1:  begin                              {GO}
+      file_currdir_set (tnam, stat);   {set the new current directory}
+      end;
+
+2:  begin                              {MAKE}
+      file_create_dir (                {create the new directory}
+        tnam,                          {directory name}
+        [],                            {no special operation}
+        stat);
+      end;
+
+3:  begin                              {EXIST}
+      file_create_dir (                {create the new directory}
+        tnam,                          {directory name}
+        [file_crea_keep_k],            {preserve existing directory, if any}
+        stat);
+      end;
+
+4:  begin                              {EXISTGO}
+      file_create_dir (                {create the new directory}
+        tnam,                          {directory name}
+        [file_crea_keep_k],            {preserve existing directory, if any}
+        stat);
+      if sys_error(stat) then return;
+      file_currdir_set (tnam, stat);   {set the new current directory}
+      end;
+
+    end;                               {end of subcommand cases}
   return;
 {
 *   Abort due to missing required parameter.
 }
 err_missing:
-  escr_stat_cmd_noarg (e, stat);
+  if sys_error(stat) then return;      {previous error ?}
+  escr_stat_cmd_noarg (e, stat);       {return with missing parameter error}
   end;

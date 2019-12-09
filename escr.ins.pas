@@ -111,6 +111,10 @@ type
   escr_inh_p_t = ^escr_inh_t;          {pointer to state for one execution inhibit layer}
   escr_p_t = ^escr_t;                  {pointer to ESCR system use state}
 
+  escr_cmdpos_t = record               {command line parsing position}
+    p: string_index_t;                 {1-N index of next char to parse}
+    end;
+
   escr_dtype_k_t = (                   {data type ID}
     escr_dtype_bool_k,                 {boolean}
     escr_dtype_int_k,                  {integer}
@@ -516,7 +520,17 @@ procedure escr_get_keyword (           {get one of list of keywords from input s
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      klist: string;               {keywords, upper case separated by blanks}
   out     pick: sys_int_machine_t;     {1-N keyword number, 0 = no token, -1 = no match}
-  out     stat: sys_err_t);            {completion status, only err, no EOS}
+  out     stat: sys_err_t);            {completion status, no match or hard error}
+  val_param; extern;
+
+procedure escr_get_pos_restore (       {restore to previously saved parsing position}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      pos: escr_cmdpos_t);         {saved parsing position to go back to}
+  val_param; extern;
+
+procedure escr_get_pos_save (          {save current command line parsing position}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     pos: escr_cmdpos_t);         {saved parsing position}
   val_param; extern;
 
 function escr_get_str (                {get string representation of next parameter}

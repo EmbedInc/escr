@@ -118,7 +118,7 @@
   <p><li>Host operating system<p>
 
     <a href="#del">DEL</a>&nbsp; - &nbsp; Delete<br>
-    <a href="#dir">DIR</a>&nbsp; - &nbsp; Set current directory<br>
+    <a href="#dir">DIR</a>&nbsp; - &nbsp; manipulate directories<br>
     <a href="#run">RUN</a>&nbsp; - &nbsp; Run external program<br>
 
   <p><li>Input and output<p>
@@ -328,10 +328,41 @@ keyword.
     <p>When <i>objtype</i> is omitted, <i>name</i> is the name of a
     ESCR symbol directly, not a string.
 
-<p><dt><tt id="dir"><b>DIR</b> <i>directory</i></tt></dt><dd>
+<p><dt><tt id="dir"><b>DIR</b> [<i>cmd</i>] <i>directory</i></tt></dt><dd>
 
-  <p>Set the current directory to <i>directory</i>.  <i>Directory</i>
-  is a string.
+  <p>Manipulates file system directories in the underlying operating
+  system.
+
+  <p><i>Directory</i> is a string that is the name of a directory.
+
+  <p><i>Cmd</i> specifies the operation to perform.  It can be one of the
+  following:<dl>
+
+    <p><dt><b><tt>GO</tt></b></dt><dd>
+
+      <p>Set the current directory to <i>directory</i>.  This is the
+      default when <i>cmd</i> is not supplied.
+
+    <p><dt><b><tt>MAKE</tt></b></dt><dd>
+
+      <p>Creates the directory <i>directory</i>.  It is an error if
+      <i>directory</i> previously exists as any file system object.
+
+    <p><dt><b><tt>EXIST</tt></b></dt><dd>
+
+      <p>Creates the directory <i>directory</i> if it does not already
+      exist.  Nothing is done if <i>directory</i> previously exists as a
+      directory.  It is an error if <i>directory</i> previously exists,
+      but is not a directory.
+
+    <p><dt><b><tt>EXISTGO</tt></b></dt><dd>
+
+      <p>Same as EXIST followed by GO with the same <i>directory</i>. This
+      command ensures that the named directory exists, then sets it as the
+      current working directory.  It is an error if <i>directory</i>
+      previously exists, but is not a directory.
+
+    </dl>
 
 <p><dt><tt id="endblock"><b>ENDBLOCK</b></tt></dt><dd>
 
