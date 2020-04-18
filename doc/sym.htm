@@ -1,8 +1,15 @@
-<html><head><title>ESCR Scripting System</title></head>
+<html lang="en-US">
+<head>
+  <link rel="stylesheet" href="../../../document.css"></link>
+  <link rel="stylesheet" href="../../document.css"></link>
+  <link rel="stylesheet" href="../document.css"></link>
+  <link rel="stylesheet" href="document.css"></link>
+  <title>ESCR Scripting System</title>
+  </head>
+<body>
 
-<body background=backg.jpg>
-<center><h1>ESCR Program and Callable System</h1>
-</center>
+<h1 class=page>ESCR Program and Callable System</h1>
+<p class=page>Last updated 18 April 2020</p>
 
 <ul>
   <li><a href="cmds.htm">Next page</a>
@@ -11,7 +18,7 @@
   </ul>
 
 <!-- *********************************************************************** -->
-<br><p><center><h2>Symbols</h2></center>
+<br><h1>Symbols</h1>
 
 <ul>
   <li><a href="#versions">Versions</a><ul>
@@ -32,9 +39,8 @@
   <li><a href="#examples">Examples</a>
   </ul>
 
-<dl>
 
-<p>Various objects in the ESCR scripting system are given names. These
+<p>Various objects in the ESCR scripting system are given names.  These
 names are referred to as "symbols".  Despite the different objects that
 can be referred to by symbols, there are some common syntax rules and
 handling of symbols.
@@ -43,7 +49,7 @@ handling of symbols.
 href="#types"><i>Symbol types</i></a> section of this document for
 details.
 
-<p><dt><h3 id="versions">Versions</h3></dt><dd>
+<h2 id="versions">Versions</h2><indent>
 
   <p>It is permissible to create a new symbol of the same name as a
   existing symbol.  If the new symbol is of a different fundamental type
@@ -53,28 +59,28 @@ details.
   of that symbol is created.
 
   <p>Symbol versions are numbered starting with 1, with sequentially
-  increasing numbers for newer versions.<dl>
+  increasing numbers for newer versions.
 
-    <p><dt id="ver-curr"><h4>Current version</h4></dt><dd>
+  <p><h3 id="ver-curr">Current version</h3><indent>
 
-      <p>One version of each symbol, usually the latest, is the "current"
-      version.  This version is implicitly referenced when no version
-      information is specified in a symbol reference.
+    <p>One version of each symbol, usually the latest, is the "current"
+    version.  This version is implicitly referenced when no version
+    information is specified in a symbol reference.
 
-      <p>A specific version of a symbol can be referenced either
-      absolutely,       or relative to the current version.  For example,
-      it is possible to explicitly reference the fixed version 1 of a
-      subroutine, or one version older than the current version.
+    <p>A specific version of a symbol can be referenced either absolutely,
+    or relative to the current version.  For example, it is possible to
+    explicitly reference the fixed version 1 of a subroutine, or one
+    version older than the current version.
 
-      <p>The current version is sometimes not the latest.  When a
-      subroutine       is called, for example, the current version of that
-      subroutine symbol becomes the next older version of the subroutine.
-      Therefore, when no version is specified in a subroutine call, the
-      default is calling a chain of subroutines, not recursion.  Note that
-      recursion is possible, and requires explicitly calling the version
-      of the subroutine +1 from the current version.
+    <p>The current version is sometimes not the latest.  When a subroutine
+    is called, for example, the current version of that subroutine symbol
+    becomes the next older version of the subroutine. Therefore, when no
+    version is specified in a subroutine call, the default is calling a
+    chain of subroutines, not recursion.  Note that recursion is possible,
+    and requires explicitly calling the version of the subroutine +1 from
+    the current version.
 
-    </dl>
+    </p></indent>
 
   <p>The versions of a symbol can be thought of as a stack.  The top of
   the stack is the new version.  New versions are created and pushed onto
@@ -84,6 +90,10 @@ details.
   <p>The difference from a normal stack is that the current is not
   constrained to always be the top of the stack.  This is the case for
   symbols that represent routines, like subroutines, macros, and commands.
+
+  <p>When other than the last version of a symbol is deleted, the newer
+  versions are re-numbered.  The versions of a symbol are always numbered
+  sequentially from 1 to the last version without any gaps.
 
   <p>In the ESCR system, this stacking is the mechanism used in place of
   having local, global, or other, symbol scope.  For example, a subroutine
@@ -100,7 +110,9 @@ details.
   the current is deliberately not something likely to occur by accident,
   and is visually obvious.
 
-<p><dt><h3 id="types">Symbol types</h3></dt><dd>
+  </p></indent>
+
+<h2 id="types">Symbol types</h2><indent>
 
   <p>There are different types of symbols (not to be confused with data
   types), with most types having their own namespaces.  Each symbol type
@@ -109,83 +121,101 @@ details.
   namespace, except as noted in the descriptions below.  The symbol type
   names are keywords, and are therefore case-insensitive.
 
-  <p>The symbol type names and their meanings are:<dl>
+  <p>The symbol type names and their meanings are:
 
-    <p><dt id="type-var"><tt><b>VAR</b></tt></dt><dd>
+  <p id="type-var"><tt><b>VAR</b></tt></p><indent>
 
-      <p>Variables.  These are in the same namespace as constants.
+    <p>Variables.  These are in the same namespace as constants.
 
-      <p>Variables have a data type and a value.  The value can be
-      changed.
+    <p>Variables have a data type and a value.  The value can be changed.
 
-    <p><dt id="type-const"><tt><b>CONST</b></tt></dt><dd>
+    </p></indent>
 
-      <p>Constants.  These are in the same namespace as variables.
+  <p id="type-const"><tt><b>CONST</b></tt></p><indent>
 
-      <p>Constants have a data type and a value.  The value can not be
-      changed.
+    <p>Constants.  These are in the same namespace as variables.
 
-    <p><dt id="type-vcon"><tt><b>VCON</b></tt></dt><dd>
+    <p>Constants have a data type and a value.  The value can not be
+    changed.
 
-      <p>Variable or constant.  This symbol type name is only used to
-      indicate that a variable or constant is allowed or requested. Actual
-      symbols are always variables or constants.  There is no VCON symbol
-      type.
+    </p></indent>
 
-    <p><dt id="type-subr"><tt><b>SUBR</b></tt></dt><dd>
+  <p id="type-vcon"><tt><b>VCON</b></tt></p><indent>
 
-      <p>Subroutines.  These are invoked with the <tt>CALL</tt> command.
+    <p>Variable or constant.  This symbol type name is only used to
+    indicate that a variable or constant is allowed or requested. Actual
+    symbols are always variables or constants.  There is no VCON symbol
+    type.
 
-    <p><dt id="type-macro"><tt><b>MACRO</b></tt></dt><dd>
+    </p></indent>
 
-      <p>Macros.  These function like subroutines, but are invoked
-      implicitly from data lines (not ESCR command lines) in pre-processor
-      mode.  Macros serve no purpose in script mode since there is no
-      mechanism to invoke them.
+  <p id="type-subr"><tt><b>SUBR</b></tt></p><indent>
 
-      <p>The details of how a macro invocation is detected in data lines
-      and the syntax for passing arguments depend on the application.  The
-      default is that the macro name is the first token on a line that
-      does not start in column 1.  The first argument is separated from
-      the macro name by a space, with subsequent arguments separated by
-      commas.  There may be any number of spaces immediately before or
-      after the commas.
+    <p>Subroutines.  These are invoked with the <tt>CALL</tt> command.
 
-    <p><dt id="type-func"><tt><b>FUNC</b></tt></dt><dd>
+    </p></indent>
 
-      <p>Functions.  A special syntax is used to identify a function and
-      its arguments.  The entire function reference is replaced with the
-      function output.  Functions are recognized and expanded on ESCR
-      command lines and in pre-processor data lines.
+  <p id="type-macro"><tt><b>MACRO</b></tt></p><indent>
 
-      <p>The syntax for recognizing the start and end of functions depend
-      on the application.  The default is that functions are enclosed in
-      brackets [].
+    <p>Macros.  These function like subroutines, but are invoked
+    implicitly from data lines (not ESCR command lines) in pre-processor
+    mode.  Macros serve no purpose in script mode since there is no
+    mechanism to invoke them.
 
-    <p><dt id="type-cmd"><tt><b>CMD</b></tt></dt><dd>
+    <p>The details of how a macro invocation is detected in data lines and
+    the syntax for passing arguments depend on the application.  The
+    default is that the macro name is the first token on a line that does
+    not start in column 1.  The first argument is separated from the macro
+    name by a space, with subsequent arguments separated by commas.  There
+    may be any number of spaces immediately before or after the commas.
 
-      <p>Commands.  All lines except blank lines, comment lines, or data
-      lines in pre-processor mode start with a command name as the first
-      token.  Commands function like subroutines.
+    </p></indent>
 
-    <p><dt id="type-label"><tt><b>LABEL</b></tt></dt><dd>
+  <p id="type-func"><tt><b>FUNC</b></tt></p><indent>
 
-      <p>Labels.  Labels are used to refer to specific locations in source
-      code.
+    <p>Functions.  A special syntax is used to identify a function and its
+    arguments.  The entire function reference is replaced with the
+    function output.  Functions are recognized and expanded on ESCR
+    command lines and in pre-processor data lines.
 
-    <p><dt id="type-unsp"><tt><b>UNSP</b></tt></dt><dd>
+    <p>The syntax for recognizing the start and end of functions depend on
+    the application.  The default is that functions are enclosed in
+    brackets [].
 
-      <p>Unspecified.  Like VCON, this is not actually a symbol type.  It
-      can be used in some instances to specify that a symbol type is
-      unknown, or that any type of symbol is allowed.
+    </p></indent>
 
-    </dl><!-- end of symbol types -->
+  <p id="type-cmd"><tt><b>CMD</b></tt></p><indent>
 
-<p><dt><h3 id="syntax">Syntax</h3></dt><dd>
+    <p>Commands.  All lines except blank lines, comment lines, or data
+    lines in pre-processor mode start with a command name as the first
+    token.  Commands function like subroutines.
 
-  <p>Symbols are specified with the syntax:
+    </p></indent>
 
-  <p>&nbsp;&nbsp;<tt><i>name[</i>:<i>type][</i>:<i>version]</i></tt>
+  <p id="type-label"><tt><b>LABEL</b></tt></p><indent>
+
+    <p>Labels.  Labels are used to refer to specific locations in source
+    code.
+
+    </p></indent>
+
+  <p id="type-unsp"><tt><b>UNSP</b></tt></p><indent>
+
+    <p>Unspecified.  Like VCON, this is not actually a symbol type.  It
+    can be used in some instances to specify that a symbol type is
+    unknown, or that any type of symbol is allowed.
+
+    </p></indent>
+
+  </p></indent>
+
+<h2 id="syntax">Syntax</h2><indent>
+
+  <p>Symbols are specified with the syntax:</p><indent>
+
+    <p><tt><i>name[</i>:<i>type][</i>:<i>version]</i></tt>
+
+    </p></indent>
 
   <p><i>Name</i> is the bare symbol name.  It must be from 1 to 80
   characters.  At most, the printable ASCII characters except ":" (colon)
@@ -202,17 +232,17 @@ details.
   incompatible with the context.
 
   <p>For example, the <tt>CALL</tt> command requires a subroutine name
-  symbol as its first argument.  Therefore,
+  symbol as its first argument.  Therefore,</p><indent>
 
-  <p>&nbsp;&nbsp;<tt>CALL abcd:subr</tt>
+    <p>&nbsp;&nbsp;<tt>CALL abcd:subr</tt></p></indent>
 
-  <p>could be valid, but
+  <p>could be valid, but</p><indent>
 
-  <p>&nbsp;&nbsp;<tt>CALL abcd:var</tt>
+    <p>&nbsp;&nbsp;<tt>CALL abcd:var</tt></p></indent>
 
   <p>is definitely not valid.
 
-  <p>When referring to an existing symbol and all symbol types are valid,
+  <p>When referring to an existing symbol, and all symbol types are valid,
   then the symbol types have precedence in the order VAR and CONST, SUBR,
   MACRO, FUNC, CMD, and LABEL.  For example, if both a constant
   <tt>ABC</tt> and a subroutine <tt>ABC</tt> exist and the context does
@@ -238,43 +268,57 @@ details.
 
   <p>For a symbol reference to indicate an existing symbol, the symbol of
   that name, of that type, and of that version must exist.  If any of
-  these is not true, then the symbol references refers to a non-existing
-  symbol. That may cause an error, depending on context.
+  these is not true, then the a non-existing symbol is referenced.  That
+  may cause an error, depending on context.
 
-<p><dt><h3 id="examples">Examples</h3></dt><dd><dl>
+  </p></indent>
 
-  <p><dt><tt>abcd</tt></dt><dd>
+<h2 id="examples">Examples</h2><indent>
+
+  <p><tt>abcd</tt></p><indent>
 
     <p>The current version of symbol <tt>abcd</tt>.  If multiple symbol
     types are allowed from context, then this refers to the variable or
     constant <tt>abcd</tt> if that exist, else the subroutine
     <tt>abcd</tt>, else the macro <tt>abcd</tt>, etc.
 
-  <p><dt><tt>abcd:subr</tt></dt><dd>
+    </p></indent>
+
+  <p><tt>abcd:subr</tt></p><indent>
 
     <p>The current version of subroutine <tt>abcd</tt>.
 
-  <p><dt><tt>abcd:2</tt></dt><dd>
+    </p></indent>
+
+  <p><tt>abcd:2</tt></p><indent>
 
     <p>Version 2 of <tt>abcd</tt>.  This is a reference to a non-existent
     symbol even if <tt>abcd</tt> exists but has no version 2.
 
-  <p><dt><tt>abcd:subr:+0</tt></dt><dd>
+    </p></indent>
+
+  <p><tt>abcd:subr:+0</tt></p><indent>
 
     <p>The current version of subroutine <tt>abcd</tt>.
 
-  <p><dt><tt>abcd:subr:-1</tt></dt><dd>
+    </p></indent>
+
+  <p><tt>abcd:subr:-1</tt></p><indent>
 
     <p>The next older version of subroutine <tt>abcd</tt>.
 
-  <p><dt><tt>abcd:subr:+1</tt></dt><dd>
+    </p></indent>
+
+  <p><tt>abcd:subr:+1</tt></p><indent>
 
     <p>The next newer version of subroutine <tt>abcd</tt>.  Inside a
     subroutine, the current version is the next older version of that
     subroutine.  Calling the "+1" version of the subroutine currently in
     is calling itself recursively.
 
-  <p><dt><tt>abcd:+1</tt></dt><dd>
+    </p></indent>
+
+  <p><tt>abcd:+1</tt></p><indent>
 
     <p>The next newer version of <tt>abcd</tt>.
 
@@ -282,13 +326,12 @@ details.
     is the same as the previous example, since the SUBR symbol type is
     implied from context.
 
-  </dl><!-- end of examples -->
+    </p></indent>
 
-</dl><!-- end of top level headings -->
+  </p></indent>
 
 
-<p><!-- ******************************************************************** -->
-<br><p><hr>
+<hr><!-- ******************************************************************* -->
 
 <ul>
   <li><a href="cmds.htm">Next page</a>

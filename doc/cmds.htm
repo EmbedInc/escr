@@ -1,8 +1,15 @@
-<html><head><title>ESCR Scripting System</title></head>
+<html lang="en-US">
+<head>
+  <link rel="stylesheet" href="../../../document.css"></link>
+  <link rel="stylesheet" href="../../document.css"></link>
+  <link rel="stylesheet" href="../document.css"></link>
+  <link rel="stylesheet" href="document.css"></link>
+  <title>ESCR Scripting System</title>
+  </head>
+<body>
 
-<body background=backg.jpg>
-<center><h1>ESCR Program and Callable System</h1>
-</center>
+<h1 class=page>ESCR Program and Callable System</h1>
+<p class=page>Last updated 18 April 2020</p>
 
 <ul>
   <li><a href="func.htm">Next page</a>
@@ -11,11 +18,12 @@
   </ul>
 
 <!-- *********************************************************************** -->
-<br><p><center><h2>Commands</h2></center>
+<br><h1>Commands</h1>
 
 <ul>
-  <p><li>Listed alphabetically<p>
+  <li>Listed alphabetically
 
+    <p>
     <a href="#append">APPEND</a>&nbsp;
     <a href="#block">BLOCK</a>&nbsp;
     <a href="#call">CALL</a>&nbsp;
@@ -51,8 +59,9 @@
     <a href="#writepop">WRITEPOP</a>&nbsp;
     <a href="#writepush">WRITEPUSH</a>&nbsp;
 
-  <p><li>Blocks and routines<p>
+  <li>Blocks and routines
 
+    <p>
     <a href="#block">BLOCK</a>&nbsp;
     <a href="#repeat">REPEAT</a>&nbsp;
     <a href="#quit">QUIT</a>&nbsp;
@@ -77,8 +86,9 @@
     <a href="#return">RETURN</a>&nbsp;
     <a href="#endcmd">ENDCMD</a>&nbsp; - &nbsp; Commands<br>
 
-  <p><li>Symbols<p>
+  <li>Symbols
 
+    <p>
     <a href="#const">CONST</a>&nbsp; - &nbsp; Define constant<br>
     <a href="#var">VAR</a>&nbsp; - &nbsp; Define variable<br>
     <a href="#del">DEL</a>&nbsp; - &nbsp; Delete symbol<br>
@@ -86,12 +96,14 @@
     <a href="#append">APPEND</a>&nbsp; - &nbsp; Append to string variable<br>
     <a href="#sylist">SYLIST</a>&nbsp; - &nbsp; List symbols<br>
 
-  <p><li>Conditional execution<p>
+  <li>Conditional execution
 
+    <p>
     <a href="#if">IF</a>&nbsp; - &nbsp; If ... then ... else<br>
 
-  <p><li>Looping<p>
+  <li>Looping
 
+    <p>
     <a href="#loop">LOOP</a>&nbsp; - &nbsp; Start loop<br>
       &nbsp; &nbsp; <a href="#loop-unconditional">unconditional</a>&nbsp;
         - &nbsp; No automatic end<br>
@@ -115,27 +127,29 @@
     <a href="#quit">QUIT</a>&nbsp; - &nbsp; Exit loop<br>
     <a href="#endloop">ENDLOOP</a>&nbsp; - &nbsp; End loop definition<br>
 
-  <p><li>Host operating system<p>
+  <li>Host operating system
 
+    <p>
     <a href="#del">DEL</a>&nbsp; - &nbsp; Delete<br>
     <a href="#dir">DIR</a>&nbsp; - &nbsp; manipulate directories<br>
     <a href="#run">RUN</a>&nbsp; - &nbsp; Run external program<br>
 
-  <p><li>Input and output<p>
+  <li>Input and output
 
+    <p>
     <a href="#show">SHOW</a>&nbsp; - &nbsp; Write to standard output<br>
     <a href="#write">WRITE</a>&nbsp; - &nbsp; Write to file or preprocessor output<br>
     <a href="#writepush">WRITEPUSH</a>&nbsp; - &nbsp; New writing state, save old<br>
     <a href="#writepop">WRITEPOP</a>&nbsp; - &nbsp; Restore previous writing state<br>
 
-  <p><li>Scripting system<p>
+  <li>Scripting system
 
+    <p>
     <a href="#include">INCLUDE</a>&nbsp; - &nbsp; Include file as source<br>
     <a href="#stop">STOP</a>&nbsp; - &nbsp; End execution<br>
 
   </ul>
 
-<dl>
 
 <p>Commands are whole source lines that cause specific actions to be taken
 by the scripting system.  Commands start with the command name, which is
@@ -160,8 +174,8 @@ only lower case letters.  User-defined command names can contain both
 upper and lower case letters.  Parameters to the intrinsic commands are
 case-insensitive to the extent possible.
 
-<p>Depending on the application, a special sequence of characters may
-be required to identify commands.  This is generally required in
+<p>Depending on the application, a special sequence of characters may be
+required to identify commands.  This is generally required in
 pre-processor mode to distinguish commands from data.
 
 <p>The ESCR program uses no special syntax to identify commands.  The
@@ -170,13 +184,15 @@ keyword.
 
 <p>The ESCR system intrinsic commands are:
 
-<p><dt><b><tt id="append">APPEND</b> <i>name arg ... arg</i></tt></dt><dd>
+<p><b><tt id="append">APPEND</b> <i>name arg ... arg</i></tt></p><indent>
 
   <p>Append the concatenation of all the <i>arg</i> arguments to the end
   of the string in the variable <i>name</i>.  <i>Name</i> must be the name
   of a variable with <b>string</b> data type.
 
-<p><dt><tt id="block"><b>BLOCK</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="block"><b>BLOCK</b></tt></p><indent>
 
   <p>Starts a new execution block.  The block is ended with the
   <b>endblock</b> command.  This type of execution block can not take
@@ -184,7 +200,9 @@ keyword.
   resolve arguments for the next innermost block that can take arguments,
   such as a <b>subroutine</b> ... <b>endsub</b> block, for example.
 
-<p><dt><tt id="call"><b>CALL</b> <i>name [arg ... arg]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="call"><b>CALL</b> <i>name [arg ... arg]</i></tt></p><indent>
 
   <p>Executes the subroutine of name <i>name</i>.  Execution returns to
   after the <i>call</i> command when the subroutine ends.
@@ -198,36 +216,39 @@ keyword.
 
   <p>The arguments are interpreted as raw collection of characters.  One
   or more blanks separate arguments.  Characters enclosed in quotes
-  ("...") or apostrophies ('...') are treated as one entity and are
-  not broken into individual arguments even if they contain blanks.
-  However, the whole string, including the enclosing quote
-  characters, becomes the argument value.
+  ("...") or apostrophies ('...') are treated as one entity and are not
+  broken into individual arguments even if they contain blanks. However,
+  the whole string, including the enclosing quote characters, becomes the
+  argument value.
 
   <p>Note that, as with all commands, any inline functions are first
   evaluated before the command is interpreted.
 
   <p>Some examples of calls to subroutine XYZ and the resulting value of
-  the arguments inside the subroutine are:<dl>
+  the arguments inside the subroutine are:
 
-    <p><dt><tt><b>call</b> xyz</tt></dt><dd>
-        Arg 0: <tt>xyz</tt><br>
+  <p><tt><b>call</b> xyz</tt></p><indent>
+    Arg 0: <tt>xyz</tt><br>
+    </indent>
 
-    <p><dt><tt><b>call</b> xyz a b "a b" "don't"</tt></dt><dd>
-        Arg 0: <tt>xyz</tt><br>
-        Arg 1: <tt>a</tt><br>
-        Arg 2: <tt>b</tt><br>
-        Arg 3: <tt>"a b"</tt><br>
-        Arg 4: <tt>"don't"</tt><br>
+  <p><tt><b>call</b> xyz a b "a b" "don't"</tt></p><indent>
+    Arg 0: <tt>xyz</tt><br>
+    Arg 1: <tt>a</tt><br>
+    Arg 2: <tt>b</tt><br>
+    Arg 3: <tt>"a b"</tt><br>
+    Arg 4: <tt>"don't"</tt><br>
+    </indent>
 
-    <p><dt><tt><b>call</b> xyz 1 2 [<b>+</b> 3 4]</tt></dt><dd>
-        Arg 0: <tt>xyz</tt><br>
-        Arg 1: <tt>1</tt><br>
-        Arg 2: <tt>2</tt><br>
-        Arg 3: <tt>7</tt><br>
+  <p><tt><b>call</b> xyz 1 2 [<b>+</b> 3 4]</tt></p><indent>
+    Arg 0: <tt>xyz</tt><br>
+    Arg 1: <tt>1</tt><br>
+    Arg 2: <tt>2</tt><br>
+    Arg 3: <tt>7</tt><br>
+    </indent>
 
-    </dl>
+  </p></indent>
 
-<p><dt><tt id="command"><b>COMMAND</b> <i>name</i></tt></dt><dd>
+<p><tt id="command"><b>COMMAND</b> <i>name</i></tt></p><indent>
 
   <p>Create a user-defined command of name <i>name</i>.
 
@@ -253,82 +274,108 @@ keyword.
   encountered.  Execution is then resumed on the line following the
   command invocation.
 
-<p><dt><tt id="const"><b>CONST</b> <i>name [dtype]</i> <b>=</b> <i>value</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="const"><b>CONST</b> <i>name [dtype]</i> <b>=</b> <i>value</i></tt></p><indent>
 
   <p>Create a new constant of name <i>name</i>.
 
   <p>The optional <i>dtype</i> parameter specifies the data type of the
   constant.  The default data type is <b>string</b>.
 
-<p><dt><tt id="del"><b>DEL</b> <i>[objtype] name</i></tt></dt><dd>
+  </p></indent>
 
-  <p>Delete the object named <i>name</i>.  <i>Objtype</i> specifies
-  the type of object, and can be one of the following:<dl>
+<p><tt id="del"><b>DEL</b> <i>[objtype] name</i></tt></p><indent>
 
-    <p><dt><tt><b>SYM</b></tt></dt><dd>
+  <p>Delete the object named <i>name</i>.  <i>Objtype</i> specifies the
+  type of object, and can be one of the following:</p><indent>
+
+    <p><tt><b>SYM</b></tt></p><indent>
 
       <p>ESCR symbol of any type.
 
-    <p><dt><tt><b>VAR</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>VAR</b></tt></p><indent>
 
       <p>ESCR variable.
 
-    <p><dt><tt><b>CONST</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>CONST</b></tt></p><indent>
 
       <p>ESCR constant.
 
-    <p><dt><tt><b>VCON</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>VCON</b></tt></p><indent>
 
       <p>ESCR variable or constant.
 
-    <p><dt><tt><b>SUBR</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>SUBR</b></tt></p><indent>
 
       <p>ESCR subroutine.
 
-    <p><dt><tt><b>MACRO</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>MACRO</b></tt></p><indent>
 
       <p>ESCR macro.
 
-    <p><dt><tt><b>FUNC</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>FUNC</b></tt></p><indent>
 
       <p>ESCR function.
 
-    <p><dt><tt><b>CMD</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>CMD</b></tt></p><indent>
 
       <p>ESCR command.
 
-    <p><dt><tt><b>LABEL</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>LABEL</b></tt></p><indent>
 
       <p>ESCR label.
 
-    <p><dt><tt><b>FILE</b></tt></dt><dd>
+      </p></indent>
 
-      <p>File system non-directory object.  Symbolic links are
-      followed.  The script will abort on error, such as <i>name</i>
-      not found.
+    <p><tt><b>FILE</b></tt></p><indent>
 
-    <p><dt><tt><b>TREE</b></tt></dt><dd>
+      <p>File system non-directory object.  Symbolic links are followed.
+      The script will abort on error, such as <i>name</i> not found.
+
+      </p></indent>
+
+    <p><tt><b>TREE</b></tt></p><indent>
 
       <p>File system object.  Symbolic links are not followed.  If the
-      file system object is a directory, then the entire tree from
-      that directory on down is deleted.  On error the ESCR integer
-      variable <tt><b>EXITSTATUS</b></tt> is set to 3, otherwise to 0.
-      <tt><b>EXITSTATUS</b></tt> is created if it does not already
-      exist.  The script exit status value is raised to what
+      file system object is a directory, then the entire tree from that
+      directory on down is deleted.  On error, the ESCR integer variable
+      <tt><b>EXITSTATUS</b></tt> is set to 3, otherwise to 0.
+      <tt><b>EXITSTATUS</b></tt> is created if it does not already exist.
+      The script exit status value is raised to what
       <tt><b>EXITSTATUS</b></tt> is set to, if previously lower.
 
-    </dl>
+      </p></indent>
 
     <p>In these cases, <i>name</i> is a string that is the name of the
-    object to delete.  In the case of a ESCR symbol, the symbol name
-    may be qualified.  In that case, the symbol type, if included in
-    the qualifier, must match the symbol type(s) specified by
-    <i>objtype</i>.
+    object to delete.  In the case of a ESCR symbol, the symbol name may
+    be qualified.  In that case, the symbol type, if included in the
+    qualifier, must match the symbol type(s) specified by <i>objtype</i>.
 
-    <p>When <i>objtype</i> is omitted, <i>name</i> is the name of a
-    ESCR symbol directly, not a string.
+    </p></indent>
 
-<p><dt><tt id="dir"><b>DIR</b> [<i>cmd</i>] <i>directory</i></tt></dt><dd>
+  <p>When <i>objtype</i> is omitted, <i>name</i> is the name of a ESCR
+  symbol directly, not a string.
+
+  </p></indent>
+
+<p><tt id="dir"><b>DIR</b> [<i>cmd</i>] <i>directory</i></tt></p><indent>
 
   <p>Manipulates file system directories in the underlying operating
   system.
@@ -336,42 +383,51 @@ keyword.
   <p><i>Directory</i> is a string that is the name of a directory.
 
   <p><i>Cmd</i> specifies the operation to perform.  It can be one of the
-  following:<dl>
+  following:
 
-    <p><dt><b><tt>GO</tt></b></dt><dd>
+    <p><b><tt>GO</tt></b></p><indent>
 
       <p>Set the current directory to <i>directory</i>.  This is the
       default when <i>cmd</i> is not supplied.
 
-    <p><dt><b><tt>MAKE</tt></b></dt><dd>
+      </p></indent>
+
+    <p><b><tt>MAKE</tt></b></p><indent>
 
       <p>Creates the directory <i>directory</i>.  It is an error if
       <i>directory</i> previously exists as any file system object.
 
-    <p><dt><b><tt>EXIST</tt></b></dt><dd>
+      </p></indent>
+
+    <p><b><tt>EXIST</tt></b></p><indent>
 
       <p>Creates the directory <i>directory</i> if it does not already
       exist.  Nothing is done if <i>directory</i> previously exists as a
       directory.  It is an error if <i>directory</i> previously exists,
       but is not a directory.
 
-    <p><dt><b><tt>EXISTGO</tt></b></dt><dd>
+      </p></indent>
+
+    <p><b><tt>EXISTGO</tt></b></p><indent>
 
       <p>Same as EXIST followed by GO with the same <i>directory</i>. This
       command ensures that the named directory exists, then sets it as the
       current working directory.  It is an error if <i>directory</i>
       previously exists, but is not a directory.
 
-    </dl>
+      </p></indent>
 
-<p><dt><tt id="endblock"><b>ENDBLOCK</b></tt></dt><dd>
+  </p></indent>
 
-  <p>Ends the definition of the current execution block, which
-  must have been started with a <a href="#block"> <b>block</b> </a>
-  command.  This command functions like <a href="#quit"> <b>quit</b> </a>
-  when executed.
+<p><tt id="endblock"><b>ENDBLOCK</b></tt></p><indent>
 
-<p><dt><tt id="endcmd"><b>ENDCMD</b></tt></dt><dd>
+  <p>Ends the definition of the current execution block, which must have
+  been started with a <a href="#block"> <b>block</b> </a> command.  This
+  command functions like <a href="#quit"> <b>quit</b> </a> when executed.
+
+  </p></indent>
+
+<p><tt id="endcmd"><b>ENDCMD</b></tt></p><indent>
 
   <p>Ends a command definition started with the last <a href="#command">
   <b>command</b> </a> command.  Code following this command is no longer
@@ -381,7 +437,9 @@ keyword.
   <p>If <b>endcmd</b> is encountered while executing a command, it
   functions just like <a href="#return"> <b>return</b> </a>.
 
-<p><dt><tt id="endfunc"><b>ENDFUNC</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="endfunc"><b>ENDFUNC</b></tt></p><indent>
 
   <p>Ends a function definition started with the last <a href="#function">
   <b>function</b> </a> command.  Code following this command is no longer
@@ -391,13 +449,17 @@ keyword.
   <p>If <b>endfunc</b> is encountered while executing a function, it acts
   like <a href="#return"> <b>return</b> </a>.
 
-<p><dt><tt id="endloop"><b>ENDLOOP</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="endloop"><b>ENDLOOP</b></tt></p><indent>
 
   <p>Ends a <a href="#loop"> <b>loop</b> </a> execution block.  If this
   command is encountered when the loop is being executed, then it
   functions like <a href="#repeat"> <b>repeat</b> </a>.
 
-<p><dt><tt id="endmac"><b>ENDMAC</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="endmac"><b>ENDMAC</b></tt></p><indent>
 
   <p>Ends a macro definition started with the last <b>macro</b> command.
   Code following this command is no longer part of the macro, and will be
@@ -406,7 +468,9 @@ keyword.
   then execution returns to immediately after the macro invocation (just
   like <b>quitmac</b> in this case).
 
-<p><dt><tt id="endsub"><b>ENDSUB</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="endsub"><b>ENDSUB</b></tt></p><indent>
 
   <p>Ends a subroutine definition started with the last <b>subroutine</b>
   command.  Code following this command is no longer considered part of
@@ -416,7 +480,9 @@ keyword.
   <p>If <b>endsub</b> is encountered while executing a subroutine, it
   functions just like <b>return</b>.
 
-<p><dt><tt id="funcstr"><b>FUNCSTR</b> <i>arg ... arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="funcstr"><b>FUNCSTR</b> <i>arg ... arg</i></tt></p><indent>
 
   <p>Sets the concatenation of the string representation of all the
   arguments to the return value of the innermost function being executed.
@@ -431,7 +497,9 @@ keyword.
   defined return value.  Unlike FUNCVAL, multiple FUNCSTR commands are not
   cumulative.
 
-<p><dt><tt id="function"><b>FUNCTION</b> <i>name</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="function"><b>FUNCTION</b> <i>name</i></tt></p><indent>
 
   <p>Create a user-defined function of name <i>name</i>.  <i>Name</i> will
   now refer to the new function regardless of its previous meaning, if
@@ -468,7 +536,9 @@ keyword.
     endfunc
   show [+ 3 4] " " [+:1 3 4]</pre>
 
-  <p>This script produces the output:<pre>
+  <p>This script produces the output:
+
+  <pre>
   8 7</pre>
 
   <p>The first command in the script defines a new version for the
@@ -494,7 +564,9 @@ keyword.
   explicitly references the absolute version 1 of symbol "+", and
   therefore gets normal addtion with the result being 7 instead of 8.
 
-<p><dt><tt id="funcval"><b>FUNCVAL</b> <i>arg ... arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="funcval"><b>FUNCVAL</b> <i>arg ... arg</i></tt></p><indent>
 
   <p>Appends the concatenation of the string representation of all the
   arguments to the return value of the innermost function being executed.
@@ -507,59 +579,65 @@ keyword.
   <p>The return value of a function is initialized to nothing.  Each
   FUNCVAL command adds characters to the return value.
 
-<p><dt><tt id="if"><b>IF</b> <i>condition [</i><b>then</b><i>]</i><br>
+  </p></indent>
+
+<p><tt id="if"><b>IF</b> <i>condition [</i><b>then</b><i>]</i><br>
 <b>THEN</b><br>
 <b>ELSE</b><br>
 <b>ENDIF</b>
-</tt></dt><dd>
+</tt></p><indent>
 
   <p>These commands are used to conditionally execute sections of code.
 
-  <p><i>Condition</i> is an expression of data type <b>bool</b>.  There are
-  two forms of the <b>if</b> construct, depending on whether the optional
-  <b>then</b> keyword is given on the <b>if</b> command line.
+  <p><i>Condition</i> is an expression of data type <b>bool</b>.  There
+  are two forms of the <b>if</b> construct, depending on whether the
+  optional <b>then</b> keyword is given on the <b>if</b> command line.
 
-  <dl>
+  <p>The general form without the <b>then</b> keyword on the <b>if</b>
+  command line is:</p><indent>
 
-    <p><dt>The general form without the <b>then</b> keyword on the
-    <b>if</b> command line is:</dt><dd>
+    <p><tt><b>if</b> <i>condition</i><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<i>code that is always executed</i><br>
+      &nbsp;&nbsp;<b>then</b><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is true</i><br>
+      &nbsp;&nbsp;<b>else</b><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
+      &nbsp;&nbsp;<b>endif</b><br></tt>
 
-      <p><tt><b>if</b> <i>condition</i><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<i>code that is always executed</i><br>
-        &nbsp;&nbsp;<b>then</b><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is true</i><br>
-        &nbsp;&nbsp;<b>else</b><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
-        &nbsp;&nbsp;<b>endif</b><br></tt>
+    <p>At least one of the <b>then</b> and <b>else</b> commands are
+    required.
 
-      <p>At least one of the <b>then</b> and <b>else</b> commands are
-      required.
+    </p></indent>
 
-    <p><dt>The general form with the <b>then</b> keyword on the <b>if</b>
-    command line is:</dt><dd>
+  <p>The general form with the <b>then</b> keyword on the <b>if</b>
+  command line is:</p><indent>
 
-      <p><tt><b>if</b> <i>condition</i> <b>then</b><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is true</i><br>
-        &nbsp;&nbsp;<b>else</b><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
-        &nbsp;&nbsp;<b>endif</b><br></tt>
+    <p><tt><b>if</b> <i>condition</i> <b>then</b><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is true</i><br>
+      &nbsp;&nbsp;<b>else</b><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<i>code executed when condition is false</i><br>
+      &nbsp;&nbsp;<b>endif</b><br></tt>
 
-      <p>The <b>else</b> command is optional.
+    <p>The <b>else</b> command is optional.
 
-    </dl>
+    </p></indent>
 
-<p><dt><tt id="include"><b>INCLUDE</b> <i>pathname</i></tt></dt><dd>
+  </p></indent>
 
-  <p>Switch the input file to the indicated file.  When the end of
-  that file is encountered, reading of the original file is resumed on
-  the line following the <b>include</b> command.
+<p><tt id="include"><b>INCLUDE</b> <i>pathname</i></tt></p><indent>
 
-  <p><i>Pathname</i> is a string.  It must therefore be enclosed
-  in quotes or apostrophies if it is a constant.  See the <b>string</b> data
-  type description for details.  The pathname is relative to the
-  directory containing the current source file.
+  <p>Switch the input file to the indicated file.  When the end of that
+  file is encountered, reading of the original file is resumed on the line
+  following the <b>include</b> command.
 
-<p><dt><tt id="loop"><b>LOOP</b> <i>[opt [arg]] ... [opt [arg]]</i></tt></dt><dd>
+  <p><i>Pathname</i> is a string.  It must therefore be enclosed in quotes
+  or apostrophies if it is a constant.  See the <b>string</b> data type
+  description for details.  The pathname is relative to the directory
+  containing the current source file.
+
+  </p></indent>
+
+<p><tt id="loop"><b>LOOP</b> <i>[opt [arg]] ... [opt [arg]]</i></tt></p><indent>
 
   <p>Starts an execution block intended for looping.  The command name can
   be followed by a sequence of options, each of which may take arguments.
@@ -568,247 +646,306 @@ keyword.
 
   <p>There are several distinct loop types that can be created with this
   command.  The options used determine the loop type and its specific
-  characteristics.  The loop types are:<dl>
+  characteristics.  The loop types are:</p><indent>
 
-  <p><dt id="loop-unconditional">Unconditional</dt><dd>
+    <h4 id="loop-unconditional">Unconditional</h4><indent>
 
-    <p>This type of loop has no special looping logic or terminating
-    condition.  <b>Repeat</b> and <b>endloop</b> will cause execution to
-    jump to immediately after the <b>loop</b> command.  Only <b>Quit</b>
-    will terminate the loop.
+      <p>This type of loop has no special looping logic or terminating
+      condition.  <b>Repeat</b> and <b>endloop</b> will cause execution to
+      jump to immediately after the <b>loop</b> command.  Only <b>Quit</b>
+      will terminate the loop.
 
-    <p>This loop type is a result of not specifying any loop options.
+      <p>This loop type is a result of not specifying any loop options.
 
-  <p><dt id="loop-counted">Counted</dt><dd>
+      </p></indent>
 
-    <p>The loop iterates over a sequence of integer values.  There is a
-    fixed non-zero increment of the loop value from one iteration to the
-    next.  This increment can be positive or negative (the loop can count
-    either up or down).
+    <h4 id="loop-counted">Counted</h4><indent>
 
-    <p>During loop execution, <b>repeat</b> and <b>endloop</b> update the
-    loop value to the next iteration.  If the new value satisfies the
-    terminating condition (if any), then the loop is terminated and
-    execution proceeds after <b>endloop</b>.  If the new value does not
-    satisfy the terminating condition or there is no terminating
-    condition, execution jumps back to immediately after the <b>loop</b>
-    command with the new iteration value in effect.
+      <p>The loop iterates over a sequence of integer values.  There is a
+      fixed non-zero increment of the loop value from one iteration to the
+      next.  This increment can be positive or negative (the loop can count
+      either up or down).
 
-    <p>The loop parameters are determined and saved when the <b>loop</b>
-    command is executed before the first iteration.  These parameters can
-    not be changed by loop code.
+      <p>During loop execution, <b>repeat</b> and <b>endloop</b> update the
+      loop value to the next iteration.  If the new value satisfies the
+      terminating condition (if any), then the loop is terminated and
+      execution proceeds after <b>endloop</b>.  If the new value does not
+      satisfy the terminating condition or there is no terminating
+      condition, execution jumps back to immediately after the <b>loop</b>
+      command with the new iteration value in effect.
 
-    <p>The loop is not run at all if the initial loop value satisfies the
-    terminating condition.
+      <p>The loop parameters are determined and saved when the <b>loop</b>
+      command is executed before the first iteration.  These parameters can
+      not be changed by loop code.
 
-    <p>The <b>loop</b> command options for counted loops are:<dl>
+      <p>The loop is not run at all if the initial loop value satisfies the
+      terminating condition.
 
-      <p><dt><tt id="loop-with"><b>with</b> <i>const</i></tt></dt><dd>
+      <p>The <b>loop</b> command options for counted loops are:</p><indent>
 
-        <p><i>Const</i> is the name of an integer constant that will be
-        created before the loop is first run.  This constant will be set
-        to the loop value before each iteration.  <i>Const</i> will be
-        local to the loop block, so it will not exist after the loop
-        terminates.
+        <p><tt id="loop-with"><b>with</b> <i>const</i></tt></p><indent>
 
-        <p>The default is that no constant is created.  In that case the
-        loop code can not access the loop value.
+          <p><i>Const</i> is the name of an integer constant that will be
+          created before the loop is first run.  This constant will be set
+          to the loop value before each iteration.  <i>Const</i> will be
+          local to the loop block, so it will not exist after the loop
+          terminates.
 
-      <p><dt><tt id="loop-from"><b>from</b> <i>n</i></tt></dt><dd>
+          <p>The default is that no constant is created.  In that case the
+          loop code can not access the loop value.
 
-        <p><i>N</i> is the loop value for the first iteration.  The
-        default is 1.
+          </p></indent>
 
-        <p>The loop starting value is implied when both the <b>to</b> and
-        <b>n</b> options are used.  All three of the <b>from</b>,
-        <b>to</b>, and <b>n</b> options can not be used together.
+        <p><tt id="loop-from"><b>from</b> <i>n</i></tt></p><indent>
 
-      <p><dt><tt id="loop-to"><b>to</b> <i>n</i></tt></dt><dd>
+          <p><i>N</i> is the loop value for the first iteration.  The
+          default is 1.
 
-        <p>Specifies the last valid loop value.  The loop terminates when
-        the loop value would be past this ending value.  The meaning of
-        "past" depends on the sign of the increment.  When the increment
-        is positive, the loop terminates when the loop value would be &gt;
-        <i>n</i>.   When the increment is negative, the loop terminates
-        when the loop value would be &lt; <i>n</i>.  Note that the loop
-        increment can not be 0.
+          <p>The loop starting value is implied when both the <b>to</b> and
+          <b>n</b> options are used.  All three of the <b>from</b>,
+          <b>to</b>, and <b>n</b> options can not be used together.
 
-        <p>When no ending value is specified, then there is no terminating
-        condition and the loop repeats indefinitely.  In that case, the
-        loop can only be ended with the <b>quit</b> command.
+          </p></indent>
 
-        <p>The loop ending value is implied when both the <b>from</b> and
-        <b>n</b> options are used.  All three of the <b>from</b>,
-        <b>to</b>, and <b>n</b> options can not be used together.
+        <p><tt id="loop-to"><b>to</b> <i>n</i></tt></p><indent>
 
-      <p><dt><tt id="loop-n"><b>n</b> <i>n</i></tt></dt><dd>
+          <p>Specifies the last valid loop value.  The loop terminates when
+          the loop value would be past this ending value.  The meaning of
+          "past" depends on the sign of the increment.  When the increment
+          is positive, the loop terminates when the loop value would be &gt;
+          <i>n</i>.   When the increment is negative, the loop terminates
+          when the loop value would be &lt; <i>n</i>.  Note that the loop
+          increment can not be 0.
 
-        <p>Specifies the number of loop iterations.
+          <p>When no ending value is specified, then there is no terminating
+          condition and the loop repeats indefinitely.  In that case, the
+          loop can only be ended with the <b>quit</b> command.
 
-        <p>When no number of iterations is specified, there is no
-        terminating condition and the loop repeats indefinitely.  In that
-        case, the loop can only be ended with the <b>quit</b> command.
+          <p>The loop ending value is implied when both the <b>from</b> and
+          <b>n</b> options are used.  All three of the <b>from</b>,
+          <b>to</b>, and <b>n</b> options can not be used together.
 
-        <p>The number of iterations is implied when both the <b>from</b>
-        and <b>to</b> options are used.  All three of the <b>from</b>,
-        <b>to</b>, and <b>n</b> options can not be used together.
+          </p></indent>
 
-      <p><dt><tt id="loop-by"><b>by</b> <i>n</i></tt></dt><dd>
+        <p><tt id="loop-n"><b>n</b> <i>n</i></tt></p><indent>
 
-        <p>Specifies the amount to add to the loop value each iteration.
-        This value must be non-zero.  The default is 1.
+          <p>Specifies the number of loop iterations.
 
-      </dl><!-- End of counted loop options -->
+          <p>When no number of iterations is specified, there is no
+          terminating condition and the loop repeats indefinitely.  In that
+          case, the loop can only be ended with the <b>quit</b> command.
 
-    <p>For example:<dl>
+          <p>The number of iterations is implied when both the <b>from</b>
+          and <b>to</b> options are used.  All three of the <b>from</b>,
+          <b>to</b>, and <b>n</b> options can not be used together.
 
-        <p><dt><tt><b>loop with</b> ii <b>from</b> 3 <b>to</b>
-        7</tt></dt><dd>
+          </p></indent>
+
+        <p><tt id="loop-by"><b>by</b> <i>n</i></tt></p><indent>
+
+          <p>Specifies the amount to add to the loop value each iteration.
+          This value must be non-zero.  The default is 1.
+
+          </p></indent>
+
+        </indent>
+
+      <p>For example:</p><indent>
+
+        <p><tt><b>loop with</b> ii <b>from</b> 3 <b>to</b>
+        7</tt></p><indent>
 
           <p>Loop values: 3, 4, 5, 6, 7
 
-        <p><dt><tt><b>loop with</b> ii <b>from</b> 2 <b>to</b>
-        -1</tt></dt><dd>
+          </p></indent>
+
+        <p><tt><b>loop with</b> ii <b>from</b> 2 <b>to</b>
+        -1</tt></p><indent>
 
           <p>Loop values: None.  The loop code is never executed.
 
-        <p><dt><tt><b>loop with</b> ii <b>from</b> 2 <b>to</b>
-        -1 <b>by</b> -1</tt></dt><dd>
+          </p></indent>
+
+        <p><tt><b>loop with</b> ii <b>from</b> 2 <b>to</b>
+        -1 <b>by</b> -1</tt></p><indent>
 
           <p>Loop values: 2, 1, 0, -1
 
-        <p><dt><tt><b>loop with</b> ii <b>from</b> 2 <b>to</b> 7 <b>by</b>
-        2</tt></dt><dd>
+          </p></indent>
 
-          <p>Loop values: 2, 4, 6</dd>
+        <p><tt><b>loop with</b> ii <b>from</b> 2 <b>to</b> 7 <b>by</b>
+        2</tt></p><indent>
 
-        <p><dt><tt><b>loop with</b> ii <b>n</b> 4 <b>from</b> 2 <b>by</b>
-        3</tt></dt><dd>
+          <p>Loop values: 2, 4, 6
 
-          <p>Loop values: 2, 5, 8, 11</dd>
+          </p></indent>
 
-        <p><dt><tt><b>loop with</b> ii <b>n</b> 5 <b>by</b> -5 <b>to</b>
-        100</tt></dt><dd>
+        <p><tt><b>loop with</b> ii <b>n</b> 4 <b>from</b> 2 <b>by</b>
+        3</tt></p><indent>
 
-          <p>Loop values: 120, 115, 110, 105, 100</dd>
+          <p>Loop values: 2, 5, 8, 11
 
-        <p><dt><tt><b>loop n</b> 5</tt></dt><dd>
+          </p></indent>
+
+        <p><tt><b>loop with</b> ii <b>n</b> 5 <b>by</b> -5 <b>to</b>
+        100</tt></p><indent>
+
+          <p>Loop values: 120, 115, 110, 105, 100
+
+          </p></indent>
+
+        <p><tt><b>loop n</b> 5</tt></p><indent>
 
           <p>Loop values: 1, 2, 3, 4, 5.  The loop value is not accessible
-          to the loop code.</dd>
+          to the loop code.
 
-        </dl><!-- end of counted loop examples -->
+          </p></indent>
 
-  <p><dt id="loop-symbols">Symbols</dt><dd>
+        </p></indent>
 
-    <p>Loops once for each symbol that was defined when <b>loop</b> was
-    first executed.  If a symbol is deleted by loop code before its
-    iteration, then that iteration is skipped.
+      </p></indent>
 
-    <p>The <b>loop</b> command options for symbol loops are:<dl>
+    <h4 id="loop-symbols">Symbols</h4><indent>
 
-      <p><dt><tt id="loop-sym"><b>symbols</b> <i>const [</i><b>VAR CONST
-      VCON SUBR MACRO FUNC CMD LABEL</b><i>]</i></tt></dt><dd>
+      <p>Loops once for each symbol that was defined when <b>loop</b> was
+      first executed.  If a symbol is deleted by loop code before its
+      iteration, then that iteration is skipped.
 
-        <p><i>Const</i> is the name of a constant of type <b>string</b>
-        that will created.  It will be local to the loop block, so will
-        not exist after the loop is ended.  This constant will contain the
-        name of a different symbol each iteration.  <i>Const</i> is the
-        name of the constant to create directly.  It is not a string.
+      <p>The <b>loop</b> command options for symbol loops are:</p><indent>
 
-        <p>The constant will be set to the fully qualified name of
-        successive symbols in the list of symbols that was saved when the
-        <b>loop</b> command was first executed.  Symbols newly created
-        inside the block are therefore not on the list.
+        <p><tt id="loop-sym"><b>symbols</b> <i>const [</i><b>VAR CONST VCON
+        SUBR MACRO FUNC CMD LABEL</b><i>]</i></tt></p><indent>
 
-        <p>The optional keywords following <i>const</i> limit the types of
-        symbols the loop will iterate over.  These keywords can appear
-        multiple times and in any order.  The default without any keywords
-        is to loop over all symbols.  When one or more keywords are
-        listed, then only symbols of those types will be in the list.
+          <p><i>Const</i> is the name of a constant of type <b>string</b>
+          that will created.  It will be local to the loop block, so will
+          not exist after the loop is ended.  This constant will contain the
+          name of a different symbol each iteration.  <i>Const</i> is the
+          name of the constant to create directly.  It is not a string.
 
-        <p>The meanings of the keywords are:<dl>
+          <p>The constant will be set to the fully qualified name of
+          successive symbols in the list of symbols that was saved when the
+          <b>loop</b> command was first executed.  Symbols newly created
+          inside the block are therefore not on the list.
 
-          <p><dt><tt><b>VAR</b></tt></dt><dd>
+          <p>The optional keywords following <i>const</i> limit the types of
+          symbols the loop will iterate over.  These keywords can appear
+          multiple times and in any order.  The default without any keywords
+          is to loop over all symbols.  When one or more keywords are
+          listed, then only symbols of those types will be in the list.
 
-            <p>Variables.
+          <p>The meanings of the keywords are:</p><indent>
 
-          <p><dt><tt><b>CONST</b></tt></dt><dd>
+            <p><tt><b>VAR</b></tt></p><indent>
 
-            <p>Contants.
+              <p>Variables.
 
-          <p><dt><tt><b>VCON</b></tt></dt><dd>
+              </p></indent>
 
-            <p>Variables or constants.  This is equivalent to specifying
-            <b>VAR</b> and <b>CONST</b>.
+            <p><tt><b>CONST</b></tt></p><indent>
 
-          <p><dt><tt><b>SUBR</b></tt></dt><dd>
+              <p>Contants.
 
-            <p>Subroutines.
+              </p></indent>
 
-          <p><dt><tt><b>MACRO</b></tt></dt><dd>
+            <p><tt><b>VCON</b></tt></p><indent>
 
-            <p>Macros.
+              <p>Variables or constants.  This is equivalent to specifying
+              <b>VAR</b> and <b>CONST</b>.
 
-          <p><dt><tt><b>FUNC</b></tt></dt><dd>
+              </p></indent>
 
-            <p>Functions.
+            <p><tt><b>SUBR</b></tt></p><indent>
 
-          <p><dt><tt><b>CMD</b></tt></dt><dd>
+              <p>Subroutines.
 
-            <p>Commands.
+              </p></indent>
 
-          <p><dt><tt><b>LABEL</b></tt></dt><dd>
+            <p><tt><b>MACRO</b></tt></p><indent>
 
-            <p>Labels.
+              <p>Macros.
 
-          </dl>
+              </p></indent>
 
-      </dl><!-- End of symbol loop options -->
+            <p><tt><b>FUNC</b></tt></p><indent>
 
-  <p><dt id="loop-directory">Directory</dt><dd>
+              <p>Functions.
 
-    <p>Loops over all the entries in a directory.
+              </p></indent>
 
-    <p>The <b>loop</b> command options for directory loops are:<dl>
+            <p><tt><b>CMD</b></tt></p><indent>
 
-      <p><dt><tt id="loop-dir"><b>dir</b> <i>dirname [</i><b>FILE
-        LINK DIR</b><i>]</i></tt></dt><dd>
+              <p>Commands.
 
-        <p><i>Dirname</i> is the name of the directory to enumerate.
-        <i>Dirname</i> is a string.  It can therefore, for example, be a
-        fixed name in quotes, or the name of a string variable.
+              </p></indent>
 
-        <p>The optional keywords <b>file</b>, <b>link</b>, and <b>dir</b>
-        specify the type of file system objects to list.  These keywords
-        can appear in any order and may be repeated.  When none of these
-        keywords are supplied, then all directory entries are included.
-        When one or more of these keywords is supplied, then only those
-        objects matching at least one of the keywords are included.
+            <p><tt><b>LABEL</b></tt></p><indent>
 
-        <p>The meaning of each keyword is:<dl>
+              <p>Labels.
 
-          <p><dt><tt><b>FILE</b></tt></dt><dd>
+              </p></indent>
 
-            <p>Ordinary data file.
+            </p></indent>
 
-          <p><dt><tt><b>LINK</b></tt></dt><dd>
+          </p></indent>
 
-            <p>Symbolic link.
+        </p></indent>
 
-          <p><dt><tt><b>DIR</b></tt></dt><dd>
+      </p></indent>
 
-            <p>Nested directory (subdirectory).
+    <h4 id="loop-directory">Directory</h4><indent>
 
-          </dl><!-- End of DIR keywords -->
+      <p>Loops over all the entries in a directory.
 
-        </dl><!-- End of directory loop options -->
+      <p>The <b>loop</b> command options for directory loops are:</p><indent>
 
-    <p>The loop will iterate once for each matching directory entry.  Use
-    the <b><a href="func.htm#dent">dent</a></b> function to access the
-    information about the directory entry for the current iteration.
+        <p><tt id="loop-dir"><b>dir</b> <i>dirname [</i><b>FILE
+          LINK DIR</b><i>]</i></tt></p><indent>
 
-    </dl><!-- End of loop types -->
+          <p><i>Dirname</i> is the name of the directory to enumerate.
+          <i>Dirname</i> is a string.  It can therefore, for example, be a
+          fixed name in quotes, or the name of a string variable.
+
+          <p>The optional keywords <b>file</b>, <b>link</b>, and
+          <b>dir</b> specify the type of file system objects to list.
+          These keywords can appear in any order and may be repeated.
+          When none of these keywords are supplied, then all directory
+          entries are included. When one or more of these keywords is
+          supplied, then only those objects matching at least one of the
+          keywords are included.
+
+          <p>The meaning of each keyword is:</p><indent>
+
+            <p><tt><b>FILE</b></tt></p><indent>
+
+              <p>Ordinary data file.
+
+              </p></indent>
+
+            <p><tt><b>LINK</b></tt></p><indent>
+
+              <p>Symbolic link.
+
+              </p></indent>
+
+            <p><tt><b>DIR</b></tt></p><indent>
+
+              <p>Nested directory (subdirectory).
+
+              </p></indent>
+
+            </p></indent>
+
+          </p></indent>
+
+        </p></indent>
+
+      <p>The loop will iterate once for each matching directory entry. Use
+      the <b><a href="func.htm#dent">dent</a></b> function to access the
+      information about the directory entry for the current iteration.
+
+      </p></indent>
+
+    </p></indent>
 
   <p>Execution will return to immediately after the <b>loop</b> command
   with the loop state set to the next iteration when <b>repeat</b> or
@@ -817,13 +954,13 @@ keyword.
 
   <p>The loop is ended when any of the following conditions are met:<ul>
 
-    <p><li><b>repeat</b> is excecuted and the new iteration state meets
-    the terminating condition.
+    <li><b>repeat</b> is excecuted and the new iteration state meets the
+    terminating condition.
 
-    <p><li><b>endloop</b> is excecuted and the new interation state meets
-    the terminating condition.
+    <li><b>endloop</b> is excecuted and the new interation state meets the
+    terminating condition.
 
-    <p><li><b>quit</b> is executed.
+    <li><b>quit</b> is executed.
 
     </ul>
 
@@ -837,7 +974,9 @@ keyword.
   will resolve arguments of the next enclosing execution block that does
   take arguments.
 
-<p><dt><tt id="macro"><b>MACRO</b> <i>name</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="macro"><b>MACRO</b> <i>name</i></tt></p><indent>
 
   <p>Defines a macro.  These are defined just like subroutines, except
   that the definition starts with <b>macro</b> and ends with
@@ -872,19 +1011,25 @@ keyword.
   <p>A <b>macro</b> ... <b>endmac</b> is an execution block that can take
   arguments.
 
-<p><dt><tt id="quit"><b>QUIT</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="quit"><b>QUIT</b></tt></p><indent>
 
   <p>Exits the current execution block.  Execution resumes with parameters
   in effect before the block was entered.  Resources used internally in
   the script system to manage the block are deallocated and local
   variables defined in the block are deleted.
 
-<p><dt><tt id="quitmac"><b>QUITMAC</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="quitmac"><b>QUITMAC</b></tt></p><indent>
 
   <p>Stops execution of a macro.  Execution is returned to the line
   following the macro invocation.
 
-<p><dt><tt id="repeat"><b>REPEAT</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="repeat"><b>REPEAT</b></tt></p><indent>
 
   <p>Go back to immediately after the command that started the current
   execution block.
@@ -896,13 +1041,17 @@ keyword.
   terminating condition, then the loop is ended and execution resumes
   immediately after the end of the block (functions like <b>quit</b>).
 
-<p><dt><tt id="return"><b>RETURN</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="return"><b>RETURN</b></tt></p><indent>
 
   <p>Ends the execution of the current subroutine, user-defined command,
   or user-defined function.  Execution resumes after where the routine was
   invoked.
 
-<p><dt><tt id="run"><b>RUN</b> <i>arg ... arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="run"><b>RUN</b> <i>arg ... arg</i></tt></p><indent>
 
   <p>Runs a external program.  The concatenation of the string
   representation of all the arguments form the command line to execute.
@@ -915,37 +1064,43 @@ keyword.
   code of the program that was executed.  This variable is created if it
   does not already exist.
 
-<p><dt><b><tt id="set">SET</b> <i>name value</i></tt></dt><dd>
+  </p></indent>
+
+<p><b><tt id="set">SET</b> <i>name value</i></tt></p><indent>
 
   <p>Set the variable <i>name</i> to the value <i>value</i>.  It is an
   error if <i>value</i> can not be converted to the data type of
   <i>name</i>, or if there is no such variable.
 
-<p><dt><tt id="show"><b>SHOW</b> <i>arg ... arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="show"><b>SHOW</b> <i>arg ... arg</i></tt></p><indent>
 
   <p>Write the concatenation of the string representation of all arguments
   as one line to standard output.  If no arguments are supplied, then a
   blank line is written.
 
-<p><dt><tt id="stop"><b>STOP</b> <i>[exstat]</i></tt></dt><dd>
+  </p></indent>
 
-  <p>Completely ends this run of the script or preprocessor input file.
-  No more input file is read, and no more output file written.  Any open
+<p><tt id="stop"><b>STOP</b> <i>[exstat]</i></tt></p><indent>
+
+  <p>Completely ends this run of the script or preprocessor input file. No
+  more input file is read, and no more output file written.  Any open
   output files are closed, and the program exits.
 
   <p>The script exit status is set according to the following rules, in
   decending precedence:<ol>
 
-    <p><li><i>Exstat</i>, if present.
+    <li><i>Exstat</i>, if present.
 
-    <p><li>The value of the integer variable EXITSTATUS, if it exists.  Note
+    <li>The value of the integer variable EXITSTATUS, if it exists.  Note
     that this variable is automatically set (and created if needed) to the
     exit status returned by any external program run from the script.
 
-    <p><li>The exit status of the last nested script the application ran
-    if the script state was not cleared afterwards.
+    <li>The exit status of the last nested script the application ran if
+    the script state was not cleared afterwards.
 
-    <p><li>0.
+    <li>0.
 
     </ol>
 
@@ -953,7 +1108,10 @@ keyword.
   It is up to each application program what, if anything, to do with it.
   The ESCR program returns the the script exit status code as its own
   program exit status code.
-<p><dt><tt id="subroutine"><b>SUBROUTINE</b> <i>name</i></tt></dt><dd>
+
+  </p></indent>
+
+<p><tt id="subroutine"><b>SUBROUTINE</b> <i>name</i></tt></p><indent>
 
   <p>Define the entry point of a subroutine and define the symbol
   <i>name</i> to refer to that subroutine.  The symbol <i>name</i> will
@@ -973,13 +1131,18 @@ keyword.
   name as it appeared in the <b>call</b> command.  The arguments passed
   from the <b>call</b> command are numbered sequentially starting at 1.
 
-<p><dt><tt id="sylist"><b>SYLIST</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="sylist"><b>SYLIST</b></tt></p><indent>
 
   <p>Write the list of all currently defined symbols and their values to
   the output file as data file comments.  It is an error if there is no
   current output file.
 
-<p><dt><tt id="var-exist"><b>VAR EXIST</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="var-exist"><b>VAR EXIST</b> <i>name [dtype] [</i><b>=</b>
+<i>value]</i></tt></p><indent>
 
   <p>Like <b>var new</b>, except that no new variable is created if
   <i>name</i> is already a variable or constant of the indicated type.
@@ -989,15 +1152,18 @@ keyword.
   for its data type.  If the variable previously existed, then its
   existing value is preserved, whether <i>value</i> is supplied or not.
 
-<p><dt><tt id="var-local"><b>VAR LOCAL</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="var-local"><b>VAR LOCAL</b> <i>name [dtype] [</i><b>=</b>
+<i>value]</i></tt></p><indent>
 
   <p>Like <b>var new</b> except for the following:<ul>
 
-    <p><li>The new variable will be automatically deleted at the end of
-    the current execution block.  Examples of execution blocks are
-    subroutines and explicit blocks defined with the <b>block</b> command.
+    <li>The new variable will be automatically deleted at the end of the
+    current execution block.  Examples of execution blocks are subroutines
+    and explicit blocks defined with the <b>block</b> command.
 
-    <p><li>The action is only performed on the first iteration thru the
+    <li>The action is only performed on the first iteration thru the
     execution block.  This allows the command to be put inside a
     <b>loop</b> ... <b>endloop</b> block, for example, but the variable
     only created on the first pass.  Even if a local variable is not
@@ -1012,7 +1178,10 @@ keyword.
 
     </ul>
 
-<p><dt><tt id="var-new"><b>VAR NEW</b> <i>name [dtype] [</i><b>=</b> <i>value]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="var-new"><b>VAR NEW</b> <i>name [dtype] [</i><b>=</b>
+<i>value]</i></tt></p><indent>
 
   <p>Create a new variable of name <i>name</i>.  The symbol <i>name</i>
   will now refer to the new variable regardless of a previously existing
@@ -1025,7 +1194,9 @@ keyword.
   <p>The variable will be set to the <i>value</i>, if supplied.  Otherwsie
   the variable's value will be the default for its data type.
 
-<p><dt><tt id="write"><b>WRITE</b> <i>arg ... arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="write"><b>WRITE</b> <i>arg ... arg</i></tt></p><indent>
 
   <p>Write the concatenation of the string representation of all arguments
   as one line to the current output file.  If no arguments are supplied,
@@ -1033,14 +1204,18 @@ keyword.
 
   <p>It is an error if there is no current output file.
 
-<p><dt><tt id="writepop"><b>WRITEPOP</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="writepop"><b>WRITEPOP</b></tt></p><indent>
 
   <p>Ends writing to the file started with the most recently executed
   WRITEPUSH command.  The output file is restored to what it was when
-  WRITEPUSH was executed.  In preprocessor mode, it is not possible to stop
-  writing to the original output file.
+  WRITEPUSH was executed.  In preprocessor mode, it is not possible to
+  stop writing to the original output file.
 
-<p><dt><tt id="writepush"><b>WRITEPUSH</b> <i>name</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="writepush"><b>WRITEPUSH</b> <i>name</i></tt></p><indent>
 
   <p>Set the file that subsequent WRITE commands write to.  The current
   output file can be restored with the WRITEPOP command.  <i>Name</i> is a
@@ -1054,11 +1229,10 @@ keyword.
   up with the WRITEPUSH command.  It is a error to attempt to write to the
   output file when there is no output file.
 
-</dl>
+  </p></indent>
 
 
-<p><!-- ******************************************************************** -->
-<br><p><hr>
+<hr><!-- ******************************************************************* -->
 
 <ul>
   <li><a href="func.htm">Next page</a>

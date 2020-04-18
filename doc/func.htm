@@ -1,8 +1,15 @@
-<html><head><title>ESCR Scripting System</title></head>
+<html lang="en-US">
+<head>
+  <link rel="stylesheet" href="../../../document.css"></link>
+  <link rel="stylesheet" href="../../document.css"></link>
+  <link rel="stylesheet" href="../document.css"></link>
+  <link rel="stylesheet" href="document.css"></link>
+  <title>ESCR Scripting System</title>
+  </head>
+<body>
 
-<body background=backg.jpg>
-<center><h1>ESCR Program and Callable System</h1>
-</center>
+<h1 class=page>ESCR Program and Callable System</h1>
+<p class=page>Last updated 18 April 2020</p>
 
 <ul>
   <li><a href="cmds.htm">Previous page</a>
@@ -10,11 +17,12 @@
   </ul>
 
 <!-- *********************************************************************** -->
-<br><p><center><h2>Functions</h2></center>
+<br><h1>Functions</h1>
 
 <ul>
-  <p><li>Listed alphabetically<p>
+  <li>Listed alphabetically
 
+    <p>
     <a href="#preinc">+1</a>&nbsp;
     <a href="#postinc">1+</a>&nbsp;
     <a href="#predec">-1</a>&nbsp;
@@ -90,8 +98,9 @@
     <a href="#vnl">VNL</a>&nbsp;
     <a href="#xor">XOR</a>&nbsp;
 
-  <p><li>Arithmetic operations<p>
+  <li>Arithmetic operations
 
+    <p>
     <a href="#preinc">+1</a>&nbsp;
     <a href="#postinc">1+</a>&nbsp;
     <a href="#predec">-1</a>&nbsp;
@@ -120,8 +129,9 @@
     <a href="#log">LOG</a> &nbsp; - &nbsp; Natural logarithm<br>
     <a href="#log2">LOG2</a> &nbsp; - &nbsp; Logarithm base 2<br>
 
-  <p><li>Bitwise operations on integers<p>
+  <li>Bitwise operations on integers
 
+    <p>
     <a href="#inv">~</a> &nbsp; - &nbsp; Invert (one's complement)<br>
     <a href="#and">AND</a> &nbsp; - &nbsp; AND<br>
     <a href="#or">OR</a> &nbsp; - &nbsp; OR<br>
@@ -129,8 +139,9 @@
     <a href="#shiftl">SHIFTL</a> &nbsp; - &nbsp; Shift left<br>
     <a href="#shiftr">SHIFTR</a> &nbsp; - &nbsp; Shift right<br>
 
-  <p><li>Logical operations<p>
+  <li>Logical operations
 
+    <p>
     <a href="#lt"><</a> &nbsp;
     <a href="#le"><=</a> &nbsp;
     <a href="#eq">=</a> &nbsp;
@@ -142,8 +153,9 @@
     <a href="#or">OR</a> &nbsp; - &nbsp; OR<br>
     <a href="#xor">XOR</a> &nbsp; - &nbsp; Exclusive OR<br>
 
-  <p><li>String manipulation<p>
+  <li>String manipulation
 
+    <p>
     <a href="#ccode">CCODE</a> &nbsp; - &nbsp; Get character code<br>
     <a href="#char">CHAR</a> &nbsp; - &nbsp; Character from code<br>
     <a href="#chars">CHARS</a> &nbsp; - &nbsp; Raw unquoted characters
@@ -168,8 +180,9 @@
     <a href="#eng">ENG</a> &nbsp; - &nbsp; Numeric value to string,
       engineering notation with unit scale prefixes<br>
 
-  <p><li>Scripting system<p>
+  <li>Scripting system
 
+    <p>
     <a href="#arg">ARG</a> &nbsp; - &nbsp; Get argument to block<br>
     <a href="#exist">EXIST</a> &nbsp; - &nbsp; Check symbol or argument existing<br>
     <a href="#if">IF</a> &nbsp; - &nbsp; Return argument based on condition<br>
@@ -177,8 +190,9 @@
     <a href="#v">V</a> &nbsp; - &nbsp; Value of symbol or expression<br>
     <a href="#vnl">VNL</a> &nbsp; - &nbsp; Value of symbol or expression, no local vars<br>
 
-  <p><li>Host operating system<p>
+  <li>Host operating system
 
+    <p>
     <a href="#evar">EVAR</a> &nbsp; - &nbsp; Environment variable value<br>
     <a href="#exist">EXIST</a> &nbsp; - &nbsp; Check for file or variable existing<br>
     <a href="#file">FILE</a> &nbsp; - &nbsp; Info about file system object<br>
@@ -190,8 +204,9 @@
     <a href="#runtf">RUNTF</a> &nbsp;
     <a href="#runso">RUNSO</a> &nbsp; - Run external program
 
-  <p><li>Miscellaneous<p>
+  <li>Miscellaneous
 
+    <p>
     <a href="#now">NOW</a> &nbsp; - &nbsp; Current time<br>
     <a href="#date">DATE</a> &nbsp; - &nbsp; Expanded date/time string<br>
     <a href="#seq">SEQ</a> &nbsp; - &nbsp; Sequence number, multi-process safe<br>
@@ -219,13 +234,17 @@ the ESCR program.  Functions are not expanded (more accurately, they are
 not recognized as functions) in comments or inside quoted strings.
 
 <p>For example, assuming the default function sytax rules, the sequence of
-characters:
+characters:</p><indent>
 
-<p><tt>&nbsp;&nbsp;The answer is [<b>+</b> 30 12]</tt>
+  <p><tt>&nbsp;&nbsp;The answer is [<b>+</b> 30 12]</tt>
 
-<p>will expand to:
+  </p></indent>
 
-<p><tt>&nbsp;&nbsp;The answer is 42</tt>
+<p>will expand to:</p><indent>
+
+  <p><tt>&nbsp;&nbsp;The answer is 42</tt>
+
+  </p></indent>
 
 <p>Functions start with the special syntax that identifies the start of a
 function, which is always followed by the function name.  Parameters may
@@ -241,30 +260,39 @@ system should specify the syntax it actually uses.  The ESCR program uses
 the default syntax.  In the function descriptions below, the function
 start and end sequences have been removed.
 
-<!-- *********************************************************************** -->
-<br><p><center><h2>Function Descriptions</h2></center><dl>
 
-<p><dt><tt id="preinc"><b>+1</b> <i>var</i></tt></dt><dd>
+<!-- *********************************************************************** -->
+<br><h1>Function Descriptions</h1>
+
+<p><tt id="preinc"><b>+1</b> <i>var</i></tt></p><indent>
 
   <p>Increment the integer variable <i>var</i> by 1, then return its
   value.
 
-<p><dt><tt id="postinc"><b>1+</b> <i>var</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="postinc"><b>1+</b> <i>var</i></tt></p><indent>
 
   <p>Return the value of the integer variable <i>var</i>, then increment
   it by 1.
 
-<p><dt><tt id="predec"><b>-1</b> <i>var</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="predec"><b>-1</b> <i>var</i></tt></p><indent>
 
   <p>Decrement the integer variable <i>var</i> by 1, then return its
   value.
 
-<p><dt><tt id="postdec"><b>1-</b> <i>var</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="postdec"><b>1-</b> <i>var</i></tt></p><indent>
 
   <p>Return the value of the integer variable <i>var</i>, then decrement
   it by 1.
 
-<p><dt><tt id="plus"><b>+</b> <i>[arg1 ... argN]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="plus"><b>+</b> <i>[arg1 ... argN]</i></tt></p><indent>
 
   <p>Returns the sum of all the arguments.  With no arguments, the result
   is integer 0.
@@ -276,7 +304,9 @@ start and end sequences have been removed.
   case the result data type is TIME, and the value is the TIME argument
   plus the seconds represented by the sum of the remaining arguments.
 
-<p><dt><tt id="minus"><b>-</b> <i>arg1 [arg2 ... argN]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="minus"><b>-</b> <i>arg1 [arg2 ... argN]</i></tt></p><indent>
 
   <p>Subtraction of the first argument minus all the remaining arguments.
   The first argument is required.
@@ -297,7 +327,9 @@ start and end sequences have been removed.
   evaluation of the function.  The function returns the current value and
   data type after the last argument is subtracted.
 
-<p><dt><tt id="times"><b>*</b> <i>[arg1 ... argN]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="times"><b>*</b> <i>[arg1 ... argN]</i></tt></p><indent>
 
   <p>Returns the product of all the arguments.  With no arguments, the
   result is integer 1.
@@ -305,7 +337,9 @@ start and end sequences have been removed.
   <p>All arguments must be numeric.  If all are integer, then the function
   value is integer.  Otherwise, the function value is floating point.
 
-<p><dt><tt id="divide"><b>/</b> <i>arg1 [arg2 ... argN]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="divide"><b>/</b> <i>arg1 [arg2 ... argN]</i></tt></p><indent>
 
   <p>Returns the first argument divided by the product of the remaining
   arguments.  The first argument is required.  All arguments must be
@@ -317,13 +351,17 @@ start and end sequences have been removed.
   The result of that becomes the new current value, which is divided by
   the next argument, etc.
 
-<p><dt><tt id="inv"><b>~</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="inv"><b>~</b> <i>arg</i></tt></p><indent>
 
   <p>Bitwise inversion.  <i>Arg</i> must be integer.  The result is that
   integer value with each bit flipped.  This is also known as the "one's
   complement".
 
-<p><dt><tt id="lt">&lt;</b> <i>arg1 arg2</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="lt">&lt;</b> <i>arg1 arg2</i></tt></p><indent>
 
   <p>Returns TRUE when <i>arg1</i> is less than <i>arg2</i>, otherwise
   FALSE.
@@ -331,7 +369,9 @@ start and end sequences have been removed.
   <p>The two arguments must be either both numeric, both strings, or both
   time values.
 
-<p><dt><tt id="le">&lt;=</b> <i>arg1 arg2</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="le">&lt;=</b> <i>arg1 arg2</i></tt></p><indent>
 
   <p>Returns TRUE when <i>arg1</i> is less or equal to <i>arg2</i>,
   otherwise FALSE.
@@ -339,7 +379,9 @@ start and end sequences have been removed.
   <p>The two arguments must be either both numeric, both strings, or both
   time values.
 
-<p><dt><tt id="eq"><b>=</b> <i>arg1 arg2</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="eq"><b>=</b> <i>arg1 arg2</i></tt></p><indent>
 
   <p>Returns TRUE when <i>arg1</i> is equal to <i>arg2</i>, otherwise
   FALSE.
@@ -347,7 +389,9 @@ start and end sequences have been removed.
   <p>The two arguments must be either both numeric, both strings, or both
   time values.
 
-<p><dt><tt id="ne">&lt;&gt;</b> <i>arg1 arg2</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="ne">&lt;&gt;</b> <i>arg1 arg2</i></tt></p><indent>
 
   <p>Returns TRUE when <i>arg1</i> is not equal to <i>arg2</i>, otherwise
   FALSE.
@@ -355,7 +399,9 @@ start and end sequences have been removed.
   <p>The two arguments must be either both numeric, both strings, or both
   time values.
 
-<p><dt><tt id="ge">&gt;=</b> <i>arg1 arg2</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="ge">&gt;=</b> <i>arg1 arg2</i></tt></p><indent>
 
   <p>Returns TRUE when <i>arg1</i> is greater than or equal to
   <i>arg2</i>, otherwise FALSE.
@@ -363,7 +409,9 @@ start and end sequences have been removed.
   <p>The two arguments must be either both numeric, both strings, or both
   time values.
 
-<p><dt><tt id="gt">&gt;</b> <i>arg1 arg2</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="gt">&gt;</b> <i>arg1 arg2</i></tt></p><indent>
 
   <p>Returns TRUE when <i>arg1</i> is greater than <i>arg2</i>, otherwise
   FALSE.
@@ -371,11 +419,16 @@ start and end sequences have been removed.
   <p>The two arguments must be either both numeric, both strings, or both
   time values.
 
-<p><dt><tt id="abs"><b>ABS</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
 
-  <p>Returns the absolute value of <i>arg</i>.  <i>Arg</i> must be numeric.
+<p><tt id="abs"><b>ABS</b> <i>arg</i></tt></p><indent>
 
-<p><dt><tt id="and"><b>AND</b> <i>arg1 [arg2 ... argN]</i></tt></dt><dd>
+  <p>Returns the absolute value of <i>arg</i>.  <i>Arg</i> must be
+  numeric.
+
+  </p></indent>
+
+<p><tt id="and"><b>AND</b> <i>arg1 [arg2 ... argN]</i></tt></p><indent>
 
   <p>Logical AND when all arguments are boolean.
 
@@ -384,7 +437,9 @@ start and end sequences have been removed.
   <p>The arguments data types must be either all <b>bool</b> or all
   <b>integer</b>. <i>Arg1</i> is required.
 
-<p><dt><tt id="arg"><b>ARG</b> <i>n</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="arg"><b>ARG</b> <i>n</i></tt></p><indent>
 
   <p>Returns the raw characters of argument <i>n</i> to the innermost
   block that takes arguments.
@@ -393,35 +448,46 @@ start and end sequences have been removed.
   string or any particular data type.  When the argument doesn't exist,
   nothing is returned.
 
-<p><dt><tt id="ccode"><b>CCODE</b> <i>char</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="ccode"><b>CCODE</b> <i>char</i></tt></p><indent>
 
   <p>Returns the integer character code of the character <i>char</i>.
   <i>Char</i> must be a string that is exactly one character long.
 
-<p><dt><tt id="char"><b>CHAR</b> <i>[ccode ... ccode]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="char"><b>CHAR</b> <i>[ccode ... ccode]</i></tt></p><indent>
 
   <p>Returns the string consisting of the characters of the indicated
   character codes.  All arguments must be integer.
 
-<p><dt><tt id="chars"><b>CHARS</b> <i>[arg1 ... argN]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="chars"><b>CHARS</b> <i>[arg1 ... argN]</i></tt></p><indent>
 
   <p>Returns the concatenation of the string representation of all the
   arguments.  This is returned as a raw sequence of characters, not as a
   string.  This function can be used to "unquote" a string.
 
-  <p>For example:
+  <p>For example:</p><indent>
 
-  <p><tt>&nbsp;
-  [<b>chars</b> "abc" 13 'def' 27.1] --> abc13def27.10000
-  </tt>
+    <p><tt>&nbsp; [<b>chars</b> "abc" 13 'def' 27.1] --> abc13def27.10000
+    </tt>
 
-<p><dt><tt id="cos"><b>COS</b> <i>ang</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="cos"><b>COS</b> <i>ang</i></tt></p><indent>
 
   <p>Returns the cosine of the angle <i>ang</i>.  <i>Ang</i> must be
   numeric, and is in radians.
 
-<p><dt><tt id="date"><b>DATE</b> <i>time [cmd arg ... arg]
-... [cmd arg ... arg]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="date"><b>DATE</b> <i>time [cmd arg ... arg] ... [cmd arg ...
+arg]</i></tt></p><indent>
 
   <p>Creates a formatted string from the time <i>time</i>.  The
   <i>time</i> argument is required.
@@ -429,9 +495,9 @@ start and end sequences have been removed.
   <p>The remaining arguments are a sequence of commands.  Each command
   starts with a command name keyword, which is possibly followed by
   arguments to that command, depending on the command.  The keywords are
-  case-insensitive.  The possible commands are:<dl>
+  case-insensitive.  The possible commands are:</p><indent>
 
-    <p><dt><tt><b>LOCAL</b></tt></dt><dd>
+    <p><tt><b>LOCAL</b></tt></p><indent>
 
       <p>Causes the time to be written in the local time zone.  The
       default is to write coordinated universal time.
@@ -445,111 +511,145 @@ start and end sequences have been removed.
       This command changes how the time is written, not how <i>time</i> is
       interpreted.
 
-    <p><dt><tt><b>STR</b> <i>string</i></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>STR</b> <i>string</i></tt></p><indent>
 
       <p>Adds the string <i>string</i> to the returned string.
 
-    <p><dt><tt><b>YEAR</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>YEAR</b></tt></p><indent>
 
       <p>Adds the 4-digit year to the returned string.
 
-    <p><dt><tt><b>MNUM</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>MNUM</b></tt></p><indent>
 
       <p>Adds the 2-digit month number to the returned string.
 
-    <p><dt><tt><b>MONTH</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>MONTH</b></tt></p><indent>
 
       <p>Adds the full month name to the returned string.
 
-    <p><dt><tt><b>MON</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>MON</b></tt></p><indent>
 
       <p>Adds the 3-character month abbreviation to the returned string.
 
-    <p><dt><tt><b>DAY</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>DAY</b></tt></p><indent>
 
       <p>Adds the 2-digit day within the month to the returned string.
 
-    <p><dt><tt><b>D</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>D</b></tt></p><indent>
 
       <p>Adds the day number within the month to the returned string.
       Only the minimum number of necessary digits are written.  No leading
       zeros are added to get to a particular field width.
 
-    <p><dt><tt><b>DAYWK</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>DAYWK</b></tt></p><indent>
 
       <p>Adds the full day of week name to the returned string.
 
-    <p><dt><tt><b>DWK</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>DWK</b></tt></p><indent>
 
       <p>Adds the day of week abbreviation to the returned string.
 
-    <p><dt><tt><b>HOUR</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>HOUR</b></tt></p><indent>
 
       <p>Adds the 2-digit hour within the day to the returned string.
 
-    <p><dt><tt><b>MIN</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>MIN</b></tt></p><indent>
 
       <p>Adds the 2-digit minute within the hour to the returned string.
 
-    <p><dt><tt><b>SEC</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>SEC</b></tt></p><indent>
 
       <p>Adds the 2-digit second within the minute to the returned string.
 
-    <p><dt><tt><b>SECF</b> <i>n</i></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>SECF</b> <i>n</i></tt></p><indent>
 
       <p>Adds the 2-digit seconds within the minute, decimal point, and
       <i>n</i> seconds fraction digits to the returned string.
 
-    </dl>
+      </p></indent>
+
+    </p></indent>
 
   <p>When no commands are used that cause anything to be written to the
-  return string, the default date/time string is returned:
+  return string, the default date/time string is returned:</p><indent>
 
-  <p><tt>&nbsp;
-  <i>YYYY</i>/<i>MM</i>/<i>DD</i>.<i>hh</i>:<i>mm</i>:<i>ss</i>
-  </tt>
+    <p><tt>&nbsp;
+    <i>YYYY</i>/<i>MM</i>/<i>DD</i>.<i>hh</i>:<i>mm</i>:<i>ss</i> </tt>
 
-  <p>For example:
+    </p></indent>
 
-  <p><tt>&nbsp;
-  [<b>date</b> 2017/03/08.11:17:32.59] --> "2017/03/08.11:17:32"<br>
-  </tt>
+  <p>For example:</p><indent>
 
-  <p><tt>&nbsp;
-  [<b>date</b> 2017/03/08.11:17:32.59 <b>daywk str</b> " at "
-    <b>hour str</b> ":" <b>min</b>] --> "Wednesday at 11:17"
-  </tt>
+    <p><tt>&nbsp; [<b>date</b> 2017/03/08.11:17:32.59] -->
+    "2017/03/08.11:17:32"<br> </tt>
 
-  <p><tt>&nbsp;
-  [<b>date</b> 2017/03/08.11:17:32.59 <b>d str</b> " " <b>mon
-    str</b> " " <b>year</b>] --> "8 Mar 2017"<br>
-  </tt>
+    <p><tt>&nbsp; [<b>date</b> 2017/03/08.11:17:32.59 <b>daywk str</b> "
+    at " <b>hour str</b> ":" <b>min</b>] --> "Wednesday at 11:17" </tt>
 
-<p><dt><tt id="degr"><b>DEGR</b> <i>deg</i></tt></dt><dd>
+    <p><tt>&nbsp; [<b>date</b> 2017/03/08.11:17:32.59 <b>d str</b> " "
+    <b>mon str</b> " " <b>year</b>] --> "8 Mar 2017"<br> </tt>
+
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="degr"><b>DEGR</b> <i>deg</i></tt></p><indent>
 
   <p>Converts degrees to radians.  <i>Deg</i> must be numeric.  The result
   is always floating point.
 
-<p><dt><tt id="dent"><b>DENT</b> <i>[opt]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="dent"><b>DENT</b> <i>[opt]</i></tt></p><indent>
 
   <p>Returns one piece of information about the current directory entry in
-  a directory entries loop (command LOOP DIR).  This function is only
-  valid inside a directory entries loop.
+  a directory entries loop (command <a href="cmds.htm#loop-directory">LOOP
+  DIR</a>).  This function is only valid inside a directory entries loop.
 
   <p><i>Opt</i> is a keyword specifying the piece of information to
   return.  The valid <i>opt</i> keywords and the resulting function return
-  values are:<dl>
+  values are:</p><indent>
 
-    <p><dt><tt><b>FNAM</b></tt></dt><dd>
+    <p><tt><b>FNAM</b></tt></p><indent>
 
       <p>String.  The bare directory entry name.  This is the default when
       <i>opt</i> is not supplied.
 
-    <p><dt><tt><b>TNAM</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>TNAM</b></tt></p><indent>
 
       <p>String.  The full absolute pathname of the directory entry.
 
-    <p><dt><tt><b>TYPE</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>TYPE</b></tt></p><indent>
 
       <p>String.  Keyword indicating the type of file system object.  The
       possible function values are:
@@ -560,23 +660,33 @@ start and end sequences have been removed.
 
       <p><tt><b>DIR</b></tt> - Nested directory (subdirectory).
 
-    <p><dt><tt><b>LEN</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>LEN</b></tt></p><indent>
 
       <p>Integer.  The file length in bytes.
 
-    <p><dt><tt><b>DTM</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>DTM</b></tt></p><indent>
 
       <p>Time.  The time the file was last modified.
 
-    <p><dt><tt><b>DIR</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>DIR</b></tt></p><indent>
 
       <p>String.  The full pathname of the directory being listed.  This
       is not dependent on the specific entry.  This value is therefore the
       same every iteration of the loop.
 
-    </dl><!-- End of OPT keywords -->
+      </p></indent>
 
-<p><dt><tt id="dir"><b>DIR</b> <i>[arg ... arg]</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="dir"><b>DIR</b> <i>[arg ... arg]</i></tt></p><indent>
 
   <p>Returns the pathname of the lowest level directory containing the
   file indicated by the concatenation of the string representation of all
@@ -585,7 +695,9 @@ start and end sequences have been removed.
   <p>If no arguments are supplied, then the pathname of the current
   working directory is returned.
 
-<p><dt><tt id="div"><b>DIV</b> <i>arg1 [arg2 ... argN]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="div"><b>DIV</b> <i>arg1 [arg2 ... argN]</i></tt></p><indent>
 
   <p>Integer division.  <p><i>Arg1</i> is divided by the next argument.
   The result of that is divided by the next argument, etc.
@@ -593,20 +705,26 @@ start and end sequences have been removed.
   <p>All arguments must be integer.  Divides are performed using integer
   arithmetic.  Only the quotient is kept.  The remainder is lost.
 
-  <p>For example:
+  <p>For example:</p><indent>
 
-  <p><tt>
-  &nbsp; [<b>div</b> 59 7 3] --> 2<br>
-  &nbsp; [<b>div</b> 59 7 -3] --> -2<br>
-  &nbsp; [<b>div</b> -103 5] --> -20
-  </tt>
+    <p><tt>
+    &nbsp; [<b>div</b> 59 7 3] --> 2<br>
+    &nbsp; [<b>div</b> 59 7 -3] --> -2<br>
+    &nbsp; [<b>div</b> -103 5] --> -20
+    </tt>
 
-<p><dt><tt id="exp"><b>E</b> <i>[arg]</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="exp"><b>E</b> <i>[arg]</i></tt></p><indent>
 
   <p>Returns e<sup><i>arg</i></sup>.  When no argument is supplied, the
   function returns the value of e.
 
-<p><dt><tt id="eng"><b>ENG</b> <i>val [sig [str]]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="eng"><b>ENG</b> <i>val [sig [str]]</i></tt></p><indent>
 
   <p>Converts the numeric value in <i>val</i> to its string representation
   in engineering notation.  <i>Val</i> must be numeric.  <i>Sig</i> is the
@@ -623,59 +741,71 @@ start and end sequences have been removed.
   written after the number followed by the exponent of 10.  The exponent
   of 10 will always be a multiple of 3.
 
-  <p>The supported units multiplier names are:
+  <p>The supported units multiplier names are:</p><indent>
 
-  <p>
-    &nbsp;&nbsp; 10<sup>15</sup> &nbsp; P (Peta)<br>
-    &nbsp;&nbsp; 10<sup>12</sup> &nbsp; T (Tera)<br>
-    &nbsp;&nbsp; 10<sup>9</sup> &nbsp; G (Giga)<br>
-    &nbsp;&nbsp; 10<sup>6</sup> &nbsp; M (Mega)<br>
-    &nbsp;&nbsp; 10<sup>3</sup> &nbsp; k (Kilo)<br>
-    &nbsp;&nbsp; 10<sup>0</sup> &nbsp;  (unity, units multiplier name is empty string)<br>
-    &nbsp;&nbsp; 10<sup>-3</sup> &nbsp; m (milli)<br>
-    &nbsp;&nbsp; 10<sup>-6</sup> &nbsp; u (micro)<br>
-    &nbsp;&nbsp; 10<sup>-9</sup> &nbsp; n (nano)<br>
-    &nbsp;&nbsp; 10<sup>-12</sup> &nbsp; p (pico)<br>
-    &nbsp;&nbsp; 10<sup>-15</sup> &nbsp; f (femto}<br>
+    <p>
+    10<sup>15</sup> &nbsp; P (Peta)<br>
+    10<sup>12</sup> &nbsp; T (Tera)<br>
+    10<sup>9</sup> &nbsp; G (Giga)<br>
+    10<sup>6</sup> &nbsp; M (Mega)<br>
+    10<sup>3</sup> &nbsp; k (Kilo)<br>
+    10<sup>0</sup> &nbsp;  (unity, units multiplier name is empty string)<br>
+    10<sup>-3</sup> &nbsp; m (milli)<br>
+    10<sup>-6</sup> &nbsp; u (micro)<br>
+    10<sup>-9</sup> &nbsp; n (nano)<br>
+    10<sup>-12</sup> &nbsp; p (pico)<br>
+    10<sup>-15</sup> &nbsp; f (femto}<br>
 
-  <p>For example:
+    </p></indent>
 
-  <p><tt>
-  &nbsp; [<b>eng</b> 123456] --> "123 k"<br>
-  &nbsp; [<b>eng</b> 123456 4 ""] --> "123.5k"<br>
-  &nbsp; [<b>eng</b> .123456 2] --> "123 m"<br>
-  &nbsp; [<b>eng</b> 12e20] --> "1.20e21 "<br>
-  </tt>
+  <p>For example:</p><indent>
 
-<p><dt><tt id="evar"><b>EVAR</b> <i>var</i></tt></dt><dd>
+    <p><tt>
+    [<b>eng</b> 123456] --> "123 k"<br>
+    [<b>eng</b> 123456 4 ""] --> "123.5k"<br>
+    [<b>eng</b> .123456 2] --> "123 m"<br>
+    [<b>eng</b> 12e20] --> "1.20e21 "<br>
+    </tt>
+
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="evar"><b>EVAR</b> <i>var</i></tt></p><indent>
 
   <p>Returns the expansion of the system environment variable <i>var</i>.
   <i>Var</i> is a string.  If the indicated environment variable does not
   exist, then the empty string is returned.  The returned data type is
   always <b>string</b>.
 
-<p><dt><tt id="exist"><b>EXIST</b> <i>name [nametype]</i></tt></dt><dd>
+  </p></indent>
 
-  <p>Tests whether the entity named by <i>name</i> exists.  This function always
-  returns a <b>bool</b> value, with TRUE indicating the named entity exists and
-  FALSE that it does not exist.
+<p><tt id="exist"><b>EXIST</b> <i>name [nametype]</i></tt></p><indent>
+
+  <p>Tests whether the entity named by <i>name</i> exists.  This function
+  always returns a <b>bool</b> value, with TRUE indicating the named
+  entity exists and FALSE that it does not exist.
 
   <p><i>Nametype</i> specifies the type of the named object.  The object
   must exist and be of the specified type for the function to return TRUE.
   The default name type is any ESCR system symbol, such as a variable or
-  constant name.  The choices for <i>nametype</i> are:<dl>
+  constant name.  The choices for <i>nametype</i> are:</p><indent>
 
-    <p><dt><tt><b>PSYM</b></tt></dt><dd>
+    <p><tt><b>PSYM</b></tt></p><indent>
 
       <p>Any ESCR system symbol.  This is the default if the
       <i>nametype</i> argument is not given.  <i>Name</i> must be a
       string.
 
-    <p><dt><tt><b>EVAR</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>EVAR</b></tt></p><indent>
 
       <p>System environment variable.  <i>Name</i> must be a string.
 
-    <p><dt><tt><b>FNAM</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>FNAM</b></tt></p><indent>
 
       <p>File system name.  The named object can be a file, directory, or
       any other object implemented by the file system this program is
@@ -683,12 +813,16 @@ start and end sequences have been removed.
       value reflects the existance of the final translated pathname.
       <i>Name</i> must be a string.
 
-    <p><dt><tt><b>FNAMNL</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>FNAMNL</b></tt></p><indent>
 
       <p>File system name.  Symbolic links are not followed.  <i>Name</i>
       must be a string.
 
-    <p><dt><tt><b>ARG</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>ARG</b></tt></p><indent>
 
       <p>Execution block argument.  <i>Name</i> must be integer, and is
       the execution block argument number.  General arguments are numbered
@@ -697,22 +831,28 @@ start and end sequences have been removed.
       href="cmds.htm#call"><tt><b>CALL</b></tt></a> command description
       for more information on arguments.
 
-    </dl>
+      </p></indent>
 
-<p><dt><tt id="exp"><b>EXP</b> <i>a b</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="exp"><b>EXP</b> <i>a b</i></tt></p><indent>
 
   <p>Returns <i>a</i> to the power of <i>b</i> (<i>a<sup>b</sup></i>).
   <i>A</i> and <i>b</i> must be numeric. When <i>a</i> is negative,
   <i>b</i> must be integer.
 
-<p><dt><tt id="file"><b>FILE</b> <i>infotype name</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="file"><b>FILE</b> <i>infotype name</i></tt></p><indent>
 
   <p>Returns information about the file system object <i>name</i>.
   <i>Infotype</i> is a keyword selecting which information about the file
   system object is returned.  The valid values of <i>infotype</i> and the
-  resulting function values are:<dl>
+  resulting function values are:</p><indent>
 
-    <p><dt><tt><b>TYPE</b></tt></dt><dd>
+    <p><tt><b>TYPE</b></tt></p><indent>
 
       <p>String.  The string is a upper-case keyword indicating the file
       system object type:
@@ -726,17 +866,25 @@ start and end sequences have been removed.
       <p>If the object does not exist, then the function returns the empty
       string.
 
-    <p><dt><tt><b>LEN</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>LEN</b></tt></p><indent>
 
       <p>Integer.  The file length in bytes.
 
-    <p><dt><tt><b>DTM</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>DTM</b></tt></p><indent>
 
       <p>Time.  The time the file was last modified.
 
-    </dl>
+      </p></indent>
 
-<p><dt><tt id="fp"><b>FP</b> <i>val</i> [<i>fmt ... fmt</i>]</tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="fp"><b>FP</b> <i>val</i> [<i>fmt ... fmt</i>]</tt></p><indent>
 
   <p>Converts the numeric value <i>val</i> to its floating point string
   representation. The optional <i>fmt</i> arguments specify particular
@@ -746,129 +894,183 @@ start and end sequences have been removed.
   <p>The formatting string is a sequence of commands.  Each command starts
   with the command name keyword, which may be followed by parameters
   specific to that command.  Command name keywords are case-insensitive.
-  The formatting commands are:<dl>
+  The formatting commands are:</p><indent>
 
-    <p><dt><tt><b>FW</b> <i>n</i></tt></dt><dd>
+    <p><tt><b>FW</b> <i>n</i></tt></p><indent>
 
       <p>Field width.  For <i>n</i> &ge; 1, the output string will be
       <i>n</i> characters wide.  <i>N</i> = 0 indicates free format,
       meaning the minimum number or necessary output characters will be
       used.
 
-    <p><dt><tt><b>FWE</b> <i>n</i></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>FWE</b> <i>n</i></tt></p><indent>
 
       <p>Field width of the exponent part of the number if exponential
       notation is used.  0 = free form.
 
-    <p><dt><tt><b>SIG</b> <i>n</i></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>SIG</b> <i>n</i></tt></p><indent>
 
       <p>Minimum significant digits required.  Default = 3.
 
-    <p><dt><tt><b>MXL</b> <i>n</i></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>MXL</b> <i>n</i></tt></p><indent>
 
       <p>Maximum digits allowed left of decimal point.  Default = SIG + 1.
 
-    <p><dt><tt><b>RIT</b> <i>n</i></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>RIT</b> <i>n</i></tt></p><indent>
 
       <p>Fixed number of digits right of decimal point.
 
-    <p><dt><tt><b>MNR</b> <i>n</i></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>MNR</b> <i>n</i></tt></p><indent>
 
       <p>Minimum required digits right of decimal point.
 
-    <p><dt><tt><b>MXR</b> <i>n</i></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>MXR</b> <i>n</i></tt></p><indent>
 
       <p>Maximum allowed digits right of point.  May force use of
       exponential notation.
 
-    <p><dt><tt><b>EXP</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>EXP</b></tt></p><indent>
 
       <p>Force use of exponential notation.
 
-    <p><dt><tt><b>NEXP</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NEXP</b></tt></p><indent>
 
       <p>Prohibit use of exponential notation.
 
-    <p><dt><tt><b>ENG</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>ENG</b></tt></p><indent>
 
       <p>Use engineering format when exponential notation is used.  Causes
       the exponent to be a multiple of 3.  Default.
 
-    <p><dt><tt><b>SCI</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>SCI</b></tt></p><indent>
 
       <p>Use scientific format when exponential notation is used.  The
       exponent is not restricted to a particular multiple.
 
-    <p><dt><tt><b>PNT</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>PNT</b></tt></p><indent>
 
       <p>Force decimal point to always be written, even if there are no
       digits to its right.
 
-    <p><dt><tt><b>NPTN</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NPTN</b></tt></p><indent>
 
       <p>Don't write the decimal point where there are no digits to its
       right.  Default.
 
-    <p><dt><tt><b>ZB</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>ZB</b></tt></p><indent>
 
       <p>Write zero before decimal if there would otherwise not be a digit
       there.  Default.
 
-    <p><dt><tt><b>NZB</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NZB</b></tt></p><indent>
 
       <p>Don't write zero as only digit before the decimal point.
 
-    <p><dt><tt><b>TZ</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>TZ</b></tt></p><indent>
 
       <p>Trailing zeros are allowed.  Default.
 
-    <p><dt><tt><b>NTZ</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NTZ</b></tt></p><indent>
 
       <p>Truncate trailing zeros.
 
-    <p><dt><tt><b>PLE</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>PLE</b></tt></p><indent>
 
       <p>Write plus sign before the exponent if it is positive.
 
-    <p><dt><tt><b>NPLE</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NPLE</b></tt></p><indent>
 
       <p>Do not write a plus sign before a positive exponent.  Default.
 
-    <p><dt><tt><b>GRP</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>GRP</b></tt></p><indent>
 
       <p>Write digits in groups (commas every three digits for English).
 
-    <p><dt><tt><b>NGRP</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NGRP</b></tt></p><indent>
 
       <p>Do not write digits in groups.  Default.
 
-    <p><dt><tt><b>PL</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>PL</b></tt></p><indent>
 
       <p>Write leading plus if number is positive.
 
-    <p><dt><tt><b>NPL</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NPL</b></tt></p><indent>
 
       <p>Do not write leading plus if number is positive.  Default.
 
-    <p><dt><tt><b>LZ</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>LZ</b></tt></p><indent>
 
       <p>Fill fixed size field with leading zeros on left.
 
-    <p><dt><tt><b>NLZ</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NLZ</b></tt></p><indent>
 
       <p>Do not add leading zeros.  Blanks will fill fixed size field.
       Default.
 
-    </dl>
+      </p></indent>
 
-<p><dt><tt id="if"><b>IF</b> <i>condition arg1 arg2</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="if"><b>IF</b> <i>condition arg1 arg2</i></tt></p><indent>
 
   <p>Returns <i>arg1</i> when <i>condition</i> is true, and <i>arg2</i>
   when <i>condition</i> is false.  <i>Condition</i> must be of type
   <b>bool</b>.  The data type of the function value is whatever data type
   the returned argument (<i>arg1</i> or <i>arg2</i>) is.
 
-<p><dt><tt id="int"><b>INT</b> <i>val</i> [<i>fmt ... fmt</i>]</tt></dt><dd>
+  </p></indent>
+
+<p><tt id="int"><b>INT</b> <i>val</i> [<i>fmt ... fmt</i>]</tt></p><indent>
 
   <p>Converts the integer value <i>val</i> to its string representation.
   The optional <i>fmt</i> arguments specify particular formatting to be
@@ -878,56 +1080,79 @@ start and end sequences have been removed.
   <p>The formatting string is a sequence of commands.  Each command starts
   with the command name keyword, which may be followed by parameters
   specific to that command.  Command name keywords are case-insensitive.
-  The formatting commands are:<dl>
+  The formatting commands are:</p><indent>
 
-    <p><dt><tt><b>FW</b> <i>n</i></tt></dt><dd>
+    <p><tt><b>FW</b> <i>n</i></tt></p><indent>
 
       <p>Field width.  For <i>n</i> &ge; 1, the output string will be
       <i>n</i> characters wide.  <i>N</i> = 0 indicates free format,
       meaning the minimum number or necessary output characters will be
       used.
 
-    <p><dt><tt><b>PL</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>PL</b></tt></p><indent>
 
       <p>Write leading plus if number is positive.
 
-    <p><dt><tt><b>NPL</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NPL</b></tt></p><indent>
 
       <p>Do not write leading plus if number is positive.  Default.
 
-    <p><dt><tt><b>LZ</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>LZ</b></tt></p><indent>
 
       <p>Fill fixed size field with leading zeros on left.
 
-    <p><dt><tt><b>NLZ</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NLZ</b></tt></p><indent>
 
       <p>Do not add leading zeros.  Leading blanks will fill fixed size
       field.  Default.
 
-    <p><dt><tt><b>BASE</b> <i>n</i></tt></dt><dd>
+      </p></indent>
 
-      <p><i>N</i> is the number conversion base (radix), which must be 2 - 36.  Default is
-      10 (decimal).  The letters A-Z will be used for digit values 10 to 35.
+    <p><tt><b>BASE</b> <i>n</i></tt></p><indent>
 
-    <p><dt><tt><b>USIN</b></tt></dt><dd>
+      <p><i>N</i> is the number conversion base (radix), which must be 2 -
+      36.  Default is 10 (decimal).  The letters A-Z will be used for
+      digit values 10 to 35.
+
+      </p></indent>
+
+    <p><tt><b>USIN</b></tt></p><indent>
 
       <p>The input integer will be interpreted as unsigned.
 
-    <p><dt><tt><b>SIN</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>SIN</b></tt></p><indent>
 
       <p>The input integer will be interpreted as signed.  Default.
 
-    </dl>
+      </p></indent>
 
-<p><dt><tt id="isint"><b>ISINT</b> <i>arg</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="isint"><b>ISINT</b> <i>arg</i></tt></p><indent>
 
   <p>Returns TRUE iff the argument can be interpreted as integer.
 
-<p><dt><tt id="isnum"><b>ISNUM</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="isnum"><b>ISNUM</b> <i>arg</i></tt></p><indent>
 
   <p>Returns TRUE iff the argument can be interpreted as a numeric value.
 
-<p><dt><tt id="lab"><b>LAB</b> <i>namechars</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="lab"><b>LAB</b> <i>namechars</i></tt></p><indent>
 
   <p>Returns the full name (expansion) of a local label with the generic
   local name <i>namechars</i>.  <i>Namechars</i> is a token, not a string.
@@ -939,11 +1164,11 @@ start and end sequences have been removed.
   example.  The following execution blocks have their own context for
   local labels:<ul>
 
-    <p><li>Top level execution
+    <li>Top level execution
 
-    <p><li>Macros
+    <li>Macros
 
-    <p><li>Subroutines
+    <li>Subroutines
 
     </ul>
 
@@ -960,61 +1185,84 @@ start and end sequences have been removed.
   long, even if leading digits are 0.  It will be longer when more digits
   are required to express the sequence number.
 
-  <p>For example:
+  <p>For example:</p><indent>
 
-  <p><tt>&nbsp;
-  [<b>lab</b> LOOP] --> LOOP_039
-  </tt>
+    <p><tt>&nbsp; [<b>lab</b> LOOP] --> LOOP_039 </tt>
 
-<p><dt><tt id="lcase"><b>LCASE</b> <i>arg</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="lcase"><b>LCASE</b> <i>arg</i></tt></p><indent>
 
   <p>Returns the string representation of <i>arg</i> with all aphabetic
   characters lower case.
 
-<p><dt><tt id="lnam"><b>LNAM</b> <i>fnam</i> [<i>suff ... suff</i>]</tt></dt><dd>
+  </p></indent>
+
+<p><tt id="lnam"><b>LNAM</b> <i>fnam</i> [<i>suff ...
+suff</i>]</tt></p><indent>
 
   <p>Returns the generic leafname of the file name <i>fnam</i>.
   <i>Fnam</i> is a string, and is required.  The <i>suff</i> arguments are
   optional, and are suffixes removed from the file name if present.  The
   first <i>suff</i> argument found in the file name is used.
 
-  <p>For example:
+  <p>For example:</p><indent>
 
-  <p><tt>
-  &nbsp; [<b>lnam</b> "c:\mystuff\virus.exe" ".bat" ".exe"] --> "virus"<br>
-  &nbsp; [<b>lnam</b> "c:\mystuff\virus.exe" ".bat" ".gif"] --> "virus.exe"
-  </tt>
+    <p><tt>
+    [<b>lnam</b> "c:\mystuff\virus.exe" ".bat" ".exe"] --> "virus"<br>
+    [<b>lnam</b> "c:\mystuff\virus.exe" ".bat" ".gif"] --> "virus.exe"
+    </tt>
 
-<p><dt><tt id="log"><b>LOG</b> <i>arg</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="log"><b>LOG</b> <i>arg</i></tt></p><indent>
 
   <p>Returns the natural logarithm of <i>arg</i>.
 
-<p><dt><tt id="log2"><b>LOG2</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="log2"><b>LOG2</b> <i>arg</i></tt></p><indent>
 
   <p>Returns the base 2 logarithm of <i>arg</i>.
 
-<p><dt><tt id="max"><b>MAX</b> <i>arg1</i> [<i>arg2 ... argN</i>]</tt></dt><dd>
+  </p></indent>
+
+<p><tt id="max"><b>MAX</b> <i>arg1</i> [<i>arg2 ...
+argN</i>]</tt></p><indent>
 
   <p>Returns the maximum value of the arguments.  All arguments must be
   numeric.  The returned data type will be integer if all arguments are
   integer, or floating point otherwise.
 
-<p><dt><tt id="min"><b>MIN</b> <i>arg1</i> [<i>arg2 ... argN</i>]</tt></dt><dd>
+  </p></indent>
+
+<p><tt id="min"><b>MIN</b> <i>arg1</i> [<i>arg2 ...
+argN</i>]</tt></p><indent>
 
   <p>Returns the minimum value of the arguments.  All arguments must be
   numeric.  The returned data type will be integer if all arguments are
   integer, or floating point otherwise.
 
-<p><dt><tt id="not"><b>NOT</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="not"><b>NOT</b> <i>arg</i></tt></p><indent>
 
   <p>Returns the opposite of the boolean argument.  The result is always
   boolean.
 
-<p><dt><tt id="now"><b>NOW</b></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="now"><b>NOW</b></tt></p><indent>
 
   <p>Returns the current time.
 
-<p><dt><tt id="or"><b>OR</b> <i>arg1 [arg2 ... argN]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="or"><b>OR</b> <i>arg1 [arg2 ... argN]</i></tt></p><indent>
 
   <p>Logical OR when all arguments are boolean.
 
@@ -1023,13 +1271,17 @@ start and end sequences have been removed.
   <p>The arguments data types must be either all <b>bool</b> or all
   <b>integer</b>. <i>Arg1</i> is required.
 
-<p><dt><tt id="pi"><b>PI</b> <i>[val]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="pi"><b>PI</b> <i>[val]</i></tt></p><indent>
 
   <p>When <i>val</i> is not present, returns the value of Pi
   (3.141592...). When <i>val</i> is present, returns the value of Pi times
   <i>val</i>.  <i>Val</i> must be numeric.
 
-<p><dt><tt id="qstr"><b>QSTR</b> <i>characters</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="qstr"><b>QSTR</b> <i>characters</i></tt></p><indent>
 
   <p>Returns a string from the sequence of characters <i>characters</i>.
   This can be thought of as "quoting" characters to make a string.
@@ -1039,34 +1291,44 @@ start and end sequences have been removed.
   <b>qstr</b> up to the end of the function, whether this contains blanks
   or not.
 
-  <p>For example:
+  <p>For example:</p><indent>
 
-  <p><tt>&nbsp;
-  [<b>qstr</b> This is a simple test.] --> "This is a simple test."
-  </tt>
+    <p><tt>
+    [<b>qstr</b> This is a simple test.] --> "This is a simple test."
+    </tt>
 
-<p><dt><tt id="qtk"><b>QTK</b> <i>[arg ... arg]</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="qtk"><b>QTK</b> <i>[arg ... arg]</i></tt></p><indent>
 
   <p>Returns the single quoted token resulting from the concatenation of
-  the string representation of all the arguments.  The resulting string will
-  start and end with quote (") characters.  If the body of the string
+  the string representation of all the arguments.  The resulting string
+  will start and end with quote (") characters.  If the body of the string
   contains any quote characters, they will be doubled.
 
   <p>This function can be used, for example, to create a single command
   line parameter to a program.  Raw strings on the command line would be
   interpreted incorrectly if they contained spaces or quote characters.
 
-<p><dt><tt id="rdeg"><b>RDEG</b> <i>rad</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="rdeg"><b>RDEG</b> <i>rad</i></tt></p><indent>
 
   <p>Converts radians to degrees.  <i>Rad</i> must be numeric.  The result
   is always floating point.
 
-<p><dt><tt id="rnd"><b>RND</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="rnd"><b>RND</b> <i>arg</i></tt></p><indent>
 
   <p>Returns <i>arg</i> rounded to the nearest integer.  <i>Arg</i> must
   be numeric.
 
-<p><dt><tt id="runex"><b>RUNEX</b> <i>arg ... arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="runex"><b>RUNEX</b> <i>arg ... arg</i></tt></p><indent>
 
   <p>Run the command line that is the concatenation of the string
   representation of all the arguments.
@@ -1077,7 +1339,9 @@ start and end sequences have been removed.
 
   <p>Any output from the program is discarded.
 
-<p><dt><tt id="runso"><b>RUNSO</b> <i>arg ... arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="runso"><b>RUNSO</b> <i>arg ... arg</i></tt></p><indent>
 
   <p>Run the command line that is the concatenation of the string
   representation of all the arguments.
@@ -1090,7 +1354,9 @@ start and end sequences have been removed.
   script exit status is raised to the program exit status code if it was
   previously lower.
 
-<p><dt><tt id="runtf"><b>RUNTF</b> <i>arg ... arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="runtf"><b>RUNTF</b> <i>arg ... arg</i></tt></p><indent>
 
   <p>Run the command line that is the concatenation of the string
   representation of all the arguments.
@@ -1103,36 +1369,45 @@ start and end sequences have been removed.
 
   <p>Any output from the program is discarded.
 
-<p><dt><tt id="seq"><b>SEQ</b> <i>fnam</i> [<i>opt ... opt</i>]</tt></dt><dd>
+  </p></indent>
+
+<p><tt id="seq"><b>SEQ</b> <i>fnam</i> [<i>opt ...
+opt</i>]</tt></p><indent>
 
   <p>Get the value of a sequence number file and update it accordingly.
   Sequence number files are described in detail in the SEQUENCE
   documentation file.  The returned data type is always <b>integer</b>.
 
-  <p><i>Fnam</i> is the name of the sequential number file.  The ".seq"
+  <p><i>Fnam</i> is the name of the sequence number file.  The ".seq"
   suffix is implied and may be omitted.
 
   <p>The remaining arguments are optional, and can modify the operation
-  and return value.  The possible <i>opt</i> arguments are:<dl>
+  and return value.  The possible <i>opt</i> arguments are:</p><indent>
 
-    <p><dt><tt><b>AFT</b></tt></dt><dd>
+    <p><tt><b>AFT</b></tt></p><indent>
 
       <p>Return the sequence number after the increment is applied (value
       written back to sequence number file).  The default is to return the
       sequence number before the increment (value originally in file).
 
-    <p><dt><tt><i>increment</i></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><i>increment</i></tt></p><indent>
 
       <p>The first integer <i>opt</i> argument is the amount to increment
       the value in the sequential number file by.  The default is 1.
 
-    <p><dt><tt><i>first</i></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><i>first</i></tt></p><indent>
 
       <p>The second integer <i>opt</i> argument is the original sequence
       number to use if the sequence number file does not exist or is
       empty.  The default is 1.
 
-    </dl>
+      </p></indent>
+
+    </p></indent>
 
   <p>The sequential number file is read and updated as one atomic
   operation.  Other concurrent attempts to access the file will result in
@@ -1140,24 +1415,32 @@ start and end sequences have been removed.
   useful for creating unique serial numbers, sequential build numbers, and
   the like.
 
-<p><dt><tt id="shiftl"><b>SHIFTL</b> <i>val n</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="shiftl"><b>SHIFTL</b> <i>val n</i></tt></p><indent>
 
   <p>Return <i>val</i> shifted left by <i>n</i> bits.  Both <i>val</i> and
   <i>n</i> must be integer.  <i>N</i> may be negative, in which case
   <i>val</i> is logically shifted right by -<i>n</i> bits.
 
-<p><dt><tt id="shiftr"><b>SHIFTR</b> <i>val n</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="shiftr"><b>SHIFTR</b> <i>val n</i></tt></p><indent>
 
   <p>Return <i>val</i> logically shifted right by <i>n</i> bits.  Both
   <i>val</i> and <i>n</i> must be integer.  <i>N</i> may be negative, in
   which case <i>val</i> is shifted left by -<i>n</i> bits.
 
-<p><dt><tt id="sin"><b>SIN</b> <i>ang</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="sin"><b>SIN</b> <i>ang</i></tt></p><indent>
 
   <p>Returns the sine of the angle <i>ang</i>.  <i>Ang</i> must be
   numeric, and is in radians.
 
-<p><dt><tt id="sindx"><b>SINDX</b> <i>ind str</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="sindx"><b>SINDX</b> <i>ind str</i></tt></p><indent>
 
   <p>Returns a string of the single character at index <i>ind</i> in the
   string representation of <i>str</i>.  <i>Ind</i> must be integer.  The
@@ -1167,28 +1450,38 @@ start and end sequences have been removed.
   outside the input string (<i>ind</i> &lt; 1, or <i>ind</i> &gt; length
   of <i>str</i>).
 
-<p><dt><tt id="slen"><b>SLEN</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="slen"><b>SLEN</b> <i>arg</i></tt></p><indent>
 
   <p>Returns the length of the string represenstation of <i>arg</i>.  The
   returned value is always integer and &ge; 0.
 
-<p><dt><tt id="sqrt"><b>SQRT</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="sqrt"><b>SQRT</b> <i>arg</i></tt></p><indent>
 
   <p>Returns the square root of <i>arg</i>.  <i>Arg</i> must be numeric
   and &ge; 0.  The return value is always floating point.
 
-<p><dt><tt id="str"><b>STR</b> <i>[arg ... arg]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="str"><b>STR</b> <i>[arg ... arg]</i></tt></p><indent>
 
   <p>Returns the concatenation of the string representation of each
   argument.
 
-  <p>For example:
+  <p>For example:</p><indent>
 
-  <p><tt>&nbsp;
-  [<b>str</b> "abc" 13 'def' 27.1] --> "abc13def27.10000"
-  </tt>
+    <p><tt>
+    [<b>str</b> "abc" 13 'def' 27.1] --> "abc13def27.10000"
+    </tt>
 
-<p><dt><tt id="substr"><b>SUBSTR</b> <i>start len str</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="substr"><b>SUBSTR</b> <i>start len str</i></tt></p><indent>
 
   <p>Returns the substring of the string representation of <i>str</i> that
   starts at character index <i>start</i> and extends for <i>len</i>
@@ -1196,13 +1489,18 @@ start and end sequences have been removed.
   end of the substring is clipped to be within the input string.  The
   empty string is returned if STR is empty.
 
-  <p>For example:
+  <p>For example:</p><indent>
 
-  <p><tt>&nbsp;
-  [<b>substr</b> 2 5 "This is a test"] --> "his i"
-  </tt>
+    <p><tt>
+    [<b>substr</b> 2 5 "This is a test"] --> "his i"
+    </tt>
 
-<p><dt><tt id="sym"><b>SYM</b> <i>name [</i><b>NL</b><i>] [opt]</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="sym"><b>SYM</b> <i>name [</i><b>NL</b><i>]
+[opt]</i></tt></p><indent>
 
   <p>Returns information about a preprocessor symbol.  <i>Name</i> is a
   string that is the name of the symbol inquiring about.  <i>Name</i> may
@@ -1220,13 +1518,13 @@ start and end sequences have been removed.
   a absolute version.
 
   <p><i>Opt</i> is a optional keyword specifying the type of information
-  to return about the symbol.  The choices for <i>opt</i> are:<dl>
+  to return about the symbol.  The choices for <i>opt</i> are:
 
-    <p><dt><tt><b>TYPE</b></tt></dt><dd>
+    <p><tt><b>TYPE</b></tt></p><indent>
 
       <p>Symbol type.  This is the default if <i>opt</i> is not supplied.
-      The function value will be one of these upper case strings, indicating
-      the type of symbol:
+      The function value will be one of these upper case strings,
+      indicating the type of symbol:
 
       <p>
       VAR<br>
@@ -1237,7 +1535,9 @@ start and end sequences have been removed.
       CMD<br>
       LABEL<br>
 
-    <p><dt><tt><b>DTYPE</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>DTYPE</b></tt></p><indent>
 
       <p>Symbol data type.  The function value will be a upper case string
       containing the data type keyword.  These are:
@@ -1256,30 +1556,42 @@ start and end sequences have been removed.
       name of a preprocessor symbol that has a data type.  For example,
       constants have data types, but subroutines do not.
 
-    <p><dt><tt><b>VER</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>VER</b></tt></p><indent>
 
       <p>Returns the integer absolute version number of the symbol.
       Absolute versions are always &ge; 1.
 
-    <p><dt><tt><b>NAME</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>NAME</b></tt></p><indent>
 
       <p>Returns a string that is just the bare name of the symbol without
       any qualifiers.
 
-    <p><dt><tt><b>QUAL</b></tt></dt><dd>
+      </p></indent>
+
+    <p><tt><b>QUAL</b></tt></p><indent>
 
       <p>Returns the string containing the fully qualified name of the
       symbol (<i>name</i>:<i>type</i>:<i>ver</i>). The version is always
       absolute.
 
-    </dl>
+      </p></indent>
 
-<p><dt><tt id="tan"><b>TAN</b> <i>ang</i></tt></dt><dd>
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="tan"><b>TAN</b> <i>ang</i></tt></p><indent>
 
   <p>Returns the tangent of the angle <i>ang</i>.  <i>Ang</i> must be
   numeric, and is in radians.
 
-<p><dt><tt id="tnam"><b>TNAM</b> <i>[arg ... arg]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="tnam"><b>TNAM</b> <i>[arg ... arg]</i></tt></p><indent>
 
   <p>Returns the full absolute treename of the file indicated by the
   concatentation of the string representation of all the arguments.  If no
@@ -1289,36 +1601,48 @@ start and end sequences have been removed.
   <p>Embed Inc portable pathname rules are used to interpret the file
   name.
 
-<p><dt><tt id="trunc"><b>TRUNC</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="trunc"><b>TRUNC</b> <i>arg</i></tt></p><indent>
 
   <p>Returns the value of <i>arg</i> rounded to the nearest integer
   towards zero.  This has the effect of "truncating" the fraction part of
   the value.  <i>Arg</i> must be numeric.  The result is always integer.
 
-<p><dt><tt id="ucase"><b>UCASE</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="ucase"><b>UCASE</b> <i>arg</i></tt></p><indent>
 
   <p>Returns the string representation of <i>arg</i> with all aphabetic
   characters upper case.
 
-<p><dt><tt id="unquote"><b>UNQUOTE</b> <i>str</i></tt></dt><dd>
+  </p></indent>
 
-  <p>Returns the string argument with all layers of quotes removed.
-  Double quote characters internal to the string will be interpreted as a
-  single quote character.  The valid quote characters are the double quote
-  (") and apostrophie (').
+<p><tt id="unquote"><b>UNQUOTE</b> <i>str</i></tt></p><indent>
 
-  <p>For example:
+  <p>Returns the string argument with all layers of quotes removed. Double
+  quote characters internal to the string will be interpreted as a single
+  quote character.  The valid quote characters are the double quote (")
+  and apostrophie (').
 
-  <p><tt>&nbsp;
-  [<b>unquote</b> ""'Messy string'"" ] --> "Messy string"
-  </tt>
+  <p>For example:</p><indent>
 
-<p><dt><tt id="v"><b>V</b> <i>arg</i></tt></dt><dd>
+    <p><tt>
+    [<b>unquote</b> ""'Messy string'"" ] --> "Messy string"
+    </tt>
+
+    </p></indent>
+
+  </p></indent>
+
+<p><tt id="v"><b>V</b> <i>arg</i></tt></p><indent>
 
   <p>Returns the value of <i>arg</i>.  This can be useful, for example, to
   explicitly dereference a variable.
 
-<p><dt><tt id="vnl"><b>VNL</b> <i>arg</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="vnl"><b>VNL</b> <i>arg</i></tt></p><indent>
 
   <p>Returns the value of <i>arg</i>.  The evaluation of <i>arg</i> is
   performed with the current version of any symbols that have local
@@ -1367,7 +1691,9 @@ start and end sequences have been removed.
   example, to build the name of a variable for the VNL function to
   dereference.
 
-<p><dt><tt id="xor"><b>XOR</b> <i>arg1 [arg2 ... argN]</i></tt></dt><dd>
+  </p></indent>
+
+<p><tt id="xor"><b>XOR</b> <i>arg1 [arg2 ... argN]</i></tt></p><indent>
 
   <p>Logical exclusive OR when all arguments are boolean.
 
@@ -1376,11 +1702,13 @@ start and end sequences have been removed.
   <p>The arguments data types must be either all <b>bool</b> or all
   <b>integer</b>. <i>Arg1</i> is required.
 
-</dl><!-- End of function descriptions -->
+  </p></indent>
 
-<p><!-- ******************************************************************** -->
-<br><p><hr>
+
+<hr><!-- ******************************************************************* -->
+
 <ul>
+  <li><a href="cmds.htm">Previous page</a>
   <li><a href="index.htm">Master index</a>
   </ul>
 
