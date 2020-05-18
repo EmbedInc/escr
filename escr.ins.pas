@@ -11,7 +11,6 @@ const
   escr_sym_log2buck_k = 7;             {Log2 buckets in symbol tables}
   escr_ulab_log2buck_k = 5;            {Log2 buckets in unique labels tables}
   escr_ulab_maxlen_k = 32;             {maximum length of undecorated unique label names}
-  escr_string_var_len_k = 1024;        {number of characters a string variable can hold}
 {
 *   Status codes.
 }
@@ -122,26 +121,6 @@ type
     escr_dtype_str_k,                  {text string}
     escr_dtype_time_k);                {absolute time descriptor}
 
-  escr_val_t = record                  {any data value}
-    dtype: escr_dtype_k_t;             {data type}
-    case escr_dtype_k_t of             {different data for each data type}
-escr_dtype_bool_k: (                   {boolean}
-      bool: boolean;
-      );
-escr_dtype_int_k: (                    {integer}
-      int: sys_int_max_t;
-      );
-escr_dtype_fp_k: (                     {floating point}
-      fp: sys_fp_max_t;
-      );
-escr_dtype_str_k: (                    {character string}
-      str: string_var8192_t;           {may actually be shorter}
-      );
-escr_dtype_time_k: (                   {absolute time descriptor}
-      time: sys_clock_t;
-      );
-    end;
-
   escr_infile_p_t = ^escr_infile_t;
   escr_infile_t = record               {information about one input file or snippet thereof}
     next_p: escr_infile_p_t;           {points to next input file in the list}
@@ -236,6 +215,46 @@ escr_dtype_time_k: (                   {absolute time descriptor}
     out   stat: sys_err_t);            {completion status}
     val_param;
 
+  escr_val_t = record                  {any data value}
+    dtype: escr_dtype_k_t;             {data type}
+    case escr_dtype_k_t of             {different data for each data type}
+escr_dtype_bool_k: (                   {boolean}
+      bool: boolean;
+      );
+escr_dtype_int_k: (                    {integer}
+      int: sys_int_max_t;
+      );
+escr_dtype_fp_k: (                     {floating point}
+      fp: sys_fp_max_t;
+      );
+escr_dtype_str_k: (                    {character string}
+      str: string_var8192_t;           {may actually be shorter}
+      );
+escr_dtype_time_k: (                   {absolute time descriptor}
+      time: sys_clock_t;
+      );
+    end;
+
+  escr_vcon_t = record                 {data in a variable or constant}
+    dtype: escr_dtype_k_t;             {data type}
+    case escr_dtype_k_t of             {different data for each data type}
+escr_dtype_bool_k: (                   {boolean}
+      bool: boolean;
+      );
+escr_dtype_int_k: (                    {integer}
+      int: sys_int_max_t;
+      );
+escr_dtype_fp_k: (                     {floating point}
+      fp: sys_fp_max_t;
+      );
+escr_dtype_str_k: (                    {character string}
+      stf: strflex_t;
+      );
+escr_dtype_time_k: (                   {absolute time descriptor}
+      time: sys_clock_t;
+      );
+    end;
+
   escr_sym_t = record                  {all the info about one symbol}
     table_p: escr_sytable_p_t;         {points to symbol table this symbol is in}
     ent_p: escr_sytable_data_p_t;      {points to symbol table data for this symbol}
@@ -247,10 +266,10 @@ escr_dtype_time_k: (                   {absolute time descriptor}
     stype: escr_sym_k_t;               {ID for the type of this symbol}
     case escr_sym_k_t of               {different fields depending on symbol type}
 escr_sym_var_k: (                      {variable}
-      var_val: escr_val_t;             {the variable's data type and current value}
+      var_val: escr_vcon_t;            {the variable's data type and current value}
       );
 escr_sym_const_k: (                    {constant}
-      const_val: escr_val_t;           {the constant's data type and value}
+      const_val: escr_vcon_t;          {the constant's data type and value}
       );
 escr_sym_subr_k: (                     {subroutine defined by user code}
       subr_line_p: escr_inline_p_t;    {points to first line of subroutine definition}
@@ -438,6 +457,7 @@ escr_inhty_blk_k: (                    {in execution block}
 
   escr_t = record                      {state for one use of the ESCR system}
     mem_p: util_mem_context_p_t;       {top mem context for all dynamic mem}
+    sfmem: strflex_mem_t;              {memory state for all flex strings}
     sym_var: escr_sytable_t;           {symbol table for variables and constants}
     sym_sub: escr_sytable_t;           {symbol table for subroutines}
     sym_mac: escr_sytable_t;           {symbol table for macros}
@@ -1231,7 +1251,6 @@ procedure escr_sym_new_var (           {create new symbol for a variable}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
   in      dtype: escr_dtype_k_t;       {data type of the variable}
-  in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
   out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}

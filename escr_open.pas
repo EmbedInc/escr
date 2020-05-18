@@ -167,6 +167,9 @@ begin
     end;
   e_p^.mem_p := mem_p;                 {save pointer to our top mem context}
 
+  strflex_strmem_create (              {create mem state for all flex strings}
+    e_p^.mem_p^, e_p^.sfmem);
+
   escr_sytable_init (e_p^.mem_p^, e_p^.sym_var, stat); {init variables/constants symbol table}
   if sys_error(stat) then goto err;
   escr_sytable_init (e_p^.mem_p^, e_p^.sym_sub, stat); {init subroutines symbol table}

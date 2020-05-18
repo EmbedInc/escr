@@ -2,6 +2,7 @@
 *   subsystem.
 }
 %include 'base.ins.pas';
+%include 'strflex.ins.pas';
 %include 'escr.ins.pas';
 {
 *   Subroutines that implement the individual preprocessor commands.  Each

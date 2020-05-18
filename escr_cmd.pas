@@ -137,7 +137,7 @@ done_cmdline:                          {done reading command line except initial
 }
 make_new:                              {a new symbol needs to be created}
   escr_sym_new_var (                   {create the variable}
-    e, name, dtype, escr_string_var_len_k, global, sym_p, stat);
+    e, name, dtype, global, sym_p, stat);
   if sys_error(stat) then return;
   if hval then begin                   {set new variable to the specified initial value ?}
     if not escr_get_val_dtype (e, sym_p^.var_val, stat) {get value and convert to var's data type}
