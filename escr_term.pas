@@ -226,10 +226,12 @@ begin
   case sym_p^.stype of                 {what kind of symbol is it ?}
 escr_sym_var_k: begin                  {symbol is a variable}
       escr_vcon_val (e, sym_p^.var_val, val); {return the variable's value}
+      sys_error_none (stat);
       return;
       end;
 escr_sym_const_k: begin                {symbol is a constant}
       escr_vcon_val (e, sym_p^.const_val, val); {return the constant's value}
+      sys_error_none (stat);
       return;
       end;
 otherwise                              {this symbol can't be used as a term}
@@ -238,6 +240,7 @@ otherwise                              {this symbol can't be used as a term}
     escr_term_val := false;
     return;
     end;
+
 not_sym:                               {skip to here on not a symbol reference}
 {
 *   The token is not a recognizable term.
