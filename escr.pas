@@ -13,7 +13,10 @@
 *   The special block argument -1 will be the full pathname of the script file.
 }
 program escr;
-%include 'base.ins.pas';
+%include 'sys.ins.pas';
+%include 'util.ins.pas';
+%include 'string.ins.pas';
+%include 'file.ins.pas';
 %include 'strflex.ins.pas';
 %include 'escr.ins.pas';
 
