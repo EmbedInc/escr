@@ -31,6 +31,6 @@ Examples
     to find prime numbers in can be set with the -FROM and -TO command
     line argument.  See the header comment for details.
 
-  fib.escr
+  args.escr
 
-    ESCR source file that generates numbers in a Fibbonacci series.
+    Shows all the command line arguments.
