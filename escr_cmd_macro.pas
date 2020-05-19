@@ -12,7 +12,7 @@ define escr_macro_run;
 *
 *   Subroutine  ESCR_CMD_MACRO (E, STAT)
 *
-*   /MACRO name
+*   Command MACRO name
 *
 *   Starts the definition of a macro.  The macro definition is stored but not
 *   executed now.
@@ -24,7 +24,6 @@ procedure escr_cmd_macro (
 
 var
   name: string_var80_t;                {macro name}
-  sz: sys_int_adr_t;                   {size of new descriptor}
   sym_p: escr_sym_p_t;                 {pointer to new name symbol}
   stat2: sys_err_t;                    {to avoid corrupting STAT}
 
@@ -45,19 +44,15 @@ begin
     goto error;
     end;
 
-  sz :=                                {make size of whole macro symbol}
-    offset(escr_sym_t.macro_line_p) + size_min(escr_sym_t.macro_line_p);
   escr_sym_new (                       {create new symbol for the macro name}
     e,                                 {state for this use of the ESCR library}
     name,                              {symbol name}
-    sz,                                {symbol descriptor size}
+    escr_sym_macro_k,                  {type of symbol to create}
     false,                             {try to make local}
-    e.sym_mac,                         {symbol table to add symbol to}
     sym_p,                             {pointer to new symbol}
     stat);
   if sys_error(stat) then goto error;
 
-  sym_p^.stype := escr_sym_macro_k;    {this symbol is a macro name}
   sym_p^.macro_line_p :=               {save pointer to macro definition line}
     e.exblock_p^.inpos_p^.last_p;
   return;
@@ -70,7 +65,7 @@ error:                                 {error after inhibit created, STAT set}
 *
 *   Subroutine  ESCR_CMD_ENDMAC (E, STAT)
 *
-*   /ENDMAC
+*   Command ENDMAC
 *
 *   End the current macro definition.
 }
@@ -100,7 +95,7 @@ begin
 *
 *   Subroutine  ESCR_CMD_QUITMAC (E, STAT)
 *
-*   /QUITMAC
+*   Command QUITMAC
 *
 *   Stop executing the innermost macro currently in.
 }

@@ -251,6 +251,10 @@ msg err78
 msg err_dtype_unimp
   lan english -def
     INTERNAL ERROR: Data type with ID %p1i is not implemented in routine %p2s.
+msg err_istype_unimp
+  lan english -def
+    INTERNAL ERROR: Internal symbol type with ID %p1i is not implemented
+    in routine %p2s.
 msg err_fnam_lnum
   lan english -def
     Error on line %p2i of file "%p1s".

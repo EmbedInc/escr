@@ -60,8 +60,8 @@ escr_looptype_sym_k: begin             {looping thru list of symbols}
       e, loop_p^.sym_list_p^.str_p^, sym_p);
     if sym_p = nil then next;          {this symbol got deleted, skip it}
 
-    string_copy (                      {copy new name into loop variable}
-      loop_p^.sym_list_p^.str_p^, loop_p^.sym_const_p^.const_val.str);
+    strflex_copy_f_vstr (              {copy new name into loop variable}
+      loop_p^.sym_list_p^.str_p^, loop_p^.sym_const_p^.const_val.stf);
     exit;                              {successfully found next symbol name}
     end;
   end;
@@ -344,7 +344,6 @@ begin
     e,                                 {state for this use of the ESCR system}
     name,                              {name of variable to create}
     escr_dtype_str_k,                  {variable's data type}
-    escr_max_namelen_k,                {max length}
     false,                             {local, not global}
     sym_p,                             {returned pointer to the new variable}
     stat);
@@ -355,8 +354,8 @@ begin
 
   if slist_p^.str_p = nil then goto loop_done; {the list is empty ?}
 
-  string_copy (                        {init loop value to first symbol name}
-    slist_p^.str_p^, loop_p^.sym_const_p^.const_val.str);
+  strflex_copy_f_vstr (                {init loop value to first symbol name}
+    slist_p^.str_p^, loop_p^.sym_const_p^.const_val.stf);
   end;                                 {end of SYMBOL keyword case}
 {
 ******************************
@@ -381,7 +380,6 @@ begin
     e,                                 {state for this use of the ESCR system}
     name,                              {name of the variable to create}
     escr_dtype_int_k,                  {data type will be integer}
-    0,                                 {additional length parameter, unused}
     false,                             {will be local, not global}
     sym_p,                             {returned pointer to the new symbol}
     stat);

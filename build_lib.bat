@@ -38,6 +38,7 @@ call src_pas %srcdir% %libname%_term %1
 call src_pas %srcdir% %libname%_ulab %1
 call src_pas %srcdir% %libname%_util %1
 call src_pas %srcdir% %libname%_val %1
+call src_pas %srcdir% %libname%_vcon %1
 
 call src_lib %srcdir% %libname%
 call src_msg %srcdir% %libname%

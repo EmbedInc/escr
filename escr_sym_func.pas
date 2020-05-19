@@ -29,17 +29,11 @@ procedure escr_sym_new_ifunc (         {create new intrinsic function symbol}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
-var
-  sz: sys_int_adr_t;                   {total symbol descriptor size required}
-
 begin
-  sz := offset(escr_sym_t.ifunc_p) +   {total symbol descriptor size}
-    sizeof(escr_sym_t.ifunc_p);
   escr_sym_new (                       {create the basic symbol}
-    e, name, sz, global, e.sym_fun, sym_p, stat);
+    e, name, escr_sym_ifunc_k, global, sym_p, stat);
   if sym_p = nil then return;          {error ?}
 
-  sym_p^.stype := escr_sym_ifunc_k;    {this symbol is intrinsic function}
   sym_p^.ifunc_p := routine_p;         {save pointer to function routine}
   end;
 {
@@ -94,16 +88,10 @@ procedure escr_sym_new_func (          {create new user-defined function symbol}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
-var
-  sz: sys_int_adr_t;                   {total symbol descriptor size required}
-
 begin
-  sz := offset(escr_sym_t.func_line_p) + {total symbol descriptor size}
-    sizeof(escr_sym_t.func_line_p);
   escr_sym_new (                       {create the basic symbol}
-    e, name, sz, global, e.sym_fun, sym_p, stat);
+    e, name, escr_sym_func_k, global, sym_p, stat);
   if sym_p = nil then return;          {error ?}
 
-  sym_p^.stype := escr_sym_func_k;     {this symbol is user defined function}
   sym_p^.func_line_p := line_p;        {save pointer to first line of definition}
   end;

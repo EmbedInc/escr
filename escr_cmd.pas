@@ -133,15 +133,18 @@ done_cmdline:                          {done reading command line except initial
     end;
   return;                              {use the existing symbol}
 {
-*   Create a new symbol according to the specifications.
+*   Create a new variable according to the specifications.
 }
 make_new:                              {a new symbol needs to be created}
   escr_sym_new_var (                   {create the variable}
     e, name, dtype, global, sym_p, stat);
   if sys_error(stat) then return;
   if hval then begin                   {set new variable to the specified initial value ?}
-    if not escr_get_val_dtype (e, sym_p^.var_val, stat) {get value and convert to var's data type}
+    if not escr_get_val (e, val, stat) {get the initial value}
       then goto err_missing;
+    if sys_error(stat) then return;
+    escr_vcon_set (                    {set the variable value}
+      e, sym_p^.var_val, val, stat);
     end;
   return;
 {
@@ -163,6 +166,7 @@ procedure escr_cmd_set (
 var
   sym_p: escr_sym_p_t;                 {pointer to symbol descriptor}
   name: string_var80_t;                {symbol name}
+  val: escr_val_t;                     {value to set variable to}
 
 label
   err_missing;
@@ -190,8 +194,11 @@ begin
     return;
     end;
 
-  if not escr_get_val_dtype (e, sym_p^.var_val, stat) {get value and convert to var's dtype}
+  if not escr_get_val (e, val, stat)   {get the value into VAL}
     then goto err_missing;
+  if sys_error(stat) then return;
+  escr_vcon_set (                      {set the variable value to VAL}
+    e, sym_p^.var_val, val, stat);
   return;
 {
 *   Abort due to missing required parameter.
@@ -252,7 +259,7 @@ begin
 }
   escr_get_args_str (e, str, stat);    {get concatenation of remaining arguments}
   if sys_error(stat) then return;
-  string_append (sym_p^.var_val.str, str); {do the append}
+  strflex_append_vstr (sym_p^.var_val.stf, str); {do the append}
   end;
 {
 ********************************************************************************
@@ -269,7 +276,6 @@ var
   sym_p: escr_sym_p_t;                 {pointer to constant symbol}
   p: string_index_t;                   {saved parse index}
   val: escr_val_t;                     {value of the new constant}
-  len: sys_int_machine_t;              {extra length argument for data type}
   name: string_var80_t;                {constant name}
   tk: string_var80_t;                  {scratch token}
 
@@ -302,18 +308,12 @@ begin
   escr_val_init (e, val.dtype, val);   {set up VAL for the indicated data type}
   if not escr_get_val_dtype (e, val, stat) {get the constant's value}
     then goto err_missing;
+  if sys_error(stat) then return;
 
-  len := 0;                            {init data type length parameter to arbitrary value}
-  case val.dtype of                    {check for data types that use LEN}
-escr_dtype_str_k: begin                {STRING}
-      len := val.str.len;              {number of characters in the string}
-      end;
-    end;
   escr_sym_new_const (                 {create the new constant symbol}
-    e, name, val.dtype, len, true, sym_p, stat);
+    e, name, val.dtype, true, sym_p, stat);
   if sys_error(stat) then return;
-  escr_val_copy (e, val, sym_p^.const_val, stat); {copy the value into the constant descriptor}
-  if sys_error(stat) then return;
+  escr_vcon_set (e, sym_p^.const_val, val, stat); {copy value into constant}
   return;
 {
 *   Abort due to missing required parameter.
@@ -455,13 +455,13 @@ procedure escr_cmd_sylist (
 {
 ********************
 *
-*   Local subroutine WRITE_VAL (VAL)
+*   Local subroutine WRITE_VAL (VCON)
 *   This subroutine is local to ESCR_CMD_SYLIST.
 *
-*   Write a representation of the data value VAL into the output line buffer.
+*   Write a representation of the data value VCON into the output line buffer.
 }
-procedure write_val (                  {write data value to output line buffer}
-  in      val: escr_val_t);            {the value}
+procedure write_vcon (                 {write data value to output line buffer}
+  in      vcon: escr_vcon_t);          {the value}
   val_param; internal;
 
 var
@@ -470,43 +470,43 @@ var
 begin
   tk.max := size_char(tk.str);         {init local var string}
 
-  case val.dtype of                    {what is the data type ?}
+  case vcon.dtype of                   {what is the data type ?}
 
 escr_dtype_bool_k: begin               {BOOLEAN}
       string_appends (e.obuf, 'BOOL = '(0));
-      if val.bool
+      if vcon.bool
         then string_appends (e.obuf, 'TRUE'(0))
         else string_appends (e.obuf, 'FALSE'(0));
       end;
 
 escr_dtype_int_k: begin
       string_appends (e.obuf, 'INTEGER = '(0));
-      string_f_int32h (tk, val.int);
+      string_f_int32h (tk, vcon.int);
       string_append (e.obuf, tk);
       string_append1 (e.obuf, 'h');
       end;
 
 escr_dtype_fp_k: begin
       string_appends (e.obuf, 'REAL = '(0));
-      escr_str_from_fp (e, val.fp, tk);
+      escr_str_from_fp (e, vcon.fp, tk);
       string_append (e.obuf, tk);
       end;
 
 escr_dtype_str_k: begin
       string_appends (e.obuf, 'STRING = "'(0));
-      string_append (e.obuf, val.str);
+      strflex_append_t_vstr (vcon.stf, e.obuf);
       string_appends (e.obuf, '"'(0));
       end;
 
 escr_dtype_time_k: begin
       string_appends (e.obuf, 'TIME = '(0));
-      escr_str_from_time (e, val.time, tk);
+      escr_str_from_time (e, vcon.time, tk);
       string_append (e.obuf, tk);
       end;
 
 otherwise
     string_appends (e.obuf, '(data type '(0));
-    string_f_int (tk, ord(val.dtype));
+    string_f_int (tk, ord(vcon.dtype));
     string_append (e.obuf, tk);
     string_appends (e.obuf, ' unknown)'(0));
     end;                               {end of data type cases}
@@ -543,12 +543,12 @@ begin
 
 escr_sym_var_k: begin                  {symbol is a variable}
         string_appends (e.obuf, ' variable '(0));
-        write_val (sym_p^.var_val);
+        write_vcon (sym_p^.var_val);
         end;
 
 escr_sym_const_k: begin                {symbol is a constant}
         string_appends (e.obuf, ' constant '(0));
-        write_val (sym_p^.const_val);
+        write_vcon (sym_p^.const_val);
         end;
 
 escr_sym_subr_k: begin                 {user-defined subroutine}

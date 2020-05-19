@@ -1,6 +1,6 @@
-{   Subroutine management.
+{   Commands that manage functions.
 }
-module escr_cmd_subr;
+module escr_cmd_func;
 define escr_cmd_function;
 define escr_cmd_endfunc;
 define escr_cmd_funcval;
@@ -23,7 +23,6 @@ procedure escr_cmd_function (
 
 var
   name: string_var80_t;                {function name}
-  sz: sys_int_adr_t;                   {size of new descriptor}
   sym_p: escr_sym_p_t;                 {pointer to new function name symbol}
   stat2: sys_err_t;                    {to avoid corrupting STAT}
 
@@ -44,21 +43,13 @@ begin
     goto error;
     end;
 
-  sz :=                                {make size of whole function symbol}
-    offset(escr_sym_t.func_line_p) + size_min(escr_sym_t.func_line_p);
-  escr_sym_new (                       {create new symbol for function name}
+  escr_sym_new_func (                  {create new symbol for function name}
     e,                                 {ESCR library use state}
     name,                              {bare symbol name}
-    sz,                                {size of whole symbol descriptor}
+    e.exblock_p^.inpos_p^.last_p,      {pointer to function starting line}
     false,                             {make symbol local, not global}
-    e.sym_fun,                         {symbol table to create new symbol in}
     sym_p,                             {returned pointer to the new symbol}
     stat);
-  if sys_error(stat) then goto error;
-
-  sym_p^.stype := escr_sym_func_k;     {this symbol is a function name}
-  sym_p^.func_line_p :=                {save pointer to function definition line}
-    e.exblock_p^.inpos_p^.last_p;
   return;
 
 error:                                 {error after inhibit created, STAT set}

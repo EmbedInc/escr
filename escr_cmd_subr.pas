@@ -1,4 +1,4 @@
-{   Subroutine management.
+{   Commands that manage subroutines.
 }
 module escr_cmd_subr;
 define escr_cmd_subroutine;
@@ -23,7 +23,6 @@ procedure escr_cmd_subroutine (
 
 var
   name: string_var80_t;                {subroutine name}
-  sz: sys_int_adr_t;                   {size of new descriptor}
   sym_p: escr_sym_p_t;                 {pointer to new subroutine name symbol}
   stat2: sys_err_t;                    {to avoid corrupting STAT}
 
@@ -44,13 +43,10 @@ begin
     goto error;
     end;
 
-  sz :=                                {make size of whole subroutine symbol}
-    offset(escr_sym_t.subr_line_p) + size_min(escr_sym_t.subr_line_p);
   escr_sym_new (                       {create new symbol for subroutine name}
-    e, name, sz, false, e.sym_sub, sym_p, stat);
+    e, name, escr_sym_subr_k, false, sym_p, stat);
   if sys_error(stat) then goto error;
 
-  sym_p^.stype := escr_sym_subr_k;     {this symbol is a subroutine name}
   sym_p^.subr_line_p :=                {save pointer to subroutine definition line}
     e.exblock_p^.inpos_p^.last_p;
   return;

@@ -427,7 +427,6 @@ begin
       e,
       name,                            {variable name}
       escr_dtype_int_k,                {integer}
-      0,                               {length, unused}
       true,                            {global}
       sym_p,                           {returned pointer to new variable}
       stat);

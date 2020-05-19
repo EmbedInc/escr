@@ -410,49 +410,47 @@ error:                                 {error parsing symbol, not a valid symbol
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_NEW (E, NAME, SZ, GLOBAL, SYTABLE, SYM_P, STAT)
+*   Subroutine ESCR_SYM_NEW (E, NAME, ITYPE, GLOBAL, SYM_P, STAT)
 *
-*   Low level routine to add or create a new version of a symbol in a specific
-*   symbol table.  If the symbol previously exists, the new version will be
-*   added immediately after the current version, and made current.  If the
-*   existing current version was not the last, then later versions are
-*   renumbered so that each newer version is numbered 1 more than the previous
-*   version.
+*   Low level routine to add or create a new version of a specific symbol type.
+*   If the symbol previously exists, the new version will be added immediately
+*   after the current version, and made current.  If the existing current
+*   version was not the last, then later versions are renumbered so that each
+*   newer version is numbered 1 more than the previous version.
+*
+*   The new symbol is filled in except for the type-specific information.  The
+*   memory is allocated for the type-specific data, but is otherwise not set.
 *
 *   NAME is the name of the symbol to create or add a new version of.  It must
 *   be a valid bare symbol name.
 *
-*   SZ is the size of the whole symbol descriptor to create.  This varies
-*   depending on the type of symbol and the data associated with it.
+*   ITYPE is the internal symbol type.  This also implicitly specifies the
+*   symbol table to add the symbol to.
 *
 *   GLOBAL indicates that the new symbol is to have global scope.  When false, a
 *   local symbol is created that will automatically be deleted when the current
 *   execution block ends.  All symbols in the top block are created global
 *   regardless of the value of GLOBAL.
 *
-*   SYTABLE is the symbol table to create the new symbol in.  For example,
-*   E.SYM_VAR is the symbol table for variables and constants.
-*
-*   SYM_P is returned pointing to the new symbol descriptor.  It will be filled
-*   in except for the symbol type and fields that depend on the symbol type.
-*   SYM_P is returned NIL on any error.  In that case STAT will be set to
-*   indicate the error.
+*   SYM_P is returned pointing to the new symbol descriptor.  SYM_P is returned
+*   NIL on any error.  In that case STAT will be set to indicate the error.
 *
 *   STAT is always the normal status when returning with a new symbol, as
-*   indicated by SYM_P not being the NIL pointer.  STAT will always indicate a
-*   error when SYM_P is NIL.
+*   indicated by SYM_P not being NIL.  STAT will always indicate a error when
+*   SYM_P is NIL.
 }
 procedure escr_sym_new (               {create new symbol}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {bare symbol name}
-  in      sz: sys_int_adr_t;           {size of the whole symbol descriptor}
+  in      itype: escr_sym_k_t;         {internal symbol type}
   in      global: boolean;             {create global, not local symbol}
-  in out  sytable: escr_sytable_t;     {symbol table to add symbol to}
-  out     sym_p: escr_sym_p_t;         {returned pointer to symbol info}
+  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
+  table_p: escr_sytable_p_t;           {pnt to symbol table to create symbol in}
+  sz: sys_int_adr_t;                   {size of new symbol descriptor}
   name_p: string_var_p_t;              {pointer to name in symbol table}
   ent_p: escr_sytable_data_p_t;        {pointer to data in symbol table}
   vern: sys_int_machine_t;             {1-N version number of the new symbol}
@@ -473,9 +471,69 @@ begin
     sys_stat_parm_vstr (name, stat);
     return;
     end;
+{
+*   Determine the symbol table the new symbol will be in, and the overall size
+*   of the symbol descriptor.  These variables will be set:
+*
+*     TABLE_P  -  Pointer to the symbol table to create new symbol in.
+*
+*     SZ  -  Size of the new symbol descriptor.
+}
+  case itype of                        {what type of symbol is being created ?}
+escr_sym_var_k: begin
+      table_p := addr(e.sym_var);
+      sz := offset(escr_sym_t.var_val) + sizeof(escr_sym_t.var_val);
+      end;
+escr_sym_const_k: begin
+      table_p := addr(e.sym_var);
+      sz := offset(escr_sym_t.var_val) + sizeof(escr_sym_t.var_val);
+      end;
+escr_sym_subr_k: begin
+      table_p := addr(e.sym_sub);
+      sz := offset(escr_sym_t.subr_line_p) + sizeof(escr_sym_t.subr_line_p);
+      end;
+escr_sym_isubr_k: begin
+      table_p := addr(e.sym_sub);
+      sz := offset(escr_sym_t.isubr_p) + sizeof(escr_sym_t.isubr_p);
+      end;
+escr_sym_cmd_k: begin
+      table_p := addr(e.sym_cmd);
+      sz := offset(escr_sym_t.cmd_line_p) + sizeof(escr_sym_t.cmd_line_p);
+      end;
+escr_sym_icmd_k: begin
+      table_p := addr(e.sym_cmd);
+      sz := offset(escr_sym_t.icmd_p) + sizeof(escr_sym_t.icmd_p);
+      end;
+escr_sym_func_k: begin
+      table_p := addr(e.sym_fun);
+      sz := offset(escr_sym_t.func_line_p) + sizeof(escr_sym_t.func_line_p);
+      end;
+escr_sym_ifunc_k: begin
+      table_p := addr(e.sym_fun);
+      sz := offset(escr_sym_t.ifunc_p) + sizeof(escr_sym_t.ifunc_p);
+      end;
+escr_sym_macro_k: begin
+      table_p := addr(e.sym_mac);
+      sz := offset(escr_sym_t.macro_line_p) + sizeof(escr_sym_t.macro_line_p);
+      end;
+escr_sym_imacro_k: begin
+      table_p := addr(e.sym_mac);
+      sz := offset(escr_sym_t.imacro_p) + sizeof(escr_sym_t.imacro_p);
+      end;
+escr_sym_label_k: begin
+      table_p := addr(e.sym_lab);
+      sz := offset(escr_sym_t.label_line_p) + sizeof(escr_sym_t.label_line_p);
+      end;
+escr_sym_src_k: begin
+      table_p := addr(e.sym_src);
+      sz := offset(escr_sym_t.src_p) + sizeof(escr_sym_t.src_p);
+      end;
+otherwise
+    escr_err_istype_unimp (e, itype, 'ESCR_SYM_NEW');
+    end;
 
   string_hash_pos_lookup (             {find position of name in symbol table}
-    sytable.hash,                      {hash table to find position in}
+    table_p^.hash,                     {hash table to find position in}
     name,                              {name to find position of}
     pos,                               {returned position}
     found);                            {TRUE if name found in table}
@@ -529,7 +587,7 @@ begin
     *   Create the new symbol version descriptor.
     }
     util_mem_grab (                    {allocate memory for new symbol descriptor}
-      sz, sytable.mem_p^, true, sym_p);
+      sz, table_p^.mem_p^, true, sym_p);
     if sym_p = nil then begin
       sys_stat_set (escr_subsys_k, escr_err_nomem_k, stat);
       sys_stat_parm_int (sz, stat);
@@ -539,12 +597,13 @@ begin
     {
     *   Fill in the new descriptor.
     }
-    sym_p^.table_p := addr(sytable);   {point to symbol table this symbol is in}
+    sym_p^.table_p := table_p;         {point to symbol table this symbol is in}
     sym_p^.ent_p := ent_p;             {point to symbol table data for this symbol}
     sym_p^.prev_p := ent_p^.curr_p;    {point back to previous version of this symbol}
     sym_p^.name_p := name_p;           {point to name in symbol table}
     sym_p^.vern := vern;               {set the 1-N version number}
     sym_p^.scope_p := nil;             {init to global scope}
+    sym_p^.stype := itype;             {set internal symbol type}
     {
     *   Link this symbol into the chain after PREV_P^.
     }
@@ -588,36 +647,28 @@ local:                                 {create symbol as local}
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_NEW_CONST (E, NAME, DTYPE, LEN, GLOBAL, SYM_P, STAT)
+*   Subroutine ESCR_SYM_NEW_CONST (E, NAME, DTYPE, GLOBAL, SYM_P, STAT)
 *
-*   Create a new symbol for a constant.  NAME is the name of the new symbol,
-*   DTYPE is the data type, and LEN is an extra argument for the data type.
-*   See the VAL_SIZE description for details of LEN.  The new symbol will be a
-*   global symbol when GLOBAL is TRUE, and local to the current execution block
-*   when GLOBAL is FALSE.  SYM_P is the returned pointer to the new symbol.  The
-*   data value will be initialized to its default value.
+*   Create a new symbol for a constant.  NAME is the name of the new symbol.
+*   DTYPE is the data type.  The new symbol will be a global symbol when GLOBAL
+*   is TRUE, and local to the current execution block when GLOBAL is FALSE.
+*   SYM_P is the returned pointer to the new symbol.  The data value will be
+*   initialized to its default value.
 }
 procedure escr_sym_new_const (         {create new symbol for a constant}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
   in      dtype: escr_dtype_k_t;       {data type of the constant}
-  in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
-  out     sym_p: escr_sym_p_t;         {returned pointer to symbol info}
+  out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
-var
-  sz: sys_int_adr_t;                   {total symbol descriptor size required}
-
 begin
-  sz := offset(escr_sym_t.const_val) + {total symbol descriptor size}
-    escr_val_size (e, dtype, len);
   escr_sym_new (                       {create the basic symbol}
-    e, name, sz, global, e.sym_var, sym_p, stat);
+    e, name, escr_sym_const_k, global, sym_p, stat);
   if sym_p = nil then return;          {error ?}
 
-  sym_p^.stype := escr_sym_const_k;    {set symbol type}
   sym_p^.const_val.dtype := dtype;     {set data type of this constant}
   case dtype of                        {what is the data type ?}
 escr_dtype_bool_k: begin               {boolean}
@@ -630,12 +681,10 @@ escr_dtype_fp_k: begin                 {floating point}
       sym_p^.const_val.fp := 0.0;
       end;
 escr_dtype_str_k: begin                {string}
-      sym_p^.const_val.str.max := len;
-      sym_p^.const_val.str.len := 0;
-      sym_p^.const_val.str.str[1] := chr(0);
+      strflex_str_create (e.sfmem, sym_p^.const_val.stf);
       end;
 escr_dtype_time_k: begin               {time}
-      sym_p^.const_val.time := sys_clock;
+      sym_p^.const_val.time := sys_clock_from_fp_abs (0.0);
       end;
 otherwise
     escr_err_dtype_unimp (e, dtype, 'ESCR_SYM_NEW_CONST');
@@ -644,36 +693,28 @@ otherwise
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_SYM_NEW_VAR (E, NAME, DTYPE, LEN, GLOBAL, SYM_P, STAT)
+*   Subroutine ESCR_SYM_NEW_VAR (E, NAME, DTYPE, GLOBAL, SYM_P, STAT)
 *
-*   Create a new symbol for a variable.  NAME is the name of the new symbol,
-*   DTYPE is the data type, and LEN is an extra argument for the data type.
-*   See the VAL_SIZE description for details of LEN.  The new symbol will be a
-*   global symbol when GLOBAL is TRUE, and local to the current execution block
-*   when GLOBAL is FALSE.  SYM_P is the returned pointer to the new symbol.  The
-*   data value will be initialized to its default value.
+*   Create a new symbol for a variable.  NAME is the name of the new symbol.
+*   DTYPE is the data type.  The new symbol will be a global symbol when GLOBAL
+*   is TRUE, and local to the current execution block when GLOBAL is FALSE.
+*   SYM_P is the returned pointer to the new symbol.  The data value will be
+*   initialized to its default value.
 }
 procedure escr_sym_new_var (           {create new symbol for a variable}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
   in      dtype: escr_dtype_k_t;       {data type of the variable}
-  in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
   out     sym_p: escr_sym_p_t;         {returned pointer to symbol info}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
-var
-  sz: sys_int_adr_t;                   {total symbol descriptor size required}
-
 begin
-  sz := offset(escr_sym_t.var_val) +   {total symbol descriptor size}
-    escr_val_size (e, dtype, len);
   escr_sym_new (                       {create the basic symbol}
-    e, name, sz, global, e.sym_var, sym_p, stat);
+    e, name, escr_sym_var_k, global, sym_p, stat);
   if sym_p = nil then return;          {error ?}
 
-  sym_p^.stype := escr_sym_var_k;      {set symbol type}
   sym_p^.var_val.dtype := dtype;       {set data type of this variable}
   case dtype of                        {what is the data type ?}
 escr_dtype_bool_k: begin               {boolean}
@@ -686,15 +727,13 @@ escr_dtype_fp_k: begin                 {floating point}
       sym_p^.var_val.fp := 0.0;
       end;
 escr_dtype_str_k: begin                {string}
-      sym_p^.var_val.str.max := len;
-      sym_p^.var_val.str.len := 0;
-      sym_p^.var_val.str.str[1] := chr(0);
+      strflex_str_create (e.sfmem, sym_p^.var_val.stf);
       end;
 escr_dtype_time_k: begin               {time}
-      sym_p^.var_val.time := sys_clock_from_fp_rel (0.0);
+      sym_p^.var_val.time := sys_clock_from_fp_abs (0.0);
       end;
 otherwise
-    escr_err_dtype_unimp (e, dtype, 'SYM_NEW_VAR');
+    escr_err_dtype_unimp (e, dtype, 'ESCR_SYM_NEW_VAR');
     end;
   end;
 {

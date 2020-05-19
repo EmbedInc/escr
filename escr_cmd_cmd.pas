@@ -1,6 +1,6 @@
-{   Subroutine management.
+{   Commands that manage commands.
 }
-module escr_cmd_subr;
+module escr_cmd_cmd;
 define escr_cmd_command;
 define escr_cmd_endcmd;
 %include 'escr2.ins.pas';
@@ -21,7 +21,6 @@ procedure escr_cmd_command (
 
 var
   name: string_var80_t;                {command name}
-  sz: sys_int_adr_t;                   {size of new descriptor}
   sym_p: escr_sym_p_t;                 {pointer to new command name symbol}
   stat2: sys_err_t;                    {to avoid corrupting STAT}
 
@@ -42,21 +41,13 @@ begin
     goto error;
     end;
 
-  sz :=                                {make size of whole command symbol}
-    offset(escr_sym_t.cmd_line_p) + size_min(escr_sym_t.cmd_line_p);
-  escr_sym_new (                       {create new symbol for command name}
+  escr_sym_new_cmd (                   {create the new command symbol}
     e,                                 {ESCR library use state}
     name,                              {bare symbol name}
-    sz,                                {size of whole symbol descriptor}
+    e.exblock_p^.inpos_p^.last_p,      {starting line of command}
     false,                             {make symbol local, not global}
-    e.sym_cmd,                         {symbol table to create new symbol in}
     sym_p,                             {returned pointer to the new symbol}
     stat);
-  if sys_error(stat) then goto error;
-
-  sym_p^.stype := escr_sym_cmd_k;      {this symbol is a command name}
-  sym_p^.cmd_line_p :=                 {save pointer to command definition line}
-    e.exblock_p^.inpos_p^.last_p;
   return;
 
 error:                                 {error after inhibit created, STAT set}

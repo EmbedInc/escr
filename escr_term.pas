@@ -144,9 +144,7 @@ begin
 *   indicates error.  STAT is not set to error when there is no term.
 *
 *   VAL is assumed to be completely uninitialized and the full VAL_T structure
-*   as defined in the include file.  VAL must not be a permanent VAL structure
-*   that may have less memory allocated, such as used to hold the value of a
-*   variable or constant.
+*   as defined in the include file.
 }
 function escr_term_val (               {get value of next term in input string}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -227,13 +225,11 @@ begin
   if sym_p = nil then goto not_sym;    {no such symbol ?}
   case sym_p^.stype of                 {what kind of symbol is it ?}
 escr_sym_var_k: begin                  {symbol is a variable}
-      escr_val_init (e, sym_p^.var_val.dtype, val); {set up VAL for this data type}
-      escr_val_copy (e, sym_p^.var_val, val, stat); {return the variable's value}
+      escr_vcon_val (e, sym_p^.var_val, val); {return the variable's value}
       return;
       end;
 escr_sym_const_k: begin                {symbol is a constant}
-      escr_val_init (e, sym_p^.const_val.dtype, val); {set up VAL for this data type}
-      escr_val_copy (e, sym_p^.const_val, val, stat); {return the constant's value}
+      escr_vcon_val (e, sym_p^.const_val, val); {return the constant's value}
       return;
       end;
 otherwise                              {this symbol can't be used as a term}

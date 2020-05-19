@@ -29,17 +29,11 @@ procedure escr_sym_new_icmd (          {create new intrinsic command symbol}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
-var
-  sz: sys_int_adr_t;                   {total symbol descriptor size required}
-
 begin
-  sz := offset(escr_sym_t.icmd_p) +    {total symbol descriptor size}
-    sizeof(escr_sym_t.icmd_p);
   escr_sym_new (                       {create the basic symbol}
-    e, name, sz, global, e.sym_cmd, sym_p, stat);
+    e, name, escr_sym_icmd_k, global, sym_p, stat);
   if sym_p = nil then return;          {error ?}
 
-  sym_p^.stype := escr_sym_icmd_k;     {this symbol is intrinsic command}
   sym_p^.icmd_p := routine_p;          {save pointer to command routine}
   end;
 {
@@ -94,16 +88,10 @@ procedure escr_sym_new_cmd (           {create new user-defined command symbol}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
-var
-  sz: sys_int_adr_t;                   {total symbol descriptor size required}
-
 begin
-  sz := offset(escr_sym_t.cmd_line_p) + {total symbol descriptor size}
-    sizeof(escr_sym_t.cmd_line_p);
   escr_sym_new (                       {create the basic symbol}
-    e, name, sz, global, e.sym_cmd, sym_p, stat);
+    e, name, escr_sym_cmd_k, global, sym_p, stat);
   if sym_p = nil then return;          {error ?}
 
-  sym_p^.stype := escr_sym_cmd_k;      {this symbol is user defined command}
   sym_p^.cmd_line_p := line_p;         {save pointer to first line of definition}
   end;

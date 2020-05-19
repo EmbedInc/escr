@@ -7,10 +7,11 @@ define escr_err_val;
 define escr_err_parm_bad;
 define escr_err_parm_last_bad;
 define escr_err_dtype_unimp;
+define escr_err_istype_unimp;
 define escr_err_sym_not_found;
 %include 'escr2.ins.pas';
 {
-****************************************************************************
+********************************************************************************
 *
 *   Subroutine ESCR_ERR_ATLINE (E, SUBSYS, MSG, PARMS, N_PARMS)
 *
@@ -71,7 +72,7 @@ begin
   sys_bomb;                            {exit the program with error status}
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Subroutine ESCR_ERR_ATLINE_ABORT (E, STAT, SUBSYS, MSG, PARMS, N_PARMS)
 *
@@ -95,7 +96,7 @@ begin
   escr_err_atline (e, subsys, msg, parms, n_parms); {indicate source line and bomb}
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Subroutine ESCR_ERR_VAL (E, VAL)
 *
@@ -139,7 +140,7 @@ otherwise
     end;
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Subroutine ESCR_ERR_PARM_BAD (E, PARM)
 *
@@ -164,7 +165,7 @@ begin
   escr_err_atline (e, 'escr', 'parm_bad_cmd', msg_parm, 2);
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Subroutine ESCR_ERR_PARM_LAST_BAD (E)
 *
@@ -179,7 +180,7 @@ begin
   escr_err_parm_bad (e, e.parse_p^.lparm);
   end;
 {
-****************************************************************************
+********************************************************************************
 *
 *   Subroutine ESCR_ERR_DTYPE_UNIMP (E, DTYPE, ROUTINE)
 *
@@ -203,4 +204,31 @@ begin
   sys_msg_parm_int (msg_parm[1], ord(dtype));
   sys_msg_parm_str (msg_parm[2], routine);
   escr_err_atline (e, 'escr', 'err_dtype_unimp', msg_parm, 2);
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_ERR_ISTYPE_UNIMP (E, ISTYPE, ROUTINE)
+*
+*   Indicate an internal error has occurred where the internal symbol type ID
+*   ISTYPE is not supported in routine ROUTINE.  The program will be aborted
+*   with error.
+}
+procedure escr_err_istype_unimp (      {unimp symbol type, internal error}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      itype: escr_sym_k_t;         {unimplemented internal symbol type}
+  in      routine: string);            {name of the routine where data type unimplemented}
+  options (val_param, noreturn);
+
+const
+  max_msg_parms = 2;                   {max parameters we can pass to a message}
+
+var
+  msg_parm:                            {parameter references for messages}
+    array[1..max_msg_parms] of sys_parm_msg_t;
+
+begin
+  sys_msg_parm_int (msg_parm[1], ord(istype));
+  sys_msg_parm_str (msg_parm[2], routine);
+  escr_err_atline (e, 'escr', 'err_istype_unimp', msg_parm, 2);
   end;

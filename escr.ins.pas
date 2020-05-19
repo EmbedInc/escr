@@ -215,6 +215,7 @@ type
     out   stat: sys_err_t);            {completion status}
     val_param;
 
+  escr_val_p_t = ^escr_val_t;
   escr_val_t = record                  {any data value}
     dtype: escr_dtype_k_t;             {data type}
     case escr_dtype_k_t of             {different data for each data type}
@@ -799,6 +800,12 @@ procedure escr_err_parm_bad (          {bomb with bad parameter to command error
   in      parm: univ string_var_arg_t); {the offending parameter}
   options (val_param, noreturn, extern);
 
+procedure escr_err_istype_unimp (      {unimp symbol type, internal error}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      istype: escr_sym_k_t;        {unimplemented internal symbol type}
+  in      routine: string);            {name of the routine where data type unimplemented}
+  options (val_param, noreturn, extern);
+
 procedure escr_err_val (               {show value and data type of offending value}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      val: escr_val_t);            {the value}
@@ -1194,9 +1201,8 @@ function escr_sym_name_sytype (        {interpret symbol type keyword}
 procedure escr_sym_new (               {create new symbol}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {bare symbol name}
-  in      sz: sys_int_adr_t;           {size of the whole symbol descriptor}
+  in      itype: escr_sym_k_t;         {internal symbol type}
   in      global: boolean;             {create global, not local symbol}
-  in out  sytable: escr_sytable_t;     {symbol table to add symbol to}
   out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
@@ -1205,7 +1211,6 @@ procedure escr_sym_new_const (         {create new symbol for a constant}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
   in      dtype: escr_dtype_k_t;       {data type of the constant}
-  in      len: sys_int_machine_t;      {extra length parameter used for some data types}
   in      global: boolean;             {create global, not local symbol}
   out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}
@@ -1397,6 +1402,25 @@ procedure escr_val_text (              {make output language text representation
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      val: escr_val_t;             {the source value}
   in out  str: univ string_var_arg_t); {returned string}
+  val_param; extern;
+
+procedure escr_vcon_set (              {set VCON to a value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  vcon: escr_vcon_t;           {set to new value, must be initialized}
+  in      val: escr_val_t;             {input val, must be convertable to VCON dtype}
+  out     stat: sys_err_t);            {completion status, error on dtype mismatch}
+  val_param; extern;
+
+procedure esrc_vcon_init (             {init variable/constant data descriptor}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     vcon: escr_vcon_t;           {set to default value for the data type}
+  in      dtype: escr_dtype_k_t);      {data type of the variable or constant}
+  val_param; extern;
+
+procedure escr_vcon_val (              {convert VCON to VAL}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      vcon: escr_vcon_t;           {input value}
+  out     val: escr_val_t);            {returned value}
   val_param; extern;
 
 procedure escr_write_obuf (            {write line to output file from OBUF}

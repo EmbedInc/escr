@@ -27,3 +27,4 @@ escr_term.obj
 escr_ulab.obj
 escr_util.obj
 escr_val.obj
+escr_vcon.obj
