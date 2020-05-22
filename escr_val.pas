@@ -48,7 +48,7 @@ escr_dtype_time_k: begin               {to TIME}
     oval.time := escr_val_time (e, ival, stat);
     end;
 otherwise                              {unimplemented output data type}
-    escr_err_dtype_unimp (e, oval.dtype, 'VAL_COPY');
+    escr_err_dtype_unimp (e, oval.dtype, 'ESCR_VAL_COPY');
     end;                               {end of output data type cases}
   end;
 {

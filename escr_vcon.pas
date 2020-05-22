@@ -74,6 +74,7 @@ begin
   val_p := addr(val);                  {init to use VAL directly}
 
   if val.dtype <> vcon.dtype then begin {need to convert to target data type ?}
+    escr_val_init (e, vcon.dtype, val2); {init VAL2 to the target data type}
     escr_val_copy (e, val, val2, stat); {convert to target data type in VAL2}
     if sys_error(stat) then return;
     val_p := addr(val2);               {copy from VAL2, not VAL}
