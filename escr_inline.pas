@@ -2,6 +2,7 @@
 }
 module escr_inline;
 define escr_inline_expand_line;
+define escr_inline_expand_rest;
 %include 'escr2.ins.pas';
 {
 *   Private routines used inside this module only.
@@ -49,6 +50,39 @@ begin
     lin,                               {input line to expand}
     1,                                 {input line index to start at}
     lot,                               {output string to append expansion to}
+    stat);
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_INLINE_EXPAND_REST (E, STAT)
+*
+*   Expand all inline functions on the remainder of the current input line.  The
+*   input line is altered in place.
+}
+procedure escr_inline_expand_rest (    {expand functions on rest of input line}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+var
+  iline: string_var8192_t;             {copy of input line segment to expand}
+
+begin
+  iline.max := size_char(iline.str);   {init local var string}
+
+  string_substr (                      {get the part of the input line to expand}
+    e.parse_p^.ibuf,                   {input string}
+    e.parse_p^.ip,                     {substring start index}
+    e.parse_p^.ibuf.len,               {substring end index}
+    iline);                            {result}
+  e.parse_p^.ibuf.len := e.parse_p^.ip - 1; {remove part to expand from input string}
+
+  inline_expand_lrest (                {expand substring, append to input line}
+    e,                                 {ESCR system use state}
+    iline,                             {the string to expand functions in}
+    1,                                 {input line index at which to start}
+    e.parse_p^.ibuf,                   {string to append expansion to}
     stat);
   end;
 {

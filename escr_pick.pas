@@ -102,6 +102,9 @@ begin
     e, e.exblock_p^.prev_p^.inpos_p^.line_p, stat);
   if sys_error(stat) then return;
 
+  escr_inh_new (e);                    {add PICK CASE execution inhibit}
+  e.inhibit_p^.inhty := escr_inhty_case_k;
+
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
 {
 *   Add our private state to the execution block.
@@ -205,7 +208,11 @@ var
   blk_p: escr_exblock_p_t;             {pointer to the PICK block}
 
 begin
-  if e.inhibit_p^.inh then return;     {execution inhibited ?}
+  if e.inhibit_p^.inh then begin       {execution is currently inhibited ?}
+    if e.inhibit_p^.inhty <> escr_inhty_case_k then return; {not PICK CASE inhibit ?}
+    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the CASE inhibit}
+    if e.inhibit_p^.inh then return;   {execution inhibited at a higher level ?}
+    end;
 
   if not pick_block (e, blk_p) then begin {get pointer to PICK block}
     err_nopick (e, stat);
@@ -224,8 +231,67 @@ procedure escr_cmd_case (
   out     stat: sys_err_t);
   val_param;
 
+var
+  blk_p: escr_exblock_p_t;             {pointer to the PICK block}
+  inh_p: escr_inh_p_t;                 {pointer to execution inhibit}
+  casetrue: boolean;                   {CASE condition is TRUE}
+
+label
+  inhibit;
+
 begin
   sys_error_none (stat);               {init to no error occurred}
+{
+*   Check the execution inhibit.  Any previous inhibit due to PICK CASE ends
+*   here and will be evaluated anew.
+}
+  if e.inhibit_p^.inh then begin       {execution is currently inhibited ?}
+    if e.inhibit_p^.inhty <> escr_inhty_case_k then return; {not PICK CASE inhibit ?}
+    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the CASE inhibit}
+    if e.inhibit_p^.inh then return;   {execution inhibited at a higher level ?}
+    escr_inline_expand_rest (e, stat); {expand functions on rest of input line}
+    if sys_error(stat) then return;
+    end;
+
+  if not pick_block (e, blk_p) then begin {get pointer to the PICK block}
+    err_nopick (e, stat);
+    return;
+    end;
+{
+*   Check for the single allowed TRUE case has already been executed.  If so,
+*   then we don't need to evaluate the CASE condition.
+}
+  if
+      (blk_p^.pick_p^.mode = escr_pickmode_first_k) and {only one case allowed}
+      (blk_p^.pick_p^.ntrue > 0)       {that case has already been executed ?}
+      then begin
+    e.parse_p^.ip := e.parse_p^.ibuf.len + 1; {indicate input line used up}
+    goto inhibit;
+    end;
+{
+*   Execute this case if the condition is TRUE.
+}
+  blk_p^.pick_p^.ncase := blk_p^.pick_p^.ncase + 1; {one more CASE this PICK}
+
+  if not escr_get_bool (e, casetrue, stat) then begin {evaluate the condition}
+    if sys_error(stat) then return;    {already have hard error ?}
+    escr_stat_cmd_noarg (e, stat);     {set missing argument error}
+    return;
+    end;
+  if not escr_get_end (e, stat) then return; {no additional parameters allowed}
+
+  if not casetrue then goto inhibit;   {condition is false, don't execute case ?}
+
+  blk_p^.pick_p^.ntrue := blk_p^.pick_p^.ntrue + 1; {one more TRUE case}
+  return;                              {normal return point to execute the case}
+
+inhibit:                               {inhibit execution of this case}
+  inh_p := e.inhibit_p;                {init to lowest execution inhibit}
+  while true do begin                  {inhibit all up to and including CASE}
+    inh_p^.inh := true;                {inhibit execution at this level}
+    if inh_p^.inhty = escr_inhty_case_k then exit; {reached the CASE inhibit ?}
+    inh_p := inh_p^.prev_p;            {no, up to next higher inhibit}
+    end;
   end;
 {
 ********************************************************************************

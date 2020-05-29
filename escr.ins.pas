@@ -431,6 +431,7 @@ escr_exblock_pick_k: (                 {PICK ... ENDPICK}
     escr_inhty_root_k,                 {the root inhibit, execution always enabled}
     escr_inhty_blkdef_k,               {reading block defintion, not executing block}
     escr_inhty_if_k,                   {in IF construct}
+    escr_inhty_case_k,                 {CASE in PICK block}
     escr_inhty_blk_k);                 {in execution block}
 
   escr_inh_t = record                  {info about one execution inhibit}
@@ -1009,6 +1010,11 @@ procedure escr_inline_expand_line (    {expand all inline functions of a line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      lin: univ string_var_arg_t;  {input line, may contain inline functions}
   out     lot: string_var8192_t;       {output line, contains no inline functions}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_inline_expand_rest (    {expand functions on rest of input line}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
