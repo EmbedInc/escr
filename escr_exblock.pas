@@ -15,7 +15,8 @@ define escr_exblock_arg_add;
 define escr_exblock_arg_get_bl;
 define escr_exblock_arg_get;
 define escr_exblock_repeat;
-define escr_exblock_quit;
+define escr_exblock_quit_blks;
+define escr_exblock_quit_curr;
 define escr_exblock_parse_save;
 define escr_exblock_locals_off;
 define escr_exblock_locals_on;
@@ -421,15 +422,14 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_QUIT (E)
+*   Subroutine ESCR_EXBLOCK_QUIT_BLKS (E, BLK)
 *
-*   Effectively leave the current execution block.  Since we don't know where
-*   the block ends, all the execution inhibits within this block are turned on.
-*   This will cause us to just scan to the end of block command, then pop the
-*   block at that time.
+*   Stop executing the block BLK.  Execution is inhibited in all subordinate
+*   blocks and until the end of the block.
 }
-procedure escr_exblock_quit (          {stop executing in the current block}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
+procedure escr_exblock_quit_blks (     {stop executing a specific block}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in var  blk: escr_exblock_t);        {quit this block and all subordinate blocks}
   val_param;
 
 var
@@ -439,9 +439,26 @@ begin
   inh_p := e.inhibit_p;                {init to current execution inhibit}
   while true do begin                  {loop to base execution inhibit this block}
     inh_p^.inh := true;                {disable execution at this level}
-    if inh_p^.prev_p = e.exblock_p^.previnh_p then exit; {at base inhibit for the block ?}
+    if inh_p^.prev_p = blk.previnh_p then exit; {at base inhibit for the block ?}
     inh_p := inh_p^.prev_p;            {back to previous execution inhibit}
     end;
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_EXBLOCK_QUIT_CURR (E)
+*
+*   Effectively leave the current execution block.  Since we don't know where
+*   the block ends, all the execution inhibits within this block are turned on.
+*   This will cause us to just scan to the end of block command, then pop the
+*   block at that time.
+}
+procedure escr_exblock_quit_curr (     {stop executing in the current block}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param;
+
+begin
+  escr_exblock_quit_blks (e, e.exblock_p^);
   end;
 {
 ********************************************************************************

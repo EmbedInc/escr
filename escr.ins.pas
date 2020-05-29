@@ -95,8 +95,9 @@ const
   escr_err_ndirloop_k = 77;            {not in a DIR loop}
   escr_err_sytypemm_k = 78;            {sytype mismatch with name <name>}
   escr_err_pick_noopt_k = 79;          {PICK command missing <opt>}
-  escr_err_pick_nval_k = 80;           {PICK command missinv <value>}
+  escr_err_pickcmd_nval_k = 80;        {PICK command missing <value>}
   escr_err_notpick_k = 81;             {not in PICK block}
+  escr_err_pick_nval_k = 82;           {PICK block does not have a value}
 {
 *   Derived constants.
 }
@@ -905,7 +906,12 @@ procedure escr_exblock_new (           {create and install new execution block}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_exblock_quit (          {stop executing in the current block}
+procedure escr_exblock_quit_blks (     {stop executing a specific block}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in var  blk: escr_exblock_t);        {quit this block and all subordinate blocks}
+  val_param; extern;
+
+procedure escr_exblock_quit_curr (     {stop executing in the current block}
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 

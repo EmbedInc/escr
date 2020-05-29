@@ -46,7 +46,7 @@ begin
     end;
 
   if sys_error(stat) then return;
-  escr_exblock_quit (e);               {leave block without executing anything}
+  escr_exblock_quit_curr (e);          {leave block without executing anything}
   end;
 {
 ********************************************************************************
@@ -60,7 +60,7 @@ procedure escr_cmd_quit (
 
 begin
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
-  escr_exblock_quit (e);
+  escr_exblock_quit_curr (e);
   end;
 {
 ********************************************************************************

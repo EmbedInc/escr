@@ -30,6 +30,47 @@ define escr_ifun_pick;
 {
 ********************************************************************************
 *
+*   Local subroutine ERR_NOPICK (E, STAT)
+*
+*   Set error to "Not in a PICK/ENDPICK block".
+}
+procedure err_nopick (                 {set "not in PICK block" error}
+  in      e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t);            {returned error status}
+  val_param; internal;
+
+begin
+  sys_stat_set (escr_subsys_k, escr_err_notpick_k, stat); {not in PICK block}
+  end;
+{
+********************************************************************************
+*
+*   Local function PICK_BLOCK (E, BLK_P)
+*
+*   Find the inner-most PICK/ENDPICK block.  If a PICK block is found, then the
+*   function returns TRUE, and BLK_P will point to the block.  If no PICK block
+*   is found, then the function returns FALSE, and BLK_P is set to NIL.
+}
+function pick_block (                  {find the relevant PICK block}
+  in      e: escr_t;                   {state for this use of the ESCR system}
+  out     blk_p: escr_exblock_p_t)     {returned pointing to the PICK block}
+  :boolean;                            {block found, BLK_P not nil}
+  val_param; internal;
+
+begin
+  pick_block := true;                  {init to PICK block found}
+
+  blk_p := e.exblock_p;                {init to current block}
+  while blk_p <> nil do begin          {scan upwards thru block nesting hierarchy}
+    if blk_p^.bltype = escr_exblock_pick_k then return; {found lowest PICK block ?}
+    blk_p := blk_p^.prev_p;            {to next higher level block}
+    end;                               {back to check this new block}
+
+  pick_block := false;
+  end;
+{
+********************************************************************************
+*
 *   Subroutine ESCR_CMD_PICK (E, STAT)
 *
 *   Command PICK ALL|FIRST [WITH value]
@@ -94,7 +135,7 @@ begin
   if sys_error(stat) then goto abort1;
   if nkeyw <> 0 then begin             {something was there ?}
     if not escr_get_val (e, val, stat) then begin {get <value>}
-      sys_stat_set (escr_subsys_k, escr_err_pick_nval_k, stat);
+      sys_stat_set (escr_subsys_k, escr_err_pickcmd_nval_k, stat);
       goto abort1;
       end;
     if sys_error(stat) then goto abort1;
@@ -145,50 +186,6 @@ begin
   if not escr_get_end (e, stat) then return; {abort on extra parameter}
   if sys_error(stat) then return;
 
-
-
-  writeln ('Ending PICK block started on line ', e.exblock_p^.start_p^.lnum,
-    ' of file "', e.exblock_p^.start_p^.file_p^.tnam.str:e.exblock_p^.start_p^.file_p^.tnam.len, '"');
-
-  write ('  Mode ');
-  case e.exblock_p^.pick_p^.mode of
-escr_pickmode_all_k: write ('ALL');
-escr_pickmode_first_k: write ('FIRST');
-otherwise
-    write (ord(e.exblock_p^.pick_p^.mode));
-    end;
-  write (', value ');
-  if e.exblock_p^.pick_p^.val_p = nil
-    then begin
-      write ('--none--');
-      end
-    else begin
-      case e.exblock_p^.pick_p^.val_p^.dtype of
-escr_dtype_bool_k: begin
-          write ('BOOL ');
-          if e.exblock_p^.pick_p^.val_p^.bool
-            then write ('true')
-            else write ('false');
-          end;
-escr_dtype_int_k: begin
-          write ('INT ', e.exblock_p^.pick_p^.val_p^.int);
-          end;
-escr_dtype_fp_k: begin
-          write ('FP ', e.exblock_p^.pick_p^.val_p^.fp);
-          end;
-escr_dtype_str_k: begin
-          write ('STR ', e.exblock_p^.pick_p^.val_p^.str.str:e.exblock_p^.pick_p^.val_p^.str.len);
-          end;
-escr_dtype_time_k: begin
-          write ('TIME');
-          end;
-        end;
-      end
-    ;
-  writeln;
-
-
-
 del_block:                             {delete this block}
   e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}
     e.exblock_p^.inpos_p^.line_p;
@@ -204,8 +201,18 @@ procedure escr_cmd_quitpick (
   out     stat: sys_err_t);
   val_param;
 
+var
+  blk_p: escr_exblock_p_t;             {pointer to the PICK block}
+
 begin
-  sys_error_none (stat);               {init to no error occurred}
+  if e.inhibit_p^.inh then return;     {execution inhibited ?}
+
+  if not pick_block (e, blk_p) then begin {get pointer to PICK block}
+    err_nopick (e, stat);
+    return;
+    end;
+
+  escr_exblock_quit_blks (e, blk_p^);  {inhibit execution until end of PICK block}
   end;
 {
 ********************************************************************************
@@ -251,13 +258,70 @@ begin
 *
 *   Subroutine ESCR_IFUN_PICK (E, STAT)
 *
-*   Function PICK.
+*   Function PICK VAL|VALIS|NTRUE|NCASE|IN
 }
 procedure escr_ifun_pick(
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
+var
+  tk: string_var32_t;                  {scratch token}
+  keyn: sys_int_machine_t;             {number of keyword picked from list}
+  blk_p: escr_exblock_p_t;             {pointer to innermost PICK block}
+
+label
+  nopick;
+
 begin
+  tk.max := size_char(tk.str);         {init local var string}
   sys_error_none (stat);               {init to no error occurred}
+
+  if escr_ifn_get_keyw (e, tk, stat)
+    then begin
+      string_tkpick80 (tk,
+        'VAL VALIS NTRUE NCASE IN',
+        keyn);
+      end
+    else begin
+      keyn := 1;
+      end
+    ;
+  case keyn of                         {which option is it ?}
+
+1:  begin                              {PICK VAL (default)}
+      if not pick_block (e, blk_p) then goto nopick;
+      if blk_p^.pick_p^.val_p = nil then begin {no value supplied to PICK command ?}
+        sys_stat_set (escr_subsys_k, escr_err_pick_nval_k, stat);
+        return;
+        end;
+      escr_ifn_ret_val (e, blk_p^.pick_p^.val_p^); {return the value}
+      end;
+
+2:  begin                              {PICK VALIS}
+      if not pick_block (e, blk_p) then goto nopick;
+      escr_ifn_ret_bool (e, blk_p^.pick_p^.val_p <> nil);
+      end;
+
+3:  begin                              {PICK NTRUE}
+      if not pick_block (e, blk_p) then goto nopick;
+      escr_ifn_ret_int (e, blk_p^.pick_p^.ntrue);
+      end;
+
+4:  begin                              {PICK NCASE}
+      if not pick_block (e, blk_p) then goto nopick;
+      escr_ifn_ret_int (e, blk_p^.pick_p^.ncase);
+      end;
+
+5:  begin                              {PICK IN}
+      escr_ifn_ret_bool (e, pick_block (e, blk_p));
+      end;
+
+otherwise
+    escr_ifn_bad_keyw (e, tk, stat);   {set bad keyword error}
+    end;
+  return;                              {normal return point}
+
+nopick:                                {not in a PICK block}
+  err_nopick (e, stat);                {set Not in PICK block error}
   end;

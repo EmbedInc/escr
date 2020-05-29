@@ -253,6 +253,9 @@ msg err80
 msg err81
   lan english -def
     Not in a PICK block.
+msg err82
+  lan english -def
+    No value was supplied to PICK block.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.
