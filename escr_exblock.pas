@@ -72,7 +72,6 @@ begin
   bl_p^.locsym_p := nil;               {init to no local symbols created this block}
   bl_p^.inpos_p := nil;                {indicate source reading position not filled in}
   bl_p^.previnh_p := e.inhibit_p;      {save pointer to inhibit before this block}
-  bl_p^.loop_p := nil;                 {init to block is not a explicit loop}
   bl_p^.parse_p := nil;                {init to no saved input parsing state}
   bl_p^.bltype := escr_exblock_top_k;  {init to top block type}
   bl_p^.ulab := nil;                   {init to no list of unique labels}
@@ -103,10 +102,16 @@ var
 begin
   sys_error_none (stat);               {init to no error encountered}
   if e.exblock_p = nil then return;    {nothing to close ?}
-
-  if e.exblock_p^.loop_p <> nil then begin {loop state exists ?}
-    escr_loop_close (e.exblock_p^.loop_p^, stat); {close system loop state}
-    if sys_error(stat) then return;
+{
+*   Special handling for shutting down specific block types.
+}
+  case e.exblock_p^.bltype of          {what type of block is it ?}
+escr_exblock_loop_k: begin             {LOOP ... ENDLOOP}
+      if e.exblock_p^.loop_p <> nil then begin {loop state exists ?}
+        escr_loop_close (e.exblock_p^.loop_p^, stat); {close system loop state}
+        if sys_error(stat) then return;
+        end;
+      end;
     end;
 {
 *   Delete the local symbols.  SYM_DEL will delete a symbol and all later

@@ -27,6 +27,16 @@ procedure escr_cmd_call (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_case (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_cmd_casenone (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_command (
   in out  e: escr_t;
   out     stat: sys_err_t);
@@ -82,6 +92,11 @@ procedure escr_cmd_endmac (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_endpick (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_endsub (
   in out  e: escr_t;
   out     stat: sys_err_t);
@@ -122,12 +137,27 @@ procedure escr_cmd_macro (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_pick (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_quit (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_quitcase (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_quitmac (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_cmd_quitpick (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
@@ -416,6 +446,11 @@ procedure escr_ifun_pi(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_pick(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_plus(
   in out  e: escr_t;
   out     stat: sys_err_t);
@@ -573,18 +608,6 @@ procedure escr_ifun_xor(
 {
 *   Other entry points.
 }
-procedure escr_err_parm_last_bad (     {last parameter parsed was bad}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
-  options (val_param, noreturn, extern);
-
-procedure escr_err_parm_missing (      {a required command parameter not found}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      subsys: string;              {name of subsystem, used to find message file}
-  in      msg: string;                 {message name withing subsystem file}
-  in      parms: univ sys_parm_msg_ar_t; {array of parameter descriptors}
-  in      n_parms: sys_int_machine_t); {number of parameters in PARMS}
-  options (val_param, noreturn, extern);
-
 procedure escr_format_fp (             {create specifically formatted floating point string}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fp: sys_fp_max_t;            {input floating point value}

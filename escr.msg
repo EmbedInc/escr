@@ -244,6 +244,15 @@ msg err78
   lan english -def
     The qualified symbol name "%p1s" does not match the specified
     symbol type.
+msg err79
+  lan english -def
+    PICK command is missing <opt> parameter.
+msg err80
+  lan english -def
+    PICK command is missing <value> parameter.
+msg err81
+  lan english -def
+    Not in a PICK block.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.

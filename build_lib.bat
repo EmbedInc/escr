@@ -28,6 +28,7 @@ call src_pas %srcdir% %libname%_inh
 call src_pas %srcdir% %libname%_inline
 call src_pas %srcdir% %libname%_open
 call src_pas %srcdir% %libname%_out
+call src_pas %srcdir% %libname%_pick
 call src_pas %srcdir% %libname%_run
 call src_pas %srcdir% %libname%_stat
 call src_pas %srcdir% %libname%_sym

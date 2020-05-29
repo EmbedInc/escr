@@ -94,6 +94,9 @@ const
   escr_err_nparse_fval_k = 76;         {no parse state for FUNCVAL value}
   escr_err_ndirloop_k = 77;            {not in a DIR loop}
   escr_err_sytypemm_k = 78;            {sytype mismatch with name <name>}
+  escr_err_pick_noopt_k = 79;          {PICK command missing <opt>}
+  escr_err_pick_nval_k = 80;           {PICK command missinv <value>}
+  escr_err_notpick_k = 81;             {not in PICK block}
 {
 *   Derived constants.
 }
@@ -351,6 +354,18 @@ escr_looptype_dir_k: (                 {loop over directory entries}
       );
     end;
 
+  escr_pickmode_k_t = (                {PICK command mode}
+    escr_pickmode_all_k,               {run all cases with true conditions}
+    escr_pickmode_first_k);            {run only first case with true condition}
+
+  escr_pick_p_t = ^escr_pick_t;
+  escr_pick_t = record                 {additional info about PICK ... ENDPICK block}
+    val_p: escr_val_p_t;               {the value, NIL if none supplied}
+    ncase: sys_int_machine_t;          {number of CASE commands so far}
+    ntrue: sys_int_machine_t;          {number of CASE commands with true conditions so far}
+    mode: escr_pickmode_k_t;           {ALL/FIRST operating mode}
+    end;
+
   escr_instr_t = record                {input string to be parsed}
     p: string_index_t;                 {1-N string string parse index}
     s: string_var8192_t;               {the string}
@@ -372,6 +387,7 @@ escr_looptype_dir_k: (                 {loop over directory entries}
     escr_exblock_top_k,                {top level block, not defined by code}
     escr_exblock_blk_k,                {BLOCK ... ENDBLOCK}
     escr_exblock_loop_k,               {LOOP ... ENDLOOP}
+    escr_exblock_pick_k,               {PICK ... ENDPICK}
     escr_exblock_sub_k,                {subroutine}
     escr_exblock_cmd_k,                {command}
     escr_exblock_func_k,               {function}
@@ -390,12 +406,18 @@ escr_looptype_dir_k: (                 {loop over directory entries}
     locsym_p: escr_sylist_p_t;         {points to list of symbols local to this block}
     inpos_p: escr_inpos_p_t;           {points to current nested input file position}
     previnh_p: escr_inh_p_t;           {points to previous inhibit before this block}
-    loop_p: escr_loop_p_t;             {points to loop definition, NIL = none}
     parse_p: escr_parse_p_t;           {points to saved parse state, NIL = none}
     bltype: escr_exblock_k_t;          {type of execution block}
     ulab: string_hash_handle_t;        {table of local labels, NIL for none, use parent}
     args: boolean;                     {this block takes arguments}
     iter1: boolean;                    {executing first iteration, not subsequent}
+    case escr_exblock_k_t of           {unique data for some block types}
+escr_exblock_loop_k: (                 {LOOP ... ENDLOOP}
+      loop_p: escr_loop_p_t;
+      );
+escr_exblock_pick_k: (                 {PICK ... ENDPICK}
+      pick_p: escr_pick_p_t;
+      );
     end;
 
   escr_ifflag_k_t = (                  {flags used for processing IF command}
@@ -798,6 +820,10 @@ procedure escr_err_dtype_unimp (       {unimplemented data type internal error}
 procedure escr_err_parm_bad (          {bomb with bad parameter to command error}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      parm: univ string_var_arg_t); {the offending parameter}
+  options (val_param, noreturn, extern);
+
+procedure escr_err_parm_last_bad (     {last parameter parsed was bad}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
   options (val_param, noreturn, extern);
 
 procedure escr_err_istype_unimp (      {unimp symbol type, internal error}
@@ -1326,6 +1352,14 @@ procedure escr_uptocomm (              {find line length without comment}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      s: univ string_var_arg_t;    {the input string}
   out     nclen: string_index_t);      {string length with comment removed}
+  val_param; extern;
+
+procedure escr_val_clone_min (         {clone VAL, use minimum possible memory}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      ival: escr_val_t;            {the input value}
+  in out  mem: util_mem_context_t;     {mem context to alloc OVAL from}
+  in      ind: boolean;                {TRUE if need to individually deallocate OVAL}
+  out     oval_p: escr_val_p_t);       {returned pointer to new VAL, all filled in}
   val_param; extern;
 
 procedure escr_val_copy (              {copy and convert value to target data type}

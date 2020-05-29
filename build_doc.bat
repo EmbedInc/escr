@@ -6,6 +6,8 @@ setlocal
 call build_vars
 set docname=%srcdir%
 
+if "%DEBUGGING%"=="true" exit /b 0
+
 call treename_var (cog)source/%docname%/doc srcdoc
 call godir (cog)doc
 if exist "%docname%.txt" del "%docname%.txt"

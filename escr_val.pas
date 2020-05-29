@@ -2,6 +2,7 @@
 }
 module escr_term;
 define escr_val_copy;
+define escr_val_clone_min;
 define escr_val_bool;
 define escr_val_int;
 define escr_val_fp;
@@ -49,6 +50,57 @@ escr_dtype_time_k: begin               {to TIME}
     end;
 otherwise                              {unimplemented output data type}
     escr_err_dtype_unimp (e, oval.dtype, 'ESCR_VAL_COPY');
+    end;                               {end of output data type cases}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_VAL_CLONE_MIN (E, IVAL, MEM, IND, OVAL_P)
+*
+*   Create a new value descriptor, and copy the value in IVAL into it.  Only the
+*   minimum necessary memory to hold the value in IVAL is allocated to the new
+*   descriptor.  OVAL_P is returned pointing to the new descriptor.
+*
+*   MEM is the memory context to allocat the new memory from.  IND is TRUE to
+*   indicate that the new value at OVAL_P must be individually deallocatable.
+*   IND of FALSE means OVAL_P^ will only be deallocated by deletion of the
+*   memory context MEM.
+}
+procedure escr_val_clone_min (         {clone VAL, use minimum possible memory}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      ival: escr_val_t;            {the input value}
+  in out  mem: util_mem_context_t;     {mem context to alloc OVAL from}
+  in      ind: boolean;                {TRUE if need to individually deallocate OVAL}
+  out     oval_p: escr_val_p_t);       {returned pointer to new VAL, all filled in}
+  val_param;
+
+begin
+  util_mem_grab (                      {allocate mem for new value descriptor}
+    escr_val_size (e, ival.dtype, ival.str.len), {amount of memory to allocate}
+    mem,                               {mem context to allocate it from}
+    ind,                               {allow individual deallocation}
+    oval_p);                           {returned pointer to the new memory}
+
+  oval_p^.dtype := ival.dtype;
+  case ival.dtype of
+escr_dtype_bool_k: begin               {BOOLEAN}
+    oval_p^.bool := ival.bool;
+    end;
+escr_dtype_int_k: begin                {INTEGER}
+    oval_p^.int := ival.int;
+    end;
+escr_dtype_fp_k: begin                 {FLOATING POINT}
+    oval_p^.fp := ival.fp;
+    end;
+escr_dtype_str_k: begin                {STRING}
+    oval_p^.str.max := ival.str.len;
+    string_copy (ival.str, oval_p^.str);
+    end;
+escr_dtype_time_k: begin               {TIME}
+    oval_p^.time := ival.time;
+    end;
+otherwise                              {unimplemented output data type}
+    escr_err_dtype_unimp (e, ival.dtype, 'ESCR_VAL_CLONE_MIN');
     end;                               {end of output data type cases}
   end;
 {

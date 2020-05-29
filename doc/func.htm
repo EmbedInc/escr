@@ -9,7 +9,7 @@
 <body>
 
 <h1 class=page>ESCR Program and Callable System</h1>
-<p class=page>Last updated 18 April 2020</p>
+<p class=page>Last updated 25 May 2020</p>
 
 <ul>
   <li><a href="cmds.htm">Previous page</a>
@@ -72,6 +72,7 @@
     <a href="#now">NOW</a>&nbsp;
     <a href="#or">OR</a>&nbsp;
     <a href="#pi">PI</a>&nbsp;
+    <a href="#pick">PICK</a>&nbsp;
     <a href="#qstr">QSTR</a>&nbsp;
     <a href="#qtk">QTK</a>&nbsp;
     <a href="#rdeg">RDEG</a>&nbsp;
@@ -186,6 +187,7 @@
     <a href="#arg">ARG</a> &nbsp; - &nbsp; Get argument to block<br>
     <a href="#exist">EXIST</a> &nbsp; - &nbsp; Check symbol or argument existing<br>
     <a href="#if">IF</a> &nbsp; - &nbsp; Return argument based on condition<br>
+    <a href="#pick">PICK</a>&nbsp; - &nbsp; Information about current <b>pick</b> block<br>
     <a href="#sym">SYM</a> &nbsp; - &nbsp; Information about a symbol<br>
     <a href="#v">V</a> &nbsp; - &nbsp; Value of symbol or expression<br>
     <a href="#vnl">VNL</a> &nbsp; - &nbsp; Value of symbol or expression, no local vars<br>
@@ -1278,6 +1280,59 @@ argN</i>]</tt></p><indent>
   <p>When <i>val</i> is not present, returns the value of Pi
   (3.141592...). When <i>val</i> is present, returns the value of Pi times
   <i>val</i>.  <i>Val</i> must be numeric.
+
+  </p></indent>
+
+<p><tt id="pick"><b>PICK</b> <i>[opt]</i></tt></p><indent>
+
+  <p>Returns information about the inner-most <a
+  href="cmds.htm#pick"><b>pick</b></a>...<a
+  href="cmds.htm#endpick"><b>endpic</b></a> block.
+
+  <p>The specific action is selected with the <i>opt</i> parameter.
+  <i>Opt</i> is a keyword than can be one of the following:</p><indent>
+
+    <p><b>VAL</b></p><indent>
+
+      <p>The function is the value of <i>value</i> passed to the
+      <b>pick</b> command.  It is an error if <i>value</i> was not
+      supplied.  The function data type is the data type of <i>value</i>.
+
+      <p>This is the default if <i>opt</i> is omitted.
+
+      </p></indent>
+
+    <p><b>VALIS</b></p><indent>
+
+      <p>Returns TRUE iff <i>value</i> was supplied to the <b>pick</b>
+      command.  The function data type is <b>bool</b>.
+
+      </p></indent>
+
+    <p><b>NTRUE</b></p><indent>
+
+      <p>Returns the number previous <a
+      href="cmds.htm#case"><b>case</b></a> commands with TRUE conditions.
+      The function data type is <b>integer</b>.
+
+      </p></indent>
+
+    <p><b>NCASE</b></p><indent>
+
+      <p>Returns the total number previous <a
+      href="cmds.htm#case"><b>case</b></a> commands.  The function data
+      type is <b>integer</b>.
+
+      </p></indent>
+
+    <p><b>IN</b></p><indent>
+
+      <p>Returns TRUE iff within a <b>pick</b>...<b>endpic</b> block. The
+      function data type is <b>bool</b>.
+
+      </p></indent>
+
+    </p></indent>
 
   </p></indent>
 
