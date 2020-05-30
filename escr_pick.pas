@@ -114,7 +114,7 @@ begin
   e.exblock_p^.pick_p := pick_p;       {link to from execution block}
   pick_p^.val_p := nil;                {init to optional value not supplied}
   pick_p^.ncase := 0;                  {init to no CASE commands}
-  pick_p^.ntrue := 0;
+  pick_p^.nrun := 0;
   pick_p^.mode := escr_pickmode_first_k; {init to something valid}
 {
 *   Process the <opt> command parameter.
@@ -255,12 +255,12 @@ begin
     return;
     end;
 {
-*   Check for the single allowed TRUE case has already been executed.  If so,
-*   then we don't need to evaluate the CASE condition.
+*   Check for the single allowed case has already been executed.  If so, then we
+*   don't need to evaluate the CASE condition.
 }
   if
       (blk_p^.pick_p^.mode = escr_pickmode_first_k) and {only one case allowed}
-      (blk_p^.pick_p^.ntrue > 0)       {that case has already been executed ?}
+      (blk_p^.pick_p^.nrun > 0)        {that case has already been executed ?}
       then begin
     e.parse_p^.ip := e.parse_p^.ibuf.len + 1; {indicate input line used up}
     goto inhibit;
@@ -279,7 +279,7 @@ begin
 
   if not casetrue then goto inhibit;   {condition is false, don't execute case ?}
 
-  blk_p^.pick_p^.ntrue := blk_p^.pick_p^.ntrue + 1; {one more TRUE case}
+  blk_p^.pick_p^.nrun := blk_p^.pick_p^.nrun + 1; {count one more case run}
   return;                              {normal return point to execute the case}
 
 inhibit:                               {inhibit execution of this case}
@@ -322,7 +322,7 @@ begin
 {
 *   Run this case if no previous case was run.
 }
-  if blk_p^.pick_p^.ntrue = 0 then return; {no previous CASE run, run this one ?}
+  if blk_p^.pick_p^.nrun = 0 then return; {no previous CASE run, run this one ?}
 {
 *   Do not run this case.
 }
@@ -361,7 +361,7 @@ begin
 *
 *   Subroutine ESCR_IFUN_PICK (E, STAT)
 *
-*   Function PICK VAL|VALIS|NTRUE|NCASE|IN
+*   Function PICK VAL|VALIS|NRUN|NCASE|IN
 }
 procedure escr_ifun_pick(
   in out  e: escr_t;
@@ -383,7 +383,7 @@ begin
   if escr_ifn_get_keyw (e, tk, stat)
     then begin
       string_tkpick80 (tk,
-        'VAL VALIS NTRUE NCASE IN',
+        'VAL VALIS NRUN NCASE IN',
         keyn);
       end
     else begin
@@ -406,9 +406,9 @@ begin
       escr_ifn_ret_bool (e, blk_p^.pick_p^.val_p <> nil);
       end;
 
-3:  begin                              {PICK NTRUE}
+3:  begin                              {PICK NRUN}
       if not pick_block (e, blk_p) then goto nopick;
-      escr_ifn_ret_int (e, blk_p^.pick_p^.ntrue);
+      escr_ifn_ret_int (e, blk_p^.pick_p^.nrun);
       end;
 
 4:  begin                              {PICK NCASE}

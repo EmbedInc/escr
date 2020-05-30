@@ -363,7 +363,7 @@ escr_looptype_dir_k: (                 {loop over directory entries}
   escr_pick_t = record                 {additional info about PICK ... ENDPICK block}
     val_p: escr_val_p_t;               {the value, NIL if none supplied}
     ncase: sys_int_machine_t;          {number of CASE commands so far}
-    ntrue: sys_int_machine_t;          {number of CASE commands with true conditions so far}
+    nrun: sys_int_machine_t;           {number of cases so far, CASEELSE doesn't count}
     mode: escr_pickmode_k_t;           {ALL/FIRST operating mode}
     end;
 
