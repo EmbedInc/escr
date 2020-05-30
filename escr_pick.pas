@@ -4,7 +4,7 @@
 *
 *     PICK
 *     CASE
-*     CASENONE
+*     CASEELSE
 *     QUITCASE
 *     QUITPICK
 *     ENDPICK
@@ -23,7 +23,7 @@ define escr_cmd_pick;
 define escr_cmd_endpick;
 define escr_cmd_quitpick;
 define escr_cmd_case;
-define escr_cmd_casenone;
+define escr_cmd_caseelse;
 define escr_cmd_quitcase;
 define escr_ifun_pick;
 %include 'escr2.ins.pas';
@@ -296,15 +296,46 @@ inhibit:                               {inhibit execution of this case}
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_CMD_CASENONE (E, STAT)
+*   Subroutine ESCR_CMD_CASEELSE (E, STAT)
 }
-procedure escr_cmd_casenone (
+procedure escr_cmd_caseelse (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
 
+var
+  blk_p: escr_exblock_p_t;             {pointer to the PICK block}
+  inh_p: escr_inh_p_t;                 {pointer to execution inhibit}
+
 begin
   sys_error_none (stat);               {init to no error occurred}
+{
+*   Check the execution inhibit.  Any previous inhibit due to PICK CASE ends
+*   here and will be evaluated anew.
+}
+  if e.inhibit_p^.inh then begin       {execution is currently inhibited ?}
+    if e.inhibit_p^.inhty <> escr_inhty_case_k then return; {not PICK CASE inhibit ?}
+    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the CASE inhibit}
+    if e.inhibit_p^.inh then return;   {execution inhibited at a higher level ?}
+    end;
+
+  if not pick_block (e, blk_p) then begin {get pointer to the PICK block}
+    err_nopick (e, stat);
+    return;
+    end;
+{
+*   Run this case if no previous case was run.
+}
+  if blk_p^.pick_p^.ntrue = 0 then return; {no previous CASE run, run this one ?}
+{
+*   Do not run this case.
+}
+  inh_p := e.inhibit_p;                {init to lowest execution inhibit}
+  while true do begin                  {inhibit all up to and including CASE}
+    inh_p^.inh := true;                {inhibit execution at this level}
+    if inh_p^.inhty = escr_inhty_case_k then exit; {reached the CASE inhibit ?}
+    inh_p := inh_p^.prev_p;            {no, up to next higher inhibit}
+    end;
   end;
 {
 ********************************************************************************

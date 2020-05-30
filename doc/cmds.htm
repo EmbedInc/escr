@@ -9,7 +9,7 @@
 <body>
 
 <h1 class=page>ESCR Program and Callable System</h1>
-<p class=page>Last updated 25 May 2020</p>
+<p class=page>Last updated 30 May 2020</p>
 
 <ul>
   <li><a href="func.htm">Next page</a>
@@ -28,7 +28,7 @@
     <a href="#block">BLOCK</a>&nbsp;
     <a href="#call">CALL</a>&nbsp;
     <a href="#case">CASE</a>&nbsp;
-    <a href="#casenone">CASENONE</a>&nbsp;
+    <a href="#caseelse">CASEELSE</a>&nbsp;
     <a href="#command">COMMAND</a>&nbsp;
     <a href="#const">CONST</a>&nbsp;
     <a href="#del">DEL</a>&nbsp;
@@ -75,7 +75,7 @@
 
     <a href="#pick">PICK</a>&nbsp;
     <a href="#case">CASE</a>&nbsp;
-    <a href="#casenone">CASENONE</a>&nbsp;
+    <a href="#caseelse">CASEELSE</a>&nbsp;
     <a href="#quitcase">QUITCASE</a>&nbsp;
     <a href="#quitpick">QUITPICK</a>&nbsp;
     <a href="#endpick">ENDPICK</a>&nbsp; - &nbsp; Pick one or all of block<br>
@@ -267,13 +267,13 @@ keyword.
   <p>Starts a section of conditionally executed code in a <a
   href="#pick"><b>pick</b></a>...<a href="#endpic"><b>endpick</b></a>
   block.  The code section ends at the next <a
-  href="#case"><b>case</b></a>, <a href="#casenone"><b>casenone</b></a>,
+  href="#case"><b>case</b></a>, <a href="#caseelse"><b>caseelse</b></a>,
   or <a href="#endpick"><b>endpick</b></a> command.
 
   <p><i>Condition</i> is an expression of data type <b>bool</b>.  The code
   section following the <b>case</b> command is only executed when
   <i>condition</i> is true.  When <i>condition</i> is false, then code
-  execution continues at the next <b>case</b>, <b>casenone</b>, or
+  execution continues at the next <b>case</b>, <b>caseelse</b>, or
   <b>endpick</b> command.
 
   <p><i>Condition</i> may depend on <i>value</i> supplied with the <a
@@ -288,19 +288,16 @@ keyword.
 
   </p></indent>
 
-<p><tt id="casenone"><b>CASENONE</b></tt></p><indent>
+<p><tt id="caseelse"><b>CASEELSE</b></tt></p><indent>
 
   <p>Like the <a href="#case"><b>case</b></a> command, except that the
   following code section is only executed if no previous <b>case</b>
-  commands with true conditions were encountered in the
-  <b>pick</b>...<b>endpick</b> block.  Further <b>case</b> commands in the
-  <b>pick</b>...<b>endpick</b> block are not allowed after a
-  <b>casenone</b> command.
+  command was executed in the <b>pick</b>...<b>endpick</b> block.
 
   <p>The <a href="#quitcase"><b>quitcase</b></a> command is also allowed
-  in a <b>casenone</b> code section.  The restrictions and available
+  in a <b>caseelse</b> code section.  The restrictions and available
   features of a code section following a <b>case</b> command and a
-  <b>casenone</b> command are deliberately the same.
+  <b>caseelse</b> command are deliberately the same.
 
   </p></indent>
 
@@ -1082,7 +1079,7 @@ keyword.
   <p>Start a block that contains a set of <a href="#case"><b>case</b></a>
   commands.  The block is ended with the <a
   href="#endpick"><b>endpick</b></a> command.  The block may contain one
-  <a href="#casenone"><b>casenone</b></a> command after all the
+  <a href="#caseelse"><b>caseelse</b></a> command after all the
   <b>case</b> commands.  A <a href="#quicpick"><b>quitpick</b></a> command
   exits the <b>pick</b>...<b>endpick</b> block by jumping to immediately
   after the <b>endpic</b> command.
@@ -1113,17 +1110,17 @@ keyword.
       exited after the end of the code for the true <b>case</b> condition.
       Specifically, this means that after a <b>case</b> command with a
       true condition, the next <b>quitcase</b>, <b>case</b>, or
-      <b>casenone</b> command causes execution to jump to after the
+      <b>caseelse</b> command causes execution to jump to after the
       <b>endpick</b> command.
 
       </p></indent>
 
     </p></indent>
 
-  <p>If a <b>casenone</b> command is encountered before a <b>case</b>
+  <p>If a <b>caseelse</b> command is encountered before a <b>case</b>
   command with a true condition, then the code following the
-  <b>casenone</b> command is executed.  <b>Case</b> commands are not
-  allowed after the <b>casenone</b> command.
+  <b>caseelse</b> command is executed.  <b>Case</b> commands are not
+  allowed after the <b>caseelse</b> command.
 
   </p></indent>
 
@@ -1139,8 +1136,8 @@ keyword.
 <p><tt id="quitcase"><b>QUITCASE</b></tt></p><indent>
 
   <p>Aborts the current code section following a <a
-  href="#case"><b>case</b></a> or <a href="#casenone"><b>casenone</b></a>
-  command.  Execution skips to the next <b>case</b>, <b>casenone</b>, or
+  href="#case"><b>case</b></a> or <a href="#caseelse"><b>caseelse</b></a>
+  command.  Execution skips to the next <b>case</b>, <b>caseelse</b>, or
   <b>endpick</b> command.
 
   </p></indent>
