@@ -211,7 +211,7 @@ label
   err_missing, err_keyw, err_abort, loop_done;
 
 begin
-  name.max := size_char(name.str);     {init local var string}
+  name.max := size_char(name.str);     {init local var strings}
   tk.max := size_char(tk.str);
   fnam.max := size_char(fnam.str);
   sys_error_none (stat);               {init to no error occurred}
@@ -221,6 +221,7 @@ begin
   e.exblock_p^.start_p :=              {save pointer to starting line of this block}
     e.exblock_p^.prev_p^.inpos_p^.last_p;
   e.exblock_p^.bltype := escr_exblock_loop_k; {indicate LOOP ... ENDLOOP type}
+  e.exblock_p^.loop_p := nil;          {init to no loop descriptor}
   escr_exblock_inline_set (            {set next source line to execute}
     e, e.exblock_p^.prev_p^.inpos_p^.line_p, stat);
   if sys_error(stat) then return;
