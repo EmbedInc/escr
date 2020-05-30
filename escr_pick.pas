@@ -51,9 +51,15 @@ begin
 *   Find the inner-most PICK/ENDPICK block.  If a PICK block is found, then the
 *   function returns TRUE, and BLK_P will point to the block.  If no PICK block
 *   is found, then the function returns FALSE, and BLK_P is set to NIL.
+*
+*   This routine must only be called when the PICK block was fully created,
+*   which means execution must not have been inhibited at the PICK command.
+*   When execution of the PICK command is inhibited, then no PICK-specific
+*   descriptor is created and the PICK_P pointer in the execution block is NIL.
+*   This routine returns with error when PICK_P is NIL.
 }
 function pick_block (                  {find the relevant PICK block}
-  in      e: escr_t;                   {state for this use of the ESCR system}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   out     blk_p: escr_exblock_p_t)     {returned pointing to the PICK block}
   :boolean;                            {block found, BLK_P not nil}
   val_param; internal;
@@ -63,7 +69,12 @@ begin
 
   blk_p := e.exblock_p;                {init to current block}
   while blk_p <> nil do begin          {scan upwards thru block nesting hierarchy}
-    if blk_p^.bltype = escr_exblock_pick_k then return; {found lowest PICK block ?}
+    if blk_p^.bltype = escr_exblock_pick_k then begin {found lowest PICK block ?}
+      if blk_p^.pick_p = nil then begin {just a skeleton PICK block ?}
+        escr_err_atline (e, 'escr', 'pick_nopick', nil, 0);
+        end;
+      return;
+      end;
     blk_p := blk_p^.prev_p;            {to next higher level block}
     end;                               {back to check this new block}
 
@@ -99,14 +110,15 @@ begin
   e.exblock_p^.start_p :=              {save pointer to starting line of this block}
     e.exblock_p^.prev_p^.inpos_p^.last_p;
   e.exblock_p^.bltype := escr_exblock_pick_k; {indicate PICK/ENDPICK type}
+  e.exblock_p^.pick_p := nil;          {init to no PICK descriptor}
   escr_exblock_inline_set (            {set next source line to execute}
     e, e.exblock_p^.prev_p^.inpos_p^.line_p, stat);
   if sys_error(stat) then return;
 
+  if e.inhibit_p^.inh then return;     {execution inhibited ?}
+
   escr_inh_new (e);                    {add PICK CASE execution inhibit}
   e.inhibit_p^.inhty := escr_inhty_case_k;
-
-  if e.inhibit_p^.inh then return;     {execution inhibited ?}
 {
 *   Add our private state to the execution block.
 }

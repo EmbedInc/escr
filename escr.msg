@@ -290,6 +290,10 @@ msg open
 msg parm_bad_cmd
   lan english -def
     Parameter "%p1s" to command "%p2s" is unrecognized.
+msg pick_nopick
+  lan english -def
+    INTERNAL ERROR: Call to PICK_BLOCK in escr_pick.pas for PICK block
+    with execution inhibit.
 msg term_val_int
   lan english -def
     The term has an integer value of %p1i.
