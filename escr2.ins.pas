@@ -37,6 +37,11 @@ procedure escr_cmd_caseelse (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_casematch (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_command (
   in out  e: escr_t;
   out     stat: sys_err_t);

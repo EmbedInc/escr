@@ -244,6 +244,7 @@ begin
   addcmd ('call', addr(escr_cmd_call), stat); if sys_error(stat) then goto err;
   addcmd ('case', addr(escr_cmd_case), stat); if sys_error(stat) then goto err;
   addcmd ('caseelse', addr(escr_cmd_caseelse), stat); if sys_error(stat) then goto err;
+  addcmd ('casematch', addr(escr_cmd_casematch), stat); if sys_error(stat) then goto err;
   addcmd ('command', addr(escr_cmd_command), stat); if sys_error(stat) then goto err;
   addcmd ('const', addr(escr_cmd_const), stat); if sys_error(stat) then goto err;
   addcmd ('del', addr(escr_cmd_del), stat); if sys_error(stat) then goto err;
