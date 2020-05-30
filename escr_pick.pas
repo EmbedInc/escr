@@ -173,8 +173,6 @@ label
   del_block;
 
 begin
-  sys_error_none (stat);               {init to no error occurred}
-
   if e.exblock_p^.bltype <> escr_exblock_pick_k then begin {not in PICK block type ?}
     sys_stat_set (escr_subsys_k, escr_err_notpick_k, stat);
     return;
@@ -240,7 +238,6 @@ label
   inhibit;
 
 begin
-  sys_error_none (stat);               {init to no error occurred}
 {
 *   Check the execution inhibit.  Any previous inhibit due to PICK CASE ends
 *   here and will be evaluated anew.
@@ -308,7 +305,6 @@ var
   inh_p: escr_inh_p_t;                 {pointer to execution inhibit}
 
 begin
-  sys_error_none (stat);               {init to no error occurred}
 {
 *   Check the execution inhibit.  Any previous inhibit due to PICK CASE ends
 *   here and will be evaluated anew.
@@ -347,8 +343,18 @@ procedure escr_cmd_quitcase (
   out     stat: sys_err_t);
   val_param;
 
+var
+  inh_p: escr_inh_p_t;                 {pointer to execution inhibit}
+
 begin
-  sys_error_none (stat);               {init to no error occurred}
+  if e.inhibit_p^.inh then return;     {execution is inhibited ?}
+
+  inh_p := e.inhibit_p;                {init to lowest execution inhibit}
+  while true do begin                  {inhibit all up to and including CASE}
+    inh_p^.inh := true;                {inhibit execution at this level}
+    if inh_p^.inhty = escr_inhty_case_k then exit; {reached the CASE inhibit ?}
+    inh_p := inh_p^.prev_p;            {no, up to next higher inhibit}
+    end;
   end;
 {
 ********************************************************************************
