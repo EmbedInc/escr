@@ -363,7 +363,7 @@ escr_looptype_dir_k: (                 {loop over directory entries}
   escr_pick_t = record                 {additional info about PICK ... ENDPICK block}
     val_p: escr_val_p_t;               {the value, NIL if none supplied}
     ncase: sys_int_machine_t;          {number of cases so far, CASEELSE doesn't count}
-    nrun: sys_int_machine_t;           {number of cases so far, CASEELSE doesn't count}
+    nrun: sys_int_machine_t;           {number of cases run so far, CASEELSE doesn't count}
     mode: escr_pickmode_k_t;           {ALL/FIRST operating mode}
     end;
 
@@ -600,15 +600,15 @@ function escr_get_token (              {get next input stream token}
 function escr_get_val (                {get value of next input stream token}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     val: escr_val_t;             {returned value}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {TRUE if token available}
+  out     stat: sys_err_t)             {completion status, no value is not error}
+  :boolean;                            {TRUE if token available and no error}
   val_param; extern;
 
 function escr_get_val_dtype (          {get next input value, to dtype of VAL}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in out  val: escr_val_t;             {returned value, DTYPE specifies data type}
-  out     stat: sys_err_t)             {completion status}
-  :boolean;                            {TRUE if token available}
+  out     stat: sys_err_t)             {completion status, no value is not error}
+  :boolean;                            {TRUE if token available and no error}
   val_param; extern;
 
 procedure escr_stat_cmd_noarg (        {missing command argument}

@@ -4,6 +4,7 @@
 *
 *     PICK
 *     CASE
+*     CASEMATCH
 *     CASEELSE
 *     QUITCASE
 *     QUITPICK
@@ -308,7 +309,7 @@ inhibit:                               {inhibit execution of this case}
 *
 *   Subroutine ESCR_CMD_CASEMATCH (E, STAT)
 *
-*   Command CASEMATCH value
+*   Command CASEMATCH value ... value
 }
 procedure escr_cmd_casematch (
   in out  e: escr_t;
@@ -319,9 +320,10 @@ var
   blk_p: escr_exblock_p_t;             {pointer to the PICK block}
   inh_p: escr_inh_p_t;                 {pointer to execution inhibit}
   val: escr_val_t;                     {value of command parameter}
+  nval: sys_int_machine_t;             {number of VALUE parameters found}
 
 label
-  inhibit;
+  inhibit, run;
 
 begin
 {
@@ -349,7 +351,7 @@ begin
   blk_p^.pick_p^.ncase := blk_p^.pick_p^.ncase + 1; {one more case this PICK}
 {
 *   Check for the single allowed case has already been executed.  If so, then we
-*   don't need to evaluate the condition.
+*   don't need to evaluate the conditions.
 }
   if
       (blk_p^.pick_p^.mode = escr_pickmode_first_k) and {only one case allowed}
@@ -359,53 +361,57 @@ begin
     goto inhibit;
     end;
 {
-*   Get VALUE into VAL.
+*   Get each VALUE parameter.  If it matches the PICK command value, then go to
+*   RUN.  If no values match, then this section falls thru to INHIBIT.
 }
+  nval := 0;                           {init to no VALUE parameter found}
   escr_val_init (e, blk_p^.pick_p^.val_p^.dtype, val); {set target dtype and init VAL}
 
-  if not escr_get_val_dtype (e, val, stat) then begin {get VALUE parameter into VAL}
-    if sys_error(stat) then return;
+  while true do begin                  {back here each new VALUE parameter}
+    if not escr_get_val_dtype (e, val, stat) then begin {get VALUE parameter into VAL}
+      if sys_error(stat) then return;  {error getting argument ?}
+      exit;                            {done with all VALUE parameters}
+      end;
+    nval := nval + 1;                  {count one more VALUE parameter}
+    {
+    *  Run this case if VAL matches the PICK block value.
+    }
+    case val.dtype of                  {what data type is it ?}
+escr_dtype_bool_k: begin
+        if val.bool = blk_p^.pick_p^.val_p^.bool then begin
+          goto run;
+          end;
+        end;
+escr_dtype_int_k: begin
+        if val.int = blk_p^.pick_p^.val_p^.int then begin
+          goto run;
+          end;
+        end;
+escr_dtype_fp_k: begin
+        if val.fp = blk_p^.pick_p^.val_p^.fp then begin
+          goto run;
+          end;
+        end;
+escr_dtype_str_k: begin
+        if string_equal(val.str, blk_p^.pick_p^.val_p^.str) then begin
+          goto run;
+          end;
+        end;
+escr_dtype_time_k: begin
+        if sys_clock_compare(val.time, blk_p^.pick_p^.val_p^.time) = sys_compare_eq_k
+            then begin
+          goto run;
+          end;
+        end;
+otherwise
+      escr_err_dtype_unimp (e, val.dtype, 'ESCR_CMD_CASEMATCH');
+      end;                             {end of value data type cases}
+    end;                               {back for next VALUE parameter}
+
+  if nval <= 0 then begin              {no VALUE parameter at all ?}
     escr_stat_cmd_noarg (e, stat);     {set missing argument error}
     return;
     end;
-
-  if not escr_get_end (e, stat) then return; {no additional parameters allowed}
-{
-*   Inhibit execution of this case if VAL does not match the PICK block value.
-}
-  case val.dtype of                    {what data type is it ?}
-escr_dtype_bool_k: begin
-      if val.bool <> blk_p^.pick_p^.val_p^.bool then begin
-        goto inhibit;
-        end;
-      end;
-escr_dtype_int_k: begin
-      if val.int <> blk_p^.pick_p^.val_p^.int then begin
-        goto inhibit;
-        end;
-      end;
-escr_dtype_fp_k: begin
-      if val.fp <> blk_p^.pick_p^.val_p^.fp then begin
-        goto inhibit;
-        end;
-      end;
-escr_dtype_str_k: begin
-      if not string_equal(val.str, blk_p^.pick_p^.val_p^.str) then begin
-        goto inhibit;
-        end;
-      end;
-escr_dtype_time_k: begin
-      if sys_clock_compare(val.time, blk_p^.pick_p^.val_p^.time) <> sys_compare_eq_k
-          then begin
-        goto inhibit;
-        end;
-      end;
-otherwise
-    escr_err_dtype_unimp (e, val.dtype, 'ESCR_CMD_CASEMATCH');
-    end;
-
-  blk_p^.pick_p^.nrun := blk_p^.pick_p^.nrun + 1; {count one more case run}
-  return;                              {normal return point to execute the case}
 
 inhibit:                               {inhibit execution of this case}
   inh_p := e.inhibit_p;                {init to lowest execution inhibit}
@@ -414,6 +420,11 @@ inhibit:                               {inhibit execution of this case}
     if inh_p^.inhty = escr_inhty_case_k then exit; {reached the CASE inhibit ?}
     inh_p := inh_p^.prev_p;            {no, up to next higher inhibit}
     end;
+  return;
+
+run:                                   {run this case}
+  e.parse_p^.ip := e.parse_p^.ibuf.len + 1; {indicate input line used up}
+  blk_p^.pick_p^.nrun := blk_p^.pick_p^.nrun + 1; {count one more case run}
   end;
 {
 ********************************************************************************

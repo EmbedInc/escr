@@ -9,7 +9,7 @@
 <body>
 
 <h1 class=page>ESCR Program and Callable System</h1>
-<p class=page>Last updated 10 August 2020</p>
+<p class=page>Last updated 21 September 2020</p>
 
 <ul>
   <li><a href="func.htm">Next page</a>
@@ -267,10 +267,10 @@ keyword.
 <p><tt id="case"><b>CASE</b> <i>condition</i></tt></p><indent>
 
   <p>Starts a section of conditionally executed code in a <a
-  href="#pick"><b>pick</b></a>...<a href="#endpic"><b>endpick</b></a>
-  block.  The code section ends at the next <a
-  href="#case"><b>case</b></a>, <a href="#casematch"><b>casematch</b></a>,
-  <a href="#caseelse"><b>caseelse</b></a>, or <a
+  href="#pick"><b>pick</b></a>...<a href="#endpick"><b>endpick</b></a>
+  block.  The code section ends at the next <b>case</b>, <a
+  href="#casematch"><b>casematch</b></a>, <a
+  href="#caseelse"><b>caseelse</b></a>, or <a
   href="#endpick"><b>endpick</b></a> command.
 
   <p><i>Condition</i> is an expression with data type <b>bool</b>.  The
@@ -306,14 +306,17 @@ keyword.
 
   </p></indent>
 
-<p><tt id="casematch"><b>CASEMATCH</b> <i>value</i></tt></p><indent>
+<p><tt id="casematch"><b>CASEMATCH</b> <i>value ... value</i></tt></p><indent>
 
   <p>Like the <a href="#case"><b>case</b></a> command, except that the
-  following code section is only executed when <i>value</i> matches the
-  value supplied to the <a href="#pick"><b>pick</b></a> command.  It is an
-  error if no <i>value</i> was supplied to the <b>pick</b> command, or the
-  data type of the <b>casematch</b> <i>value</i> can not be converted to
-  the data type of the <b>pick</b> <i>value</i>.
+  following code section is only executed when at least one <i>value</i>
+  matches the value supplied to the <a href="#pick"><b>pick</b></a>
+  command.
+
+  <p>It is an error if no <i>value</i> was supplied to this
+  <b>casematch</b> command, no <i>value</i> was supplied to the
+  <b>pick</b> command, or the data type of a <b>casematch</b> <i>value</i>
+  can not be converted to the data type of the <b>pick</b> <i>value</i>.
 
   </p></indent>
 
