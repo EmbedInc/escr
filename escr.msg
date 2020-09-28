@@ -256,6 +256,9 @@ msg err81
 msg err82
   lan english -def
     No choice value was supplied to PICK block.
+msg err83
+  lan english -def
+    Multiple valid PICK block options, but only one is allowed.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.
@@ -290,6 +293,9 @@ msg open
 msg parm_bad_cmd
   lan english -def
     Parameter "%p1s" to command "%p2s" is unrecognized.
+msg pick_mode_unimpl
+  lan english -def
+    INTERNAL ERROR: PICK mode of %p1i not implemented in routine %p2s.
 msg pick_nopick
   lan english -def
     INTERNAL ERROR: Call to PICK_BLOCK in escr_pick.pas for PICK block
