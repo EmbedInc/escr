@@ -27,21 +27,6 @@ procedure escr_cmd_call (
   out     stat: sys_err_t);
   val_param; extern;
 
-procedure escr_cmd_case (
-  in out  e: escr_t;
-  out     stat: sys_err_t);
-  val_param; extern;
-
-procedure escr_cmd_caseelse (
-  in out  e: escr_t;
-  out     stat: sys_err_t);
-  val_param; extern;
-
-procedure escr_cmd_casematch (
-  in out  e: escr_t;
-  out     stat: sys_err_t);
-  val_param; extern;
-
 procedure escr_cmd_command (
   in out  e: escr_t;
   out     stat: sys_err_t);
@@ -142,6 +127,21 @@ procedure escr_cmd_macro (
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_cmd_option (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_cmd_optionelse (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
+procedure escr_cmd_optionif (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_cmd_pick (
   in out  e: escr_t;
   out     stat: sys_err_t);
@@ -152,12 +152,12 @@ procedure escr_cmd_quit (
   out     stat: sys_err_t);
   val_param; extern;
 
-procedure escr_cmd_quitcase (
+procedure escr_cmd_quitmac (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;
 
-procedure escr_cmd_quitmac (
+procedure escr_cmd_quitopt (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param; extern;

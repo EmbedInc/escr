@@ -95,9 +95,9 @@ const
   escr_err_ndirloop_k = 77;            {not in a DIR loop}
   escr_err_sytypemm_k = 78;            {sytype mismatch with name <name>}
   escr_err_pick_noopt_k = 79;          {PICK command missing <opt>}
-  escr_err_pickcmd_nval_k = 80;        {PICK command missing <value>}
+  escr_err_pickcmd_nchoice_k = 80;     {PICK command missing <choice>}
   escr_err_notpick_k = 81;             {not in PICK block}
-  escr_err_pick_nval_k = 82;           {PICK block does not have a value}
+  escr_err_pick_nchoice_k = 82;        {PICK block does not have a choice value}
 {
 *   Derived constants.
 }
@@ -361,9 +361,9 @@ escr_looptype_dir_k: (                 {loop over directory entries}
 
   escr_pick_p_t = ^escr_pick_t;
   escr_pick_t = record                 {additional info about PICK ... ENDPICK block}
-    val_p: escr_val_p_t;               {the value, NIL if none supplied}
-    ncase: sys_int_machine_t;          {number of cases so far, CASEELSE doesn't count}
-    nrun: sys_int_machine_t;           {number of cases run so far, CASEELSE doesn't count}
+    choice_p: escr_val_p_t;            {the CHOICE value, NIL if none supplied}
+    nopt: sys_int_machine_t;           {number of options encountered so far}
+    nrun: sys_int_machine_t;           {number of options run so far}
     mode: escr_pickmode_k_t;           {ALL/FIRST operating mode}
     end;
 
@@ -431,7 +431,7 @@ escr_exblock_pick_k: (                 {PICK ... ENDPICK}
     escr_inhty_root_k,                 {the root inhibit, execution always enabled}
     escr_inhty_blkdef_k,               {reading block defintion, not executing block}
     escr_inhty_if_k,                   {in IF construct}
-    escr_inhty_case_k,                 {CASE in PICK block}
+    escr_inhty_opt_k,                  {OPTION in PICK block}
     escr_inhty_blk_k);                 {in execution block}
 
   escr_inh_t = record                  {info about one execution inhibit}

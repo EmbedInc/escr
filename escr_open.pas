@@ -242,9 +242,6 @@ begin
   addcmd ('append', addr(escr_cmd_append), stat); if sys_error(stat) then goto err;
   addcmd ('block', addr(escr_cmd_block), stat); if sys_error(stat) then goto err;
   addcmd ('call', addr(escr_cmd_call), stat); if sys_error(stat) then goto err;
-  addcmd ('case', addr(escr_cmd_case), stat); if sys_error(stat) then goto err;
-  addcmd ('caseelse', addr(escr_cmd_caseelse), stat); if sys_error(stat) then goto err;
-  addcmd ('casematch', addr(escr_cmd_casematch), stat); if sys_error(stat) then goto err;
   addcmd ('command', addr(escr_cmd_command), stat); if sys_error(stat) then goto err;
   addcmd ('const', addr(escr_cmd_const), stat); if sys_error(stat) then goto err;
   addcmd ('del', addr(escr_cmd_del), stat); if sys_error(stat) then goto err;
@@ -265,10 +262,13 @@ begin
   addcmd ('include', addr(escr_cmd_include), stat); if sys_error(stat) then goto err;
   addcmd ('loop', addr(escr_cmd_loop), stat); if sys_error(stat) then goto err;
   addcmd ('macro', addr(escr_cmd_macro), stat); if sys_error(stat) then goto err;
+  addcmd ('option', addr(escr_cmd_option), stat); if sys_error(stat) then goto err;
+  addcmd ('optionelse', addr(escr_cmd_optionelse), stat); if sys_error(stat) then goto err;
+  addcmd ('optionif', addr(escr_cmd_optionif), stat); if sys_error(stat) then goto err;
   addcmd ('pick', addr(escr_cmd_pick), stat); if sys_error(stat) then goto err;
   addcmd ('quit', addr(escr_cmd_quit), stat); if sys_error(stat) then goto err;
-  addcmd ('quitcase', addr(escr_cmd_quitcase), stat); if sys_error(stat) then goto err;
   addcmd ('quitmac', addr(escr_cmd_quitmac), stat); if sys_error(stat) then goto err;
+  addcmd ('quitopt', addr(escr_cmd_quitopt), stat); if sys_error(stat) then goto err;
   addcmd ('quitpick', addr(escr_cmd_quitpick), stat); if sys_error(stat) then goto err;
   addcmd ('repeat', addr(escr_cmd_repeat), stat); if sys_error(stat) then goto err;
   addcmd ('return', addr(escr_cmd_return), stat); if sys_error(stat) then goto err;

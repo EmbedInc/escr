@@ -249,13 +249,13 @@ msg err79
     PICK command is missing <opt> parameter.
 msg err80
   lan english -def
-    PICK command is missing <value> parameter.
+    PICK command is missing <choice> parameter.
 msg err81
   lan english -def
     Not in a PICK block.
 msg err82
   lan english -def
-    No value was supplied to PICK block.
+    No choice value was supplied to PICK block.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.

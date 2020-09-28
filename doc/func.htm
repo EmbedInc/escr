@@ -9,7 +9,7 @@
 <body>
 
 <h1 class=page>ESCR Program and Callable System</h1>
-<p class=page>Last updated 25 May 2020</p>
+<p class=page>Last updated 27 September 2020</p>
 
 <ul>
   <li><a href="cmds.htm">Previous page</a>
@@ -1294,9 +1294,9 @@ argN</i>]</tt></p><indent>
 
     <p><b>VAL</b></p><indent>
 
-      <p>The function is the value of <i>value</i> passed to the
-      <b>pick</b> command.  It is an error if <i>value</i> was not
-      supplied.  The function data type is the data type of <i>value</i>.
+      <p>The function is the value of <i>choice</i> passed to the
+      <b>pick</b> command.  It is an error if <i>choice</i> was not
+      supplied.  The function data type is the data type of <i>choice</i>.
 
       <p>This is the default if <i>opt</i> is omitted.
 
@@ -1304,33 +1304,28 @@ argN</i>]</tt></p><indent>
 
     <p><b>VALIS</b></p><indent>
 
-      <p>Returns TRUE iff <i>value</i> was supplied to the <b>pick</b>
+      <p>Returns TRUE iff <i>choice</i> was supplied to the <b>pick</b>
       command.  The function data type is <b>bool</b>.
 
       </p></indent>
 
     <p><b>NRUN</b></p><indent>
 
-      <p>Returns the number of previous <a
-      href="cmds.htm#case"><b>case</b></a> or <a
-      href="cmds.htm#casematch"><b>casematch</b></a> commands that had
-      their code blocks executed.  The function data type is
-      <b>integer</b>.
+      <p>Returns the number of options run so far within this <b>pick</b>
+      block.  The function data type is <b>integer</b>.
 
       </p></indent>
 
-    <p><b>NCASE</b></p><indent>
+    <p><b>NOPT</b></p><indent>
 
-      <p>Returns the total number of previous <a
-      href="cmds.htm#case"><b>case</b></a> or <a
-      href="cmds.htm#casematch"><b>casematch</b></a> commands.  The
-      function data type is <b>integer</b>.
+      <p>Returns the total number of options encountered so far in the
+      <b>pick</b> block.  The function data type is <b>integer</b>.
 
       </p></indent>
 
     <p><b>IN</b></p><indent>
 
-      <p>Returns TRUE iff within a <b>pick</b>...<b>endpic</b> block. The
+      <p>Returns TRUE iff within a <b>pick</b>...<b>endpic</b> block.  The
       function data type is <b>bool</b>.
 
       </p></indent>

@@ -3,10 +3,10 @@
 *   Commands:
 *
 *     PICK
-*     CASE
-*     CASEMATCH
-*     CASEELSE
-*     QUITCASE
+*     OPTION
+*     OPTIONIF
+*     OPTIONELSE
+*     QUITOPT
 *     QUITPICK
 *     ENDPICK
 *
@@ -23,10 +23,10 @@ module escr_pick;
 define escr_cmd_pick;
 define escr_cmd_endpick;
 define escr_cmd_quitpick;
-define escr_cmd_case;
-define escr_cmd_casematch;
-define escr_cmd_caseelse;
-define escr_cmd_quitcase;
+define escr_cmd_option;
+define escr_cmd_optionif;
+define escr_cmd_optionelse;
+define escr_cmd_quitopt;
 define escr_ifun_pick;
 %include 'escr2.ins.pas';
 {
@@ -118,16 +118,16 @@ begin
 
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
 
-  escr_inh_new (e);                    {add PICK CASE execution inhibit}
-  e.inhibit_p^.inhty := escr_inhty_case_k;
+  escr_inh_new (e);                    {add PICK OPTION execution inhibit}
+  e.inhibit_p^.inhty := escr_inhty_opt_k;
 {
 *   Add our private state to the execution block.
 }
   util_mem_grab (                      {allocate PICK block private data}
     sizeof(pick_p^), e.exblock_p^.mem_p^, false, pick_p);
   e.exblock_p^.pick_p := pick_p;       {link to from execution block}
-  pick_p^.val_p := nil;                {init to optional value not supplied}
-  pick_p^.ncase := 0;                  {init to no CASE commands}
+  pick_p^.choice_p := nil;             {init to optional choice value not supplied}
+  pick_p^.nopt := 0;                   {init to no options found}
   pick_p^.nrun := 0;
   pick_p^.mode := escr_pickmode_first_k; {init to something valid}
 {
@@ -146,13 +146,13 @@ begin
 2:  pick_p^.mode := escr_pickmode_all_k;
     end;
 {
-*   Process optional "WITH value" clause.
+*   Process optional "BY choice" clause.
 }
-  escr_get_keyword (e, 'WITH', nkeyw, stat); {try to read WITH keyword}
+  escr_get_keyword (e, 'BY', nkeyw, stat); {try to read BY keyword}
   if sys_error(stat) then goto abort1;
   if nkeyw <> 0 then begin             {something was there ?}
     if not escr_get_val (e, val, stat) then begin {get <value>}
-      sys_stat_set (escr_subsys_k, escr_err_pickcmd_nval_k, stat);
+      sys_stat_set (escr_subsys_k, escr_err_pickcmd_nchoice_k, stat);
       goto abort1;
       end;
     if sys_error(stat) then goto abort1;
@@ -161,7 +161,7 @@ begin
       val,                             {the value to clone}
       e.mem_p^,                        {context to get new memory from}
       false,                           {will not be individually deallcated}
-      pick_p^.val_p);                  {returned pointer to cloned value}
+      pick_p^.choice_p);               {returned pointer to cloned value}
     if not escr_get_end (e, stat)      {nothing more allowed on command line}
       then goto abort1;
     end;
@@ -221,8 +221,8 @@ var
 
 begin
   if e.inhibit_p^.inh then begin       {execution is currently inhibited ?}
-    if e.inhibit_p^.inhty <> escr_inhty_case_k then return; {not PICK CASE inhibit ?}
-    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the CASE inhibit}
+    if e.inhibit_p^.inhty <> escr_inhty_opt_k then return; {not PICK OPTION inhibit ?}
+    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the OPTION inhibit}
     if e.inhibit_p^.inh then return;   {execution inhibited at a higher level ?}
     end;
 
@@ -236,82 +236,11 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_CMD_CASE (E, STAT)
-}
-procedure escr_cmd_case (
-  in out  e: escr_t;
-  out     stat: sys_err_t);
-  val_param;
-
-var
-  blk_p: escr_exblock_p_t;             {pointer to the PICK block}
-  inh_p: escr_inh_p_t;                 {pointer to execution inhibit}
-  casetrue: boolean;                   {CASE condition is TRUE}
-
-label
-  inhibit;
-
-begin
-{
-*   Check the execution inhibit.  Any previous inhibit due to PICK CASE ends
-*   here and will be evaluated anew.
-}
-  if e.inhibit_p^.inh then begin       {execution is currently inhibited ?}
-    if e.inhibit_p^.inhty <> escr_inhty_case_k then return; {not PICK CASE inhibit ?}
-    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the CASE inhibit}
-    if e.inhibit_p^.inh then return;   {execution inhibited at a higher level ?}
-    escr_inline_expand_rest (e, stat); {expand functions on rest of input line}
-    if sys_error(stat) then return;
-    end;
-
-  if not pick_block (e, blk_p) then begin {get pointer to the PICK block}
-    err_nopick (e, stat);
-    return;
-    end;
-
-  blk_p^.pick_p^.ncase := blk_p^.pick_p^.ncase + 1; {one more CASE this PICK}
-{
-*   Check for the single allowed case has already been executed.  If so, then we
-*   don't need to evaluate the CASE condition.
-}
-  if
-      (blk_p^.pick_p^.mode = escr_pickmode_first_k) and {only one case allowed}
-      (blk_p^.pick_p^.nrun > 0)        {that case has already been executed ?}
-      then begin
-    e.parse_p^.ip := e.parse_p^.ibuf.len + 1; {indicate input line used up}
-    goto inhibit;
-    end;
-{
-*   Execute this case if the condition is TRUE.
-}
-  if not escr_get_bool (e, casetrue, stat) then begin {evaluate the condition}
-    if sys_error(stat) then return;    {already have hard error ?}
-    escr_stat_cmd_noarg (e, stat);     {set missing argument error}
-    return;
-    end;
-  if not escr_get_end (e, stat) then return; {no additional parameters allowed}
-
-  if not casetrue then goto inhibit;   {condition is false, don't execute case ?}
-
-  blk_p^.pick_p^.nrun := blk_p^.pick_p^.nrun + 1; {count one more case run}
-  return;                              {normal return point to execute the case}
-
-inhibit:                               {inhibit execution of this case}
-  inh_p := e.inhibit_p;                {init to lowest execution inhibit}
-  while true do begin                  {inhibit all up to and including CASE}
-    inh_p^.inh := true;                {inhibit execution at this level}
-    if inh_p^.inhty = escr_inhty_case_k then exit; {reached the CASE inhibit ?}
-    inh_p := inh_p^.prev_p;            {no, up to next higher inhibit}
-    end;
-  end;
-{
-********************************************************************************
+*   Subroutine ESCR_CMD_OPTION (E, STAT)
 *
-*   Subroutine ESCR_CMD_CASEMATCH (E, STAT)
-*
-*   Command CASEMATCH value ... value
+*   Command OPTION value ... value
 }
-procedure escr_cmd_casematch (
+procedure escr_cmd_option (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
@@ -331,8 +260,8 @@ begin
 *   here and will be evaluated anew.
 }
   if e.inhibit_p^.inh then begin       {execution is currently inhibited ?}
-    if e.inhibit_p^.inhty <> escr_inhty_case_k then return; {not PICK CASE inhibit ?}
-    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the CASE inhibit}
+    if e.inhibit_p^.inhty <> escr_inhty_opt_k then return; {not PICK OPTION inhibit ?}
+    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the OPT inhibit}
     if e.inhibit_p^.inh then return;   {execution inhibited at a higher level ?}
     escr_inline_expand_rest (e, stat); {expand functions on rest of input line}
     if sys_error(stat) then return;
@@ -343,15 +272,131 @@ begin
     return;
     end;
 
-  if blk_p^.pick_p^.val_p = nil then begin {no value supplied to PICK command ?}
-    sys_stat_set (escr_subsys_k, escr_err_pick_nval_k, stat);
+  if blk_p^.pick_p^.choice_p = nil then begin {no choice supplied to PICK command ?}
+    sys_stat_set (escr_subsys_k, escr_err_pick_nchoice_k, stat);
     return;
     end;
 
-  blk_p^.pick_p^.ncase := blk_p^.pick_p^.ncase + 1; {one more case this PICK}
+  blk_p^.pick_p^.nopt := blk_p^.pick_p^.nopt + 1; {one more option this PICK}
 {
-*   Check for the single allowed case has already been executed.  If so, then we
-*   don't need to evaluate the conditions.
+*   Check for the single allowed option has already been executed.  If so, then
+*   we don't need to evaluate the conditions.
+}
+  if
+      (blk_p^.pick_p^.mode = escr_pickmode_first_k) and {only one opt allowed}
+      (blk_p^.pick_p^.nrun > 0)        {that opt has already been executed ?}
+      then begin
+    e.parse_p^.ip := e.parse_p^.ibuf.len + 1; {indicate input line used up}
+    goto inhibit;
+    end;
+{
+*   Get each VALUE parameter.  If it matches the PICK command choice, then go to
+*   RUN.  If no values match, then this section falls thru to INHIBIT.
+}
+  nval := 0;                           {init to no VALUE parameter found}
+  escr_val_init (e, blk_p^.pick_p^.choice_p^.dtype, val); {set target dtype and init VAL}
+
+  while true do begin                  {back here each new VALUE parameter}
+    if not escr_get_val_dtype (e, val, stat) then begin {get VALUE parameter into VAL}
+      if sys_error(stat) then return;  {error getting argument ?}
+      exit;                            {done with all VALUE parameters}
+      end;
+    nval := nval + 1;                  {count one more VALUE parameter}
+    {
+    *  Run this option if VAL matches the PICK block choice.
+    }
+    case val.dtype of                  {what data type is it ?}
+escr_dtype_bool_k: begin
+        if val.bool = blk_p^.pick_p^.choice_p^.bool then begin
+          goto run;
+          end;
+        end;
+escr_dtype_int_k: begin
+        if val.int = blk_p^.pick_p^.choice_p^.int then begin
+          goto run;
+          end;
+        end;
+escr_dtype_fp_k: begin
+        if val.fp = blk_p^.pick_p^.choice_p^.fp then begin
+          goto run;
+          end;
+        end;
+escr_dtype_str_k: begin
+        if string_equal(val.str, blk_p^.pick_p^.choice_p^.str) then begin
+          goto run;
+          end;
+        end;
+escr_dtype_time_k: begin
+        if sys_clock_compare(val.time, blk_p^.pick_p^.choice_p^.time) = sys_compare_eq_k
+            then begin
+          goto run;
+          end;
+        end;
+otherwise
+      escr_err_dtype_unimp (e, val.dtype, 'ESCR_CMD_OPTION');
+      end;                             {end of value data type cases}
+    end;                               {back for next VALUE parameter}
+
+  if nval <= 0 then begin              {no VALUE parameter at all ?}
+    escr_stat_cmd_noarg (e, stat);     {set missing argument error}
+    return;
+    end;
+
+inhibit:                               {inhibit execution of this option}
+  inh_p := e.inhibit_p;                {init to lowest execution inhibit}
+  while true do begin                  {inhibit all up to and including OPTION}
+    inh_p^.inh := true;                {inhibit execution at this level}
+    if inh_p^.inhty = escr_inhty_opt_k then exit; {reached the OPTION inhibit ?}
+    inh_p := inh_p^.prev_p;            {no, up to next higher inhibit}
+    end;
+  return;
+
+run:                                   {run this option}
+  e.parse_p^.ip := e.parse_p^.ibuf.len + 1; {indicate input line used up}
+  blk_p^.pick_p^.nrun := blk_p^.pick_p^.nrun + 1; {count one more option run}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_CMD_OPTIONIF (E, STAT)
+*
+*   Command OPTIONIF condition
+}
+procedure escr_cmd_optionif (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  blk_p: escr_exblock_p_t;             {pointer to the PICK block}
+  inh_p: escr_inh_p_t;                 {pointer to execution inhibit}
+  optrue: boolean;                     {condition is TRUE}
+
+label
+  inhibit;
+
+begin
+{
+*   Check the execution inhibit.  Any previous inhibit due to PICK OPTION ends
+*   here and will be evaluated anew.
+}
+  if e.inhibit_p^.inh then begin       {execution is currently inhibited ?}
+    if e.inhibit_p^.inhty <> escr_inhty_opt_k then return; {not PICK OPTION inhibit ?}
+    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the OPT inhibit}
+    if e.inhibit_p^.inh then return;   {execution inhibited at a higher level ?}
+    escr_inline_expand_rest (e, stat); {expand functions on rest of input line}
+    if sys_error(stat) then return;
+    end;
+
+  if not pick_block (e, blk_p) then begin {get pointer to the PICK block}
+    err_nopick (e, stat);
+    return;
+    end;
+
+  blk_p^.pick_p^.nopt := blk_p^.pick_p^.nopt + 1; {one more option this PICK}
+{
+*   Check for the single allowed option has already been executed.  If so, then
+*   we don't need to evaluate the condition.
 }
   if
       (blk_p^.pick_p^.mode = escr_pickmode_first_k) and {only one case allowed}
@@ -361,77 +406,38 @@ begin
     goto inhibit;
     end;
 {
-*   Get each VALUE parameter.  If it matches the PICK command value, then go to
-*   RUN.  If no values match, then this section falls thru to INHIBIT.
+*   Execute this option if the condition is TRUE.
 }
-  nval := 0;                           {init to no VALUE parameter found}
-  escr_val_init (e, blk_p^.pick_p^.val_p^.dtype, val); {set target dtype and init VAL}
-
-  while true do begin                  {back here each new VALUE parameter}
-    if not escr_get_val_dtype (e, val, stat) then begin {get VALUE parameter into VAL}
-      if sys_error(stat) then return;  {error getting argument ?}
-      exit;                            {done with all VALUE parameters}
-      end;
-    nval := nval + 1;                  {count one more VALUE parameter}
-    {
-    *  Run this case if VAL matches the PICK block value.
-    }
-    case val.dtype of                  {what data type is it ?}
-escr_dtype_bool_k: begin
-        if val.bool = blk_p^.pick_p^.val_p^.bool then begin
-          goto run;
-          end;
-        end;
-escr_dtype_int_k: begin
-        if val.int = blk_p^.pick_p^.val_p^.int then begin
-          goto run;
-          end;
-        end;
-escr_dtype_fp_k: begin
-        if val.fp = blk_p^.pick_p^.val_p^.fp then begin
-          goto run;
-          end;
-        end;
-escr_dtype_str_k: begin
-        if string_equal(val.str, blk_p^.pick_p^.val_p^.str) then begin
-          goto run;
-          end;
-        end;
-escr_dtype_time_k: begin
-        if sys_clock_compare(val.time, blk_p^.pick_p^.val_p^.time) = sys_compare_eq_k
-            then begin
-          goto run;
-          end;
-        end;
-otherwise
-      escr_err_dtype_unimp (e, val.dtype, 'ESCR_CMD_CASEMATCH');
-      end;                             {end of value data type cases}
-    end;                               {back for next VALUE parameter}
-
-  if nval <= 0 then begin              {no VALUE parameter at all ?}
+  if not escr_get_bool (e, optrue, stat) then begin {evaluate the condition}
+    if sys_error(stat) then return;    {already have hard error ?}
     escr_stat_cmd_noarg (e, stat);     {set missing argument error}
     return;
     end;
+  if not escr_get_end (e, stat) then return; {no additional parameters allowed}
+
+  if not optrue then goto inhibit;     {condition is false, don't execute case ?}
+
+  blk_p^.pick_p^.nrun := blk_p^.pick_p^.nrun + 1; {count one more case run}
+  return;                              {normal return point to execute the case}
 
 inhibit:                               {inhibit execution of this case}
   inh_p := e.inhibit_p;                {init to lowest execution inhibit}
-  while true do begin                  {inhibit all up to and including CASE}
+  while true do begin                  {inhibit all up to and including OPTION}
     inh_p^.inh := true;                {inhibit execution at this level}
-    if inh_p^.inhty = escr_inhty_case_k then exit; {reached the CASE inhibit ?}
+    if inh_p^.inhty = escr_inhty_opt_k then exit; {reached the OPTION inhibit ?}
     inh_p := inh_p^.prev_p;            {no, up to next higher inhibit}
     end;
-  return;
-
-run:                                   {run this case}
-  e.parse_p^.ip := e.parse_p^.ibuf.len + 1; {indicate input line used up}
-  blk_p^.pick_p^.nrun := blk_p^.pick_p^.nrun + 1; {count one more case run}
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_CMD_CASEELSE (E, STAT)
+*   Subroutine ESCR_CMD_OPTIONELSE (E, STAT)
+*
+*   Command OPTIONELSE
+*
+*   Execute this option if no previous option executed.
 }
-procedure escr_cmd_caseelse (
+procedure escr_cmd_optionelse (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
@@ -442,12 +448,12 @@ var
 
 begin
 {
-*   Check the execution inhibit.  Any previous inhibit due to PICK CASE ends
+*   Check the execution inhibit.  Any previous inhibit due to PICK option ends
 *   here and will be evaluated anew.
 }
   if e.inhibit_p^.inh then begin       {execution is currently inhibited ?}
-    if e.inhibit_p^.inhty <> escr_inhty_case_k then return; {not PICK CASE inhibit ?}
-    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the CASE inhibit}
+    if e.inhibit_p^.inhty <> escr_inhty_opt_k then return; {not PICK OPTION inhibit ?}
+    e.inhibit_p^.inh := e.inhibit_p^.prev_p^.inh; {end the OPTION inhibit}
     if e.inhibit_p^.inh then return;   {execution inhibited at a higher level ?}
     end;
 
@@ -465,16 +471,16 @@ begin
   inh_p := e.inhibit_p;                {init to lowest execution inhibit}
   while true do begin                  {inhibit all up to and including CASE}
     inh_p^.inh := true;                {inhibit execution at this level}
-    if inh_p^.inhty = escr_inhty_case_k then exit; {reached the CASE inhibit ?}
+    if inh_p^.inhty = escr_inhty_opt_k then exit; {reached the OPT inhibit ?}
     inh_p := inh_p^.prev_p;            {no, up to next higher inhibit}
     end;
   end;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_CMD_QUITCASE (E, STAT)
+*   Subroutine ESCR_CMD_QUITOPT (E, STAT)
 }
-procedure escr_cmd_quitcase (
+procedure escr_cmd_quitopt (
   in out  e: escr_t;
   out     stat: sys_err_t);
   val_param;
@@ -486,9 +492,9 @@ begin
   if e.inhibit_p^.inh then return;     {execution is inhibited ?}
 
   inh_p := e.inhibit_p;                {init to lowest execution inhibit}
-  while true do begin                  {inhibit all up to and including CASE}
+  while true do begin                  {inhibit all up to and including OPTION}
     inh_p^.inh := true;                {inhibit execution at this level}
-    if inh_p^.inhty = escr_inhty_case_k then exit; {reached the CASE inhibit ?}
+    if inh_p^.inhty = escr_inhty_opt_k then exit; {reached the OPT inhibit ?}
     inh_p := inh_p^.prev_p;            {no, up to next higher inhibit}
     end;
   end;
@@ -497,7 +503,7 @@ begin
 *
 *   Subroutine ESCR_IFUN_PICK (E, STAT)
 *
-*   Function PICK VAL|VALIS|NRUN|NCASE|IN
+*   Function PICK VAL|VALIS|NRUN|NOPT|IN
 }
 procedure escr_ifun_pick(
   in out  e: escr_t;
@@ -519,7 +525,7 @@ begin
   if escr_ifn_get_keyw (e, tk, stat)
     then begin
       string_tkpick80 (tk,
-        'VAL VALIS NRUN NCASE IN',
+        'VAL VALIS NRUN NOPT IN',
         keyn);
       end
     else begin
@@ -530,16 +536,16 @@ begin
 
 1:  begin                              {PICK VAL (default)}
       if not pick_block (e, blk_p) then goto nopick;
-      if blk_p^.pick_p^.val_p = nil then begin {no value supplied to PICK command ?}
-        sys_stat_set (escr_subsys_k, escr_err_pick_nval_k, stat);
+      if blk_p^.pick_p^.choice_p = nil then begin {no choice supplied to PICK command ?}
+        sys_stat_set (escr_subsys_k, escr_err_pick_nchoice_k, stat);
         return;
         end;
-      escr_ifn_ret_val (e, blk_p^.pick_p^.val_p^); {return the value}
+      escr_ifn_ret_val (e, blk_p^.pick_p^.choice_p^); {return the value}
       end;
 
 2:  begin                              {PICK VALIS}
       if not pick_block (e, blk_p) then goto nopick;
-      escr_ifn_ret_bool (e, blk_p^.pick_p^.val_p <> nil);
+      escr_ifn_ret_bool (e, blk_p^.pick_p^.choice_p <> nil);
       end;
 
 3:  begin                              {PICK NRUN}
@@ -547,9 +553,9 @@ begin
       escr_ifn_ret_int (e, blk_p^.pick_p^.nrun);
       end;
 
-4:  begin                              {PICK NCASE}
+4:  begin                              {PICK NOPT}
       if not pick_block (e, blk_p) then goto nopick;
-      escr_ifn_ret_int (e, blk_p^.pick_p^.ncase);
+      escr_ifn_ret_int (e, blk_p^.pick_p^.nopt);
       end;
 
 5:  begin                              {PICK IN}

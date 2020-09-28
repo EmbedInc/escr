@@ -9,7 +9,7 @@
 <body>
 
 <h1 class=page>ESCR Program and Callable System</h1>
-<p class=page>Last updated 21 September 2020</p>
+<p class=page>Last updated 27 September 2020</p>
 
 <ul>
   <li><a href="func.htm">Next page</a>
@@ -27,9 +27,6 @@
     <a href="#append">APPEND</a>&nbsp;
     <a href="#block">BLOCK</a>&nbsp;
     <a href="#call">CALL</a>&nbsp;
-    <a href="#case">CASE</a>&nbsp;
-    <a href="#caseelse">CASEELSE</a>&nbsp;
-    <a href="#casematch">CASEMATCH</a>&nbsp;
     <a href="#command">COMMAND</a>&nbsp;
     <a href="#const">CONST</a>&nbsp;
     <a href="#del">DEL</a>&nbsp;
@@ -48,9 +45,12 @@
     <a href="#include">INCLUDE</a>&nbsp;
     <a href="#loop">LOOP</a>&nbsp;
     <a href="#macro">MACRO</a>&nbsp;
+    <a href="#option">OPTION</a>&nbsp;
+    <a href="#optionelse">OPTIONELSE</a>&nbsp;
+    <a href="#optionif">OPTIONIF</a>&nbsp;
     <a href="#pick">PICK</a>&nbsp;
     <a href="#quit">QUIT</a>&nbsp;
-    <a href="#quitcase">QUITCASE</a>&nbsp;
+    <a href="#quitopt">QUITOPT</a>&nbsp;
     <a href="#quitmac">QUITMAC</a>&nbsp;
     <a href="#quitpick">QUITPICK</a>&nbsp;
     <a href="#repeat">REPEAT</a>&nbsp;
@@ -75,10 +75,10 @@
     <a href="#endblock">ENDBLOCK</a>&nbsp; - &nbsp; Basic block<br>
 
     <a href="#pick">PICK</a>&nbsp;
-    <a href="#case">CASE</a>&nbsp;
-    <a href="#casematch">CASEMATCH</a>&nbsp;
-    <a href="#caseelse">CASEELSE</a>&nbsp;
-    <a href="#quitcase">QUITCASE</a>&nbsp;
+    <a href="#option">OPTION</a>&nbsp;
+    <a href="#optionif">OPTIONIF</a>&nbsp;
+    <a href="#optionelse">OPTIONELSE</a>&nbsp;
+    <a href="#quitopt">QUITOPT</a>&nbsp;
     <a href="#quitpick">QUITPICK</a>&nbsp;
     <a href="#endpick">ENDPICK</a>&nbsp; - &nbsp; Pick one or all of block<br>
 
@@ -115,7 +115,7 @@
 
     <p>
     <a href="#if">IF</a>&nbsp; - &nbsp; If ... then ... else<br>
-    <a href="#pick">PICK</a>&nbsp; - &nbsp; Pick one or all matching cases<br>
+    <a href="#pick">PICK</a>&nbsp; - &nbsp; Pick one or all matching options<br>
 
   <li>Looping
 
@@ -261,62 +261,6 @@ keyword.
     Arg 2: <tt>2</tt><br>
     Arg 3: <tt>7</tt><br>
     </indent>
-
-  </p></indent>
-
-<p><tt id="case"><b>CASE</b> <i>condition</i></tt></p><indent>
-
-  <p>Starts a section of conditionally executed code in a <a
-  href="#pick"><b>pick</b></a>...<a href="#endpick"><b>endpick</b></a>
-  block.  The code section ends at the next <b>case</b>, <a
-  href="#casematch"><b>casematch</b></a>, <a
-  href="#caseelse"><b>caseelse</b></a>, or <a
-  href="#endpick"><b>endpick</b></a> command.
-
-  <p><i>Condition</i> is an expression with data type <b>bool</b>.  The
-  code section following the <b>case</b> command is only executed when
-  <i>condition</i> is true.  When <i>condition</i> is false, then code
-  execution continues at the next <b>CASExxx</b>, or <b>endpick</b>
-  command.
-
-  <p><i>Condition</i> may depend on <i>value</i> supplied with the <a
-  href="#pick"><b>pick</b></a> command.  <i>Value</i> is accessed with the
-  <a href="func.htm#pick"><b>pick</b></a> function.  See the <a
-  href="func.htm#pick"><b>pick</b> function description</a> for details.
-
-  <p>If the code section is executed (<i>condition</i> is true and
-  otherwise allowed by the <b>pick</b> command), then a <a
-  href="#quitcase"><b>quitcase</b></a> command jumps to the end of the
-  code section, and a <a href="#quitpick"><b>quitpick</b></a> command to
-  the end of the <b>pick</b>...<b>endpick</b> block.
-
-  </p></indent>
-
-<p><tt id="caseelse"><b>CASEELSE</b></tt></p><indent>
-
-  <p>Like the <a href="#case"><b>case</b></a> command, except that the
-  following code section is only executed if no previous <b>case</b> or
-  <b>casematch</b> command was executed in the
-  <b>pick</b>...<b>endpick</b> block.
-
-  <p>The <a href="#quitcase"><b>quitcase</b></a> command is also allowed
-  in a <b>caseelse</b> code section.  The restrictions and available
-  features of a code section following a <b>CASExxx</b> command and a
-  <b>caseelse</b> command are deliberately the same.
-
-  </p></indent>
-
-<p><tt id="casematch"><b>CASEMATCH</b> <i>value ... value</i></tt></p><indent>
-
-  <p>Like the <a href="#case"><b>case</b></a> command, except that the
-  following code section is only executed when at least one <i>value</i>
-  matches the value supplied to the <a href="#pick"><b>pick</b></a>
-  command.
-
-  <p>It is an error if no <i>value</i> was supplied to this
-  <b>casematch</b> command, no <i>value</i> was supplied to the
-  <b>pick</b> command, or the data type of a <b>casematch</b> <i>value</i>
-  can not be converted to the data type of the <b>pick</b> <i>value</i>.
 
   </p></indent>
 
@@ -1092,45 +1036,148 @@ keyword.
 
   </p></indent>
 
-<p><tt id="pick"><b>PICK</b> <i>opt [</i><b>WITH</b>
-<i>value]</i></tt></p><indent>
+<p><tt id="option"><b>OPTION</b> <i>value ... value</i></tt></p><indent>
 
-  <p>Starts a block that contains a set of <a
-  href="#case"><b>case</b></a>, <a href="#casematch"><b>casematch</b></a>,
-  and/or <a href="#caseelse"><b>caseelse</b></a>, commands.  The block is
-  ended with the <a href="#endpick"><b>endpick</b></a> command.
+  <p>Starts a section of conditionally executed code in a <a
+  href="#pick"><b>pick</b></a>...<a href="#endpick"><b>endpick</b></a>
+  block.  The code section ends at the next <b>option</b>, <a
+  href="#optionif"><b>optionif</b></a>, <a
+  href="#optionelse"><b>optionelse</b></a>, or <a
+  href="#endpick"><b>endpick</b></a> command.
+
+  <p>This option is valid when at least one <i>value</i> matches
+  <i>choice</i> supplied to the <b>pick</b> command.
+
+  <p>It is an error if no <i>value</i> was supplied to this <b>option</b>
+  command, no <i>choice</i> was supplied to the <b>pick</b> command, or
+  the data type of a <i>value</i> can not be converted to the data type of
+  <i>choice</i>.
+
+  <p>The <a href="#quitopt"><b>quitopt</b></a> command aborts execution of
+  the option.
+
+  </p></indent>
+
+<p><tt id="optionelse"><b>OPTIONELSE</b></tt></p><indent>
+
+  <p>Starts a section of conditionally executed code in a <a
+  href="#pick"><b>pick</b></a>...<a href="#endpick"><b>endpick</b></a>
+  block.  The code section ends at the next <a
+  href="#option"><b>option</b></a>, <a
+  href="#optionif"><b>optionif</b></a>, <b>optionelse</b>, or <a
+  href="#endpick"><b>endpick</b></a> command.
+
+  <p>The option is code is executed if no previous option was executed.
+
+  <p>The <a href="#quitopt"><b>quitopt</b></a> command aborts execution of
+  the option.
+
+  </p></indent>
+
+<p><tt id="optionif"><b>OPTIONIF</b> <i>condition</i></tt></p><indent>
+
+  <p>Starts a section of conditionally executed code in a <a
+  href="#pick"><b>pick</b></a>...<a href="#endpick"><b>endpick</b></a>
+  block.  The code section ends at the next <a
+  href="#option"><b>option</b></a>, <b>optionif</b>, <a
+  href="#optionelse"><b>optionelse</b></a>, or <a
+  href="#endpick"><b>endpick</b></a> command.
+
+  <p>The option is valid when <i>condition</i> is true.  <i>Condition</i>
+  must resolve to a value of type <b>bool</b>.
+
+  <p><i>Condition</i> may depend on <i>choice</i> supplied to the <a
+  href="#pick"><b>pick</b></a> command.  <i>Choice</i> is accessed with the
+  <a href="func.htm#pick"><b>pick</b></a> function.  See the <a
+  href="func.htm#pick"><b>pick</b></a> function description for details.
+
+  <p>The <a href="#quitopt"><b>quitopt</b></a> command aborts execution of
+  the option.
+
+  </p></indent>
+
+<p><tt id="pick"><b>PICK</b> <i>opt [</i><b>BY</b>
+<i>choice]</i></tt></p><indent>
+
+  <p>Starts a block of options that are conditionally executed.  Commands
+  that specify options are <a href="#option"><b>option</b></a>, <a
+  href="#optionif"><b>optionif</b></a>, and <a
+  href="#optionelse"><b>optionelse</b></a>.  The block is ended with the
+  <a href="#endpick"><b>endpick</b></a> command.
 
   <p>A <a href="#quitpick"><b>quitpick</b></a> command exits the
   <b>pick</b>...<b>endpick</b> block by jumping to immediately after the
-  <b>endpic</b> command.
+  <b>endpick</b> command.
 
-  <p>The code following each <b>CASExxx</b> command is conditionally
-  executed.  The condition may depend on the value of <i>value</i>.
-  <i>Value</i>, if provided, is evaluated when the <b>pick</b> command is
+  <p>The code following each <b>OPTIONxxx</b> command is conditionally
+  executed.  The condition may depend on the value of <i>choice</i>.
+  <i>Choice</i>, if provided, is evaluated when the <b>pick</b> command is
   executed, then the result saved.  This saved result is available inside
   the <b>pick</b> block via the <a href="func.htm#pick"><b>pick</b></a>
-  function.  The <b>pick</b> function can also be used to determine
-  whether <i>value</i> was supplied or not, and how many <b>case</b>
-  commands with true conditions have been encountered so far.  See the <a
-  href="func.htm#pick"><b>pick</b> function description</a> for details.
+  function.
+
+  <p>The <b>pick</b> function can also be used to determine whether
+  <i>choice</i> was supplied or not, how many previous options were
+  encountered, and how many were run.  See the <a
+  href="func.htm#pick"><b>pick</b></a> function description for details.
 
   <p><i>Opt</i> is one of the following keywords:</p><indent>
 
-    <p><b>ALL</b></p><indent>
+    <p><b>ONE</b></p><indent>
 
-      <p>The code following all <b>CASExxx</b> commands with valid
-      conditions will be executed.
+      <p>At most one option is allowed to be valid.  It is an error if
+      more than one valid option is found.  A valid option is not
+      required, as this can be handled with the <b>optionelse</b> command.
+
+      <p>An <b>optionelse</b> option is always allowed, even if another
+      option was valid.
 
       </p></indent>
 
     <p><b>FIRST</b></p><indent>
 
-      <p>The code following the first <b>CASExxx</b> command with a valid
-      condition will be executed.  No other cases will be executed.
+      <p>The first valid option is executed, then the PICK command ended.
+      This functions like the <b>ONE</b> keyword, except that it is not an
+      error if further options are valid.  The <b>optionelse</b> option is
+      only executed if there were no previous valid options.
+
+      </p></indent>
+
+    <p><b>ALL</b></p><indent>
+
+      <p>All valid options are executed.  The <b>optionelse</b> option is
+      only executed if there were no previous valid options.
 
       </p></indent>
 
     </p></indent>
+
+  <p>The commands and functions related to <b>pick</b> blocks are:<ul>
+
+    <li><b>pick</b> &nbsp; - &nbsp; Starts the block.
+
+    <li><a href="#option"><b>option</b></a> &nbsp; - &nbsp; Option
+    enabled by matching <i>choice</i>.
+
+    <li><a href="#optionif"><b>optionif</b></a> &nbsp; - &nbsp; Option
+    enabled by conditional expression.
+
+    <li><a href="#optionelse"><b>optionelse</b></a> &nbsp; - &nbsp; Option
+    run when no previous option was run.
+
+    <li><a href="#quitopt"><b>quitopt</b></a> &nbsp; - &nbsp; Abort out of
+    the current option.
+
+    <li><a href="#quitpick"><b>quitpick</b></a> &nbsp; - &nbsp; Abort out
+    of the current <b>pick</b> block.
+
+    <li><a href="#endpick"><b>endpick</b></a> &nbsp; - &nbsp; End the
+    <b>pick</b> block.
+
+    <li><a href="func.htm#pick"><b>pick</b></a> function &nbsp; - &nbsp; Gets
+    various info about the current <b>pick</b> block.
+
+    </ul>
 
   </p></indent>
 
@@ -1143,17 +1190,21 @@ keyword.
 
   </p></indent>
 
-<p><tt id="quitcase"><b>QUITCASE</b></tt></p><indent>
-
-  <p>Aborts the current code section following a <b>CASExxx</b> command.
-  Execution skips to the next <b>CASExxx</b>, or <b>endpick</b> command.
-
-  </p></indent>
-
 <p><tt id="quitmac"><b>QUITMAC</b></tt></p><indent>
 
   <p>Stops execution of a macro.  Execution is returned to the line
   following the macro invocation.
+
+  </p></indent>
+
+<p><tt id="quitopt"><b>QUITOPT</b></tt></p><indent>
+
+  <p>Aborts execution of the current option in a <a
+  href="#pick"><b>pick</b></a> block.  Execution skips to the next <a
+  href="#option"><b>option</b></a>, <a
+  href="#optionif"><b>optionif</b></a>, <a
+  href="#optionelse"><b>optionelse</b></a>, or <a
+  href="#endpick"><b>endpick</b></a> command.
 
   </p></indent>
 
