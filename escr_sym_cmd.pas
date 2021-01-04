@@ -82,7 +82,7 @@ begin
 procedure escr_sym_new_cmd (           {create new user-defined command symbol}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
-  in      line_p: escr_inline_p_t;     {pointer to first line of command definition}
+  in      line_p: fline_line_p_t;      {pointer to first line of command definition}
   in      global: boolean;             {create global, not local symbol}
   out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}

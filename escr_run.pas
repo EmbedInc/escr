@@ -367,7 +367,7 @@ leave:
 }
 procedure escr_run_atline (            {run starting at specific input files line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t;     {pointer to first input files line to execute}
+  in      line_p: fline_line_p_t;      {pointer to first input files line to execute}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
@@ -402,7 +402,7 @@ procedure escr_run_conn (              {run at current line of open file}
   val_param;
 
 var
-  infile_p: escr_infile_p_t;           {pointer to input file descriptor}
+  infile_p: fline_coll_p_t;            {pointer to input file descriptor}
 
 begin
   escr_infile_new (e, conn.tnam, infile_p); {create new input file descriptor}
@@ -432,7 +432,7 @@ procedure escr_run_file (              {run starting at first line of file}
   val_param;
 
 var
-  infile_p: escr_infile_p_t;           {pointer to the input file data in memory}
+  infile_p: fline_coll_p_t;            {pointer to the input file data in memory}
 
 begin
   escr_infile_open (                   {find file data or read it into memory}

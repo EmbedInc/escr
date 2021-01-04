@@ -700,7 +700,7 @@ var
   fnam: string_treename_t;             {new input file name}
   olddir: string_treename_t;           {old current directory}
   newdir: string_treename_t;           {new current directory where source file is in}
-  file_p: escr_infile_p_t;             {pointer to info about new file}
+  file_p: fline_coll_p_t;              {pointer to info about new file}
   stat2: sys_err_t;
 
 label

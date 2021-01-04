@@ -6,7 +6,7 @@
 *   by FILES_P in the ESCR use state.  Whole files are read into memory the
 *   first time they are referenced, then re-used for any subsequent references.
 *
-*   Snippets that are sections of a file are given symbolic names are are
+*   Snippets that are sections of a file are given symbolic names and are
 *   referenced from the SRC symbol table.
 }
 module escr_infile;
@@ -30,7 +30,7 @@ define escr_infile_skipline;
 procedure escr_infile_new (            {create new input file snippet descriptor}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      tnam: univ string_var_arg_t; {full unique treename of the file}
-  out     infile_p: escr_infile_p_t);  {returned pointer to input file descriptor}
+  out     infile_p: fline_coll_p_t);   {returned pointer to input file descriptor}
   val_param;
 
 begin
@@ -57,7 +57,7 @@ begin
 procedure escr_infile_find (           {find existing input file descriptor}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      tnam: univ string_var_arg_t; {full unique treename of the file}
-  out     infile_p: escr_infile_p_t);  {points to snippet, or NIL for not found}
+  out     infile_p: fline_coll_p_t);   {points to snippet, or NIL for not found}
   val_param;
 
 begin
@@ -86,13 +86,13 @@ begin
 }
 procedure escr_infile_add_line (       {add line to source file snippet}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  var     infile: escr_infile_t;       {snippet to add the line to}
+  var     infile: fline_coll_t;        {snippet to add the line to}
   in      line: univ string_var_arg_t; {the source line}
   in      lnum: sys_int_machine_t);    {source line number within its file}
   val_param;
 
 var
-  line_p: escr_inline_p_t;             {pointer to the new source line descriptor}
+  line_p: fline_line_p_t;              {pointer to the new source line descriptor}
   ii: sys_int_machine_t;               {scratch integer}
   len: sys_int_machine_t;              {unpadded length of input line}
 
@@ -147,7 +147,7 @@ begin
 }
 procedure escr_infile_add_lines (      {add lines to source file snippet}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  var     infile: escr_infile_t;       {snippet to add the lines to}
+  var     infile: fline_coll_t;        {snippet to add the lines to}
   var     conn: file_conn_t;           {existing connection to text file}
   out     stat: sys_err_t);            {completion status}
   val_param;
@@ -186,7 +186,7 @@ procedure escr_infile_open (           {find file data or read it into memory}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {file name}
   in      suff: string;                {allowed file name suffixes, blank separated}
-  out     infile_p: escr_infile_p_t;   {returned pointer to input file descriptor}
+  out     infile_p: fline_coll_p_t;    {returned pointer to input file descriptor}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
@@ -228,7 +228,7 @@ procedure escr_infile_pop (            {pop back one nested input file level}
   val_param;
 
 var
-  pos_p: escr_inpos_p_t;               {pointer to input position state}
+  pos_p: fline_hier_p_t;               {pointer to input position state}
 
 begin
   if e.exblock_p = nil then return;    {no current execution block ?}
@@ -263,8 +263,8 @@ procedure escr_infile_getline (        {get next input stream source line}
   val_param;
 
 var
-  pos_p: escr_inpos_p_t;               {pointer to input position state}
-  line_p: escr_inline_p_t;             {pointer to input line info}
+  pos_p: fline_hier_p_t;               {pointer to input position state}
+  line_p: fline_line_p_t;              {pointer to input line info}
 
 label
   retry;

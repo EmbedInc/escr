@@ -34,8 +34,8 @@ var
   msg_parm:                            {parameter references for messages}
     array[1..max_msg_parms] of sys_parm_msg_t;
   block_p: escr_exblock_p_t;           {pointer to nested execution block state}
-  inpos_p: escr_inpos_p_t;             {pointer to nested input position state}
-  line_p: escr_inline_p_t;             {pointer to definition of one input stream line}
+  inpos_p: fline_hier_p_t;             {pointer to nested input position state}
+  line_p: fline_line_p_t;              {pointer to definition of one input stream line}
 
 begin
   escr_out_close_all (e, true);        {close and delete all output files}

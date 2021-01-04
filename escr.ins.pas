@@ -108,8 +108,8 @@ const
     lshft(1, escr_ulab_log2buck_k);
 
 type
-  escr_inline_p_t = ^escr_inline_t;    {pointer to line within input file}
-  escr_inline_pp_t = ^escr_inline_p_t;
+  fline_line_p_t = ^fline_line_t;      {pointer to line within input file}
+  escr_inline_pp_t = ^fline_line_p_t;
   escr_sym_p_t = ^escr_sym_t;          {pointer to a symbol instance}
   escr_exblock_p_t = ^escr_exblock_t;  {pointer to info about one nested executable block}
   escr_inh_p_t = ^escr_inh_t;          {pointer to state for one execution inhibit layer}
@@ -125,29 +125,6 @@ type
     escr_dtype_fp_k,                   {floating point}
     escr_dtype_str_k,                  {text string}
     escr_dtype_time_k);                {absolute time descriptor}
-
-  escr_infile_p_t = ^escr_infile_t;
-  escr_infile_t = record               {information about one input file or snippet thereof}
-    next_p: escr_infile_p_t;           {points to next input file in the list}
-    tnam: string_treename_t;           {full treename of the input file}
-    lfirst_p: escr_inline_p_t;         {pointer to first line of snippet}
-    llast_p: escr_inline_p_t;          {pointer to last line of snippet}
-    end;
-
-  escr_inline_t = record               {info about one input file line}
-    next_p: escr_inline_p_t;           {pointer to next input line this file, NIL = last}
-    file_p: escr_infile_p_t;           {pointer to file this line is from}
-    lnum: sys_int_machine_t;           {1-N line number of this line}
-    str_p: string_var_p_t;             {pointer to string for this line}
-    end;
-
-  escr_inpos_p_t = ^escr_inpos_t;
-  escr_inpos_t = record                {one level in current input files position}
-    prev_p: escr_inpos_p_t;            {points to previous level, back there on EOF}
-    level: sys_int_machine_t;          {nesting level within block, top = 0}
-    line_p: escr_inline_p_t;           {points to next input line}
-    last_p: escr_inline_p_t;           {points to last input line read}
-    end;
 
   escr_sytable_p_t = ^escr_sytable_t;
   escr_sytable_t = record              {symbol table}
@@ -278,34 +255,34 @@ escr_sym_const_k: (                    {constant}
       const_val: escr_vcon_t;          {the constant's data type and value}
       );
 escr_sym_subr_k: (                     {subroutine defined by user code}
-      subr_line_p: escr_inline_p_t;    {points to first line of subroutine definition}
+      subr_line_p: fline_line_p_t;     {points to first line of subroutine definition}
       );
 escr_sym_isubr_k: (                    {intrinsic subroutine, implemented by compiled code}
       isubr_p: escr_isubr_p_t;         {points to routine that implements the subroutine}
       );
 escr_sym_macro_k: (                    {macro}
-      macro_line_p: escr_inline_p_t;   {points to first line of macro definition}
+      macro_line_p: fline_line_p_t;    {points to first line of macro definition}
       );
 escr_sym_imacro_k: (                   {intrinsic macro, implemented by compiled routine}
       imacro_p: escr_imacro_p_t;       {pointer to routine that implements the macro}
       );
 escr_sym_func_k: (                     {function defined by user code}
-      func_line_p: escr_inline_p_t;    {points to first line of function definition}
+      func_line_p: fline_line_p_t;     {points to first line of function definition}
       );
 escr_sym_ifunc_k: (                    {intrisic function, implemented by compiled routine}
       ifunc_p: escr_ifunc_p_t;         {pointer to routine that implements the function}
       );
 escr_sym_cmd_k: (                      {command defined by user code}
-      cmd_line_p: escr_inline_p_t;     {points to first line of command definition}
+      cmd_line_p: fline_line_p_t;      {points to first line of command definition}
       );
 escr_sym_icmd_k: (                     {intrisic command, implemented by compiled routine}
       icmd_p: escr_icmd_p_t;           {pointer to routine that implements the command}
       );
 escr_sym_label_k: (                    {label for specific line in input files}
-      label_line_p: escr_inline_p_t;   {points to first line of command definition}
+      label_line_p: fline_line_p_t;    {points to first line of command definition}
       );
 escr_sym_src_k: (                      {label for a source code snippet}
-      src_p: escr_infile_p_t;          {pointer to source code snippet}
+      src_p: fline_coll_p_t;           {pointer to source code snippet}
       );
     end;
 
@@ -399,7 +376,7 @@ escr_looptype_dir_k: (                 {loop over directory entries}
   escr_exblock_t = record              {info about one nested execution block}
     prev_p: escr_exblock_p_t;          {pointer to previous execution block, NIL at top}
     level: sys_int_machine_t;          {nesting level, 0 at top}
-    start_p: escr_inline_p_t;          {pointer to first line of block definition}
+    start_p: fline_line_p_t;           {pointer to first line of block definition}
     sym_p: escr_sym_p_t;               {points to sym for name of this block, if any}
     sym_curr_p: escr_sym_p_t;          {symbol to restore to curr version on exit, if any}
     mem_p: util_mem_context_p_t;       {mem context for block, deleted when block closed}
@@ -407,7 +384,7 @@ escr_looptype_dir_k: (                 {loop over directory entries}
     arg_last_p: escr_arg_p_t;          {points to last argument in list}
     nargs: sys_int_machine_t;          {number of arguments in arguments list}
     locsym_p: escr_sylist_p_t;         {points to list of symbols local to this block}
-    inpos_p: escr_inpos_p_t;           {points to current nested input file position}
+    inpos_p: fline_hier_p_t;           {points to current nested input file position}
     previnh_p: escr_inh_p_t;           {points to previous inhibit before this block}
     parse_p: escr_parse_p_t;           {points to saved parse state, NIL = none}
     bltype: escr_exblock_k_t;          {type of execution block}
@@ -492,7 +469,7 @@ escr_inhty_blk_k: (                    {in execution block}
     sym_cmd: escr_sytable_t;           {symbol table for commands}
     sym_lab: escr_sytable_t;           {symbol table for input file line labels}
     sym_src: escr_sytable_t;           {symbol table for input file source snippets}
-    files_p: escr_infile_p_t;          {points to list of input files}
+    infile: fline_t;                   {input files state}
     parse: escr_parse_t;               {root input parsing state}
     parse_p: escr_parse_p_t;           {points to current input parsing state}
     exblock_p: escr_exblock_p_t;       {points to info about current execution block}
@@ -872,13 +849,13 @@ procedure escr_exblock_close (         {close curr execution block and delete te
 
 procedure escr_exblock_inline_push (   {push new source line location for exec block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t;     {pointer to next input line to use}
+  in      line_p: fline_line_p_t;      {pointer to next input line to use}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
 procedure escr_exblock_inline_set (    {go to new input source position in curr block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t;     {pointer to next input line to use}
+  in      line_p: fline_line_p_t;      {pointer to next input line to use}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
@@ -955,7 +932,7 @@ procedure escr_ifunc_add (             {add intrinsic function}
 procedure escr_infile_find (           {find existing input file descriptor}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      tnam: univ string_var_arg_t; {full unique treename of the file}
-  out     infile_p: escr_infile_p_t);  {points to snippet, or NIL for not found}
+  out     infile_p: fline_coll_p_t);   {points to snippet, or NIL for not found}
   val_param; extern;
 
 procedure escr_infile_getline (        {get next input stream source line}
@@ -965,14 +942,14 @@ procedure escr_infile_getline (        {get next input stream source line}
 
 procedure escr_infile_add_line (       {add line to source file snippet}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  var     infile: escr_infile_t;       {snippet to add the line to}
+  var     infile: fline_coll_t;        {snippet to add the line to}
   in      line: univ string_var_arg_t; {the source line}
   in      lnum: sys_int_machine_t);    {source line number within its file}
   val_param; extern;
 
 procedure escr_infile_add_lines (      {add lines to source file snippet}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  var     infile: escr_infile_t;       {snippet to add the lines to}
+  var     infile: fline_coll_t;        {snippet to add the lines to}
   var     conn: file_conn_t;           {existing connection to text file}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
@@ -980,14 +957,14 @@ procedure escr_infile_add_lines (      {add lines to source file snippet}
 procedure escr_infile_new (            {create new input file snippet descriptor}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      tnam: univ string_var_arg_t; {full unique treename of the file}
-  out     infile_p: escr_infile_p_t);  {returned pointer to input file descriptor}
+  out     infile_p: fline_coll_p_t);   {returned pointer to input file descriptor}
   val_param; extern;
 
 procedure escr_infile_open (           {find file data or read it into memory}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {file name}
   in      suff: string;                {allowed file name suffixes, blank separated}
-  out     infile_p: escr_infile_p_t;   {returned pointer to input file descriptor}
+  out     infile_p: fline_coll_p_t;    {returned pointer to input file descriptor}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
@@ -1070,7 +1047,7 @@ procedure escr_run (                   {run, state all set up, returns on block 
 
 procedure escr_run_atline (            {run starting at specific input files line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t;     {pointer to first input files line to execute}
+  in      line_p: fline_line_p_t;      {pointer to first input files line to execute}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
@@ -1259,7 +1236,7 @@ procedure escr_sym_new_const (         {create new symbol for a constant}
 procedure escr_sym_new_cmd (           {create new user-defined command symbol}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
-  in      line_p: escr_inline_p_t;     {pointer to first line of command definition}
+  in      line_p: fline_line_p_t;      {pointer to first line of command definition}
   in      global: boolean;             {create global, not local symbol}
   out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}
@@ -1268,7 +1245,7 @@ procedure escr_sym_new_cmd (           {create new user-defined command symbol}
 procedure escr_sym_new_func (          {create new user-defined function symbol}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {symbol name}
-  in      line_p: escr_inline_p_t;     {pointer to first line of function definition}
+  in      line_p: fline_line_p_t;      {pointer to first line of function definition}
   in      global: boolean;             {create global, not local symbol}
   out     sym_p: escr_sym_p_t;         {returned pointer to the new symbol}
   out     stat: sys_err_t);            {completion status}

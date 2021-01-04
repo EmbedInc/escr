@@ -211,7 +211,7 @@ begin
 }
 procedure escr_exblock_inline_set (    {go to new input source position in curr block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t;     {pointer to next input line to use}
+  in      line_p: fline_line_p_t;      {pointer to next input line to use}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
@@ -243,12 +243,12 @@ begin
 }
 procedure escr_exblock_inline_push (   {push new source line location for exec block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: escr_inline_p_t;     {pointer to next input line to use}
+  in      line_p: fline_line_p_t;      {pointer to next input line to use}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
 var
-  pos_p: escr_inpos_p_t;               {pointer to new nested input position state}
+  pos_p: fline_hier_p_t;               {pointer to new nested input position state}
   level: sys_int_machine_t;            {new input file nesting level, top = 0}
 
 begin
