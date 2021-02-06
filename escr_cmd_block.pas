@@ -25,7 +25,7 @@ begin
   escr_exblock_new (e, stat);          {create new execution block state}
   if sys_error(stat) then return;
   e.exblock_p^.bltype := escr_exblock_blk_k; {indicate BLOCK ... ENBLOCK type}
-  escr_exblock_goto_line (e, line_p, stat); {init input line for the new block}
+  escr_exblock_goto_line_aft (e, line_p, stat); {init input line for the new block}
   end;
 {
 ********************************************************************************
@@ -92,5 +92,5 @@ begin
 
   line_p := escr_in_line (e);          {get pointer to curr input line}
   escr_exblock_close (e, stat);        {end this BLOCK ... ENDBLOCK execution block}
-  escr_exblock_goto_line (e, line_p, stat); {restart parent block here}
+  escr_exblock_goto_line_aft (e, line_p, stat); {restart parent block on next line}
   end;

@@ -296,10 +296,9 @@ escr_sym_cmd_k: begin                  {user-defined command, implemented with s
           if not escr_get_tkraw (e, buf) then exit; {try to get command parameter}
           escr_exblock_arg_add (e, buf); {add as next argument to new execution block}
           end;
-        escr_exblock_goto_line (       {go to command definition line}
+        escr_exblock_goto_line_aft (   {go to body of command definition}
           e, sym_p^.cmd_line_p, stat);
         if sys_error(stat) then return;
-        escr_infile_skipline (e);      {skip over command definition line}
         escr_exblock_ulab_init (e);    {create table for local labels}
         end;                           {end of execution not inhibited case}
       end;                             {end of user-defined command case}

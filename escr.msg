@@ -284,9 +284,9 @@ msg err_lookupver_nover
 msg in_block
   lan english -def
     In block starting on line %p1i of "%p2s".
-msg included_from
+msg from_line
   lan english -def
-    Included from "%p1s" at line %p2i.
+    From line %p2i of file "%p1s".
 msg open
   lan english -def
     Error occurred on attempt to open a new ESCR script system use state.

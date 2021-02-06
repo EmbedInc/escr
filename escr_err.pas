@@ -40,7 +40,6 @@ var
 begin
   escr_out_close_all (e, true);        {close and delete all output files}
 
-  writeln;                             {leave blank line before error messages}
   sys_message_parms (subsys, msg, parms, n_parms); {write caller's message}
   if e.exblock_p = nil then return;
 
@@ -63,7 +62,7 @@ begin
         if name_p <> nil then begin
           sys_msg_parm_vstr (msg_parm[1], name_p^); {input file name}
           sys_msg_parm_int (msg_parm[2], fline_line_lnum_virt(line_p^)); {line number}
-          sys_message_parms ('escr', 'included from', msg_parm, 2);
+          sys_message_parms ('escr', 'from_line', msg_parm, 2);
           end;
         end;
       fline_block_pop (e.fline_p^, e.exblock_p^.instk_p); {to next input file up}
@@ -106,6 +105,7 @@ procedure escr_err_atline_abort (      {bomb with msg and source line on error}
 begin
   if not sys_error(stat) then return;  {STAT is not indicating an error ?}
 
+  writeln;
   sys_error_print (stat, '', '', nil, 0); {show the error}
   escr_err_atline (e, subsys, msg, parms, n_parms); {indicate source line and bomb}
   end;

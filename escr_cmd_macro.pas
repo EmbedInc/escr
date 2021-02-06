@@ -204,7 +204,7 @@ begin
     if not escr_get_tkrawc (e, tk) then exit; {get next argument}
     escr_exblock_arg_add (e, tk);      {add as next argument to new execution block}
     end;
-  escr_exblock_goto_line_aft (         {go to macro definition line}
+  escr_exblock_goto_line_aft (         {go to first line of marcro body}
     e, sym_p^.macro_line_p, stat);
   if sys_error(stat) then return;
   escr_macro_run := true;              {indicate macro invocation processed}
