@@ -389,6 +389,46 @@ begin
 {
 ********************************************************************************
 *
+*   Subroutine ESCR_RUN_CONN (E, CONN, STAT)
+*
+*   Execute script code starting at the current position of a open file.  CONN
+*   is the existing connection to the file.
+}
+procedure escr_run_conn (              {run at current line of open file}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  var     conn: file_conn_t;           {pointer to I/O connection state}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+var
+  coll_p: fline_coll_p_t;              {pointer to stored collection of lines}
+  line_p: fline_line_p_t;              {pointer to line to start running at}
+
+begin
+  fline_coll_new (                     {create new collection of source lines}
+    e.fline_p^,                        {FLINE library use state}
+    conn.tnam,                         {name to use for the collection}
+    fline_colltyp_file_k,              {type of collection}
+    coll_p);                           {returned pointer to new collection descriptor}
+
+  fline_file_add_conn (                {add lines from the I/O connection to the collection}
+    e.fline_p^,                        {FLINE library use state}
+    conn,                              {I/O connection to get text lines from}
+    coll_p^,                           {collection to store the lines in}
+    stat);
+  if sys_error(stat) then return;
+
+  fline_coll_line_first (coll_p^, line_p); {get pointer to starting line}
+
+  e.exstat := 0;                       {init script exit status code}
+  escr_run_atline (                    {run the code in this file}
+    e,                                 {state for this use of the ESCR system}
+    line_p,                            {pointer to line to start running at}
+    stat);
+  end;
+{
+********************************************************************************
+*
 *   Subroutine ESCR_RUN_FILE (E, FNAM, SUFF, STAT)
 *
 *   Execute script code starting at the first line of the indicated file.  The

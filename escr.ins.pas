@@ -1070,6 +1070,12 @@ procedure escr_run_clean (             {clean out any existing execution state}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
+procedure escr_run_conn (              {run at current line of open file}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  var     conn: file_conn_t;           {pointer to I/O connection state}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
 procedure escr_run_file (              {run starting at first line of file}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {name of file to run script code from}
