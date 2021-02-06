@@ -187,7 +187,9 @@ begin
 {
 *   Do basic initialization.
 }
-  e_p^.files_p := nil;
+  fline_lib_new (e_p^.mem_p^, e_p^.fline_p, stat);
+  if sys_error(stat) then return;
+
   escr_parse_init (e_p^.parse);
   e_p^.parse_p := addr(e_p^.parse);
   e_p^.exblock_p := nil;
@@ -393,6 +395,7 @@ begin
   if e_p = nil then return;            {no state to deallocate ?}
 
   escr_out_close_all (e_p^, false);    {close all output files}
+  fline_lib_end (e_p^.fline_p);        {end use of the FLINE library}
 
   mem_p := e_p^.mem_p;                 {get pointer to top memory context}
   util_mem_context_del (mem_p);        {delete the mem context}

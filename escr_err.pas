@@ -19,7 +19,7 @@ define escr_err_sym_not_found;
 *   the current source file name and line number, then exit the program with
 *   error status.
 }
-procedure escr_err_atline (            {show error followed by source line number}
+procedure escr_err_atline (            {show error followed by source location}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      subsys: string;              {name of subsystem, used to find message file}
   in      msg: string;                 {message name withing subsystem file}
@@ -33,41 +33,55 @@ const
 var
   msg_parm:                            {parameter references for messages}
     array[1..max_msg_parms] of sys_parm_msg_t;
-  block_p: escr_exblock_p_t;           {pointer to nested execution block state}
-  inpos_p: fline_hier_p_t;             {pointer to nested input position state}
   line_p: fline_line_p_t;              {pointer to definition of one input stream line}
+  name_p: string_var_p_t;
+  stat: sys_err_t;
 
 begin
   escr_out_close_all (e, true);        {close and delete all output files}
 
+  writeln;                             {leave blank line before error messages}
   sys_message_parms (subsys, msg, parms, n_parms); {write caller's message}
+  if e.exblock_p = nil then return;
 
-  block_p := e.exblock_p;              {get pointer to current execution block}
-  if block_p = nil then return;        {not in a execution block, nothing to report ?}
-  inpos_p := block_p^.inpos_p;         {get pointer to nested input file state}
-  if inpos_p = nil then return;        {no input files open ?}
-
-  line_p := inpos_p^.last_p;           {get pointer to current input line info}
-  sys_msg_parm_vstr (msg_parm[1], line_p^.file_p^.tnam); {input file name}
-  sys_msg_parm_int (msg_parm[2], line_p^.lnum); {input file line number}
-  sys_message_parms ('escr', 'err_fnam_lnum', msg_parm, 2);
-
-  inpos_p := inpos_p^.prev_p;          {back to next nested input file this execution block}
-  while block_p <> nil do begin        {back thru the nested execution blocks}
-    while inpos_p <> nil do begin      {back thru nested input files this execution block}
-      line_p := inpos_p^.last_p;       {get pointer to last read line}
-      sys_msg_parm_vstr (msg_parm[1], line_p^.file_p^.tnam); {file name}
-      sys_msg_parm_int (msg_parm[2], line_p^.lnum); {line number}
-      sys_message_parms ('escr', 'included_from', msg_parm, 2);
-      inpos_p := inpos_p^.prev_p;      {back to file included from}
+  fline_hier_get_line (e.exblock_p^.instk_p^, line_p); {get pointer to current line}
+  if line_p <> nil then begin
+    fline_line_name_virt (line_p^, name_p);
+    if name_p <> nil then begin
+      sys_msg_parm_vstr (msg_parm[1], name_p^); {input file name}
+      sys_msg_parm_int (msg_parm[2], fline_line_lnum_virt(line_p^)); {line number}
+      sys_message_parms ('escr', 'err_fnam_lnum', msg_parm, 2);
       end;
-    if block_p^.prev_p <> nil then begin {in a nested execution block ?}
-      sys_msg_parm_int (msg_parm[1], block_p^.start_p^.lnum); {block start line number}
-      sys_msg_parm_vstr (msg_parm[2], block_p^.start_p^.file_p^.tnam); {block start fname}
-      sys_message_parms ('escr', 'in_block', msg_parm, 2);
-      end;
-    block_p := block_p^.prev_p;        {one level up to parent execution block}
     end;
+  fline_block_pop (e.fline_p^, e.exblock_p^.instk_p); {up one level within this block}
+
+  while e.exblock_p <> nil do begin    {up thru the nested execution blocks}
+    while e.exblock_p^.instk_p <> nil do begin {up the nested input files this block}
+      fline_hier_get_line (e.exblock_p^.instk_p^, line_p); {get pointer to this input line}
+      if line_p <> nil then begin
+        fline_line_name_virt (line_p^, name_p); {get file name}
+        if name_p <> nil then begin
+          sys_msg_parm_vstr (msg_parm[1], name_p^); {input file name}
+          sys_msg_parm_int (msg_parm[2], fline_line_lnum_virt(line_p^)); {line number}
+          sys_message_parms ('escr', 'included from', msg_parm, 2);
+          end;
+        end;
+      fline_block_pop (e.fline_p^, e.exblock_p^.instk_p); {to next input file up}
+      end;
+    if                                 {in a nested execution block ?}
+        (e.exblock_p^.prev_p <> nil) and then {not the top level block ?}
+        (e.exblock_p^.start_p <> nil)  {the starting line is known ?}
+        then begin
+      line_p := e.exblock_p^.start_p;  {get pointer to starting line of this block}
+      fline_line_name_virt (line_p^, name_p); {get pointer to file name}
+      if name_p <> nil then begin      {we have a file name ?}
+        sys_msg_parm_int (msg_parm[1], fline_line_lnum_virt(line_p^));
+        sys_msg_parm_vstr (msg_parm[2], name_p^); {block start fname}
+        sys_message_parms ('escr', 'in_block', msg_parm, 2);
+        end;
+      end;
+    escr_exblock_close (e, stat);      {close this block, to parent block}
+    end;                               {back write message about this new block}
 
   sys_bomb;                            {exit the program with error status}
   end;

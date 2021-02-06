@@ -48,7 +48,7 @@ begin
   if sys_error(stat) then goto error;
 
   sym_p^.subr_line_p :=                {save pointer to subroutine definition line}
-    e.exblock_p^.inpos_p^.last_p;
+    escr_in_line (e);
   return;
 
 error:                                 {error after inhibit created, STAT set}
@@ -132,10 +132,9 @@ begin
     if not escr_get_tkraw (e, tk) then exit; {get next argument}
     escr_exblock_arg_add (e, tk);      {add as next argument to new execution block}
     end;
-  escr_exblock_inline_set (            {go to subroutine definition line}
+  escr_exblock_goto_line_aft (         {start at first line of subroutine}
     e, sym_p^.subr_line_p, stat);
   if sys_error(stat) then return;
-  escr_infile_skipline (e);            {skip over subroutine definition line}
   escr_exblock_ulab_init (e);          {create table for local labels}
   end;
 {

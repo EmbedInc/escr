@@ -1,4 +1,4 @@
-{   Module of routines that implement individual commands.  Some larger command
+{   Module of routines that implement built-in commands.  Some larger command
 *   routines are in their own modules, called ESCR_CMD_<name>.  The smaller
 *   command routines are collected here.
 *
@@ -527,6 +527,7 @@ procedure write_symbol (               {write info about all versions of a symbo
 var
   sym_p: escr_sym_p_t;                 {pointer to individual symbol descriptor}
   tk: string_var32_t;                  {scratch token for number conversion}
+  str_p: string_var_p_t;               {pointer to arbitrary var string}
 
 begin
   tk.max := size_char(tk.str);         {init local var string}
@@ -553,10 +554,11 @@ escr_sym_const_k: begin                {symbol is a constant}
 
 escr_sym_subr_k: begin                 {user-defined subroutine}
         string_appends (e.obuf, ' subroutine, line '(0));
-        string_f_int (tk, sym_p^.subr_line_p^.lnum);
+        string_f_int (tk, fline_line_lnum_virt(sym_p^.subr_line_p^));
         string_append (e.obuf, tk);
         string_appends (e.obuf, ' of '(0));
-        string_append (e.obuf, sym_p^.subr_line_p^.file_p^.tnam);
+        fline_line_name_virt (sym_p^.subr_line_p^, str_p);
+        string_append (e.obuf, str_p^);
         end;
 
 escr_sym_isubr_k: begin                {intrinsic subroutine}
@@ -565,10 +567,11 @@ escr_sym_isubr_k: begin                {intrinsic subroutine}
 
 escr_sym_macro_k: begin                {user-defined macro}
         string_appends (e.obuf, ' macro, line '(0));
-        string_f_int (tk, sym_p^.macro_line_p^.lnum);
+        string_f_int (tk, fline_line_lnum_virt(sym_p^.macro_line_p^));
         string_append (e.obuf, tk);
         string_appends (e.obuf, ' of '(0));
-        string_append (e.obuf, sym_p^.macro_line_p^.file_p^.tnam);
+        fline_line_name_virt (sym_p^.macro_line_p^, str_p);
+        string_append (e.obuf, str_p^);
         end;
 
 escr_sym_imacro_k: begin               {intrinsic macro}
@@ -577,10 +580,11 @@ escr_sym_imacro_k: begin               {intrinsic macro}
 
 escr_sym_func_k: begin                 {user-defined function}
         string_appends (e.obuf, ' function, line '(0));
-        string_f_int (tk, sym_p^.func_line_p^.lnum);
+        string_f_int (tk, fline_line_lnum_virt(sym_p^.func_line_p^));
         string_append (e.obuf, tk);
         string_appends (e.obuf, ' of '(0));
-        string_append (e.obuf, sym_p^.func_line_p^.file_p^.tnam);
+        fline_line_name_virt (sym_p^.func_line_p^, str_p);
+        string_append (e.obuf, str_p^);
         end;
 
 escr_sym_ifunc_k: begin                {intrinsic function}
@@ -589,10 +593,11 @@ escr_sym_ifunc_k: begin                {intrinsic function}
 
 escr_sym_cmd_k: begin                  {user-defined command}
         string_appends (e.obuf, ' command, line '(0));
-        string_f_int (tk, sym_p^.cmd_line_p^.lnum);
+        string_f_int (tk, fline_line_lnum_virt(sym_p^.cmd_line_p^));
         string_append (e.obuf, tk);
         string_appends (e.obuf, ' of '(0));
-        string_append (e.obuf, sym_p^.cmd_line_p^.file_p^.tnam);
+        fline_line_name_virt (sym_p^.cmd_line_p^, str_p);
+        string_append (e.obuf, str_p^);
         end;
 
 escr_sym_icmd_k: begin                 {intrinsic command}
@@ -601,19 +606,21 @@ escr_sym_icmd_k: begin                 {intrinsic command}
 
 escr_sym_label_k: begin                {label}
         string_appends (e.obuf, ' label, line '(0));
-        string_f_int (tk, sym_p^.label_line_p^.lnum);
+        string_f_int (tk, fline_line_lnum_virt(sym_p^.label_line_p^));
         string_append (e.obuf, tk);
         string_appends (e.obuf, ' of '(0));
-        string_append (e.obuf, sym_p^.label_line_p^.file_p^.tnam);
+        fline_line_name_virt (sym_p^.label_line_p^, str_p);
+        string_append (e.obuf, str_p^);
         end;
 
 escr_sym_src_k: begin                  {label for source code snippet}
         string_appends (e.obuf, ' source code block, lines ');
-        string_append_intu (e.obuf, sym_p^.src_p^.lfirst_p^.lnum, 0);
+        string_append_intu (e.obuf, fline_line_lnum_virt(sym_p^.src_p^.first_p^), 0);
         string_appends (e.obuf, ' to ');
-        string_append_intu (e.obuf, sym_p^.src_p^.llast_p^.lnum, 0);
+        string_append_intu (e.obuf, fline_line_lnum_virt(sym_p^.src_p^.last_p^), 0);
         string_appends (e.obuf, ' of '(0));
-        string_append (e.obuf, sym_p^.src_p^.tnam);
+        fline_line_name_virt (sym_p^.src_p^.first_p^, str_p);
+        string_append (e.obuf, str_p^);
         end;
 
 otherwise
@@ -701,6 +708,7 @@ var
   olddir: string_treename_t;           {old current directory}
   newdir: string_treename_t;           {new current directory where source file is in}
   file_p: fline_coll_p_t;              {pointer to info about new file}
+  str_p: string_var_p_t;               {pointer to arbitrary var string}
   stat2: sys_err_t;
 
 label
@@ -714,21 +722,23 @@ begin
 
   if not escr_get_str (e, fnam, stat)  {get new file name into FNAM}
     then goto err_missing;
-
   if not escr_get_end (e, stat) then return; {abort on extra parameter}
-
+{
+*   The include file name is in FNAM.
+}
+  fline_hier_name (e.exblock_p^.instk_p^, str_p); {get current source file name pointer}
   string_pathname_split (              {get source file's directory in NEWDIR}
-    e.exblock_p^.inpos_p^.last_p^.file_p^.tnam, newdir, olddir);
+    str_p^, newdir, olddir);
   file_currdir_get (olddir, stat);     {get and save current directory name}
   if sys_error(stat) then return;
   file_currdir_set (newdir, stat);     {go to source file's directory for include file open}
   if sys_error(stat) then return;
   escr_infile_open (e, fnam, e.incsuff, file_p, stat); {get pointer to info about the new file}
-  file_currdir_set (olddir, stat2);
+  file_currdir_set (olddir, stat2);    {go back to original directory}
   if sys_error(stat) then return;
   sys_error_abort (stat2, '', '', nil, 0);
-  escr_exblock_inline_push (           {set next line to first line in new file}
-    e, file_p^.lfirst_p, stat);
+  escr_exblock_push_coll (             {set next line to first line in new file}
+    e, file_p, stat);
   return;
 {
 *   Abort due to missing required parameter.
@@ -880,12 +890,7 @@ begin
     escr_exblock_close (e, stat);
     if sys_error(stat) then return;
     end;
-
-  while e.exblock_p^.inpos_p^.prev_p <> nil do begin {back to top file}
-    escr_infile_pop (e);
-    end;
-
-  e.exblock_p^.inpos_p^.line_p := nil; {as if hit end of input file}
+  fline_hier_delete (e.fline_p^, e.exblock_p^.instk_p); {completely close input stream}
   end;
 {
 ********************************************************************************

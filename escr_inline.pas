@@ -387,7 +387,7 @@ escr_sym_func_k: begin                 {user-defined function}
         end;
       escr_exblock_parse_save (e, stat); {save parsing state, create new}
       if sys_error(stat) then return;
-      escr_exblock_inline_set (        {go to function definition line}
+      escr_exblock_goto_line (         {go to function definition line}
         e, sym_p^.func_line_p, stat);
       if sys_error(stat) then return;
       escr_infile_skipline (e);        {skip over command definition line}

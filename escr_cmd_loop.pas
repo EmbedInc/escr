@@ -194,6 +194,7 @@ type
   keyw_t = set of keyw_k_t;            {set of all possible keywords}
 
 var
+  line_p: fline_line_p_t;              {pointer to current input line}
   keyw: keyw_t;                        {keywords seen so far}
   loop_p: escr_loop_p_t;               {pointer to loop descriptor}
   pick: sys_int_machine_t;             {number of keyword picked from list}
@@ -215,15 +216,16 @@ begin
   tk.max := size_char(tk.str);
   fnam.max := size_char(fnam.str);
   sys_error_none (stat);               {init to no error occurred}
+  line_p := escr_in_line (e);          {get pointer to the current input line}
 
   escr_exblock_new (e, stat);          {create new execution block state}
   if sys_error(stat) then return;
-  e.exblock_p^.start_p :=              {save pointer to starting line of this block}
-    e.exblock_p^.prev_p^.inpos_p^.last_p;
+  e.exblock_p^.start_p := line_p;      {save pointer to starting line of this block}
   e.exblock_p^.bltype := escr_exblock_loop_k; {indicate LOOP ... ENDLOOP type}
   e.exblock_p^.loop_p := nil;          {init to no loop descriptor}
-  escr_exblock_inline_set (            {set next source line to execute}
-    e, e.exblock_p^.prev_p^.inpos_p^.line_p, stat);
+
+  escr_exblock_goto_line_aft (         {set next source line to execute}
+    e, line_p, stat);
   if sys_error(stat) then return;
 
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
@@ -668,6 +670,9 @@ procedure escr_cmd_endloop (
   out     stat: sys_err_t);
   val_param;
 
+var
+  line_p: fline_line_p_t;              {pointer to current input line}
+
 label
   del_block;
 
@@ -678,7 +683,7 @@ begin
     sys_stat_set (escr_subsys_k, escr_err_notloop_k, stat);
     return;
     end;
-  if e.exblock_p^.inpos_p^.prev_p <> nil then begin {block ended in include file ?}
+  if fline_hier_level(e.exblock_p^.instk_p) > 0 then begin {block ended in include file ?}
     sys_stat_set (escr_subsys_k, escr_err_endblock_include_k, stat);
     sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     return;
@@ -694,9 +699,11 @@ begin
     end;
 
 del_block:                             {delete this block}
-  e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}
-    e.exblock_p^.inpos_p^.line_p;
+  line_p := escr_in_line (e);          {get pointer to current input line}
   escr_exblock_close (e, stat);        {end this execution block}
+  if sys_error(stat) then return;
+  escr_exblock_goto_line_aft (         {restart previous block at next line}
+    e, line_p, stat);
   end;
 {
 ********************************************************************************

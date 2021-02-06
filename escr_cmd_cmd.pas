@@ -44,7 +44,7 @@ begin
   escr_sym_new_cmd (                   {create the new command symbol}
     e,                                 {ESCR library use state}
     name,                              {bare symbol name}
-    e.exblock_p^.inpos_p^.last_p,      {starting line of command}
+    escr_in_line (e),                  {pointer to starting line of command}
     false,                             {make symbol local, not global}
     sym_p,                             {returned pointer to the new symbol}
     stat);

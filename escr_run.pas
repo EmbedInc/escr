@@ -296,7 +296,7 @@ escr_sym_cmd_k: begin                  {user-defined command, implemented with s
           if not escr_get_tkraw (e, buf) then exit; {try to get command parameter}
           escr_exblock_arg_add (e, buf); {add as next argument to new execution block}
           end;
-        escr_exblock_inline_set (      {go to command definition line}
+        escr_exblock_goto_line (       {go to command definition line}
           e, sym_p^.cmd_line_p, stat);
         if sys_error(stat) then return;
         escr_infile_skipline (e);      {skip over command definition line}
@@ -383,37 +383,9 @@ begin
     escr_exblock_ulab_init (e);        {top level block has unique labels context}
     end;
 
-  escr_exblock_inline_set (e, line_p, stat); {set next source line to execute}
+  escr_exblock_goto_line (e, line_p, stat); {set next source line to execute}
   if sys_error(stat) then return;
   escr_run (e, stat);                  {run code, delete block when done}
-  end;
-{
-********************************************************************************
-*
-*   Subroutine ESCR_RUN_CONN (E, CONN, STAT)
-*
-*   Execute script code starting at the current position of a open file.  CONN
-*   is the existing connection to the file.
-}
-procedure escr_run_conn (              {run at current line of open file}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  var     conn: file_conn_t;           {pointer to I/O connection state}
-  out     stat: sys_err_t);            {completion status}
-  val_param;
-
-var
-  infile_p: fline_coll_p_t;            {pointer to input file descriptor}
-
-begin
-  escr_infile_new (e, conn.tnam, infile_p); {create new input file descriptor}
-  escr_infile_add_lines (e, infile_p^, conn, stat); {save file contents in memory}
-  if sys_error(stat) then return;
-
-  e.exstat := 0;                       {init script exit status code}
-  escr_run_atline (                    {run the code in this file}
-    e,                                 {state for this use of the ESCR system}
-    infile_p^.lfirst_p,                {pointer to line to start running at}
-    stat);
   end;
 {
 ********************************************************************************
@@ -432,13 +404,13 @@ procedure escr_run_file (              {run starting at first line of file}
   val_param;
 
 var
-  infile_p: fline_coll_p_t;            {pointer to the input file data in memory}
+  coll_p: fline_coll_p_t;              {pointer to the input file data in memory}
 
 begin
   escr_infile_open (                   {find file data or read it into memory}
     e,                                 {state for this use of the ESCR system}
     fnam, suff,                        {file name and allowed suffixes}
-    infile_p,                          {returned pointer to file data}
+    coll_p,                            {returned pointer to file data}
     stat);
   if sys_error(stat) then return;
 
@@ -448,14 +420,14 @@ begin
       then begin
     escr_exblock_arg_addn (            {add full script pathname as block argument -1}
       e,                               {state for this use of the ESCR system}
-      infile_p^.tnam,                  {argument string}
+      coll_p^.name_p^,                 {argument string}
       -1);                             {argument number}
     end;
 
   e.exstat := 0;                       {init script exit status code}
   escr_run_atline (                    {run the code in this file}
     e,                                 {state for this use of the ESCR system}
-    infile_p^.lfirst_p,                {pointer to line to start running at}
+    coll_p^.first_p,                   {pointer to line to start running at}
     stat);
   end;
 {

@@ -46,7 +46,7 @@ begin
   escr_sym_new_func (                  {create new symbol for function name}
     e,                                 {ESCR library use state}
     name,                              {bare symbol name}
-    e.exblock_p^.inpos_p^.last_p,      {pointer to function starting line}
+    escr_in_line (e),                  {pointer to function starting line}
     false,                             {make symbol local, not global}
     sym_p,                             {returned pointer to the new symbol}
     stat);

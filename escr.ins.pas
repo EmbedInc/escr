@@ -108,7 +108,6 @@ const
     lshft(1, escr_ulab_log2buck_k);
 
 type
-  fline_line_p_t = ^fline_line_t;      {pointer to line within input file}
   escr_inline_pp_t = ^fline_line_p_t;
   escr_sym_p_t = ^escr_sym_t;          {pointer to a symbol instance}
   escr_exblock_p_t = ^escr_exblock_t;  {pointer to info about one nested executable block}
@@ -173,7 +172,7 @@ type
     escr_sym_ifunc_k,                  {intrinsic function, compiled routine}
     escr_sym_macro_k,                  {macro, defined by user code}
     escr_sym_imacro_k,                 {intrinsic macro, compiled routine}
-    escr_sym_label_k,                  {label for a specific input files line}
+    escr_sym_label_k,                  {label for a specific input file line}
     escr_sym_src_k);                   {label for a source code snippet}
   escr_symty_t = set of escr_sym_k_t;
 
@@ -375,7 +374,7 @@ escr_looptype_dir_k: (                 {loop over directory entries}
 
   escr_exblock_t = record              {info about one nested execution block}
     prev_p: escr_exblock_p_t;          {pointer to previous execution block, NIL at top}
-    level: sys_int_machine_t;          {nesting level, 0 at top}
+    level: sys_int_machine_t;          {block nesting level, 0 at top}
     start_p: fline_line_p_t;           {pointer to first line of block definition}
     sym_p: escr_sym_p_t;               {points to sym for name of this block, if any}
     sym_curr_p: escr_sym_p_t;          {symbol to restore to curr version on exit, if any}
@@ -384,7 +383,7 @@ escr_looptype_dir_k: (                 {loop over directory entries}
     arg_last_p: escr_arg_p_t;          {points to last argument in list}
     nargs: sys_int_machine_t;          {number of arguments in arguments list}
     locsym_p: escr_sylist_p_t;         {points to list of symbols local to this block}
-    inpos_p: fline_hier_p_t;           {points to current nested input file position}
+    instk_p: fline_hier_p_t;           {points to stack of input files}
     previnh_p: escr_inh_p_t;           {points to previous inhibit before this block}
     parse_p: escr_parse_p_t;           {points to saved parse state, NIL = none}
     bltype: escr_exblock_k_t;          {type of execution block}
@@ -469,7 +468,7 @@ escr_inhty_blk_k: (                    {in execution block}
     sym_cmd: escr_sytable_t;           {symbol table for commands}
     sym_lab: escr_sytable_t;           {symbol table for input file line labels}
     sym_src: escr_sytable_t;           {symbol table for input file source snippets}
-    infile: fline_t;                   {input files state}
+    fline_p: fline_p_t;                {to FLINE library use state (manages input files)}
     parse: escr_parse_t;               {root input parsing state}
     parse_p: escr_parse_p_t;           {points to current input parsing state}
     exblock_p: escr_exblock_p_t;       {points to info about current execution block}
@@ -567,6 +566,12 @@ function escr_get_str (                {get string representation of next parame
 function escr_get_tkraw (              {get next raw input stream token}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     tk: univ string_var_arg_t)   {the returned token, strings not unquoted}
+  :boolean;                            {TRUE if token was available}
+  val_param; extern;
+
+function escr_get_tkrawc (             {get next raw token, comma delimited}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     tk: univ string_var_arg_t)   {the returned token}
   :boolean;                            {TRUE if token was available}
   val_param; extern;
 
@@ -775,7 +780,7 @@ procedure escr_commscr_clear (         {clear script comment syntaxes}
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
-procedure escr_err_atline (            {show error followed by source line number}
+procedure escr_err_atline (            {show error followed by source location}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      subsys: string;              {name of subsystem, used to find message file}
   in      msg: string;                 {message name within subsystem file}
@@ -847,15 +852,27 @@ procedure escr_exblock_close (         {close curr execution block and delete te
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_exblock_inline_push (   {push new source line location for exec block}
+procedure escr_exblock_push_line_aft ( {to new nested level after end of line}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      line_p: fline_line_p_t;      {pointer to the input line}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_exblock_push_coll (     {push new lines collection for exec block}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      coll_p: fline_coll_p_t;      {pointer to collection to read}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_exblock_goto_line (     {go to new input source position in curr block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      line_p: fline_line_p_t;      {pointer to next input line to use}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_exblock_inline_set (    {go to new input source position in curr block}
+procedure escr_exblock_goto_line_aft ( {position to after input line}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: fline_line_p_t;      {pointer to next input line to use}
+  in      line_p: fline_line_p_t;      {pointer to line to position after}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
@@ -915,6 +932,22 @@ procedure escr_exitstatus (            {set EXITSTATUS, create if needed}
   in      exstat: sys_int_machine_t);  {value to set EXITSTATUS to}
   val_param; extern;
 
+procedure escr_format_fp (             {create specifically formatted floating point string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fp: sys_fp_max_t;            {input floating point value}
+  in      fmt: univ string_var_arg_t;  {format string}
+  in out  s: univ string_var_arg_t;    {returned floating point string}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_format_int (            {create specifically formatted integer string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      i: sys_int_max_t;            {input integer value}
+  in      fmt: univ string_var_arg_t;  {format string}
+  in out  s: univ string_var_arg_t;    {returned integer string}
+  out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
 procedure escr_icmd_add (              {add intrinsic command}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      name: univ string_var_arg_t; {name of the command to add}
@@ -929,10 +962,9 @@ procedure escr_ifunc_add (             {add intrinsic function}
   out     stat: sys_err_t);
   val_param; extern;
 
-procedure escr_infile_find (           {find existing input file descriptor}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      tnam: univ string_var_arg_t; {full unique treename of the file}
-  out     infile_p: fline_coll_p_t);   {points to snippet, or NIL for not found}
+function escr_in_line (                {get pointer to current input line}
+  in out  e: escr_t)                   {state for this use of the ESCR system}
+  :fline_line_p_t;                     {pointer to the last-read input line}
   val_param; extern;
 
 procedure escr_infile_getline (        {get next input stream source line}
@@ -940,31 +972,11 @@ procedure escr_infile_getline (        {get next input stream source line}
   out     str_p: string_var_p_t);      {returned pointer to source line or NIL}
   val_param; extern;
 
-procedure escr_infile_add_line (       {add line to source file snippet}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  var     infile: fline_coll_t;        {snippet to add the line to}
-  in      line: univ string_var_arg_t; {the source line}
-  in      lnum: sys_int_machine_t);    {source line number within its file}
-  val_param; extern;
-
-procedure escr_infile_add_lines (      {add lines to source file snippet}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  var     infile: fline_coll_t;        {snippet to add the lines to}
-  var     conn: file_conn_t;           {existing connection to text file}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
-procedure escr_infile_new (            {create new input file snippet descriptor}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      tnam: univ string_var_arg_t; {full unique treename of the file}
-  out     infile_p: fline_coll_p_t);   {returned pointer to input file descriptor}
-  val_param; extern;
-
 procedure escr_infile_open (           {find file data or read it into memory}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {file name}
   in      suff: string;                {allowed file name suffixes, blank separated}
-  out     infile_p: fline_coll_p_t;    {returned pointer to input file descriptor}
+  out     coll_p: fline_coll_p_t;      {returned pointer to file lines in memory}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
@@ -1014,6 +1026,12 @@ function escr_loop_iter (              {advance to next loop iteration}
   :boolean;                            {looped continues, not terminated}
   val_param; extern;
 
+function escr_macro_run (              {run macro if present on curr input line}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  out     stat: sys_err_t)             {completion status}
+  :boolean;                            {macro was processed}
+  val_param; extern;
+
 procedure escr_open (                  {start a new use of the ESCR system}
   in out  mem: util_mem_context_t;     {parent memory context, will make sub context}
   out     e_p: escr_p_t;               {will point to new initialized ESCR use state}
@@ -1056,12 +1074,6 @@ procedure escr_run_clean (             {clean out any existing execution state}
   out     stat: sys_err_t);            {completion status}
   val_param; extern;
 
-procedure escr_run_conn (              {run at current line of open file}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  var     conn: file_conn_t;           {pointer to I/O connection state}
-  out     stat: sys_err_t);            {completion status}
-  val_param; extern;
-
 procedure escr_run_file (              {run starting at first line of file}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {name of file to run script code from}
@@ -1093,9 +1105,28 @@ procedure escr_stat_sym_nfound (       {symbol not found}
   in out  stat: sys_err_t);            {set, not altered if already err}
   val_param; extern;
 
+procedure escr_str_from_time (         {make string from absolute time descriptor}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      time: sys_clock_t;           {input absolute time descriptor}
+  in out  s: univ string_var_arg_t);   {returned string representation of the time}
+  val_param; extern;
+
+procedure escr_str_from_fp (           {make string from floating point value}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fp: sys_fp_max_t;            {floating point input value}
+  in out  s: univ string_var_arg_t);   {returned string representation}
+  val_param; extern;
+
 procedure escr_str_quote (             {quote and append string, ESCR syntax}
   in      stri: univ string_var_arg_t; {input string}
   in out  stro: univ string_var_arg_t); {string to append to}
+  val_param; extern;
+
+function escr_str_to_time (            {make absolute time descriptor from string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      s: univ string_var_arg_t;    {input string}
+  out     time: sys_clock_t)           {returned time descriptor}
+  :boolean;                            {TRUE on success}
   val_param; extern;
 
 procedure escr_syexcl_add (            {add syntax exclusion}
@@ -1337,6 +1368,12 @@ function escr_term_val (               {get value of next term in input string}
   out     val: escr_val_t;             {returned value of the term}
   out     stat: sys_err_t)             {completion status, no error on func TRUE}
   :boolean;                            {TRUE if term was available}
+  val_param; extern;
+
+procedure escr_ulab_get (              {get expansion of generic unique label name}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      name: univ string_var_arg_t; {generic unique label name}
+  in out  exp: univ string_var_arg_t); {returned full label name (expansion)}
   val_param; extern;
 
 procedure escr_uptocomm (              {find line length without comment}

@@ -94,6 +94,7 @@ procedure escr_cmd_pick (
   val_param;
 
 var
+  line_p: fline_line_p_t;              {pointer to current input line}
   pick_p: escr_pick_p_t;               {points to private PICK/ENDPICK block data}
   nkeyw: sys_int_machine_t;            {number of keyword picked from list}
   val: escr_val_t;                     {optional value supplied with PICK command}
@@ -103,17 +104,17 @@ label
   abort1;
 
 begin
+  line_p := escr_in_line (e);          {save pointer to the current input line}
 {
 *   Create, init, and install the PICK/ENDPICK execution block.
 }
   escr_exblock_new (e, stat);          {create new execution block state}
   if sys_error(stat) then return;
-  e.exblock_p^.start_p :=              {save pointer to starting line of this block}
-    e.exblock_p^.prev_p^.inpos_p^.last_p;
+  e.exblock_p^.start_p := line_p;      {set pointer to starting line of this block}
   e.exblock_p^.bltype := escr_exblock_pick_k; {indicate PICK/ENDPICK type}
   e.exblock_p^.pick_p := nil;          {init to no PICK descriptor}
-  escr_exblock_inline_set (            {set next source line to execute}
-    e, e.exblock_p^.prev_p^.inpos_p^.line_p, stat);
+  escr_exblock_goto_line_aft (         {set next source line to execute}
+    e, line_p, stat);
   if sys_error(stat) then return;
 
   if e.inhibit_p^.inh then return;     {execution inhibited ?}
@@ -184,6 +185,9 @@ procedure escr_cmd_endpick (
   out     stat: sys_err_t);
   val_param;
 
+var
+  line_p: fline_line_p_t;              {pointer to current input line}
+
 label
   del_block;
 
@@ -192,7 +196,7 @@ begin
     sys_stat_set (escr_subsys_k, escr_err_notpick_k, stat);
     return;
     end;
-  if e.exblock_p^.inpos_p^.prev_p <> nil then begin {block end nested from start ?}
+  if fline_hier_level(e.exblock_p^.instk_p) > 0 then begin {block end nested from start ?}
     sys_stat_set (escr_subsys_k, escr_err_endblock_include_k, stat);
     sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     return;
@@ -203,9 +207,9 @@ begin
   if sys_error(stat) then return;
 
 del_block:                             {delete this block}
-  e.exblock_p^.prev_p^.inpos_p^.line_p := {restart previous block after this command}
-    e.exblock_p^.inpos_p^.line_p;
+  line_p := escr_in_line (e);          {get pointer to the current input line}
   escr_exblock_close (e, stat);        {end this execution block}
+  escr_exblock_goto_line_aft (e, line_p, stat); {restart prev block on next line}
   end;
 {
 ********************************************************************************

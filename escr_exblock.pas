@@ -8,8 +8,10 @@ define escr_exblock_new;
 define escr_exblock_close;
 define escr_exblock_refsym;
 define escr_exblock_ulab_init;
-define escr_exblock_inline_set;
-define escr_exblock_inline_push;
+define escr_exblock_goto_line;
+define escr_exblock_goto_line_aft;
+define escr_exblock_push_line;
+define escr_exblock_push_coll;
 define escr_exblock_arg_addn;
 define escr_exblock_arg_add;
 define escr_exblock_arg_get_bl;
@@ -71,7 +73,7 @@ begin
   bl_p^.arg_last_p := nil;
   bl_p^.nargs := 0;
   bl_p^.locsym_p := nil;               {init to no local symbols created this block}
-  bl_p^.inpos_p := nil;                {indicate source reading position not filled in}
+  bl_p^.instk_p := nil;                {indicate source reading position not filled in}
   bl_p^.previnh_p := e.inhibit_p;      {save pointer to inhibit before this block}
   bl_p^.parse_p := nil;                {init to no saved input parsing state}
   bl_p^.bltype := escr_exblock_top_k;  {init to top block type}
@@ -136,6 +138,8 @@ escr_exblock_loop_k: begin             {LOOP ... ENDLOOP}
   if par_p <> nil then begin           {this block has its own parsing state ?}
     e.parse_p := par_p^.prev_p;        {pop back to the previous parsing state}
     end;
+
+  fline_block_delete (e.fline_p^, e.exblock_p^.instk_p); {delete any nested input}
 
   mem_p := e.exblock_p^.mem_p;         {save memory context for this block}
   e.exblock_p := e.exblock_p^.prev_p;  {make parent execution block current}
@@ -203,13 +207,12 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_INLINE_SET (E, LINE_P, STAT)
+*   Subroutine ESCR_EXBLOCK_GOTO_LINE (E, LINE_P, STAT)
 *
 *   Set a new source input stream position for the current block.  The previous
-*   position will be lost.  This is more like a GOTO, whereas
-*   EXBLOCK_INLINE_PUSH is more like a CALL.
+*   position will be lost.
 }
-procedure escr_exblock_inline_set (    {go to new input source position in curr block}
+procedure escr_exblock_goto_line (     {go to new input source position in curr block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      line_p: fline_line_p_t;      {pointer to next input line to use}
   out     stat: sys_err_t);            {completion status}
@@ -218,13 +221,73 @@ procedure escr_exblock_inline_set (    {go to new input source position in curr 
 begin
   sys_error_none (stat);               {init to no error encountered}
 
-  if e.exblock_p^.inpos_p = nil
+  fline_hier_set_line_bef (            {set position to before start of line}
+    e.fline_p^,                        {FLINE library use state}
+    e.exblock_p^.instk_p,              {input hierarchy for this block}
+    line_p^);                          {line to set position before of}
+
+  if e.exblock_p^.start_p = nil then begin {line starting this block not set yet ?}
+    e.exblock_p^.start_p := line_p;    {set this line as block starting line}
+    end;
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_EXBLOCK_GOTO_LINE_AFT (E, LINE_P, STAT)
+*
+*   Set the source stream input position to immediately after the line pointed
+*   to by LINE_P.  The previous position will be lost.
+}
+procedure escr_exblock_goto_line_aft ( {position to after input line}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      line_p: fline_line_p_t;      {pointer to line to position after}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+begin
+  sys_error_none (stat);               {init to no error encountered}
+
+  fline_hier_set_line_aft (            {set position to after end of line}
+    e.fline_p^,                        {FLINE library use state}
+    e.exblock_p^.instk_p,              {input hierarchy for this block}
+    line_p^);                          {line to set position after of}
+
+  if e.exblock_p^.start_p = nil then begin {line starting this block not set yet ?}
+    e.exblock_p^.start_p := line_p;    {set this line as block starting line}
+    end;
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_EXBLOCK_PUSH_LINE (E, LINE_P, STAT)
+*
+*   Set the next input line that will be processed by the current execution
+*   block.  The new position will be nested under the previous position.  The
+*   previous position will be restored when the new position state is deleted.
+}
+procedure escr_exblock_push_line (     {push new source line location for exec block}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      line_p: fline_line_p_t;      {pointer to next input line to use}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+begin
+  sys_error_none (stat);               {init to no error encountered}
+
+  if fline_block_level (e.exblock_p^.instk_p) >= escr_max_inclev_k then begin {too deep ?}
+    sys_stat_set (escr_subsys_k, escr_err_inftoomany_k, stat);
+    sys_stat_parm_int (escr_max_inclev_k, stat);
+    return;
+    end;
+
+  if e.exblock_p^.instk_p = nil
     then begin                         {no position set yet at all for this block}
-      escr_exblock_inline_push (e, line_p, stat); {create new position descriptor and set it}
-      if sys_error(stat) then return;
+      fline_block_new_line (           {create the top level for this block}
+        e.fline_p^, nil, line_p^, e.exblock_p^.instk_p);
       end
     else begin                         {position descriptor already exists}
-      e.exblock_p^.inpos_p^.line_p := line_p; {jump to the new source stream position}
+      fline_hier_push_line (           {create one new nested level}
+        e.fline_p^, e.exblock_p^.instk_p, line_p^);
       end
     ;
 
@@ -235,49 +298,42 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_EXBLOCK_INLINE_PUSH (E, LINE_P, STAT)
+*   Subroutine ESCR_EXBLOCK_PUSH_COLL (E, COLL_P, STAT)
 *
 *   Set the next input line that will be processed by the current execution
-*   block.  The new position will be nested under the previous position.  The
-*   previous position will be restored when the new position state is deleted.
+*   block to the start of the collection pointed to by COLL_P.  The new position
+*   will be nested under the previous position.  The previous position will be
+*   restored when the new position state is deleted.
 }
-procedure escr_exblock_inline_push (   {push new source line location for exec block}
+procedure escr_exblock_push_coll (     {push new lines collection for exec block}
   in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      line_p: fline_line_p_t;      {pointer to next input line to use}
+  in      coll_p: fline_coll_p_t;      {pointer to collection to read}
   out     stat: sys_err_t);            {completion status}
   val_param;
-
-var
-  pos_p: fline_hier_p_t;               {pointer to new nested input position state}
-  level: sys_int_machine_t;            {new input file nesting level, top = 0}
 
 begin
   sys_error_none (stat);               {init to no error encountered}
 
-  level := 0;                          {init to this is top input file this block}
-  if e.exblock_p^.inpos_p <> nil then begin {there is a previous input file this block ?}
-    level := e.exblock_p^.inpos_p^.level + 1; {make nesting level of new input file}
-    if level > escr_max_inclev_k then begin {would exceed input file nesting level ?}
-      sys_stat_set (escr_subsys_k, escr_err_inftoomany_k, stat);
-      sys_stat_parm_int (escr_max_inclev_k, stat);
-      return;
-      end;
+  if fline_block_level (e.exblock_p^.instk_p) >= escr_max_inclev_k then begin {too deep ?}
+    sys_stat_set (escr_subsys_k, escr_err_inftoomany_k, stat);
+    sys_stat_parm_int (escr_max_inclev_k, stat);
+    return;
     end;
 
-  util_mem_grab (                      {allocate new input position descriptor}
-    sizeof(pos_p^), e.exblock_p^.mem_p^, true, pos_p);
-  pos_p^.prev_p := e.exblock_p^.inpos_p; {point back to previous input stream position}
-  pos_p^.level := level;               {set nesting level of this position state}
-  pos_p^.line_p := line_p;             {point to next input line to use}
-  if pos_p^.prev_p = nil
-    then begin                         {no previous input location exists this block}
-      pos_p^.last_p := line_p;         {make the new line the last read line}
+  if e.exblock_p^.instk_p = nil
+    then begin                         {no position set yet at all for this block}
+      fline_hier_create (
+        e.fline_p^, e.exblock_p^.instk_p, coll_p^);
       end
-    else begin                         {a previous input line was read this block}
-      pos_p^.last_p := pos_p^.prev_p^.last_p; {init pointer to last read line}
+    else begin                         {position descriptor already exists}
+      fline_hier_push_coll (           {create one new nested level}
+        e.fline_p^, e.exblock_p^.instk_p, coll_p^);
       end
     ;
-  e.exblock_p^.inpos_p := pos_p;       {make new input position current}
+
+  if e.exblock_p^.start_p = nil then begin {line starting this block not set yet ?}
+    fline_coll_line_first (coll_p^, e.exblock_p^.start_p); {set this line as block start}
+    end;
   end;
 {
 ********************************************************************************
@@ -414,10 +470,8 @@ begin
     if sys_error(stat) then return;
     end;
 
-  escr_exblock_inline_set (e, e.exblock_p^.start_p, stat); {jump back to block start command}
+  escr_exblock_goto_line_aft (e, e.exblock_p^.start_p, stat); {jump back to block start command}
   if sys_error(stat) then return;
-  escr_infile_skipline (e);            {skip block definition, to first executable line}
-  e.exblock_p^.iter1 := false;         {not in first iteration anymore}
   end;
 {
 ********************************************************************************

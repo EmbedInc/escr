@@ -3,4 +3,5 @@
 %include 'string.ins.pas';
 %include 'file.ins.pas';
 %include 'strflex.ins.pas';
+%include 'fline.ins.pas';
 %include 'escr.ins.pas';

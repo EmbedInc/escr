@@ -10,7 +10,7 @@ define escr_macro_run;
 {
 ********************************************************************************
 *
-*   Subroutine  ESCR_CMD_MACRO (E, STAT)
+*   Subroutine ESCR_CMD_MACRO (E, STAT)
 *
 *   Command MACRO name
 *
@@ -54,7 +54,7 @@ begin
   if sys_error(stat) then goto error;
 
   sym_p^.macro_line_p :=               {save pointer to macro definition line}
-    e.exblock_p^.inpos_p^.last_p;
+    escr_in_line (e);
   return;
 
 error:                                 {error after inhibit created, STAT set}
@@ -63,7 +63,7 @@ error:                                 {error after inhibit created, STAT set}
 {
 ********************************************************************************
 *
-*   Subroutine  ESCR_CMD_ENDMAC (E, STAT)
+*   Subroutine ESCR_CMD_ENDMAC (E, STAT)
 *
 *   Command ENDMAC
 *
@@ -93,7 +93,7 @@ begin
 {
 ********************************************************************************
 *
-*   Subroutine  ESCR_CMD_QUITMAC (E, STAT)
+*   Subroutine ESCR_CMD_QUITMAC (E, STAT)
 *
 *   Command QUITMAC
 *
@@ -204,10 +204,9 @@ begin
     if not escr_get_tkrawc (e, tk) then exit; {get next argument}
     escr_exblock_arg_add (e, tk);      {add as next argument to new execution block}
     end;
-  escr_exblock_inline_set (            {go to macro definition line}
+  escr_exblock_goto_line_aft (         {go to macro definition line}
     e, sym_p^.macro_line_p, stat);
   if sys_error(stat) then return;
-  escr_infile_skipline (e);            {skip over macro definition line}
   escr_macro_run := true;              {indicate macro invocation processed}
   return;
 

@@ -357,7 +357,7 @@ start and end sequences have been removed.
 
 <p><tt id="inv"><b>~</b> <i>arg</i></tt></p><indent>
 
-  <p>Bitwise inversion.  <i>Arg</i> must be integer.  The result is that
+  <p>Bitwise inversion.  <i>Arg</i> must be integer.  The result is the
   integer value with each bit flipped.  This is also known as the "one's
   complement".
 
@@ -850,9 +850,9 @@ arg]</i></tt></p><indent>
 <p><tt id="file"><b>FILE</b> <i>infotype name</i></tt></p><indent>
 
   <p>Returns information about the file system object <i>name</i>.
-  <i>Infotype</i> is a keyword selecting which information about the file
-  system object is returned.  The valid values of <i>infotype</i> and the
-  resulting function values are:</p><indent>
+  <i>Name</i> is a string.  <i>Infotype</i> is a keyword selecting which
+  information about the file system object is returned.  The valid values
+  of <i>infotype</i> and the resulting function values are:</p><indent>
 
     <p><tt><b>TYPE</b></tt></p><indent>
 
@@ -1088,7 +1088,7 @@ arg]</i></tt></p><indent>
 
       <p>Field width.  For <i>n</i> &ge; 1, the output string will be
       <i>n</i> characters wide.  <i>N</i> = 0 indicates free format,
-      meaning the minimum number or necessary output characters will be
+      meaning the minimum number of necessary output characters will be
       used.
 
       </p></indent>
