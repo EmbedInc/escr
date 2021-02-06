@@ -16,7 +16,6 @@ module escr_infile;
 define escr_infile_open;
 define escr_infile_pop;
 define escr_infile_getline;
-define escr_infile_skipline;
 define escr_in_line;
 %include 'escr2.ins.pas';
 {
@@ -93,29 +92,6 @@ begin
     end;
 
   fline_block_getnext_str (e.fline_p^, e.exblock_p^.instk_p, str_p);
-  end;
-{
-********************************************************************************
-*
-*   Subroutine ESCR_INFILE_SKIPLINE (E)
-*
-*   Skip to the next input line.  This is the same as reading and ignoring the
-*   next input line.  It is a error if currently at the input stream end of the
-*   current execution block.
-}
-procedure escr_infile_skipline (       {skip next input file line}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
-  val_param;
-
-var
-  str_p: string_var_p_t;               {pointer to input line to ignore}
-
-begin
-  escr_infile_getline (e, str_p);      {get the next input line}
-  if str_p = nil then begin
-    writeln ('INTERNAL ERROR: End of execution block encountered in INFILE_SKIPLINE.');
-    escr_err_atline (e, '', '', nil, 0);
-    end;
   end;
 {
 ********************************************************************************

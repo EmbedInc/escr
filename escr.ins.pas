@@ -984,10 +984,6 @@ procedure escr_infile_pop (            {pop back one nested input file level}
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
 
-procedure escr_infile_skipline (       {skip next input file line}
-  in out  e: escr_t);                  {state for this use of the ESCR system}
-  val_param; extern;
-
 procedure escr_inh_new (               {create new execution inhibit}
   in out  e: escr_t);                  {state for this use of the ESCR system}
   val_param; extern;
