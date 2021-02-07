@@ -8,7 +8,7 @@ msg err2
     Unable to allocate dynamic memory of %p1i bytes.
 msg err3
   lan english -def
-    The maximum versions of symbol "%p2s" already exist on attempt to
+    The maximum versions of symbol "%p1s" already exist on attempt to
     create a new version.
 msg err4
   lan english -def

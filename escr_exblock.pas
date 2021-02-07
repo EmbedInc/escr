@@ -472,6 +472,7 @@ begin
 
   escr_exblock_goto_line_aft (e, e.exblock_p^.start_p, stat); {jump back to block start command}
   if sys_error(stat) then return;
+  e.exblock_p^.iter1 := false;         {no longer in first iteration of block}
   end;
 {
 ********************************************************************************
