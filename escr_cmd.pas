@@ -726,7 +726,8 @@ begin
 {
 *   The include file name is in FNAM.
 }
-  fline_hier_name (e.exblock_p^.instk_p^, str_p); {get current source file name pointer}
+  fline_hier_name (                    {get current source file name pointer}
+    e.fline_p^, e.exblock_p^.instk_p^, str_p);
   string_pathname_split (              {get source file's directory in NEWDIR}
     str_p^, newdir, olddir);
   file_currdir_get (olddir, stat);     {get and save current directory name}

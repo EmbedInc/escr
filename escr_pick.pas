@@ -196,7 +196,9 @@ begin
     sys_stat_set (escr_subsys_k, escr_err_notpick_k, stat);
     return;
     end;
-  if fline_hier_level(e.exblock_p^.instk_p) > 0 then begin {block end nested from start ?}
+  if fline_hier_level (                {block end nested from start ?}
+      e.fline_p^, e.exblock_p^.instk_p) > 0
+      then begin
     sys_stat_set (escr_subsys_k, escr_err_endblock_include_k, stat);
     sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     return;
