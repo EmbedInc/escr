@@ -77,7 +77,7 @@ loop_line:
     if not (escr_flag_preproc_k in e.flags) {in script mode ?}
       then goto loop_line;             {ignore the blank line}
     if e.exblock_p^.level = 0 then begin {in top level execution block ?}
-      e.parse_p^.ibuf.len := 0;        {"copy" the input line to the output line}
+      e.parse_p^.ibuf.len := 0;        {"copy" the source line to the input line}
       goto no_cmd;                     {pass to output file}
       end;
     goto loop_line;                    {ignore this line}

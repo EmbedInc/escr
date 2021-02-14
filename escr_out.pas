@@ -82,7 +82,7 @@ procedure escr_out_close_all (         {close all output files}
 
 begin
   while e.out_p <> nil do begin        {loop until all output files closed}
-     escr_out_close (e, del);          {delete this output file, pop back to previous}
+    escr_out_close (e, del);           {delete this output file, pop back to previous}
     end;
   end;
 {
