@@ -29,3 +29,4 @@ escr_ulab.obj
 escr_util.obj
 escr_val.obj
 escr_vcon.obj
+escr_wcoll.obj

@@ -1,7 +1,9 @@
 {   Output file handling.
 }
 module escr_out;
-define escr_out_open;
+define escr_out_new;
+define escr_out_remove;
+define escr_out_open_file;
 define escr_out_close;
 define escr_out_close_all;
 define escr_write_vstr;
@@ -10,15 +12,17 @@ define escr_write_obuf;
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_OUT_OPEN (E, FNAM, STAT)
+*   Subroutine ESCR_OUT_NEW (E)
 *
-*   Switch the current output file to FNAM.  The previous output file state is
-*   saved, and will be returned to when this new file is closed.
+*   Low level routine to create a new output file descriptor.  E.OUT_P will
+*   point to the new descriptor, which will point to the previous, if any.  The
+*   new descriptor is allocated and linked into the system, but not otherwise
+*   filled in.
+*
+*   ESCR_OUT_REMOVE performs the reverse operation of this routine.
 }
-procedure escr_out_open (              {open new output file, save previous state}
-  in out  e: escr_t;                   {state for this use of the ESCR system}
-  in      fnam: univ string_var_arg_t; {name of file to switch writing to}
-  out     stat: sys_err_t);            {completion status}
+procedure escr_out_new (               {make new output file level, not filled in}
+  in out  e: escr_t);                  {ESCR lib use state, E.OUT_P pnt to new level}
   val_param;
 
 var
@@ -28,14 +32,57 @@ begin
   util_mem_grab (                      {allocate new output file descriptor}
     sizeof(o_p^), e.mem_p^, true, o_p);
 
-  file_open_write_text (fnam, '', o_p^.conn, stat); {open the file}
+  o_p^.prev_p := e.out_p;              {link new level back to previous}
+  e.out_p := o_p;                      {switch to this new output level}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_OUT_REMOVE (E)
+*
+*   Low level routine to remove the current output file level.  This routine
+*   only unlinks the descriptor and deallocates it.  The content of the existing
+*   output descriptor is otherwise ignored.
+*
+*   This routine does the revers of ESCR_OUT_NEW.
+}
+procedure escr_out_remove (            {remove and dealloc curr out, back to previous}
+  in out  e: escr_t);                  {ESCR lib use state, E.OUT_P pnt to previous}
+  val_param;
+
+var
+  o_p: escr_outfile_p_t;               {pointer to descriptor to remove}
+
+begin
+  if e.out_p = nil then return;        {there is no current output, nothing to do ?}
+
+  o_p := e.out_p;                      {save pointer to the existing level}
+  e.out_p := o_p^.prev_p;              {point back to previous level}
+
+  util_mem_ungrab (o_p, e.mem_p^);     {deallocate descriptor for old output level}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_OUT_OPEN_FILE (E, FNAM, STAT)
+*
+*   Switch the current output file to FNAM.  The previous output file state is
+*   saved, and will be returned to when this new file is closed.
+}
+procedure escr_out_open_file (         {open new output file, save previous state}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fnam: univ string_var_arg_t; {name of file to switch writing to}
+  out     stat: sys_err_t);            {completion status}
+  val_param;
+
+begin
+  escr_out_new (e);                    {create new blank output level}
+
+  file_open_write_text (fnam, '', e.out_p^.conn, stat); {open the file}
   if sys_error(stat) then begin        {error opening file ?}
-    util_mem_ungrab (o_p, e.mem_p^);   {deallocate new descriptor}
+    escr_out_remove (e);               {remove new level, back to old}
     return;                            {return with the error}
     end;
-
-  o_p^.prev_p := e.out_p;              {save pointer to old output file}
-  e.out_p := o_p;                      {switch to new output file}
   end;
 {
 ********************************************************************************
@@ -52,20 +99,20 @@ procedure escr_out_close (             {close the current output file, pop previ
   val_param;
 
 var
-  o_p: escr_outfile_p_t;               {pointer to state of output file to close}
   stat: sys_err_t;
 
 begin
-  o_p := e.out_p;                      {save pointer to state of the file to delete}
-  if o_p = nil then return;            {no current output file, nothing to do ?}
-  e.out_p := o_p^.prev_p;              {pop back to previous output file}
+  if e.out_p = nil then return;        {no current output, nothing to do ?}
 
-  file_close (o_p^.conn);              {close the file}
-  if del then begin                    {supposed to delete the file ?}
-    file_delete_name (o_p^.conn.tnam, stat); {try to delete the file}
+  file_close (e.out_p^.conn);          {close the file}
+  if                                   {delete the file too ?}
+      del and                          {caller requested deletion ?}
+      (e.out_p^.conn.obty = file_obty_file_k) {is a file ?}
+      then begin
+    file_delete_name (e.out_p^.conn.tnam, stat); {try to delete the file}
     end;
 
-  util_mem_ungrab (o_p, e.mem_p^);     {deallocate descriptor for old output file}
+  escr_out_remove (e);                 {delete this output level, back to previous}
   end;
 {
 ********************************************************************************

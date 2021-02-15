@@ -811,7 +811,7 @@ begin
     then goto err_missing;
   if not escr_get_end (e, stat) then return; {abort on extra parameter}
 
-  escr_out_open (e, fnam, stat);       {save curr state, open new file}
+  escr_out_open_file (e, fnam, stat);  {save curr state, open new file}
   return;
 {
 *   Abort due to missing required parameter.

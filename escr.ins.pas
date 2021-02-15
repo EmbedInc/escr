@@ -459,6 +459,7 @@ escr_inhty_blk_k: (                    {in execution block}
     val_param;
 
   escr_t = record                      {state for one use of the ESCR system}
+    fline_p: fline_p_t;                {to FLINE library use state (manages input files)}
     mem_p: util_mem_context_p_t;       {top mem context for all dynamic mem}
     sfmem: strflex_mem_t;              {memory state for all flex strings}
     sym_var: escr_sytable_t;           {symbol table for variables and constants}
@@ -468,7 +469,6 @@ escr_inhty_blk_k: (                    {in execution block}
     sym_cmd: escr_sytable_t;           {symbol table for commands}
     sym_lab: escr_sytable_t;           {symbol table for input file line labels}
     sym_src: escr_sytable_t;           {symbol table for input file source snippets}
-    fline_p: fline_p_t;                {to FLINE library use state (manages input files)}
     parse: escr_parse_t;               {root input parsing state}
     parse_p: escr_parse_p_t;           {points to current input parsing state}
     exblock_p: escr_exblock_p_t;       {points to info about current execution block}
@@ -758,6 +758,11 @@ procedure escr_close (                 {end a use of the ESCR system}
   in out  e_p: escr_p_t);              {pointer to ESCR use state, returned NIL}
   val_param; extern;
 
+procedure escr_close_keep_lines (      {end ESCR use, keep input and output lines state}
+  in out  e_p: escr_p_t;               {pointer to ESCR use state, returned NIL}
+  out     fline_p: fline_p_t);         {pointer to input and output lines state, not closed}
+  val_param; extern;
+
 procedure escr_commdat_add (           {add identifying syntax for data comment}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      st: univ string_var_arg_t;   {characters that start comment}
@@ -1044,10 +1049,15 @@ procedure escr_out_close_all (         {close all output files}
   in      del: boolean);               {delete the files}
   val_param; extern;
 
-procedure escr_out_open (              {open new output file, save previous state}
+procedure escr_out_open_file (         {open new output file, save previous state}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fnam: univ string_var_arg_t; {name of file to switch writing to}
   out     stat: sys_err_t);            {completion status}
+  val_param; extern;
+
+procedure escr_out_to_coll (           {route output to memory}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in out  coll: fline_coll_t);         {collection to write subsequent lines to}
   val_param; extern;
 
 procedure escr_parse_init (            {init input parsing state descriptor}

@@ -9,6 +9,18 @@
 %include 'fline.ins.pas';
 %include 'escr.ins.pas';
 {
+*   Routines that are really internal to ESCR, but need to be visible between
+*   modules.  These routines are here because they are not intended for use by
+*   applications.
+}
+procedure escr_out_new (               {make new output file level, not filled in}
+  in out  e: escr_t);                  {ESCR lib use state, E.OUT_P pnt to new level}
+  val_param; extern;
+
+procedure escr_out_remove (            {remove and dealloc curr out, back to previous}
+  in out  e: escr_t);                  {ESCR lib use state, E.OUT_P pnt to previous}
+  val_param; extern;
+{
 *   Subroutines that implement the individual preprocessor commands.  Each
 *   of these have the same interface.  See the header comments in module
 *   ESCR_CMD for the details.

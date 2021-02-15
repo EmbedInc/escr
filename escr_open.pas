@@ -8,6 +8,7 @@ module escr_open;
 define escr_parse_init;
 define escr_open;
 define escr_close;
+define escr_close_keep_lines;
 define escr_set_incsuff;
 %include 'escr2.ins.pas';
 {
@@ -68,7 +69,8 @@ procedure escr_open (                  {start a new use of the ESCR system}
   val_param;
 
 var
-  mem_p: util_mem_context_p_t;         {pointer to new top memory context}
+  fline_p: fline_p_t;                  {to FLINE library use state}
+  mem_p: util_mem_context_p_t;         {to ESCR top mem, subordinate to FLINE mem}
 
 label
   err_nocontext, err;
@@ -154,9 +156,10 @@ begin
 *   Start of ESCR_OPEN.
 }
 begin
-  sys_error_none (stat);               {init to no error encountered}
+  fline_lib_new (mem, fline_p, stat);  {create FLINE library use state}
+  if sys_error(stat) then return;
 
-  util_mem_context_get (mem, mem_p);   {create top mem context for this ESCR use}
+  util_mem_context_get (fline_p^.mem_p^, mem_p); {create mem context for this ESCR use}
   if mem_p = nil then goto err_nocontext; {unable to create new memory context ?}
 
   util_mem_grab (sizeof(e_p^), mem_p^, false, e_p); {create the new state block}
@@ -165,6 +168,7 @@ begin
     sys_stat_parm_int (sizeof(e_p^), stat);
     goto err;
     end;
+  e_p^.fline_p := fline_p;             {save pointer to FLINE lib use state}
   e_p^.mem_p := mem_p;                 {save pointer to our top mem context}
 
   strflex_strmem_create (              {create mem state for all flex strings}
@@ -187,9 +191,6 @@ begin
 {
 *   Do basic initialization.
 }
-  fline_lib_new (e_p^.mem_p^, e_p^.fline_p, stat);
-  if sys_error(stat) then return;
-
   escr_parse_init (e_p^.parse);
   e_p^.parse_p := addr(e_p^.parse);
   e_p^.exblock_p := nil;
@@ -370,10 +371,39 @@ err_nocontext:                         {could not get new memory context}
   sys_stat_set (escr_subsys_k, escr_err_nomcontext_k, stat);
 
 err:                                   {return with error, STAT already set}
-  if mem_p <> nil then begin           {our mem context was created ?}
-    util_mem_context_del (mem_p);      {yes, delete all our dynamic memory}
-    end;
+  fline_lib_end (fline_p);             {end FLINE lib use, delete all dyn memory}
   e_p := nil;                          {indicate the new state was not created}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_CLOSE_KEEP_LINES (E_P, FLINE_P)
+*
+*   End the use of the ESCR library pointed to by E_P.  This ESCR library use is
+*   closed, and its system resources deallocated.  E_P is returned NIL.
+*
+*   However, the in-memory collections of input and output lines are not
+*   deallocated.  FLINE_P is returned pointing to this remaing FLINE library use
+*   state.
+}
+procedure escr_close_keep_lines (      {end ESCR use, keep input and output lines state}
+  in out  e_p: escr_p_t;               {pointer to ESCR use state, returned NIL}
+  out     fline_p: fline_p_t);         {pointer to input and output lines state, not closed}
+  val_param;
+
+var
+  mem_p: util_mem_context_p_t;         {pointer to new top memory context}
+
+begin
+  if e_p = nil then return;            {no state to deallocate ?}
+
+  escr_out_close_all (e_p^, false);    {close all output files}
+
+  fline_p := e_p^.fline_p;             {return pointer to FLINE lib use state}
+
+  mem_p := e_p^.mem_p;                 {get pointer to top ESCR mem context}
+  util_mem_context_del (mem_p);        {deallocate all ESCR dynamic memory}
+  e_p := nil;                          {indicate ESCR use state no longer exists}
   end;
 {
 ********************************************************************************
@@ -389,18 +419,11 @@ procedure escr_close (                 {end a use of the ESCR system}
   val_param;
 
 var
-  mem_p: util_mem_context_p_t;         {pointer to new top memory context}
+  fline_p: fline_p_t;                  {pointer to FLINE library use state}
 
 begin
-  if e_p = nil then return;            {no state to deallocate ?}
-
-  escr_out_close_all (e_p^, false);    {close all output files}
-  fline_lib_end (e_p^.fline_p);        {end use of the FLINE library}
-
-  mem_p := e_p^.mem_p;                 {get pointer to top memory context}
-  util_mem_context_del (mem_p);        {delete the mem context}
-
-  e_p := nil;                          {indicate use state no longer exists}
+  escr_close_keep_lines (e_p, fline_p); {close and deallocate ESCR part}
+  fline_lib_end (fline_p);             {close and deallocate FLINE part}
   end;
 {
 ********************************************************************************

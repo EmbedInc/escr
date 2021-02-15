@@ -40,6 +40,7 @@ call src_pas %srcdir% %libname%_ulab
 call src_pas %srcdir% %libname%_util
 call src_pas %srcdir% %libname%_val
 call src_pas %srcdir% %libname%_vcon
+call src_pas %srcdir% %libname%_wcoll
 
 call src_lib %srcdir% %libname%
 call src_msg %srcdir% %libname%
