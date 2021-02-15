@@ -296,6 +296,11 @@ escr_sym_cmd_k: begin                  {user-defined command, implemented with s
           if not escr_get_tkraw (e, buf) then exit; {try to get command parameter}
           escr_exblock_arg_add (e, buf); {add as next argument to new execution block}
           end;
+        fline_lpos_push (              {one logical input location level lower}
+          e.fline_p^,                  {FLINE library use state}
+          e.lpos_p,                    {logical position chain to update}
+          escr_in_line(e));            {pointer to current input line}
+        e.exblock_p^.lpos_p := e.lpos_p; {set the new position as the parent pos this block}
         escr_exblock_goto_line_aft (   {go to body of command definition}
           e, sym_p^.cmd_line_p, stat);
         if sys_error(stat) then return;

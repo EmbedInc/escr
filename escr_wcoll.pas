@@ -96,6 +96,12 @@ begin
     dat_p^.e_p^.fline_p^,              {FLINE library use state}
     dat_p^.coll_p^,                    {collection to add the line to}
     buf);                              {string to add as the new line}
+
+  fline_line_lpos_set (                {set logical position of this line}
+    dat_p^.e_p^.fline_p^,              {FLINE library use state}
+    dat_p^.coll_p^.last_p^,            {the line to set logical position of}
+    dat_p^.e_p^.lpos_p,                {pointer to logical position hiearchy}
+    escr_in_line(dat_p^.e_p^));        {pointer to lowest level of position}
   end;
 {
 ********************************************************************************

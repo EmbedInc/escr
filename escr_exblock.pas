@@ -76,6 +76,7 @@ begin
   bl_p^.instk_p := nil;                {indicate source reading position not filled in}
   bl_p^.previnh_p := e.inhibit_p;      {save pointer to inhibit before this block}
   bl_p^.parse_p := nil;                {init to no saved input parsing state}
+  bl_p^.lpos_p := e.lpos_p;            {init to parent nested logical input position}
   bl_p^.bltype := escr_exblock_top_k;  {init to top block type}
   bl_p^.ulab := nil;                   {init to no list of unique labels}
   bl_p^.args := false;                 {init to this block does not take arguments}
@@ -101,6 +102,7 @@ var
   mem_p: util_mem_context_p_t;         {points to mem context for the block}
   sym_p: escr_sym_p_t;                 {pointer to symbol to delete}
   par_p: escr_parse_p_t;               {pointer to saved input parsing state}
+  lpos_p: fline_lposdyn_p_t;           {pointer to logical input level to delete to}
 
 begin
   sys_error_none (stat);               {init to no error encountered}
@@ -131,7 +133,23 @@ escr_exblock_loop_k: begin             {LOOP ... ENDLOOP}
     e.exblock_p^.sym_p^.ent_p^.curr_p := {restore previous current version}
       e.exblock_p^.sym_curr_p;
     end;
-
+{
+*   Pop all the logical input position levels created in this block.
+}
+  if e.exblock_p^.prev_p = nil
+    then begin                         {removing the last block}
+      lpos_p := nil;
+      end
+    else begin                         {there is a parent block}
+      lpos_p := e.exblock_p^.prev_p^.lpos_p; {get position to pop back to}
+      end
+    ;
+  while e.lpos_p <> lpos_p do begin    {keep popping until get to previos pos}
+    fline_lpos_pop (e.fline_p^, e.lpos_p);
+    end;
+{
+*   Restore other state.
+}
   e.inhibit_p := e.exblock_p^.previnh_p; {restore to inhibit before this block}
 
   par_p := e.exblock_p^.parse_p;       {get pointer to any saved input parsing state}

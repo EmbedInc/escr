@@ -215,6 +215,7 @@ begin
   e_p^.syfunc_st_p := nil;
   e_p^.flags := [];
   e_p^.exstat := 0;
+  e_p^.lpos_p := nil;
 {
 *   Do higher level initialization now that all fields have at least legal
 *   values.
@@ -398,6 +399,10 @@ begin
   if e_p = nil then return;            {no state to deallocate ?}
 
   escr_out_close_all (e_p^, false);    {close all output files}
+
+  while e_p^.lpos_p <> nil do begin    {delete the dynamic input position levels}
+    fline_lpos_pop (e_p^.fline_p^, e_p^.lpos_p);
+    end;
 
   fline_p := e_p^.fline_p;             {return pointer to FLINE lib use state}
 

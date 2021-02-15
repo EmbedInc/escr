@@ -132,6 +132,13 @@ begin
     if not escr_get_tkraw (e, tk) then exit; {get next argument}
     escr_exblock_arg_add (e, tk);      {add as next argument to new execution block}
     end;
+
+  fline_lpos_push (                    {one logical input location level lower}
+    e.fline_p^,                        {FLINE library use state}
+    e.lpos_p,                          {logical position chain to update}
+    escr_in_line(e));                  {pointer to current input line}
+  e.exblock_p^.lpos_p := e.lpos_p;     {set the new position as the parent pos this block}
+
   escr_exblock_goto_line_aft (         {start at first line of subroutine}
     e, sym_p^.subr_line_p, stat);
   if sys_error(stat) then return;
