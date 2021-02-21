@@ -243,8 +243,8 @@ begin
     stat);
   if sys_error(stat) then goto err;
 
-  escr_quotesyn_add (e_p^, '"', '"');  {quoted string can start/end with quotes}
   escr_quotesyn_add (e_p^, '''', ''''); {quoted string can start/end with apostrophies}
+  escr_quotesyn_add (e_p^, '"', '"');  {quoted string can start/end with quotes}
   {
   *   Add the intrinsic commands to the commands symbol table.
   }
