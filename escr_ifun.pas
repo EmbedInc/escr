@@ -3459,9 +3459,8 @@ otherwise
 *   string inside these quotes is returned.  This function can will remove
 *   multiple layers of quotes, if present.
 *
-*   Surrounding quotes can be either the quote character (") or the apostrophie
-*   (').  Two successive quotes in the interior of the string will be translated
-*   to a single quote.
+*   Two successive end-quote characters in the interior of the string will be
+*   translated to a single end-quote character.
 }
 procedure escr_ifun_unquote (
   in out  e: escr_t;
@@ -3469,15 +3468,17 @@ procedure escr_ifun_unquote (
   val_param;
 
 var
-  sind: sys_int_machine_t;             {source index into S}
-  slen: sys_int_machine_t;             {source length of S}
-  c: char;                             {current character}
-  q: char;                             {quote character}
-  qp: boolean;                         {the previous character was a quote}
-  s: string_var8192_t;
+  s: string_var8192_t;                 {the string to remove quotes from}
+  lev: sys_int_machine_t;              {number of layers of quotes found}
+  qsyn_p: escr_quotesyn_p_t;           {pointer to current quoted string syntax def}
+  qen: char;                           {quote end char for inner-most quotes}
+  p: sys_int_machine_t;                {parse index after quotes removed}
+  en: sys_int_machine_t;               {index of last char with quotes removed}
+  c: char;                             {current source character being parsed}
+  pq: boolean;                         {previously parsed char was end quote}
 
 label
-  retry, nquote;
+  retry, donelev;
 
 begin
   s.max := size_char(s.str);           {init local var string}
@@ -3487,56 +3488,56 @@ begin
     return;
     end;
 
-retry:                                 {back here to try again after one unquote layer}
-  if s.len < 2 then goto nquote;       {too short to be quoted string ?}
-  q := s.str[1];                       {save first character, could be quote}
-  if s.str[s.len] <> q then goto nquote; {first and last characters don't match ?}
-  if (q <> '''') and (q <> '"') then goto nquote; {start and end not quotes ?}
-{
-*   The input string is quoted.  Q is the quote character.
-}
-  slen := s.len;                       {save length of the input string}
-  sind := 2;                           {init input string index}
-  s.len := 0;                          {init the result to empty}
-  qp := false;                         {init to previous character was not a quote}
+  lev := 0;                            {init to no levels of quotes found}
 
-  while sind < slen do begin           {loop thru body of input string}
-    c := s.str[sind];                  {fetch this input string character}
-    sind := sind + 1;                  {update source index for next time}
-    if c = q
-      then begin                       {this character is a quote}
-        if qp
-          then begin                   {second quote in a row}
-            qp := false;               {done with pair}
-            end
-          else begin                   {first quote in a row}
-            qp := true;                {remember that previous char was quote}
-            next;                      {nothing more to do this character}
-            end
-          ;
-        end
-      else begin                       {this character is not a quote}
-        if qp then begin               {previous character was a quote ?}
-          s.len := s.len + 1;          {write lone quote skipped over last time}
-          s.str[s.len] := q;
-          end;
-        qp := false;                   {previous char not a quote next time}
-        end
-      ;
-    s.len := s.len + 1;                {append this character to output string}
-    s.str[s.len] := c;
-    end;                               {back to do next input character}
-
-  if qp then begin                     {previous character was a quote}
-    s.len := s.len + 1;                {write lone quote skipped over last time}
-    s.str[s.len] := q;
+retry:                                 {back here to try again after each layer removed}
+  if s.len < ((lev * 2) + 2) then begin {too short for another layer of quotes ?}
+    goto donelev;                      {done finding all quote levels}
     end;
-  goto retry;                          {unquoted string, back to check for another layer}
-{
-*   The string in S is not quoted.  Return it.
-}
-nquote:
-  escr_ifn_ret_str (e, s);             {return the unquoted string}
+
+  qsyn_p := e.quotesyn_p;              {init to first quoted string syntax in list}
+  while qsyn_p <> nil do begin         {loop over list of quoted string syntaxes}
+    if                                 {enclosed in these quotes ?}
+        (s.str[1 + lev] = qsyn_p^.st) and {starts with starting quote ?}
+        (s.str[s.len - lev] = qsyn_p^.en) {ends with ending quote ?}
+        then begin
+      lev := lev + 1;                  {record one more level of quotes found}
+      qen := qsyn_p^.en;               {save the quote end character}
+      goto retry;                      {back to check for another level of quotes}
+      end;
+    qsyn_p := qsyn_p^.next_p;          {advance to next quote syntax in list}
+    end;                               {back to check this new quote syntax}
+
+donelev:                               {done finding all levels of quotes}
+  if lev > 0 then begin                {at least one level of quotes was found ?}
+    p := 1 + lev;                      {init parse index to after leading quotes}
+    en := s.len - lev;                 {index of last character to parse}
+    s.len := 0;                        {init final returne string to empty}
+    pq := false;                       {init to previous parsed char no end quote}
+    while p <= en do begin             {scan the string inside the quotes}
+      c := s.str[p];                   {fetch this source character}
+      if c = qen
+        then begin                     {this is a quote end character}
+          if pq
+            then begin                 {previous char was also quote end}
+              string_append1 (s, c);   {add single end-quote char to output string}
+              pq := false;             {reset to previous char was not end quote}
+              end
+            else begin                 {previous char was not end quote}
+              pq := true;              {flag previous char was end-quote for next time}
+              end
+            ;
+          end
+        else begin                     {this is not a quote end char}
+          string_append1 (s, c);       {add this character to the output string}
+          pq := false;                 {previous char was not end-quote}
+          end
+        ;
+      p := p + 1;                      {advance to next source character}
+      end;                             {back to check this new source character}
+    end;                               {end of quotes were removed case}
+
+  escr_ifn_ret_str (e, s);             {return the final unquoted string}
   end;
 {
 ********************************************************************************

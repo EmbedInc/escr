@@ -2,20 +2,24 @@
 }
 module escr_term;
 define escr_term_raw;
+define escr_term_rawc;
 define escr_term_parse;
 define escr_term_val;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
 *
-*   Function ESCR_TERM_RAW (E, FSTR, P, TERM, STAT)
+*   Function ESCR_TERM_RAW (E, FSTR, P, TERM)
 *
 *   Return the raw characters of the next term in FSTR exactly as found.  P is
 *   the starting parse index, and will be udpated to after the term.  The
-*   returns TRUE to indicate returning with a term normally.
+*   function returns TRUE to indicate returning with a term normally.
+*
+*   Tokens are delimited by one or more spaces.  These spaces are not parts of
+*   any token.
 *
 *   No interpretation of the token is performed, except that spaces within
-*   quotes or apostrophies do not represet breaks between tokens.
+*   quoted strings do not represet breaks between tokens.
 *
 *   When the end of the input string is encountered before a term is found, the
 *   function returns FALSE with STAT indicating no error.  On error, STAT is set
@@ -25,15 +29,15 @@ function escr_term_raw (               {get chars of next token from input strin
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fstr: univ string_var_arg_t; {source string, term will be next token}
   in out  p: string_index_t;           {source string parse index, updated}
-  in out  term: univ string_var_arg_t; {returned raw term characters}
-  out     stat: sys_err_t)             {completion status, no error on func TRUE}
+  in out  term: univ string_var_arg_t) {returned raw term characters}
   :boolean;                            {TRUE if term was available and no error}
   val_param;
 
 var
-  qchar: char;                         {string quote character}
-  quote: boolean;                      {token is a quoted string}
+  quote: boolean;                      {in a quoted string}
+  qen: char;                           {quoted string end character}
   c: char;                             {current character}
+  qsyn_p: escr_quotesyn_p_t;           {pointer to quoted string syntax list entry}
 
 begin
   escr_term_raw := false;              {init to no token available}
@@ -52,7 +56,7 @@ begin
     if quote
       then begin                       {in a quoted string}
         string_append1 (term, c);      {copy this char to returned token}
-        if c = qchar then quote := false; {hit closed quote ?}
+        if c = qen then quote := false; {hit quoted string end ?}
         end
       else begin                       {not in a quoted string}
         if c = ' ' then begin          {unquoted blank ends token}
@@ -60,10 +64,15 @@ begin
           exit;
           end;
         string_append1 (term, c);      {copy this char to returned token}
-        if (c = '''') or (c = '"') then begin {leading quote ?}
-          qchar := c;                  {set closing quote character}
-          quote := true;               {indicate now in a quoted string}
-          end;
+        qsyn_p := e.quotesyn_p;        {init to first quoted string syntax list entry}
+        while qsyn_p <> nil do begin   {scan the list of quoted string syntaxes}
+          if c = qsyn_p^.st then begin {this character starts a quoted string ?}
+            quote := true;             {indicate now in a quoted string}
+            qen := qsyn_p^.en;         {set quoted string end character}
+            exit;                      {stop looking for quoted string start}
+            end;
+          qsyn_p := qsyn_p^.next_p;    {to next quoted string syntax list entry}
+          end;                         {back to check char against new quote start}
         end
       ;
     p := p + 1;                        {make index of the next char}
@@ -72,15 +81,91 @@ begin
 {
 ********************************************************************************
 *
+*   Function ESCR_TERM_RAWC (E, FSTR, P, TERM)
+*
+*   Like ESCR_TERM_RAWC except that tokens are delimited by single commas that
+*   may be surrounded by any number of spaces.
+}
+function escr_term_rawc (              {get chars of next token from input string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fstr: univ string_var_arg_t; {source string, term will be next token}
+  in out  p: string_index_t;           {source string parse index, updated}
+  in out  term: univ string_var_arg_t) {returned raw term characters}
+  :boolean;                            {TRUE if term was available and no error}
+  val_param;
+
+var
+  quote: boolean;                      {in a quoted string}
+  qen: char;                           {quoted string end character}
+  c: char;                             {current character}
+  qsyn_p: escr_quotesyn_p_t;           {pointer to quoted string syntax list entry}
+  nspace: sys_int_machine_t;           {number of spaces read but not added to TERM}
+
+label
+  nextin;
+
+begin
+  escr_term_rawc := false;             {init to no token available}
+  term.len := 0;
+
+  while p <= fstr.len do begin         {skip over blanks at current position}
+    if fstr.str[p] <> ' ' then exit;   {at a non-blank ?}
+    p := p + 1;                        {skip over this blank}
+    end;
+  if p > fstr.len then return;         {no token before end of input string ?}
+  escr_term_rawc := true;              {will be returning with a token}
+
+  quote := false;                      {init to not within a quoted string}
+  nspace := 0;                         {init to no pending trailing spaces}
+
+  while p <= fstr.len do begin         {scan the remainder of the input string}
+    c := fstr.str[p];                  {fetch this character}
+    if quote
+      then begin                       {in a quoted string}
+        string_append1 (term, c);      {copy this char to returned token}
+        if c = qen then quote := false; {hit quoted string end ?}
+        end
+      else begin                       {not in a quoted string}
+        if c = ',' then begin          {unquoted comma ends token}
+          p := p + 1;                  {start after the comma next time}
+          exit;
+          end;
+        if c = ' ' then begin          {blank, could be padding before comma}
+          nspace := nspace + 1;        {count one more trailing blank not in TERM}
+          goto nextin;
+          end;
+        while nspace > 0 do begin      {there are unreported blanks ?}
+          string_append1 (term, ' ');  {add one blank}
+          nspace := nspace - 1;        {count one less unreported blank left}
+          end;                         {back to add next ureported blank}
+        string_append1 (term, c);      {copy this char to returned token}
+        qsyn_p := e.quotesyn_p;        {init to first quoted string syntax list entry}
+        while qsyn_p <> nil do begin   {scan the list of quoted string syntaxes}
+          if c = qsyn_p^.st then begin {this character starts a quoted string ?}
+            quote := true;             {indicate now in a quoted string}
+            qen := qsyn_p^.en;         {set quoted string end character}
+            exit;                      {stop looking for quoted string start}
+            end;
+          qsyn_p := qsyn_p^.next_p;    {to next quoted string syntax list entry}
+          end;                         {back to check char against new quote start}
+        end                            {end of was not in quoted string}
+      ;
+nextin:                                {done with this input char, on to next}
+    p := p + 1;                        {advance input string index to next char}
+    end;                               {back to process this new char}
+  end;
+{
+********************************************************************************
+*
 *   Function ESCR_TERM_PARSE (E, FSTR, P, TERM, QUOTED, STAT)
 *
 *   Parse the next term from the input string FSTR.  The characters of the term
-*   are returned in TERM, and QUOTED is set iff these were enclosed in quotes or
-*   apostrophies.  These enclosing quotes, if any, are not returned in TERM.
-*   Also, escaped literal quotes are returned interpreted in TERM, not exactly
-*   as found in FSTR.
+*   are returned in TERM, and QUOTED is set iff these were in a quotes string.
+*   The enclosing quotes, if any, are not returned in TERM.  Also, escaped
+*   literal quotes are returned interpreted in TERM, not exactly as found in
+*   FSTR.
 *
-*   Examples:
+*   Examples using the default ESCR quoted string rules:
 *
 *     Characters in FSTR   TERM                QUOTED
 *     ------------------   -----------------   ------
@@ -108,28 +193,76 @@ function escr_term_parse (             {parse next term from input string}
 
 var
   c: char;                             {scratch character}
+  qsyn_p: escr_quotesyn_p_t;           {pointer matching quoted string syntax}
+
+label
+  qstring;
 
 begin
-  term.len := 0;                       {init returned string to empty}
-  quoted := false;                     {init to term is not a quoted string}
   sys_error_none (stat);               {init to no error encountered}
   escr_term_parse := false;            {init to no term found}
+  term.len := 0;                       {init returned string to empty}
+  quoted := false;                     {init to term is not a quoted string}
 
   if p > fstr.len then return;         {nothing left to parse from input string ?}
   while fstr.str[p] = ' ' do begin     {skip over blanks}
     p := p + 1;                        {advance to next input string char}
     if p > fstr.len then return;       {hit end of input string ?}
     end;                               {back to check this next input string char}
-{
-*   P is the index of the first character of the term token.
-}
-  c := fstr.str[p];                    {save the first token character}
-  string_token (fstr, p, term, stat);  {get the token contents into TERM}
-  if string_eos(stat) then return;     {nothing there ?}
-  if sys_error(stat) then return;      {hard error ?}
-  escr_term_parse := true;             {indicate returning with a term}
 
-  quoted := (c = '''') or (c = '"');   {was quoted string ?}
+  c := fstr.str[p];                    {get the first token character}
+  if escr_quote_start (e, c, qsyn_p)   {first character is start of quoted string ?}
+    then goto qstring;
+{
+*   Not a quoted string.  P is the index of the first character, and C is that
+*   character.
+}
+  while true do begin
+    string_append1 (term, c);          {add this char to returned string}
+    p := p + 1;                        {advance to next source character}
+    if p > fstr.len then exit;         {hit end of input string ?}
+    c := fstr.str[p];                  {fetch this new source character}
+    if c = ' ' then begin              {hit blank ending the term ?}
+      p := p + 1;                      {start after the blank next time}
+      exit;
+      end;
+    end;                               {back to handle this new input string char}
+
+  escr_term_parse := true;             {returning with a term}
+  return;
+{
+*   Quoted string.  P is the index of the quote start character, and QSYN_P is
+*   pointing to the quoted string syntax description.
+}
+qstring:
+  quoted := true;                      {indicate returning quoted string contents}
+
+  while true do begin
+    p := p + 1;                        {skip over the quote start character}
+    if p > fstr.len then begin         {hit end of input string ?}
+      sys_stat_set (string_subsys_k, string_stat_no_endquote_k, stat);
+      return;
+      end;
+    c := fstr.str[p];                  {fetch this new source character}
+    if c = qsyn_p^.en then begin       {ending quoted string character ?}
+      p := p + 1;                      {go to next character}
+      if p > fstr.len then exit;       {end of string right after closing quote ?}
+      c := fstr.str[p];                {fetch next char after ending quote}
+      if c = qsyn_p^.en then begin     {two consecutive end quotes ?}
+        string_append1 (term, c);      {interpret as single end quote char and continue}
+        next;
+        end;
+      if c = ' ' then begin            {blank after closing quote ?}
+        p := p + 1;                    {start after the blank next time}
+        exit;
+        end;
+      sys_stat_set (string_subsys_k, string_stat_bad_quote_k, stat);
+      return;
+      end;                             {end of char is quote end}
+    string_append1 (term, c);          {copy this char to the output string}
+    end;                               {back to do next input char}
+
+  escr_term_parse := true;             {returning with a term}
   end;
 {
 ********************************************************************************

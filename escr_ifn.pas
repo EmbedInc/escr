@@ -424,7 +424,7 @@ procedure escr_ifn_ret_str (           {return string value}
   val_param;
 
 begin
-  escr_str_quote (str, e.parse_p^.funret); {quote and append the string}
+  escr_str_quote (e, str, e.parse_p^.funret); {quote and append the string}
   end;
 {
 ********************************************************************************
@@ -445,7 +445,7 @@ begin
   tk.max := size_char(tk.str);         {init local var string}
 
   string_vstring (tk, strp, 80);       {convert to var string}
-  escr_str_quote (tk, e.parse_p^.funret); {quote and append the string}
+  escr_str_quote (e, tk, e.parse_p^.funret); {quote and append the string}
   end;
 {
 ********************************************************************************
@@ -492,17 +492,22 @@ procedure escr_ifn_ret_char (          {return one-character string}
   val_param;
 
 var
-  q: char;                             {quote character}
+  qsyn_p: escr_quotesyn_p_t;           {points to quoted string syntax description}
 
 begin
-  q := '"';                            {init to using double quotes}
-  if c = q then begin                  {the character is a double quote ?}
-    q := '''';                         {use single quote instead}
+  qsyn_p := e.quotesyn_p;              {init to first quoted string type}
+
+  if qsyn_p = nil then begin           {no quoted strings defined ?}
+    string_append1 (e.parse_p^.funret, c); {add just the bare character}
+    return;
     end;
 
-  string_append1 (e.parse_p^.funret, q); {write the quoted string}
-  string_append1 (e.parse_p^.funret, c);
-  string_append1 (e.parse_p^.funret, q);
+  string_append1 (e.parse_p^.funret, qsyn_p^.st); {write quote start char}
+  string_append1 (e.parse_p^.funret, c); {write the character}
+  if c = qsyn_p^.en then begin         {character is same as quote end ?}
+    string_append1 (e.parse_p^.funret, c); {double will be interpreted as literal single}
+    end;
+  string_append1 (e.parse_p^.funret, qsyn_p^.en); {write quote end char}
   end;
 {
 ********************************************************************************

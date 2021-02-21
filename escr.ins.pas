@@ -459,6 +459,13 @@ escr_inhty_blk_k: (                    {in execution block}
     :boolean;                          {function start found, P moved to immediately after}
     val_param;
 
+  escr_quotesyn_p_t = ^escr_quotesyn_t;
+  escr_quotesyn_t = record             {quoted string start/end syntax}
+    next_p: escr_quotesyn_p_t;         {pointer to next string start/end syntax in list}
+    st: char;                          {quoted string start character}
+    en: char;                          {matching quoted string end character}
+    end;
+
   escr_t = record                      {state for one use of the ESCR system}
     fline_p: fline_p_t;                {to FLINE library use state (manages input files)}
     mem_p: util_mem_context_p_t;       {top mem context for all dynamic mem}
@@ -483,11 +490,13 @@ escr_inhty_blk_k: (                    {in execution block}
     syexcl_p: escr_syrlist_p_t;        {list of syntax exclusions (like quotes)}
     commscr_p: escr_syrlist_p_t;       {list of script engine comment identifiers}
     commdat_p: escr_syrlist_p_t;       {list of data file comments, preproc mode only}
+    commdeol_p: escr_syrlist_p_t;      {list of dat file comments that end at end of line}
     syfunc: escr_syrange_t;            {start/end syntax for script functions}
     syfunc_st_p: escr_syfunc_st_p_t;   {app routine to identify function start}
     flags: escr_flags_t;               {system-wide control flags}
     exstat: sys_int_machine_t;         {script exit status}
     lpos_p: fline_lposdyn_p_t;         {points to current logical input nested position}
+    quotesyn_p: escr_quotesyn_p_t;     {points to list of quoted string start/end syntaxes}
     end;
 {
 ****************************************
@@ -928,9 +937,9 @@ function escr_excl_check (             {check for syntax exclusion at char}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      stri: univ string_var_arg_t; {input string}
   in out  p: string_index_t;           {index to check for syntax exclusion at}
-  in      excl_p: escr_syrlist_p_t;    {list of syntax ranges, each one exclusion}
-  in      stro_p: univ string_var_p_t; {points to output string}
-  out     stat: sys_err_t)             {completion status}
+  in      excl_p: escr_syrlist_p_t;    {list of exclusions to check, may be NIL}
+  in      stro_p: univ string_var_p_t; {points to output string, may be NIL}
+  out     stat: sys_err_t)             {completion status, only err if excl found}
   :boolean;                            {excl found, P changed, excl appended to STRO}
   val_param; extern;
 
@@ -1066,6 +1075,23 @@ procedure escr_parse_init (            {init input parsing state descriptor}
   out     par: escr_parse_t);          {parsing state to init}
   val_param; extern;
 
+function escr_quote_start (            {check for start of quoted string character}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      stchar: char;                {the character to check}
+  out     qsyn_p: escr_quotesyn_p_t)   {points to applicable syntax, NIL not quoted}
+  :boolean;                            {character starts a quoted string}
+  val_param; extern;
+
+procedure escr_quotesyn_add (          {add one quoted string start/end syntax to list}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      qst: char;                   {quoated string start character}
+  in      qen: char);                  {corresponding quoted string end character}
+  val_param; extern;
+
+procedure escr_quotesyn_clear (        {clear all quoted string start/end syntaxes}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param; extern;
+
 procedure escr_run (                   {run, state all set up, returns on block end}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   out     stat: sys_err_t);            {completion status}
@@ -1132,6 +1158,7 @@ procedure escr_str_from_fp (           {make string from floating point value}
   val_param; extern;
 
 procedure escr_str_quote (             {quote and append string, ESCR syntax}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      stri: univ string_var_arg_t; {input string}
   in out  stro: univ string_var_arg_t); {string to append to}
   val_param; extern;
@@ -1370,8 +1397,15 @@ function escr_term_raw (               {get chars of next token from input strin
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      fstr: univ string_var_arg_t; {source string, term will be next token}
   in out  p: string_index_t;           {source string parse index, updated}
-  in out  term: univ string_var_arg_t; {returned raw term characters, unquoted}
-  out     stat: sys_err_t)             {completion status, no error on func TRUE}
+  in out  term: univ string_var_arg_t) {returned raw term characters}
+  :boolean;                            {TRUE if term was available and no error}
+  val_param; extern;
+
+function escr_term_rawc (              {get chars of next token from input string}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      fstr: univ string_var_arg_t; {source string, term will be next token}
+  in out  p: string_index_t;           {source string parse index, updated}
+  in out  term: univ string_var_arg_t) {returned raw term characters}
   :boolean;                            {TRUE if term was available and no error}
   val_param; extern;
 

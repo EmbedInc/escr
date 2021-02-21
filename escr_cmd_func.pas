@@ -180,5 +180,5 @@ begin
     e, e.parse_p^.funret, stat);
 
   par_p^.funret.len := 0;              {init the function return to empty}
-  escr_str_quote (e.parse_p^.funret, par_p^.funret);
+  escr_str_quote (e, e.parse_p^.funret, par_p^.funret);
   end;

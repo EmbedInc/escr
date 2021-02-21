@@ -10,6 +10,9 @@ define escr_commdat_add;
 define escr_syexcl_clear;
 define escr_syexcl_add;
 define escr_excl_check;
+define escr_quotesyn_clear;
+define escr_quotesyn_add;
+define escr_quote_start;
 %include 'escr2.ins.pas';
 {
 ********************************************************************************
@@ -135,7 +138,8 @@ procedure escr_commdat_clear (         {clear script comment syntaxes}
   val_param;
 
 begin
-  escr_syrlist_clear (e, e.commdat_p);
+  escr_syrlist_clear (e, e.commdat_p); {deallocate the list}
+  e.commdeol_p := nil;                 {indicate no end of line comments}
   end;
 {
 ********************************************************************************
@@ -156,17 +160,39 @@ procedure escr_commdat_add (           {add identifying syntax for data comment}
   out     stat: sys_err_t);            {completion status}
   val_param;
 
+var
+  syent_p: escr_syrlist_p_t;           {pointer to list entry}
+  syent_pp: ^escr_syrlist_p_t;         {where to write forward list link}
+
 begin
   if st.len <= 0 then begin            {no starting string ?}
     sys_stat_set (escr_subsys_k, escr_err_nosystart_k, stat);
     return;
     end;
 
-  escr_syrlist_add (e, e.commdat_p, stat); {add new entry to list}
-  if sys_error(stat) then return;
+  if en.len > 0
+    then begin                         {not an end of line comment}
+      escr_syrlist_add (e, e.commdat_p, stat); {add to data file comments list}
+      if sys_error(stat) then return;
+      syent_p := e.commdat_p;          {set pointer to the new list entry}
+      end
+    else begin                         {this is an end of line comment}
+      escr_syrlist_add (e, e.commdeol_p, stat); {add to end of line comm list}
+      if sys_error(stat) then return;
+      syent_p := e.commdat_p;          {init to first dat file comments list entry}
+      syent_pp := addr(e.commdat_p);
+      while syent_p <> nil do begin    {scan the existing list}
+        if syent_p^.range.en.len <= 0 then exit; {found first end of line comment ?}
+        syent_pp := addr(syent_p^.next_p); {update where to write forward link}
+        syent_p := syent_p^.next_p;    {to next list entry}
+        end;                           {back to check this new list entry}
+      syent_p := e.commdeol_p;         {set pointer to the new list entry}
+      syent_pp^ := syent_p;            {forward link last non-EOL comment to new entry}
+      end
+    ;
 
-  string_copy (st, e.commdat_p^.range.st); {save starting characters}
-  string_copy (en, e.commdat_p^.range.en); {save ending characters}
+  string_copy (st, syent_p^.range.st); {save starting characters}
+  string_copy (en, syent_p^.range.en); {save ending characters}
   end;
 {
 ********************************************************************************
@@ -244,9 +270,9 @@ function escr_excl_check (             {check for syntax exclusion at char}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      stri: univ string_var_arg_t; {input string}
   in out  p: string_index_t;           {index to check for syntax exclusion at}
-  in      excl_p: escr_syrlist_p_t;    {list of syntax ranges, each one exclusion}
-  in      stro_p: univ string_var_p_t; {points to output string}
-  out     stat: sys_err_t)             {completion status}
+  in      excl_p: escr_syrlist_p_t;    {list of exclusions to check, may be NIL}
+  in      stro_p: univ string_var_p_t; {points to output string, may be NIL}
+  out     stat: sys_err_t)             {completion status, only err if excl found}
   :boolean;                            {excl found, P changed, excl appended to STRO}
   val_param;
 
@@ -337,4 +363,121 @@ not_excle:                             {exclusion doesn't end here}
   sys_stat_parm_vstr (syr_p^.range.st, stat);
   sys_stat_parm_vstr (syr_p^.range.en, stat);
   sys_stat_parm_int (exstart, stat);
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_QUOTESYN_CLEAR (E)
+*
+*   Clear any existing quoted string start/end syntaxes.  This makes recognizing
+*   quoted strings impossible.
+*
+*   Defaults are set when the library use state is created:
+*
+*     Start: ("), End (").  Quote character starts and ends a string.
+*
+*     Start: ('), End (').  Apostrophy character starts and ends a string.
+*
+*   Applications can add to these without needing to clear all definitions.
+*   However, if any of the default definitions are not desired, then the
+*   application must clear all, and add only what is desired.
+}
+procedure escr_quotesyn_clear (        {clear all quoted string start/end syntaxes}
+  in out  e: escr_t);                  {state for this use of the ESCR system}
+  val_param;
+
+var
+  qsyn_p: escr_quotesyn_p_t;           {points to curr quoted string syntax description}
+  next_p: escr_quotesyn_p_t;           {points to next list entry}
+
+begin
+  qsyn_p := e.quotesyn_p;              {init to first list entry}
+  while qsyn_p <> nil do begin         {back here each new list entry}
+    next_p := qsyn_p^.next_p;          {save pointer to next list entry}
+    util_mem_ungrab (qsyn_p, e.mem_p^); {deallocate this list entry}
+    qsyn_p := next_p;                  {on to next list entry}
+    end;                               {back to process this new list entry}
+
+  e.quotesyn_p := nil;                 {indicate the list is empty}
+  end;
+{
+********************************************************************************
+*
+*   Subroutine ESCR_QUOTESYN_ADD (E, QST, QEN)
+*
+*   Add one quoted string syntax to the list.  QST is the quoted string start
+*   character and QEN the corresponding quoted string end character.  Any text
+*   after QST up to but not including the next QEN will be interpreted as a
+*   literal string.
+*
+*   Attempts to add duplicate entries are ignored.
+}
+procedure escr_quotesyn_add (          {add one quoted string start/end syntax to list}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      qst: char;                   {quoated string start character}
+  in      qen: char);                  {corresponding quoted string end character}
+  val_param;
+
+var
+  qsyn_p: escr_quotesyn_p_t;           {points to quotes string syntax list entry}
+
+begin
+{
+*   Check for existing entry for the requested syntax.  If found, there is
+*   nothing to do.  Duplicate entries don't change string interpretation, but
+*   do cause wasted cycles looking for strings.
+}
+  qsyn_p := e.quotesyn_p;              {init to first existing list entry}
+  while qsyn_p <> nil do begin         {back here each new existing list entry}
+    if                                 {requested syntax is already in the list ?}
+        (qsyn_p^.st = qst) and         {start character matches ?}
+        (qsyn_p^.en = qen)             {end character matches ?}
+        then begin
+      return;                          {already in list, nothing to do}
+      end;
+    qsyn_p := qsyn_p^.next_p;          {to next list entry}
+    end;                               {back to check this next entry for duplicate}
+{
+*   An entry with the requested syntax doesn't exist.  Create it.
+}
+  util_mem_grab (                      {allocate memory for new list entry}
+    sizeof(qsyn_p^), e.mem_p^, true, qsyn_p);
+  qsyn_p^.st := qst;                   {fill in this list entry}
+  qsyn_p^.en := qen;
+
+  qsyn_p^.next_p := e.quotesyn_p;      {link new entry to start of list}
+  e.quotesyn_p := qsyn_p;
+  end;
+{
+********************************************************************************
+*
+*   Function ESCR_QUOTE_START (E, STCHAR, QSYN_P)
+*
+*   Determine whether the character STCHAR starts a quoted string.
+*
+*   If STCHAR starts a quoted string, the function returns TRUE, and QSYN_P will
+*   point to the applicable quoted string syntax description.  This can be used
+*   to find the quoted string end character.
+*
+*   If STCHAR does not start a quoted string, then the function returns FALSE
+*   and QSYN_P is set to NIL.
+}
+function escr_quote_start (            {check for start of quoted string character}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
+  in      stchar: char;                {the character to check}
+  out     qsyn_p: escr_quotesyn_p_t)   {points to applicable syntax, NIL not quoted}
+  :boolean;                            {character starts a quoted string}
+  val_param;
+
+begin
+  qsyn_p := e.quotesyn_p;              {init to first quoted string syntax list entry}
+  while qsyn_p <> nil do begin         {scan the list}
+    if stchar = qsyn_p^.st then begin  {char matches string start ?}
+      escr_quote_start := true;
+      return;
+      end;
+    qsyn_p := qsyn_p^.next_p;          {advance to next list entry}
+    end;                               {back to check char against new list entry}
+
+  escr_quote_start := false;           {char didn't match any string start chars}
   end;

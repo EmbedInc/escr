@@ -208,6 +208,7 @@ begin
   e_p^.syexcl_p := nil;
   e_p^.commscr_p := nil;
   e_p^.commdat_p := nil;
+  e_p^.commdeol_p := nil;
   e_p^.syfunc.st.max := size_char(e_p^.syfunc.st.str);
   string_vstring (e_p^.syfunc.st, '[', 1);
   e_p^.syfunc.en.max := size_char(e_p^.syfunc.en.str);
@@ -216,6 +217,7 @@ begin
   e_p^.flags := [];
   e_p^.exstat := 0;
   e_p^.lpos_p := nil;
+  e_p^.quotesyn_p := nil;
 {
 *   Do higher level initialization now that all fields have at least legal
 *   values.
@@ -240,6 +242,9 @@ begin
     string_v(''''),                    {quoted string end}
     stat);
   if sys_error(stat) then goto err;
+
+  escr_quotesyn_add (e_p^, '"', '"');  {quoted string can start/end with quotes}
+  escr_quotesyn_add (e_p^, '''', ''''); {quoted string can start/end with apostrophies}
   {
   *   Add the intrinsic commands to the commands symbol table.
   }

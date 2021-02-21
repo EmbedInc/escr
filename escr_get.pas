@@ -23,8 +23,9 @@ define escr_get_args_str;
 *
 *   Function ESCR_GET_TOKEN (E, TK)
 *
-*   Return TRUE and the next input line token in TK if one is available.  If
-*   not, the function returns FALSE and TK as the empty string.
+*   Try to get the next input line token.  If one it available, it is returned
+*   in TK and the function returns TRUE.  If not, TK is returned the empty
+*   string and the function returns FALSE.
 }
 function  escr_get_token (             {get next input stream token}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -33,26 +34,29 @@ function  escr_get_token (             {get next input stream token}
   val_param;
 
 var
+  gotit: boolean;                      {got a token}
+  quoted: boolean;                     {the token was a quoted string}
   stat: sys_err_t;
 
 begin
-  escr_get_token := false;             {init to not returning with a token}
-
-  string_token (                       {try to get the next token}
-    e.parse_p^.ibuf, e.parse_p^.ip, e.parse_p^.lparm, stat);
-  if not sys_error(stat) then begin    {got it ?}
-    string_copy (e.parse_p^.lparm, tk);
-    escr_get_token := true;
+  gotit := escr_term_parse (           {parse next token from input string}
+    e,                                 {ESCR library use state}
+    e.parse_p^.ibuf,                   {string to parse token from}
+    e.parse_p^.ip,                     {parse index}
+    e.parse_p^.lparm,                  {returned token}
+    quoted,                            {token was a quoted string}
+    stat);
+  if gotit then begin                  {got a token, no error ?}
+    string_copy (e.parse_p^.lparm, tk); {return the token into TK}
+    escr_get_token := true;            {indicate returning with a token}
     return;
     end;
-  if string_eos(stat) then begin       {hit end of input line ?}
-    tk.len := 0;
-    return;
-    end;
 
-  sys_error_print (stat, '', '', nil, 0); {abort with error}
-  escr_err_atline (e, '', '', nil, 0);
-  return;                              {keep compiler from complaining}
+  escr_get_token := false;             {not returning with a token}
+  if sys_error(stat) then begin        {hard error ?}
+    sys_error_print (stat, '', '', nil, 0); {show the error}
+    escr_err_atline (e, '', '', nil, 0); {show source location and abort}
+    end;
   end;
 {
 ********************************************************************************
@@ -93,8 +97,7 @@ begin
 *   Get the next token without any interpretation.  The same syntax rules for
 *   token delimiting still apply, but the token is not altered in any way.  If
 *   the token is a quoted string, the quotes are not removed although internal
-*   blanks are considered part of the token until the closing quote.  Quotes
-*   can be either quote characters (") or apostrophies (').
+*   blanks are considered part of the token until the closing quote.
 }
 function escr_get_tkraw (              {get next raw input stream token}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -102,49 +105,12 @@ function escr_get_tkraw (              {get next raw input stream token}
   :boolean;                            {TRUE if token was available}
   val_param;
 
-var
-  qchar: char;                         {string quote character}
-  quote: boolean;                      {token is a quoted string}
-  c: char;                             {current character}
-
 begin
-  escr_get_tkraw := false;             {init to no token available}
-  tk.len := 0;
-
-  while                                {skip over blanks at current position}
-      e.parse_p^.ip <= e.parse_p^.ibuf.len
-      do begin
-    if e.parse_p^.ibuf.str[e.parse_p^.ip] <> ' ' then exit; {at a non-blank ?}
-    e.parse_p^.ip := e.parse_p^.ip + 1; {skip over this blank}
-    end;
-  if e.parse_p^.ip > e.parse_p^.ibuf.len {no token before end of input string ?}
-    then return;
-  escr_get_tkraw := true;              {will be returning with a token}
-
-  quote := false;                      {init to not within a quoted string}
-  while                                {scan the remainder of the input string}
-      e.parse_p^.ip <= e.parse_p^.ibuf.len
-      do begin
-    c := e.parse_p^.ibuf.str[e.parse_p^.ip]; {fetch this character}
-    if quote
-      then begin                       {in a quoted string}
-        string_append1 (tk, c);        {copy this char to returned token}
-        if c = qchar then quote := false; {hit closed quote ?}
-        end
-      else begin                       {not in a quoted string}
-        if c = ' ' then begin          {unquoted blank ends token}
-          e.parse_p^.ip := e.parse_p^.ip + 1; {skip over this blank}
-          exit;
-          end;
-        string_append1 (tk, c);        {copy this char to returned token}
-        if (c = '''') or (c = '"') then begin {leading quote ?}
-          qchar := c;                  {set closing quote character}
-          quote := true;               {indicate now in a quoted string}
-          end;
-        end
-      ;
-    e.parse_p^.ip := e.parse_p^.ip + 1; {make index of the next char}
-    end;                               {back to process this new char}
+  escr_get_tkraw := escr_term_raw (    {parse and get the raw token}
+    e,                                 {ESCR library use state}
+    e.parse_p^.ibuf,                   {source string}
+    e.parse_p^.ip,                     {source string parse index}
+    tk);                               {returned token}
   end;
 {
 ********************************************************************************
@@ -160,65 +126,12 @@ function escr_get_tkrawc (             {get next raw token, comma delimited}
   :boolean;                            {TRUE if token was available}
   val_param;
 
-var
-  qchar: char;                         {string quote character}
-  quote: boolean;                      {token is a quoted string}
-  c: char;                             {current character}
-  blcnt: sys_int_machine_t;            {number of blank characters skipped over}
-
 begin
-  escr_get_tkrawc := false;            {init to no token available}
-  tk.len := 0;
-
-  while                                {skip over blanks at current position}
-      e.parse_p^.ip <= e.parse_p^.ibuf.len
-      do begin
-    if e.parse_p^.ibuf.str[e.parse_p^.ip] <> ' ' then exit; {at a non-blank ?}
-    e.parse_p^.ip := e.parse_p^.ip + 1; {skip over this blank}
-    end;
-  if e.parse_p^.ip > e.parse_p^.ibuf.len {no token before end of input string ?}
-    then return;
-  escr_get_tkrawc := true;             {will be returning with a token}
-
-  quote := false;                      {init to not within a quoted string}
-  blcnt := 0;                          {init to no blanks skipped over}
-  while                                {scan the remainder of the input string}
-      e.parse_p^.ip <= e.parse_p^.ibuf.len
-      do begin
-    c := e.parse_p^.ibuf.str[e.parse_p^.ip]; {fetch this character}
-    e.parse_p^.ip := e.parse_p^.ip + 1; {update index to next character to fetch}
-    if quote
-      then begin                       {in a quoted string}
-        string_append1 (tk, c);        {copy this char to returned token}
-        if c = qchar then quote := false; {hit closed quote ?}
-        end
-      else begin                       {not in a quoted string}
-        case c of                      {check for special handling characters}
-
-'''', '"': begin                       {leading quote}
-  quote := true;                       {indicate now in a quoted string}
-  qchar := c;                          {set the end quote character}
-  string_append1 (tk, c);              {copy current character to the returned token}
-  end;
-
-' ': begin                             {blank}
-  blcnt := blcnt + 1;                  {count one more blank encountered}
-  end;
-
-',': begin                             {comma}
-  return;                              {end of token delimiter found}
-  end;
-
-otherwise                              {all other characters}
-  while blcnt > 0 do begin             {skipped blanks were internal to the token}
-    string_append1 (tk, ' ');          {pass on this blank}
-    blcnt := blcnt - 1;                {count one less skipped blank left to restore}
-    end;
-  string_append1 (tk, c);              {copy current character to the returned token}
-  end;
-        end                            {end of not in quoted string case}
-      ;
-    end;                               {back to process this new char}
+  escr_get_tkrawc := escr_term_rawc (  {parse and get the raw token}
+    e,                                 {ESCR library use state}
+    e.parse_p^.ibuf,                   {source string}
+    e.parse_p^.ip,                     {source string parse index}
+    tk);                               {returned token}
   end;
 {
 ********************************************************************************

@@ -381,7 +381,7 @@ escr_sym_func_k: begin                 {user-defined function}
         e, e.parse_p^.funame, 0);
       while true do begin              {loop until argument list exhausted}
         if not                         {try to get next function parameter}
-          escr_term_raw (e, e.parse_p^.funarg.s, e.parse_p^.funarg.p, parm, stat)
+          escr_term_raw (e, e.parse_p^.funarg.s, e.parse_p^.funarg.p, parm)
           then exit;                   {exhausted function arguments ?}
         escr_exblock_arg_add (e, parm); {add as next argument to new execution block}
         end;

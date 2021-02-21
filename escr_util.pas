@@ -31,11 +31,11 @@ begin
 {
 ********************************************************************************
 *
-*   Function ESCR_STR_TO_TIME (E, E, S, TIME)
+*   Function ESCR_STR_TO_TIME (E, S, TIME)
 *
-*   Interpret the string S to the absolute time and return the result in
-*   the time descriptor TIME.  The function returns TRUE on success and FALSE
-*   if the input string is not a valid date/time string.
+*   Interpret the string S to the absolute time and return the result in the
+*   time descriptor TIME.  The function returns TRUE on success and FALSE if the
+*   input string is not a valid date/time string.
 }
 function escr_str_to_time (            {make absolute time descriptor from string}
   in out  e: escr_t;                   {state for this use of the ESCR system}
@@ -204,7 +204,7 @@ begin
 *
 *   Subroutine ESCR_STR_FROM_FP (E, TK, FP)
 *
-*   Convert the floating point value FP to it's official Escr string
+*   Convert the floating point value FP to it's official ESCR string
 *   representation.  The result must always contain a decimal point or
 *   exponential notation to distinguish it from a integer string.
 }
@@ -235,71 +235,62 @@ begin
 *
 *   Subroutine ESCR_UPTOCOMM (E, S, NCLEN)
 *
-*   Finds the length of the string S with the assembler end of line comment and
-*   any blanks preceeding it removed.  The resulting line length is returned in
+*   Find the length of the string S with any data file end of line comment and
+*   blanks preceeding it removed.  The resulting line length is returned in
 *   NCLEN.
 }
-procedure escr_uptocomm (              {find line length without comment}
+procedure escr_uptocomm (              {find line length without EOL comment}
   in out  e: escr_t;                   {state for this use of the ESCR system}
   in      s: univ string_var_arg_t;    {the input string}
   out     nclen: string_index_t);      {string length with comment removed}
   val_param;
 
-type
-  parse_k_t = (                        {line parsing state}
-    parse_norm_k,                      {normal, not within special syntax}
-    parse_quote_k);                    {within quoted string, EQ is ending quote}
-
 var
   p: string_index_t;                   {input string parse index}
-  parse: parse_k_t;                    {input string parsing state}
-  c: char;                             {scratch character}
-  eq: char;                            {ending quote character}
+  syent_p: escr_syrlist_p_t;           {syntax list entry}
+  ii: sys_int_machine_t;               {scratch integer and loop counter}
+  stat: sys_err_t;
 
 label
-  found_comm;
+  next_comm, next_char;
 
 begin
-  parse := parse_norm_k;               {init parsing state}
-  p := 1;                              {init parsing index}
-  while p <= s.len do begin            {scan the input string}
-    c := s.str[p];                     {get this input line character}
-    case parse of                      {what is parsing state ?}
-parse_norm_k: begin                    {not within any special syntax}
-        case c of                      {check for special characters}
-'''', '"': begin                       {start of quoted string}
-            parse := parse_quote_k;    {indicate now within quoted string}
-            eq := c;                   {set ending quote character}
-            end;
-';':      begin                        {start of end of line comment}
-            goto found_comm;
-            end;
-          end;                         {end of special character cases}
-        end;                           {end of normal parsing state case}
-parse_quote_k: begin                   {within a quoted string}
-        if c = eq then begin           {this is the end quote character ?}
-          parse := parse_norm_k;       {back to normal parsing case}
-          end;
-        end;
-      end;                             {end of parsing state cases}
-    p := p + 1;                        {advance parse index to next character}
-    end;                               {back to parse this next character}
-{
-*   No comment found.
-}
-  nclen := s.len;                      {pass back original string length}
-  return;
-{
-*   Found comment starting at index P.
-}
-found_comm:
-  p := p - 1;                          {make last index before comment}
-  while p > 0 do begin                 {delete spaces right before comment}
-    if p <= 0 then exit;
-    if s.str[p] <> ' ' then exit;
-    p := p - 1;
-    end;
-  nclen := p;                          {pass back length without the comment}
+  nclen := 0;                          {init length with EOL comment stripped}
+  p := 1;                              {init to checking first char in string}
+  while p <= s.len do begin            {loop over the characters in the string}
+    if s.str[p] = ' ' then goto next_char; {skip over blanks without advancing length}
+
+    if escr_excl_check (               {syntax exclusion starts here ?}
+        e,                             {ESCR library use state}
+        s,                             {the string to check for exclusion in}
+        p,                             {char index to check for exclusion starting}
+        e.syexcl_p,                    {pointer to list of exclusions to check for}
+        nil,                           {don't copy characters to any output string}
+        stat)
+        then begin
+      escr_err_atline_abort (e, stat, '', '', nil, 0);
+      nclen := p - 1;                  {valid at least up to exclusion end}
+      next;                            {back to check at this new parse index}
+      end;
+
+    syent_p := e.commdeol_p;           {init to first end of line comment list entry}
+    while syent_p <> nil do begin      {loop over the end of line comment syntaxes}
+      if (s.len - p + 1) < syent_p^.range.st.len {not enough room for this comment start ?}
+        then goto next_comm;
+      for ii := 1 to syent_p^.range.st.len do begin {check the comm start characters}
+        if s.str[p + ii - 1] <> syent_p^.range.st.str[ii] {char doesn't match comm start ?}
+          then goto next_comm;
+        end;                           {back to check next comment start sequence char}
+      return;                          {found end of line comment start}
+next_comm:                             {done with this comment type, on to next}
+      syent_p := syent_p^.next_p;      {advance to next EOL comment type in the list}
+      end;                             {back to check this new EOL comment type}
+
+    nclen := p;                        {this is a valid non-comment non-blank char}
+
+next_char:                             {advance to next input string character}
+    p := p + 1;                        {to next character}
+    end;                               {back to check this new character}
   end;
 {
 ********************************************************************************
@@ -353,43 +344,40 @@ begin
 *
 *   Subroutine ESCR_STR_QUOTE (STRI, STRO)
 *
-*   Append the quoted string of the characters in STRI to the string STRO.  This
-*   follows ESCR syntax rules where quoted strings are either enclosed in quotes
-*   or apostrophies.  To express the quoting character in a string, the quoting
-*   character is doubled.
+*   Append the contents of STRI as a quoted string to the end of STRO.  Any
+*   end-quote characters in STRI are doubled so that they will be interpreted
+*   as single characters.
 }
 procedure escr_str_quote (             {quote and append string, ESCR syntax}
+  in out  e: escr_t;                   {state for this use of the ESCR system}
   in      stri: univ string_var_arg_t; {input string}
   in out  stro: univ string_var_arg_t); {string to append to}
   val_param;
 
 var
   p: sys_int_machine_t;                {string index}
+  qsyn_p: escr_quotesyn_p_t;           {pointer to quoted string syntax to use}
   c: char;                             {scratch character}
-  q: char;                             {" or ' quote character to use}
 
 begin
-  q := '"';                            {init to default quote char}
-  for p := 1 to stri.len do begin      {scan the input string}
-    c := stri.str[p];                  {get this input string character}
-    if c = '''' then begin             {found apostrophy in string ?}
-      q := '"';                        {use quotes}
-      exit;                            {no point scanning further}
-      end;
-    if c = '"' then q := '''';         {use apostrophies if string contains quotes}
+  qsyn_p := e.quotesyn_p;              {get pointer to the quoted string syntax to use}
+
+  if qsyn_p = nil then begin           {this system doesn't have quoted string ?}
+    string_append (stro, stri);        {append the bare string}
+    return;
     end;
 {
-*   Q is the string quoting character to use.
+*   QSYN_P points to the quoted string syntax to use.
 }
-  string_append1 (stro, q);            {write leading quote}
+  string_append1 (stro, qsyn_p^.st);   {write leading quote}
   for p := 1 to stri.len do begin      {once for each string character}
     c := stri.str[p];                  {get this string character}
-    if c = q then begin                {this is quote character ?}
-      string_append1 (stro, c);        {write quote character twice}
+    if c = qsyn_p^.en then begin       {this is a end-quote character ?}
+      string_append1 (stro, qsyn_p^.en); {write end-quote character twice}
       end;
     string_append1 (stro, c);          {write string character}
     end;
-  string_append1 (stro, q);            {write closing quote}
+  string_append1 (stro, qsyn_p^.en);   {write closing quote}
   end;
 {
 ********************************************************************************
