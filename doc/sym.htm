@@ -9,7 +9,7 @@
 <body>
 
 <h1 class=page>ESCR Program and Callable System</h1>
-<p class=page>Last updated 18 April 2020</p>
+<p class=page>Last updated 28 February 2021</p>
 
 <ul>
   <li><a href="cmds.htm">Next page</a>
@@ -21,9 +21,6 @@
 <br><h1>Symbols</h1>
 
 <ul>
-  <li><a href="#versions">Versions</a><ul>
-    <li><a href="#ver-curr">Current version</a>
-    </ul>
   <li><a href="#types">Symbol types</a><ul>
     <li><a href="#type-var">VAR</a>
     <li><a href="#type-const">CONST</a>
@@ -35,6 +32,9 @@
     <li><a href="#type-label">LABEL</a>
     <li><a href="#type-unsp">UNSP</a>
     </ul>
+  <li><a href="#versions">Versions</a><ul>
+    <li><a href="#ver-curr">Current version</a>
+    </ul>
   <li><a href="#syntax">Syntax</a>
   <li><a href="#examples">Examples</a>
   </ul>
@@ -43,74 +43,8 @@
 <p>Various objects in the ESCR scripting system are given names.  These
 names are referred to as "symbols".  Despite the different objects that
 can be referred to by symbols, there are some common syntax rules and
-handling of symbols.
-
-<p>Symbols refer to objects like variables and subroutines. See the <a
-href="#types"><i>Symbol types</i></a> section of this document for
-details.
-
-<h2 id="versions">Versions</h2><indent>
-
-  <p>It is permissible to create a new symbol of the same name as a
-  existing symbol.  If the new symbol is of a different fundamental type
-  (variable as opposed to a subroutine, for example), then there is no
-  conflict since there is a separate name space for each fundamental type.
-  If the new symbol is the same type as a previous one, then a new version
-  of that symbol is created.
-
-  <p>Symbol versions are numbered starting with 1, with sequentially
-  increasing numbers for newer versions.
-
-  <p><h3 id="ver-curr">Current version</h3><indent>
-
-    <p>One version of each symbol, usually the latest, is the "current"
-    version.  This version is implicitly referenced when no version
-    information is specified in a symbol reference.
-
-    <p>A specific version of a symbol can be referenced either absolutely,
-    or relative to the current version.  For example, it is possible to
-    explicitly reference the fixed version 1 of a subroutine, or one
-    version older than the current version.
-
-    <p>The current version is sometimes not the latest.  When a subroutine
-    is called, for example, the current version of that subroutine symbol
-    becomes the next older version of the subroutine. Therefore, when no
-    version is specified in a subroutine call, the default is calling a
-    chain of subroutines, not recursion.  Note that recursion is possible,
-    and requires explicitly calling the version of the subroutine +1 from
-    the current version.
-
-    </p></indent>
-
-  <p>The versions of a symbol can be thought of as a stack.  The top of
-  the stack is the new version.  New versions are created and pushed onto
-  the stack.  When the current version is deleted, it is popped off the
-  stack and the next previous version becomes current.
-
-  <p>The difference from a normal stack is that the current is not
-  constrained to always be the top of the stack.  This is the case for
-  symbols that represent routines, like subroutines, macros, and commands.
-
-  <p>When other than the last version of a symbol is deleted, the newer
-  versions are re-numbered.  The versions of a symbol are always numbered
-  sequentially from 1 to the last version without any gaps.
-
-  <p>In the ESCR system, this stacking is the mechanism used in place of
-  having local, global, or other, symbol scope.  For example, a subroutine
-  creates the variable <tt>ii</tt>, and deletes it upon exit (there is a
-  mechanism to make this somewhat automatic).  Inside the subroutine, an
-  unqualified reference to just <tt>ii</tt> refers to the variable created
-  upon entry to the subroutine.  No harm is done, and there is no
-  ambiguity, if a variable <tt>ii</tt> also existed in the calling
-  routine.
-
-  <p>The effect is largely the same as achieved by namespace scoping, but
-  that versions in other scopes can be accessed <i>when explicitly
-  specified</i>.  The syntax to explicitly specify a version other than
-  the current is deliberately not something likely to occur by accident,
-  and is visually obvious.
-
-  </p></indent>
+handling of symbols.  Symbols refer to objects like variables and
+subroutines.
 
 <h2 id="types">Symbol types</h2><indent>
 
@@ -209,6 +143,70 @@ details.
 
   </p></indent>
 
+<h2 id="versions">Versions</h2><indent>
+
+  <p>It is permissible to create a new symbol of the same name as a
+  existing symbol.  If the new symbol is of a different fundamental type
+  (variable as opposed to a subroutine, for example), then there is no
+  conflict since there is a separate name space for each fundamental type.
+  If the new symbol is the same type as a previous one, then a new version
+  of that symbol is created.
+
+  <p>Symbol versions are numbered starting with 1, with sequentially
+  increasing numbers for newer versions.
+
+  <p><h3 id="ver-curr">Current version</h3><indent>
+
+    <p>One version of each symbol, usually the latest, is the "current"
+    version.  This version is implicitly referenced when no version
+    information is specified in a symbol reference.
+
+    <p>A specific version of a symbol can be referenced either absolutely,
+    or relative to the current version.  For example, it is possible to
+    explicitly reference the fixed version 1 of a subroutine, or one
+    version older than the current version.
+
+    <p>The current version is sometimes not the latest.  When a subroutine
+    is called, for example, the current version of that subroutine symbol
+    becomes the next older version of the subroutine. Therefore, when no
+    version is specified in a subroutine call, the default is calling a
+    chain of subroutines, not recursion.  Note that recursion is possible,
+    and requires explicitly calling the version of the subroutine +1 from
+    the current version.
+
+    </p></indent>
+
+  <p>The versions of a symbol can be thought of as a stack.  The top of
+  the stack is the newest version.  New versions are created and pushed
+  onto the stack.  When the current version is deleted, it is popped off
+  the stack and the next previous version becomes current (if the deleted
+  version was current previously).
+
+  <p>The difference from a normal stack is that the current is not
+  constrained to always be the top of the stack.  This is the case for
+  symbols that represent routines, like subroutines, macros, and commands.
+
+  <p>When other than the last version of a symbol is deleted, the newer
+  versions are re-numbered.  The versions of a symbol are always numbered
+  sequentially from 1 to the last version without any gaps.
+
+  <p>In the ESCR system, this stacking is the mechanism used in place of
+  having local, global, or other, symbol scope.  For example, a subroutine
+  creates the variable <tt>ii</tt>, and deletes it upon exit (there is a
+  mechanism to make this somewhat automatic).  Inside the subroutine, an
+  unqualified reference to just <tt>ii</tt> refers to the variable created
+  upon entry to the subroutine.  No harm is done, and there is no
+  ambiguity, if a variable <tt>ii</tt> also existed in the calling
+  routine.
+
+  <p>The effect is largely the same as achieved by namespace scoping, but
+  that versions in other scopes can be accessed <i>when explicitly
+  specified</i>.  The syntax to explicitly specify a version other than
+  the current is deliberately not something likely to occur by accident,
+  and is visually obvious.
+
+  </p></indent>
+
 <h2 id="syntax">Syntax</h2><indent>
 
   <p>Symbols are specified with the syntax:</p><indent>
@@ -268,8 +266,8 @@ details.
 
   <p>For a symbol reference to indicate an existing symbol, the symbol of
   that name, of that type, and of that version must exist.  If any of
-  these is not true, then the a non-existing symbol is referenced.  That
-  may cause an error, depending on context.
+  these is not true, then a non-existing symbol is referenced.  That may
+  cause an error, depending on context.
 
   </p></indent>
 

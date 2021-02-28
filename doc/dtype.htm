@@ -9,7 +9,7 @@
 <body>
 
 <h1 class=page>ESCR Program and Callable System</h1>
-<p class=page>Last updated 18 April 2020</p>
+<p class=page>Last updated 28 February 2021</p>
 
 <ul>
   <li><a href="sym.htm">Next page</a>
@@ -96,16 +96,21 @@ keywords, and are therefore case-insensitive.  The data types are:
 
 <h2 id="string">STRING</h2><indent>
 
-  <p>A string constant is a sequence of characters enclosed in quotes
-  ("..") or apostrophies ('..').  The value is the characters between but
-  not including the quotes.  To include the enclosing quote character
-  literally in a string, it must be written twice consecutively.  This
-  only applies to the quoting character used for the specific string.
-  For example, both these string have the same value:</p><indent>
+  <p>A string constant is a sequence of characters enclosed in a pair of
+  quoted string start/end characters.  These start and end characters can
+  be set by the application.  The ESCR default is quotes ("...") or
+  apostrophies ('...').
 
-    <p><tt>"Don't"
+  <p>The value is the characters between but not including the quote
+  start/end characters  To include the ending quote character literally in
+  a string, it must be written twice consecutively.  This only applies to
+  the end-quote character used for the specific string.  For example, both
+  these string have the same value (assuming default ESCR
+  syntax):</p><indent>
 
-    <br>'Dont''t'</tt>
+    <p><tt>"Don't say ""never""."
+
+    <br>'Don''t say "never".'</tt>
 
     </p></indent>
 
@@ -124,7 +129,7 @@ keywords, and are therefore case-insensitive.  The data types are:
   implementation, but are not guaranteed to be consistent accross
   implementations.
 
-  <p>As a example, the following strings are listed in less than to
+  <p>As an example, the following strings are listed in less than to
   greater than order:<tt>
 
   <p>"aB" "ab" "cd" "cde" "cde f" "cdef" "def22" "defaa"</tt>
