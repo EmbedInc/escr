@@ -47,7 +47,7 @@ begin
     e,                                 {ESCR library use state}
     name,                              {bare symbol name}
     escr_in_line (e),                  {pointer to function starting line}
-    false,                             {make symbol local, not global}
+    true,                              {make symbol global, not local to block}
     sym_p,                             {returned pointer to the new symbol}
     stat);
   return;

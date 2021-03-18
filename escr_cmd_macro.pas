@@ -48,7 +48,7 @@ begin
     e,                                 {state for this use of the ESCR library}
     name,                              {symbol name}
     escr_sym_macro_k,                  {type of symbol to create}
-    false,                             {try to make local}
+    true,                              {make symbol global, not local to block}
     sym_p,                             {pointer to new symbol}
     stat);
   if sys_error(stat) then goto error;

@@ -43,8 +43,13 @@ begin
     goto error;
     end;
 
-  escr_sym_new (                       {create new symbol for subroutine name}
-    e, name, escr_sym_subr_k, false, sym_p, stat);
+  escr_sym_new (                       {create new symbol for the macro name}
+    e,                                 {state for this use of the ESCR library}
+    name,                              {symbol name}
+    escr_sym_subr_k,                   {type of symbol to create}
+    true,                              {make symbol global, not local to block}
+    sym_p,                             {pointer to new symbol}
+    stat);
   if sys_error(stat) then goto error;
 
   sym_p^.subr_line_p :=                {save pointer to subroutine definition line}
