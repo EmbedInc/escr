@@ -3,3 +3,16 @@ Add LIST data type.
 Add LOOP LIST.  Loops over list entries.
 
 Add LOOP TOKENS.  Loops over explicit list of tokens in a string.
+
+Fix problem of MAKE_ESCR_SCRIPTER not setting the registry entries correctly
+on some machines.  On one machine where this failed:
+
+  Computer\HKEY_CLASSES_ROOT\Applications\escr.exe\shell\open\command
+
+    After MAKE_ESCR_SCRIPTER, didn't get command line args:
+
+      "C:\embedinc\com\escr.exe" "%1"
+
+    Manually fixed, works correctly:
+
+      "C:\embedinc\com\escr.exe" "%1" %*
