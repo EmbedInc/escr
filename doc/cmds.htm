@@ -9,7 +9,7 @@
 <body>
 
 <h1 class=page>ESCR Program and Callable System</h1>
-<p class=page>Last updated 27 September 2020</p>
+<p class=page>Last updated 18 November 2022</p>
 
 <ul>
   <li><a href="func.htm">Next page</a>
@@ -1131,6 +1131,16 @@ keyword.
 
       <p>An <b>optionelse</b> option is always allowed, even if another
       option was valid.
+
+      </p></indent>
+
+    <p><b>ONEREQ</b></p><indent>
+
+      <p>Exactly one option must be valid.  It is an error if no valid
+      option is found, or more than one valid option.  <b>Optionelse</b>
+      is a valid option if no previous option was valid.  If
+      <b>optionelse</b> is the last option, then <b>ONEREQ</b> functions
+      like <b>ONE</b>.
 
       </p></indent>
 

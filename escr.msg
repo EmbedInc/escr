@@ -259,6 +259,13 @@ msg err82
 msg err83
   lan english -def
     Multiple valid PICK block options, but only one is allowed.
+msg err84
+  lan english -def
+    No valid option found in PICK block in ONEREQ mode.
+msg err85
+  lan english -def
+    No valid option found in PICK command in ONEREQ mode.  The PICK choice
+    value was <%p1s>.
 /*
 /*   Messages without error status codes.  These messages are used directly by
 /*   ESCR system code.

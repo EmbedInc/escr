@@ -135,7 +135,7 @@ begin
 *   Process the <opt> command parameter.
 }
   escr_get_keyword (e,                 {get mode keyword and pick from list}
-    'ONE FIRST ALL',
+    'ONE ONEREQ FIRST ALL',
     nkeyw, stat);
   if sys_error(stat) then goto abort1;
   case nkeyw of                        {which keyword was it ?}
@@ -144,8 +144,9 @@ begin
       goto abort1;
       end;
 1:  pick_p^.mode := escr_pickmode_one_k;
-2:  pick_p^.mode := escr_pickmode_first_k;
-3:  pick_p^.mode := escr_pickmode_all_k;
+2:  pick_p^.mode := escr_pickmode_onereq_k;
+3:  pick_p^.mode := escr_pickmode_first_k;
+4:  pick_p^.mode := escr_pickmode_all_k;
     end;
 {
 *   Process optional "BY choice" clause.
@@ -187,11 +188,14 @@ procedure escr_cmd_endpick (
 
 var
   line_p: fline_line_p_t;              {pointer to current input line}
+  tk: string_var132_t;                 {scratch token}
 
 label
   del_block;
 
 begin
+  tk.max := size_char(tk.str);         {init local var string}
+
   if e.exblock_p^.bltype <> escr_exblock_pick_k then begin {not in PICK block type ?}
     sys_stat_set (escr_subsys_k, escr_err_notpick_k, stat);
     return;
@@ -203,10 +207,34 @@ begin
     sys_stat_parm_vstr (e.parse_p^.cmd, stat);
     return;
     end;
-  if e.inhibit_p^.inh then goto del_block; {execution is inhibited ?}
+
+  if                                   {whole PICK block was not executed ?}
+      e.inhibit_p^.inh and             {execution is currently inhibited ?}
+      (not (e.inhibit_p^.inhty = escr_inhty_opt_k)) {but not due to invalid option ?}
+      then begin
+    goto del_block;                    {delete the PICK block without further processing}
+    end;
 
   if not escr_get_end (e, stat) then return; {abort on extra parameter}
   if sys_error(stat) then return;
+
+  case e.exblock_p^.pick_p^.mode of    {check for special handling PICK modes}
+escr_pickmode_onereq_k: begin          {at least one option must have been run}
+      if e.exblock_p^.pick_p^.nrun = 0 then begin
+        if e.exblock_p^.pick_p^.choice_p = nil
+          then begin                   {no choice supplied in PICK command}
+            sys_stat_set (escr_subsys_k, escr_err_pick0_nchoice_k, stat);
+            end
+          else begin                   {choice was supplied in PICK command}
+            sys_stat_set (escr_subsys_k, escr_err_pick0_choice_k, stat);
+            escr_val_str (e, e.exblock_p^.pick_p^.choice_p^, tk); {make choice string}
+            sys_stat_parm_vstr (tk, stat); {add choice string}
+            end
+          ;
+        return;                        {return with ONEREQ violation error}
+        end;
+      end;                             {end of ONEREQ mode case}
+    end;                               {end of PICK mode cases}
 
 del_block:                             {delete this block}
   line_p := escr_in_line (e);          {get pointer to the current input line}
@@ -298,7 +326,8 @@ begin
   rallowed := true;                    {init to allowed to run this option}
   case blk_p^.pick_p^.mode of          {which PICK mode is in effect ?}
 
-escr_pickmode_one_k: begin             {only one option allowed}
+escr_pickmode_one_k,                   {only one option allowed}
+escr_pickmode_onereq_k: begin
       rallowed := blk_p^.pick_p^.nrun <= 0; {no previous option was run ?}
       end;
 
@@ -443,7 +472,8 @@ begin
   rallowed := true;                    {init to allowed to run this option}
   case blk_p^.pick_p^.mode of          {which PICK mode is in effect ?}
 
-escr_pickmode_one_k: begin             {only one option allowed}
+escr_pickmode_one_k,                   {only one option allowed}
+escr_pickmode_onereq_k: begin
       rallowed := blk_p^.pick_p^.nrun <= 0; {no previous option was run ?}
       end;
 

@@ -98,7 +98,9 @@ const
   escr_err_pickcmd_nchoice_k = 80;     {PICK command missing <choice>}
   escr_err_notpick_k = 81;             {not in PICK block}
   escr_err_pick_nchoice_k = 82;        {PICK block does not have a choice value}
-  escr_err_pick_more1_k = 83;          {more than one valid option in ONE mode}
+  escr_err_pick_more1_k = 83;          {more than one valid PICK option in ONE mode}
+  escr_err_pick0_nchoice_k = 84;       {no valid PICK options in ONEREQ mode, no choice}
+  escr_err_pick0_choice_k = 85;        {no valid PICK options in ONEREQ mode, with choice}
 {
 *   Derived constants.
 }
@@ -334,6 +336,7 @@ escr_looptype_dir_k: (                 {loop over directory entries}
 
   escr_pickmode_k_t = (                {PICK command mode}
     escr_pickmode_one_k,               {run only one case, multiple valid not allowed}
+    escr_pickmode_onereq_k,            {exactly one case required to be valid}
     escr_pickmode_first_k,             {run only first case with valid condition}
     escr_pickmode_all_k);              {run all cases with valid conditions}
 
