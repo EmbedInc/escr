@@ -223,7 +223,7 @@ begin
     fp,                                {input floating point number}
     0,                                 {no fixed string width}
     0,                                 {no fixed width for exponent, if used}
-    7,                                 {min required significant digits}
+    10,                                {min required significant digits}
     6,                                 {max digits allowed left of point}
     1,                                 {min digits required right of point}
     7,                                 {max digits allowed right of point}
