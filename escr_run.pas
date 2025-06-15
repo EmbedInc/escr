@@ -357,7 +357,7 @@ leave:
 {
 ********************************************************************************
 *
-*   Subroutine ESCR_RUN_ATLINE (E, LINE, STAT)
+*   Subroutine ESCR_RUN_ATLINE (E, LINE_P, STAT)
 *
 *   Execute script code starting at the indicated input file line.
 *

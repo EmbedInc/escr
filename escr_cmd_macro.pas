@@ -199,7 +199,6 @@ begin
     e.fline_p^,                        {FLINE library use state}
     e.lpos_p,                          {logical position chain to update}
     escr_in_line(e));                  {pointer to current input line}
-  e.exblock_p^.lpos_p := e.lpos_p;     {set the new position as the parent pos this block}
 
   if label.len > 0 then begin          {label exists on this line ?}
     escr_exblock_arg_addn (e, label, -1); {label name is special argument -1}

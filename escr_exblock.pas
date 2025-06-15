@@ -76,7 +76,7 @@ begin
   bl_p^.instk_p := nil;                {indicate source reading position not filled in}
   bl_p^.previnh_p := e.inhibit_p;      {save pointer to inhibit before this block}
   bl_p^.parse_p := nil;                {init to no saved input parsing state}
-  bl_p^.lpos_p := e.lpos_p;            {init to parent nested logical input position}
+  bl_p^.lpos_p := e.lpos_p;            {save parent's logical input hiearchy position}
   bl_p^.bltype := escr_exblock_top_k;  {init to top block type}
   bl_p^.ulab := nil;                   {init to no list of unique labels}
   bl_p^.args := false;                 {init to this block does not take arguments}
@@ -136,15 +136,23 @@ escr_exblock_loop_k: begin             {LOOP ... ENDLOOP}
 {
 *   Pop all the logical input position levels created in this block.
 }
-  if e.exblock_p^.prev_p = nil
-    then begin                         {removing the last block}
-      lpos_p := nil;
-      end
-    else begin                         {there is a parent block}
-      lpos_p := e.exblock_p^.prev_p^.lpos_p; {get position to pop back to}
-      end
-    ;
-  while e.lpos_p <> lpos_p do begin    {keep popping until get to previos pos}
+  lpos_p := e.exblock_p^.lpos_p;       {logical input hier pos to pop back to}
+
+  while e.lpos_p <> lpos_p do begin    {keep popping until get to previous pos}
+    if e.lpos_p = nil then begin       {already popped past top ?}
+      writeln;
+      writeln ('INTERNAL ERROR: Attempted to pop input position to parent execution');
+      writeln ('block, but got to top input without matching parent position.');
+      write ('On attempt to close the execution block: ');
+      if e.exblock_p^.sym_p <> nil then begin
+        if e.exblock_p^.sym_p^.name_p <> nil then begin
+          writeln ('"', e.exblock_p^.sym_p^.name_p^.str:e.exblock_p^.sym_p^.name_p^.len, '"');
+          sys_bomb;
+          end;
+        end;
+      writeln ('- no name -');
+      sys_bomb;
+      end;
     fline_lpos_pop (e.fline_p^, e.lpos_p);
     end;
 {
@@ -541,7 +549,7 @@ begin
 *   Save the current input stream parsing state such that it will be restored to
 *   this state when the block is closed.  The input parsing state can only be
 *   saved once per execution block.  This is usually done after a new block is
-*   created, before any code is run in it.  It is a error if the input parsing
+*   created, before any code is run in it.  It is an error if the input parsing
 *   state was previously saved in this block.
 }
 procedure escr_exblock_parse_save (    {save parsing state, will be restored on block end}

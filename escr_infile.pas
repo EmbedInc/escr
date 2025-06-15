@@ -42,7 +42,7 @@ procedure escr_infile_open (           {find file data or read it into memory}
   val_param;
 
 begin
-  fline_file_get_suff (                {fine or make stored lines of this file}
+  fline_file_get_suff (                {find or make stored lines of this file}
     e.fline_p^,                        {FLINE library use state}
     fnam, suff,                        {file name and optional suffixes}
     coll_p,                            {returned pointer to collection of lines}

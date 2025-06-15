@@ -142,7 +142,6 @@ begin
     e.fline_p^,                        {FLINE library use state}
     e.lpos_p,                          {logical position chain to update}
     escr_in_line(e));                  {pointer to current input line}
-  e.exblock_p^.lpos_p := e.lpos_p;     {set the new position as the parent pos this block}
 
   escr_exblock_goto_line_aft (         {start at first line of subroutine}
     e, sym_p^.subr_line_p, stat);

@@ -389,7 +389,7 @@ escr_looptype_dir_k: (                 {loop over directory entries}
     instk_p: fline_hier_p_t;           {points to stack of input files}
     previnh_p: escr_inh_p_t;           {points to previous inhibit before this block}
     parse_p: escr_parse_p_t;           {points to saved parse state, NIL = none}
-    lpos_p: fline_lposdyn_p_t;         {parent nested logical input pos in this block}
+    lpos_p: fline_lposdyn_p_t;         {logical input hierarchy pos of parent at this block}
     bltype: escr_exblock_k_t;          {type of execution block}
     ulab: string_hash_handle_t;        {table of local labels, NIL for none, use parent}
     args: boolean;                     {this block takes arguments}
