@@ -9,7 +9,7 @@
 <body>
 
 <h1 class=page>ESCR Program and Callable System</h1>
-<p class=page>Last updated 28 September 2020</p>
+<p class=page>Last updated 22 Aug 2025</p>
 
 <ul>
   <li><a href="cmds.htm">Previous page</a>
@@ -58,6 +58,7 @@
     <a href="#file">FILE</a>&nbsp;
     <a href="#fp">FP</a>&nbsp;
     <a href="#if">IF</a>&nbsp;
+    <a href="#in">IN</a>&nbsp;
     <a href="#int">INT</a>&nbsp;
     <a href="#isint">ISINT</a>&nbsp;
     <a href="#isnum">ISNUM</a>&nbsp;
@@ -185,10 +186,12 @@
 
     <p>
     <a href="#arg">ARG</a> &nbsp; - &nbsp; Get argument to block<br>
+    <a href="#in">IN</a> &nbsp; - &nbsp; Get live input string from user<br>
     <a href="#exist">EXIST</a> &nbsp; - &nbsp; Check symbol or argument existing<br>
     <a href="#if">IF</a> &nbsp; - &nbsp; Return argument based on condition<br>
     <a href="#pick">PICK</a>&nbsp; - &nbsp; Information about current <b>pick</b> block<br>
     <a href="#sym">SYM</a> &nbsp; - &nbsp; Information about a symbol<br>
+    <a href="#dent">DENT</a> &nbsp; - &nbsp; Directory entry info, in DIR loop<br>
     <a href="#v">V</a> &nbsp; - &nbsp; Value of symbol or expression<br>
     <a href="#vnl">VNL</a> &nbsp; - &nbsp; Value of symbol or expression, no local vars<br>
 
@@ -202,9 +205,10 @@
     <a href="#lnam">LNAM</a> &nbsp; - &nbsp; File leafname, can remove suffix<br>
     <a href="#tnam">TNAM</a> &nbsp; - &nbsp; File full treename<br>
     <a href="#dent">DENT</a> &nbsp; - &nbsp; Directory entry info, in DIR loop<br>
+    <a href="#in">IN</a> &nbsp; - &nbsp; Get live input string from user<br>
     <a href="#runex">RUNEX</a> &nbsp;
     <a href="#runtf">RUNTF</a> &nbsp;
-    <a href="#runso">RUNSO</a> &nbsp; - Run external program
+    <a href="#runso">RUNSO</a> &nbsp; - &nbsp; Run external program
 
   <li>Miscellaneous
 
@@ -1069,6 +1073,25 @@ arg]</i></tt></p><indent>
   when <i>condition</i> is false.  <i>Condition</i> must be of type
   <b>bool</b>.  The data type of the function value is whatever data type
   the returned argument (<i>arg1</i> or <i>arg2</i>) is.
+
+  </p></indent>
+
+<p><tt id="in"><b>IN</b> <i>prompt ... prompt</i></tt></p><indent>
+
+  <p>Returns the next string entered by the user, with trailing spaces
+  removed.  The trailing carriage return (or whatever) used to indicate
+  end of input line to the operating system is not included in the
+  returned string.  If the user just hits "enter" on Windows, for example,
+  then the function returns the empty string.
+
+  <p>The concatenation of the string representation of all the
+  <i>prompt</i> arguments is shown to the user with the input position
+  left immediately after the prompt.  No prompt is written when there are
+  no <i>prompt</i> arguments, or the resulting prompt string is the empty
+  string.
+
+  <p>The function blocks indefinitely until the the user terminates the
+  text entry.
 
   </p></indent>
 

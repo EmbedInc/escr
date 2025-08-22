@@ -319,6 +319,7 @@ begin
   addfunc ('>=', addr(escr_ifun_ge), stat); if sys_error(stat) then goto err;
   addfunc ('>', addr(escr_ifun_gt), stat); if sys_error(stat) then goto err;
   addfunc ('if', addr(escr_ifun_if), stat); if sys_error(stat) then goto err;
+  addfunc ('in', addr(escr_ifun_in), stat); if sys_error(stat) then goto err;
   addfunc ('int', addr(escr_ifun_int), stat); if sys_error(stat) then goto err;
   addfunc ('~', addr(escr_ifun_inv), stat); if sys_error(stat) then goto err;
   addfunc ('isint', addr(escr_ifun_isint), stat); if sys_error(stat) then goto err;

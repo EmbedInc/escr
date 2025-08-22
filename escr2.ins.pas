@@ -369,6 +369,11 @@ procedure escr_ifun_if(
   out     stat: sys_err_t);
   val_param; extern;
 
+procedure escr_ifun_in(
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param; extern;
+
 procedure escr_ifun_int(
   in out  e: escr_t;
   out     stat: sys_err_t);

@@ -100,6 +100,7 @@ define escr_ifun_runtf;
 define escr_ifun_runso;
 define escr_ifun_file;
 define escr_ifun_qtk;
+define escr_ifun_in;
 %include 'escr2.ins.pas';
 
 const
@@ -4049,4 +4050,33 @@ begin
   string_append1 (tk, '"');            {add trailing quote}
 
   escr_ifn_ret_str (e, tk);            {return the token}
+  end;
+{
+********************************************************************************
+*
+*   IN [prompt]
+*
+*   Return line of text entered by user.  PROMPT is show to the user immediately
+*   before the text line entry, when PROMPT is present.
+}
+procedure escr_ifun_in (
+  in out  e: escr_t;
+  out     stat: sys_err_t);
+  val_param;
+
+var
+  str: string_var8192_t;               {scratch string}
+
+begin
+  str.max := size_char(str.str);       {init local var strings}
+
+  escr_ifn_get_strs (e, str, stat);    {get the prompt string}
+  if sys_error(stat) then return;
+  if str.len > 0 then begin            {prompt string was supplied ?}
+    string_prompt (str);               {show prompt string to user}
+    end;
+
+  string_readin (str);                 {get text line from user}
+
+  escr_ifn_ret_str (e, str);           {return the user's text string}
   end;
