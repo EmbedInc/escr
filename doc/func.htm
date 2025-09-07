@@ -9,7 +9,7 @@
 <body>
 
 <h1 class=page>ESCR Program and Callable System</h1>
-<p class=page>Last updated 22 Aug 2025</p>
+<p class=page>Last updated 7 Sep 2025</p>
 
 <ul>
   <li><a href="cmds.htm">Previous page</a>
@@ -589,7 +589,8 @@ arg]</i></tt></p><indent>
 
     <p><tt><b>SEC</b></tt></p><indent>
 
-      <p>Adds the 2-digit second within the minute to the returned string.
+      <p>Adds the 2-digit seconds within the minute to the returned
+      string.
 
       </p></indent>
 
@@ -610,7 +611,7 @@ arg]</i></tt></p><indent>
 
     </p></indent>
 
-  <p>For example:</p><indent>
+  <p>Examples:</p><indent>
 
     <p><tt>&nbsp; [<b>date</b> 2017/03/08.11:17:32.59] -->
     "2017/03/08.11:17:32"<br> </tt>
@@ -764,7 +765,7 @@ arg]</i></tt></p><indent>
 
     </p></indent>
 
-  <p>For example:</p><indent>
+  <p>Examples:</p><indent>
 
     <p><tt>
     [<b>eng</b> 123456] --> "123 k"<br>
@@ -1246,13 +1247,15 @@ suff</i>]</tt></p><indent>
 
 <p><tt id="log"><b>LOG</b> <i>arg</i></tt></p><indent>
 
-  <p>Returns the natural logarithm of <i>arg</i>.
+  <p>Returns the natural logarithm of <i>arg</i>.  <i>Arg</i> must be
+  numeric.  The result is floating point.
 
   </p></indent>
 
 <p><tt id="log2"><b>LOG2</b> <i>arg</i></tt></p><indent>
 
-  <p>Returns the base 2 logarithm of <i>arg</i>.
+  <p>Returns the base 2 logarithm of <i>arg</i>.  <i>Arg</i> must be
+  numeric.  The result is floating point.
 
   </p></indent>
 
@@ -1302,7 +1305,8 @@ argN</i>]</tt></p><indent>
 
   <p>When <i>val</i> is not present, returns the value of Pi
   (3.141592...). When <i>val</i> is present, returns the value of Pi times
-  <i>val</i>.  <i>Val</i> must be numeric.
+  <i>val</i>.  <i>Val</i> must be numeric.  The result is floating point.
+
 
   </p></indent>
 
@@ -1402,7 +1406,7 @@ argN</i>]</tt></p><indent>
 <p><tt id="rnd"><b>RND</b> <i>arg</i></tt></p><indent>
 
   <p>Returns <i>arg</i> rounded to the nearest integer.  <i>Arg</i> must
-  be numeric.
+  be numeric.  The result is integer.
 
   </p></indent>
 
@@ -1413,7 +1417,7 @@ argN</i>]</tt></p><indent>
 
   <p>The function returns the exit status code resulting from running the
   command.  The variable <tt>EXITSTATUS</tt> and the script exit status
-  code are NOT altered.
+  code are not altered.
 
   <p>Any output from the program is discarded.
 
@@ -1443,7 +1447,7 @@ argN</i>]</tt></p><indent>
   The exact interpretation of TRUE/FALSE from the exit status code is
   operating-system dependent.  However, generally a exit status code of 0
   is interpreted as TRUE, with anything else being FALSE.  The variable
-  EXITSTATUS and the script exit status code are NOT altered.
+  EXITSTATUS and the script exit status code are not altered.
 
   <p>Any output from the program is discarded.
 
@@ -1465,8 +1469,9 @@ opt</i>]</tt></p><indent>
     <p><tt><b>AFT</b></tt></p><indent>
 
       <p>Return the sequence number after the increment is applied (value
-      written back to sequence number file).  The default is to return the
-      sequence number before the increment (value originally in file).
+      written back to the sequence number file).  The default is to return
+      the sequence number before the increment (value originally in the
+      file).
 
       </p></indent>
 
@@ -1499,7 +1504,8 @@ opt</i>]</tt></p><indent>
 
   <p>Return <i>val</i> shifted left by <i>n</i> bits.  Both <i>val</i> and
   <i>n</i> must be integer.  <i>N</i> may be negative, in which case
-  <i>val</i> is logically shifted right by -<i>n</i> bits.
+  <i>val</i> is logically shifted right by -<i>n</i> bits.  The result is
+  integer.
 
   </p></indent>
 
@@ -1507,14 +1513,15 @@ opt</i>]</tt></p><indent>
 
   <p>Return <i>val</i> logically shifted right by <i>n</i> bits.  Both
   <i>val</i> and <i>n</i> must be integer.  <i>N</i> may be negative, in
-  which case <i>val</i> is shifted left by -<i>n</i> bits.
+  which case <i>val</i> is shifted left by -<i>n</i> bits.  The result is
+  integer.
 
   </p></indent>
 
 <p><tt id="sin"><b>SIN</b> <i>ang</i></tt></p><indent>
 
   <p>Returns the sine of the angle <i>ang</i>.  <i>Ang</i> must be
-  numeric, and is in radians.
+  numeric, and is in radians.  The result is floating point.
 
   </p></indent>
 
@@ -1588,12 +1595,12 @@ opt</i>]</tt></p><indent>
   <p>In all cases, if the symbol specified by <i>name</i> does not exist,
   the function returns the empty string.
 
-  <p>The NL keyword cause <i>name</i> to be evaluated with local symbols
+  <p>The NL keyword causes <i>name</i> to be evaluated with local symbols
   ignored.  Specifically, for any symbol that has a local version, the
   current version of that symbol will be the version previous to the local
   version.  This effectively means symbols are evaluated in the parent
   context to the current block.  NL has no effect if <i>name</i> specifies
-  a absolute version.
+  an absolute version.
 
   <p><i>Opt</i> is a optional keyword specifying the type of information
   to return about the symbol.  The choices for <i>opt</i> are:
@@ -1665,7 +1672,7 @@ opt</i>]</tt></p><indent>
 <p><tt id="tan"><b>TAN</b> <i>ang</i></tt></p><indent>
 
   <p>Returns the tangent of the angle <i>ang</i>.  <i>Ang</i> must be
-  numeric, and is in radians.
+  numeric, and is in radians.  The result is floating point.
 
   </p></indent>
 
