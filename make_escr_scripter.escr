@@ -54,7 +54,6 @@ if [not [exist tnam fnamnl]] then //ESCR program is not installed ?
 //   of their previous values.  TNAM is the full pathname of the ESCR program
 //   executable.
 //
-run "cmd /c assoc .es=EmbedScript"
 run "cmd /c assoc .escr=EmbedScript"
 run "cmd /c ftype EmbedScript=""" tnam """ ""%1"" %*"
 
